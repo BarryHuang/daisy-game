@@ -125,25 +125,63 @@
         
         /* 道具：跑輪 (預設隱藏，解鎖後顯示) */
         .prop-wheel {
-            position: absolute; left: 10px; bottom: 40px; width: 100px; height: 100px;
+            position: absolute; right: 10px; bottom: 40px; width: 100px; height: 100px;
             border: 8px solid #ffcc80; border-radius: 50%; opacity: 0; pointer-events: none;
             transition: opacity 0.5s; z-index: 1;
+            /* 跑輪支架 */
+            box-shadow: 0 5px 0 5px #e6b800;
         }
-        .prop-wheel.show { opacity: 0.8; }
+        .prop-wheel::before {
+            content:''; position: absolute; top:50%; left:50%; width: 10px; height: 10px;
+            background: #d35400; border-radius: 50%; transform: translate(-50%, -50%);
+        }
+        .prop-wheel.show { opacity: 0.9; }
         .prop-wheel.spin { animation: spinWheel 1s linear infinite; opacity: 1; }
         @keyframes spinWheel { 100% { transform: rotate(360deg); } }
         
         /* 道具：水瓶 */
         .prop-water {
-            position: absolute; right: 20px; bottom: 80px; width: 20px; height: 50px;
-            background: rgba(255,255,255,0.8); border: 2px solid #ccc; border-radius: 10px;
+            position: absolute; right: 120px; bottom: 85px; width: 20px; height: 45px;
+            background: rgba(220, 248, 255, 0.9); border: 2px solid #90caf9; border-radius: 10px;
             opacity: 0; z-index: 1; transition: opacity 0.5s;
         }
         .prop-water::after {
-            content: ''; position: absolute; bottom: -10px; left: 6px;
+            content: ''; position: absolute; bottom: -12px; left: 6px;
             width: 4px; height: 15px; background: silver; border-radius: 2px;
         }
         .prop-water.show { opacity: 0.9; }
+
+        /* 新道具：溫馨小木屋 */
+        .prop-house {
+            position: absolute; left: 10px; bottom: 40px; width: 100px; height: 80px;
+            background: #d7ccc8; border: 3px solid #8d6e63; border-radius: 10px;
+            opacity: 0; z-index: 0; transition: opacity 0.5s;
+        }
+        .prop-house::before { /* 屋頂 */
+            content: ''; position: absolute; top: -35px; left: -10px;
+            border-left: 60px solid transparent; border-right: 60px solid transparent;
+            border-bottom: 35px solid #a1887f;
+        }
+        .prop-house::after { /* 門 */
+            content: ''; position: absolute; bottom: 0; left: 35px;
+            width: 30px; height: 40px; background: #3e2723; border-radius: 15px 15px 0 0;
+        }
+        .prop-house.show { opacity: 1; }
+
+        /* 新道具：溜滑梯 */
+        .prop-slide {
+            position: absolute; left: 130px; bottom: 40px; width: 80px; height: 60px;
+            opacity: 0; z-index: 1; transition: opacity 0.5s;
+        }
+        .prop-slide::before { /* 承載面 */
+            content: ''; position: absolute; top: 0; left: 0; width: 100px; height: 10px;
+            background: #ff5252; transform: rotate(30deg); transform-origin: left top; border-radius: 5px;
+        }
+        .prop-slide::after { /* 樓梯 */
+            content: ''; position: absolute; top: 0; left: 0; width: 10px; height: 50px;
+            background: #ffb74d; border-radius: 5px;
+        }
+        .prop-slide.show { opacity: 0.9; }
 
         .hamster-svg { width: 120px; height: 120px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2; position: relative;}
         .hamster-svg.happy { animation: jump 0.5s 2; }
@@ -160,12 +198,12 @@
 
         /* 動作按鈕群組化 */
         .pet-actions { 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; 
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; 
             margin-top: 15px; width: 100%;
         }
         .action-btn {
             background: white; border: 2px solid var(--primary); border-radius: 15px;
-            padding: 8px 5px; font-size: 1.1rem; cursor: pointer; display: flex; flex-direction: column;
+            padding: 8px 2px; font-size: 1rem; cursor: pointer; display: flex; flex-direction: column;
             align-items: center; font-weight: bold; color: var(--primary); transition: 0.2s;
         }
         .action-btn:hover { background: var(--primary); color: white; }
@@ -253,7 +291,9 @@
                 <div class="stat">💰 金幣: <span id="h-coins">0</span></div>
             </div>
             <div class="hamster-cage" id="cage">
-                <!-- 背景玩具：跑輪 -->
+                <!-- 背景玩具：解鎖道具區 -->
+                <div class="prop-house" id="prop-house"></div>
+                <div class="prop-slide" id="prop-slide"></div>
                 <div class="prop-wheel" id="prop-wheel"></div>
                 <div class="prop-water" id="prop-water"></div>
                 
@@ -292,16 +332,26 @@
                     <span style="font-size: 0.8rem; font-weight: normal;">免費呼嚕</span>
                 </div>
                 <!-- 水瓶按鈕 (商店) -->
-                <div class="action-btn locked" id="btn-water" onclick="drinkWater()">
+                <div class="action-btn locked" id="btn-water" onclick="buyItem('water', 30, '水瓶💧')">
                     <span id="label-water">買水瓶 💧</span>
                     <span style="font-size: 0.8rem; font-weight: normal;" id="txt-water">30 💰</span>
+                </div>
+                <!-- 小木屋 (商店) -->
+                <div class="action-btn locked" id="btn-house" onclick="buyItem('house', 100, '小木屋🏡')">
+                    <span id="label-house">買木屋 🏡</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-house">100 💰</span>
+                </div>
+                <!-- 溜滑梯 (商店) -->
+                <div class="action-btn locked" id="btn-slide" onclick="buyItem('slide', 150, '溜滑梯🎢')">
+                    <span id="label-slide">溜滑梯 🎢</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-slide">150 💰</span>
                 </div>
                 <!-- 跑輪按鈕 (商店) -->
                 <div class="action-btn locked" id="btn-run" onclick="playWheel()">
                     <span id="label-run">買跑輪 🎡</span>
                     <span style="font-size: 0.8rem; font-weight: normal;" id="txt-run">50 💰</span>
                 </div>
-                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 2;">
+                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 3;">
                     <span>睡覺 💤</span>
                     <span style="font-size: 0.8rem; font-weight: normal;">休息一下</span>
                 </div>
@@ -367,18 +417,20 @@
             exp: 0,
             coins: 0, 
             totalWordsCleared: 0,
-            items: { wheel: false, water: false }
+            items: { wheel: false, water: false, house: false, slide: false }
         };
 
         function migratePetData(data) {
-            if(!data) return { level: 1, exp: 0, coins: 0, totalWordsCleared: 0, items: { wheel: false, water: false } };
+            if(!data) return { level: 1, exp: 0, coins: 0, totalWordsCleared: 0, items: { wheel: false, water: false, house: false, slide: false } };
             // 向下相容，把 seeds 轉成 coins 金幣
             if(data.seeds !== undefined) {
                 data.coins = data.seeds;
                 delete data.seeds;
             }
             if(data.coins === undefined) data.coins = 0;
-            if(!data.items) data.items = { wheel: false, water: false };
+            if(!data.items) data.items = { wheel: false, water: false, house: false, slide: false };
+            if(data.items.house === undefined) data.items.house = false;
+            if(data.items.slide === undefined) data.items.slide = false;
             return data;
         }
 
@@ -487,22 +539,70 @@
                 wheel.classList.remove('show');
             }
 
-            // 處理水瓶商店與解鎖
-            const waterBtn = document.getElementById('btn-water');
-            const waterProp = document.getElementById('prop-water');
-            if(petData.items.water) {
-                waterBtn.classList.remove('locked');
-                waterBtn.classList.add('free');
-                document.getElementById('label-water').textContent = "喝水 💧";
-                waterBtn.querySelector('#txt-water').textContent = "免費！";
-                waterProp.classList.add('show');
+            // 處理場景解鎖 - 統一刷新 UI
+            refreshShopItem('water', 30, '水瓶💧', '喝水 💧');
+            refreshShopItem('house', 100, '小木屋🏡', '有屋子了');
+            refreshShopItem('slide', 150, '溜滑梯🎢', '有滑梯了');
+        }
+
+        function refreshShopItem(itemId, cost, buyLabel, ownedLabel) {
+            const btn = document.getElementById(`btn-${itemId}`);
+            const prop = document.getElementById(`prop-${itemId}`);
+            
+            if(petData.items[itemId]) {
+                btn.classList.remove('locked');
+                btn.classList.add('free');
+                document.getElementById(`label-${itemId}`).textContent = ownedLabel;
+                btn.querySelector(`#txt-${itemId}`).textContent = "已擁有";
+                prop.classList.add('show');
+                
+                // 木屋和滑梯只做展示，不再點擊互動，可以把點擊關閉
+                if(itemId === 'house' || itemId === 'slide') {
+                    btn.classList.add('disabled');
+                    btn.classList.remove('free');
+                    btn.querySelector(`#txt-${itemId}`).textContent = "豪華設備";
+                }
             } else {
-                waterBtn.classList.remove('free');
-                document.getElementById('label-water').textContent = "買水瓶 💧";
-                waterBtn.querySelector('#txt-water').textContent = "30 💰";
-                if(petData.coins >= 30) waterBtn.classList.remove('locked');
-                else waterBtn.classList.add('locked');
-                waterProp.classList.remove('show');
+                btn.classList.remove('free');
+                document.getElementById(`label-${itemId}`).textContent = `買${buyLabel}`;
+                btn.querySelector(`#txt-${itemId}`).textContent = `${cost} 💰`;
+                if(petData.coins >= cost) btn.classList.remove('locked');
+                else btn.classList.add('locked');
+                prop.classList.remove('show');
+            }
+        }
+
+        // 通用的購買功能
+        function buyItem(itemId, cost, itemName) {
+            if (isSleeping) return wakeUp();
+            if (isRunning) return;
+            
+            if(petData.items[itemId]) {
+                // 已購買，如果有專屬互動在這裡呼叫
+                if(itemId === 'water') {
+                    // 喝水動畫
+                    const hamster = document.getElementById('hamster');
+                    hamster.classList.add('happy');
+                    playTone(800, 'sine', 0.1); setTimeout(()=>playTone(900, 'sine', 0.1), 150);
+                    createFloatingEmoji('💧', 1200, -30);
+                    setTimeout(() => hamster.classList.remove('happy'), 1000);
+                }
+                return;
+            }
+            
+            // 購買邏輯
+            if (petData.coins >= cost) {
+                petData.coins -= cost;
+                petData.items[itemId] = true;
+                savePetData();
+                updatePetUI();
+                alert(`🎊 購買成功！小倉鼠擁有 ${itemName} 了！`);
+                
+                // 放個慶祝煙火
+                confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 , x: 0.75} }); 
+                playTone(600, 'sine', 0.1); setTimeout(()=>playTone(800, 'sine', 0.2), 150);
+            } else {
+                alert(`金幣還不夠買 ${itemName} 喔！(需要 ${cost} 💰)`);
             }
         }
 
@@ -763,34 +863,7 @@
             }, 3000);
         }
 
-        function drinkWater() {
-            if (isSleeping) return wakeUp();
-            if (isRunning) return;
-            
-            // 處理購買邏輯
-            if (!petData.items.water) {
-                if (petData.coins >= 30) {
-                    petData.coins -= 30;
-                    petData.items.water = true;
-                    savePetData();
-                    updatePetUI();
-                    alert("💧 購買成功！小倉鼠有新鮮的水可以喝了！");
-                } else {
-                    alert("金幣還不夠買水瓶喔！(需要 30 💰)");
-                    return;
-                }
-            }
-
-            const hamster = document.getElementById('hamster');
-            // 跳上去喝水
-            hamster.classList.add('happy');
-            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(900, 'sine', 0.1), 150);
-            createFloatingEmoji('💧', 1200, -30);
-            
-            setTimeout(() => {
-                hamster.classList.remove('happy');
-            }, 1000);
-        }
+        // (使用新的通用 buyItem)
 
         function sleepHamster() {
             if(isRunning) return;
