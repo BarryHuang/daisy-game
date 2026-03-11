@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daisy's Word Game</title>
+    <!-- 引入 Canvas Confetti 套件來實現全螢幕灑彩紙效果 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fff5f8; margin: 0; padding: 20px; }
+        .box { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; width: 90%; max-width: 400px; }
+        select { padding: 10px; border-radius: 8px; border: 2px solid #ff85a2; outline: none; font-size: 1rem; margin: 5px; width: 80%; }
+        #hangman-svg { width: 150px; height: 180px; background: white; border-radius: 15px; margin: 10px; }
+        line, circle { fill: none; stroke: #444; stroke-width: 5; stroke-linecap: round; display: none; }
+        #word-display { font-size: 2rem; letter-spacing: 8px; margin: 20px; font-weight: bold; color: #d63384; text-transform: uppercase; word-break: break-all; transition: transform 0.3s; }
+        #keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; width: 100%; max-width: 400px; }
+        .key { padding: 12px 2px; font-size: 1.1rem; border: none; background: #6f42c1; color: white; border-radius: 5px; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .key:active { transform: scale(0.95); }
+        .key:disabled { background: #ddd; color: #aaa; box-shadow: none; cursor: default; }
+        #message { font-size: 1.2rem; font-weight: bold; margin: 10px; height: 30px; }
+        .controls { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding:10px 20px; border-radius:10px; border:none; color:white; font-weight:bold; cursor: pointer; font-size: 1rem; box-shadow: 0 3px 6px rgba(0,0,0,0.15); transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-primary { background:#ff85a2; }
+        .btn-speak { background:#28a745; }
+        .correct-anim { animation: bounce 0.5s ease-in-out; color: #28a745 !important; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    </style>
+</head>
+<body>
+    <h2 style="color:#d63384;">Daisy 拼字大挑戰 👑</h2>
+    <div class="box">
+        <select id="cat" onchange="setupWeek()"></select><br>
+        <select id="week" onchange="init()"></select>
+    </div>
+    <svg id="hangman-svg" viewBox="0 0 200 250">
+        <line x1="20" y1="230" x2="180" y2="230" style="display:block;"/>
+        <line x1="50" y1="230" x2="50" y2="20" style="display:block;"/>
+        <line x1="50" y1="20" x2="130" y2="20" style="display:block;"/>
+        <line x1="130" y1="20" x2="130" y2="50" style="display:block;"/>
+        <circle cx="130" cy="75" r="25" id="part-0" />
+        <line x1="130" y1="100" x2="130" y2="170" id="part-1" />
+        <line x1="130" y1="120" x2="90" y2="150" id="part-2" />
+        <line x1="130" y1="120" x2="170" y2="150" id="part-3" />
+        <line x1="130" y1="170" x2="95" y2="215" id="part-4" />
+        <line x1="130" y1="170" x2="165" y2="215" id="part-5" />
+    </svg>
+    <div id="word-display">_ _ _</div>
+    <div id="message"></div>
+    <div id="keyboard"></div>
+    
+    <div class="controls">
+        <button class="btn btn-speak" onclick="speakWord()">🔊 聽發音</button>
+        <button class="btn btn-primary" onclick="init()">換個單字</button>
+    </div>
+
+    <script>
+        const words = {
+            "FET Spelling": {
+                "Wk 2": ["beautiful", "calf", "graze", "forest", "angry", "catch", "sad", "promise", "grassy", "happy"],
+                "Wk 3": ["agree", "quickly", "return", "surprised", "pleased", "truth", "mad", "protect", "always", "promise"],
+                "Wk 4": ["school", "learn", "math", "problem", "important", "think", "art", "because", "creative", "imagination"],
+                "Wk 5": ["amazing", "music", "concentrate", "remember", "teamwork", "reason", "best", "learn"],
+                "Wk 6": ["baseball", "love", "sport", "college", "team", "allowed", "meet", "field", "cheer", "boo"],
+                "Wk 10": ["memory", "discovers", "amaze", "wonder", "tunes", "alone", "struggle", "dream", "achieve", "world"],
+                "Wk 11/12": ["wonder", "whisper", "bones", "delight", "children", "mountain", "artist", "surround", "desert", "season"],
+                "Wk 13": ["autumn", "spring", "summer", "winter", "speckled", "woven", "showers", "sprout", "bloom", "spread"],
+                "Wk 14": ["slither", "barefoot", "flutter", "taste", "scurry", "scatter", "jacket", "secret", "honk", "store"],
+                "Wk 15": ["crisp", "gray", "rush", "spider", "weave", "chilly", "zip", "agree", "chipmunk", "dig"],
+                "Wk 16": ["autumn", "whisper", "fly", "shake", "spin", "dash", "empty", "jar", "fetch", "lie"]
+            },
+            "CET Vocabulary": {
+                "Wk 1&2": ["cool", "fun", "world", "mall", "picnic", "basket", "office", "shop", "fold", "cross"],
+                "Wk 3": ["come", "piano", "violin", "music", "building", "cover", "glass", "stair", "shell", "sink"],
+                "Wk 4": ["visit", "community", "bookshelf", "library", "real", "front", "garage", "create", "elephant", "climb"],
+                "Wk 5": ["country", "hear", "quiet", "mouse", "letter", "cousin", "pick", "excited", "imagine", "phone"],
+                "Wk 6": ["feet", "scary", "street", "skateboard", "zoom", "shout", "behind", "jump", "garbage", "can"],
+                "Wk 7&8": ["ambulance", "hospital", "city", "busy", "loud", "sick", "tomorrow", "soon", "later"],
+                "Wk 10": ["field", "museum", "dinosaur", "drawing", "model", "fossil", "alive", "trip", "break"],
+                "Wk 11": ["cow", "together", "puzzle", "about", "could", "show", "chicken", "four", "bird"],
+                "Wk 12": ["claw", "catch", "horn", "teeth", "ate", "clue", "flat", "other", "meat", "past"],
+                "Wk 13": ["sky", "cloud", "float", "plane", "over", "dream", "stretch", "pilot", "doctor", "silly"],
+                "Wk 14": ["train", "neighbor", "ask", "tough", "brave", "remind", "talented", "wait", "minute", "job"],
+                "Wk 15&16": ["trick", "fly", "flew", "learn", "start", "famous", "stop"],
+                "Wk 18": ["elf", "shoemaker", "imagination", "leather", "shed", "pair", "shiny", "peek"]
+            }
+        };
+
+        let current = "", guessed = [], err = 0;
+        const catS = document.getElementById('cat'), wkS = document.getElementById('week');
+        
+        // 簡單的音效系統
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = type;
+                oscillator.frequency.value = freq;
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                oscillator.stop(audioCtx.currentTime + duration);
+            } catch(e) { console.log(e); }
+        }
+
+        // 語音朗讀功能 (Text-to-Speech)
+        function speakWord() {
+            if ('speechSynthesis' in window) {
+                // 中斷之前還在唸的聲音
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(current);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8; // 稍微放慢一點，適合小朋友聽
+                utterance.pitch = 1.2; // 讓聲音稍微高一點，聽起來活潑些
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("抱歉，您的設備不支援語音朗讀功能 😢");
+            }
+        }
+
+        // 滿天彩紙效果
+        function triggerConfetti() {
+            if(typeof confetti !== 'undefined') {
+                var duration = 3 * 1000;
+                var animationEnd = Date.now() + duration;
+                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                var interval = setInterval(function() {
+                    var timeLeft = animationEnd - Date.now();
+                    if (timeLeft <= 0) { return clearInterval(interval); }
+                    var particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
+                }, 250);
+            }
+        }
+
+        function setupConfig() {
+            catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            setupWeek();
+        }
+        function setupWeek() {
+            wkS.innerHTML = Object.keys(words[catS.value]).map(w => `<option>${w}</option>`).join('');
+            init();
+        }
+        function init() {
+            const list = words[catS.value][wkS.value];
+            current = list[Math.floor(Math.random() * list.length)].toUpperCase();
+            guessed = []; err = 0;
+            const msg = document.getElementById('message');
+            msg.textContent = "";
+            msg.style.color = "inherit";
+            document.getElementById('word-display').classList.remove('correct-anim');
+            for(let i=0; i<6; i++) {
+                const part = document.getElementById(`part-${i}`);
+                if(part) part.style.display="none";
+            }
+            render();
+            keys();
+        }
+        function render() {
+            document.getElementById('word-display').innerHTML = current.split('').map(l => (l===' '?'&nbsp;':(guessed.includes(l)?l:'_'))).join(' ');
+        }
+        function keys() {
+            const k = document.getElementById('keyboard');
+            k.innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').map(l => `<button class="key" id="key-${l}" onclick="guess('${l}')">${l}</button>`).join('');
+            
+            // 支援實體鍵盤（如果用 iPad 加鍵盤也能玩）
+            window.onkeydown = function(e) {
+                const key = e.key.toUpperCase();
+                if(/^[A-Z]$/.test(key) && !guessed.includes(key) && err < 6) {
+                    guess(key);
+                }
+            }
+        }
+        function guess(l) {
+            const btn = document.getElementById(`key-${l}`);
+            if(btn && btn.disabled) return;
+            if(btn) btn.disabled = true;
+            
+            if(current.includes(l)) {
+                guessed.push(l); 
+                render();
+                playTone(600, 'sine', 0.15); // 答對音效 Ding!
+                
+                // 檢查是否全對
+                if(!document.getElementById('word-display').textContent.includes('_')) {
+                    const msg = document.getElementById('message');
+                    msg.textContent = "Daisy 太棒了！🎉";
+                    msg.style.color = "#28a745";
+                    document.getElementById('word-display').classList.add('correct-anim');
+                    document.querySelectorAll('.key').forEach(k=>k.disabled=true);
+                    triggerConfetti();
+                    
+                    // 答對後自動唸一次加深印象
+                    setTimeout(() => speakWord(), 500);
+                }
+            } else {
+                playTone(200, 'sawtooth', 0.2); // 答錯音效 Buzz!
+                const part = document.getElementById(`part-${err}`);
+                if(part) part.style.display="block";
+                err++;
+                
+                // 檢查是否失敗
+                if(err>=6) {
+                    const msg = document.getElementById('message');
+                    msg.textContent = "答案是: " + current;
+                    msg.style.color = "#dc3545";
+                    document.querySelectorAll('.key').forEach(k=>k.disabled=true);
+                    
+                    // 雖然沒猜中，還是唸一次讓她知道怎麼唸
+                    setTimeout(() => speakWord(), 500);
+                }
+            }
+        }
+        setupConfig();
+    </script>
+</body>
+</html>
