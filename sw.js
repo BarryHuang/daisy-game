@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-hamster-v1';
+const CACHE_NAME = 'daisy-hamster-v2';
 const ASSETS_TO_CACHE = [
   './daisy_hamster.html',
   './manifest.json',
@@ -8,17 +8,10 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // 強制立刻啟用新的 Service Worker
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
     })
   );
 });
@@ -29,10 +22,30 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
+            return caches.delete(cacheName); // 刪除舊的快取
           }
         })
       );
+    })
+  );
+});
+
+// 使用 "Stale-while-revalidate" (邊用舊的邊更新) 策略
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((cachedResponse) => {
+        const fetchedResponse = fetch(event.request).then((networkResponse) => {
+          // 將最新抓取到的版本存入快取中
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        }).catch(() => {
+          // 如果網路斷線，就回傳快取
+          return cachedResponse;
+        });
+        // 優先回傳快取讓畫面秒開，同時背景去抓新的蓋掉快取 (下次打開就會是新的)
+        return cachedResponse || fetchedResponse;
+      });
     })
   );
 });
