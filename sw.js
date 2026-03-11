@@ -1,7 +1,9 @@
-const CACHE_NAME = 'daisy-hamster-v2';
+const CACHE_NAME = 'daisy-hamster-v3';
 const ASSETS_TO_CACHE = [
   './daisy_hamster.html',
   './manifest.json',
+  './style.css',
+  './words.js',
   'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js',
   'https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js'
