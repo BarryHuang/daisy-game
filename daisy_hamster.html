@@ -198,12 +198,12 @@
 
         /* 動作按鈕群組化 */
         .pet-actions { 
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; 
             margin-top: 15px; width: 100%;
         }
         .action-btn {
-            background: white; border: 2px solid var(--primary); border-radius: 15px;
-            padding: 8px 2px; font-size: 1rem; cursor: pointer; display: flex; flex-direction: column;
+            background: white; border: 2px solid var(--primary); border-radius: 12px;
+            padding: 6px 2px; font-size: 0.95rem; cursor: pointer; display: flex; flex-direction: column;
             align-items: center; font-weight: bold; color: var(--primary); transition: 0.2s;
         }
         .action-btn:hover { background: var(--primary); color: white; }
@@ -323,14 +323,28 @@
             </div>
             
             <div class="pet-actions">
-                <div class="action-btn" id="btn-feed" onclick="feedHamster()">
-                    <span>餵食 🌻</span>
-                    <span style="font-size: 0.8rem; font-weight: normal;">消耗 1 💰</span>
+                <!-- 食物專區 -->
+                <div class="action-btn" id="btn-feed-seed" onclick="feedHamster('seed', 1, 10, '🌻')">
+                    <span>瓜子🌻</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">1 💰/+10 Exp</span>
                 </div>
+                <div class="action-btn" id="btn-feed-carrot" onclick="feedHamster('carrot', 3, 40, '🥕')">
+                    <span>胡蘿蔔🥕</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">3 💰/+40 Exp</span>
+                </div>
+                <div class="action-btn" id="btn-feed-apple" onclick="feedHamster('apple', 5, 80, '🍎')">
+                    <span>蘋果🍎</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">5 💰/+80 Exp</span>
+                </div>
+                <!-- 互動專區 -->
                 <div class="action-btn free" onclick="petHamster()">
                     <span>摸摸 🖐️</span>
-                    <span style="font-size: 0.8rem; font-weight: normal;">免費呼嚕</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">免費呼嚕</span>
                 </div>
+                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 4;">
+                    <span>睡覺 💤 (讓倉鼠好好休息)</span>
+                </div>
+                <!-- 商店專區 -->
                 <!-- 水瓶按鈕 (商店) -->
                 <div class="action-btn locked" id="btn-water" onclick="buyItem('water', 30, '水瓶💧')">
                     <span id="label-water">買水瓶 💧</span>
@@ -350,10 +364,6 @@
                 <div class="action-btn locked" id="btn-run" onclick="playWheel()">
                     <span id="label-run">買跑輪 🎡</span>
                     <span style="font-size: 0.8rem; font-weight: normal;" id="txt-run">50 💰</span>
-                </div>
-                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 3;">
-                    <span>睡覺 💤</span>
-                    <span style="font-size: 0.8rem; font-weight: normal;">休息一下</span>
                 </div>
             </div>
             <div style="margin-top:20px; font-size: 0.9rem; color:#888; font-weight:bold; text-align:center;">
@@ -517,9 +527,13 @@
             document.getElementById('h-lvl').textContent = petData.level;
             document.getElementById('h-coins').textContent = petData.coins;
             
-            const feedBtn = document.getElementById('btn-feed');
-            if(petData.coins < 1) feedBtn.classList.add('disabled');
-            else feedBtn.classList.remove('disabled');
+            // 處理食物按鈕狀態
+            ['seed', 'carrot', 'apple'].forEach(food => {
+                const btn = document.getElementById(`btn-feed-${food}`);
+                const cost = food === 'seed' ? 1 : (food === 'carrot' ? 3 : 5);
+                if(petData.coins < cost) btn.classList.add('disabled');
+                else btn.classList.remove('disabled');
+            });
             
             // 處理跑輪商店與解鎖
             const runBtn = document.getElementById('btn-run');
@@ -784,11 +798,11 @@
         }
 
         // --- 倉鼠互動特效 ---
-        function triggerSeedDrop() {
+        function triggerSeedDrop(emoji = '💰') {
             const cage = document.getElementById('cage');
             const seed = document.createElement('div');
             seed.className = 'falling-seed';
-            seed.textContent = '💰';
+            seed.textContent = emoji;
             seed.style.left = `${40 + Math.random() * 20}%`;
             cage.appendChild(seed);
             setTimeout(() => seed.remove(), 1000);
@@ -909,15 +923,18 @@
             setTimeout(() => emoji.remove(), duration);
         }
 
-        function feedHamster() {
-            if(petData.coins < 1 || isRunning) {
-                if(petData.coins < 1 && !isRunning) alert("金幣不夠買飼料了！(需要 1 💰)");
+        function feedHamster(foodType = 'seed', cost = 1, exp = 10, emoji = '🌻') {
+            if(petData.coins < cost || isRunning) {
+                if(petData.coins < cost && !isRunning) alert(`金幣不夠買${emoji}了！(需要 ${cost} 💰)`);
                 return;
             }
             wakeUp();
             
-            petData.coins -= 1;
-            petData.exp += 10; // 餵食加10分經驗
+            petData.coins -= cost;
+            petData.exp += exp;
+            
+            // 顯示食物掉落
+            triggerSeedDrop(emoji);
             
             // 升級邏輯 (這裡簡化，每 100 exp 升一級)
             if(petData.exp >= petData.level * 100) {
