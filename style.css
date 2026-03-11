@@ -304,3 +304,19 @@
 /* 成就彈出動畫 */
 @keyframes slideDownFade { 0% { top: -50px; opacity: 0; } 100% { top: 20px; opacity: 1; } }
 @keyframes slideDownFadeOut { 0% { top: 20px; opacity: 1; } 100% { top: -50px; opacity: 0; } }
+
+/* 每日任務與簽到UI */
+.quest-btn { position: absolute; top: 10px; right: 10px; background: #f39c12; color: #fff; border: 2px solid #e67e22; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 10; transition: transform 0.2s; }
+.quest-btn:hover { transform: scale(1.1); }
+.quest-btn.bounce { animation: bounce 1s infinite alternate; }
+@keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+
+/* 驚喜盲盒扭蛋機 */
+.gacha-box { font-size: 5rem; text-align: center; cursor: pointer; transition: transform 0.2s; margin: 20px 0; }
+.gacha-box:active { transform: scale(0.9); }
+.gacha-box.shake { animation: gachaShake 0.5s infinite; }
+@keyframes gachaShake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-5deg); } 20% { transform: translate(-3px, 0px) rotate(5deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(5deg); } 50% { transform: translate(-1px, 2px) rotate(-5deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-5deg); } 80% { transform: translate(-1px, -1px) rotate(5deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-5deg); } }
+
+/* 訪客系統 */
+.visitor-sprite { position: absolute; font-size: 2.5rem; cursor: pointer; z-index: 5; transition: all 0.5s ease; }
+.visitor-bubble { position: absolute; top: -30px; left: -20px; background: white; padding: 5px 10px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; color: #333; pointer-events: none; border: 2px solid #ddd; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
