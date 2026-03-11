@@ -453,6 +453,9 @@
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('current-user').textContent = secretCode;
             
+            // 立刻先刷新一次 UI (讓 BARRY 測試帳號馬上生效)
+            updatePetUI();
+            
             // 監聽 Firebase 資料同步
             const petRef = db.ref('users/' + secretCode + '/petData');
             petRef.once('value', (snapshot) => {
