@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daisy's Hamster Adventure 🐹</title>
+    <!-- 引入 Canvas Confetti 套件來實現全螢幕灑彩紙效果 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #ff85a2;
+            --secondary: #8ba4f9;
+            --accent: #ffeb3b;
+            --bg-grad: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            --game-bg: rgba(255, 255, 255, 0.95);
+            --hamster-bg: #fff5f8;
+            --text: #444;
+        }
+
+        body { 
+            font-family: 'Comic Sans MS', -apple-system, sans-serif; 
+            background: var(--bg-grad); 
+            margin: 0; padding: 10px; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text);
+        }
+
+        h2 { text-align: center; color: var(--primary); text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin: 10px 0; }
+
+        /* 雙欄版面配置：左側遊戲，右側倉鼠 */
+        .app-container {
+            display: flex; flex-direction: row; width: 100%; max-width: 900px;
+            gap: 20px; align-items: stretch;
+        }
+
+        /* 手機版：疊加顯示 (倉鼠在上，遊戲在下) */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .hamster-section { min-height: 250px; }
+        }
+
+        /* 共同的卡片樣式 */
+        .card {
+            background: var(--game-bg); border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            flex: 1;
+        }
+
+        /* --- 左側：遊戲區 --- */
+        .game-section { border: 4px solid var(--secondary); justify-content: flex-start; }
+        
+        .controls-row { display: flex; width: 100%; gap: 10px; margin-bottom: 15px; }
+        select { 
+            flex: 1; padding: 8px; border-radius: 10px; border: 2px solid var(--secondary); 
+            outline: none; font-size: 1rem; background: white; color: var(--text);
+        }
+        
+        #progress-bar {
+            width: 100%; height: 15px; background: #eee; border-radius: 10px;
+            overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #progress-fill {
+            height: 100%; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            width: 0%; transition: width 0.3s ease;
+        }
+        
+        #stage-info { font-weight: bold; color: var(--secondary); margin-bottom: 5px; font-size: 1.2rem; }
+
+        .btn-speak { 
+            background: #ff9800; color: white; border: none; padding: 10px 20px;
+            border-radius: 20px; font-size: 1.2rem; cursor: pointer; font-weight: bold;
+            box-shadow: 0 4px 0 #e65100; transition: transform 0.1s, box-shadow 0.1s;
+            margin-bottom: 20px;
+        }
+        .btn-speak:active { transform: translateY(4px); box-shadow: 0 0 0 #e65100; }
+
+        /* 拼字格子 */
+        #target-slots {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+            margin-bottom: 20px; min-height: 50px;
+        }
+        .slot {
+            width: 35px; height: 40px; border-bottom: 3px solid #ccc;
+            display: flex; justify-content: center; align-items: flex-end;
+            font-size: 1.8rem; font-weight: bold; color: var(--primary);
+            text-transform: uppercase; padding-bottom: 5px; transition: 0.3s;
+        }
+        .slot.filled { border-bottom-color: transparent; }
+        .slot.current { border-bottom-color: var(--primary); animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* 鍵盤 */
+        #keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; max-width: 350px; }
+        .key { 
+            padding: 12px 0; font-size: 1.2rem; border: none; background: #f0f0f0; 
+            color: var(--text); border-radius: 8px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 3px 0 #ccc; transition: 0.1s; user-select: none;
+        }
+        .key:active { transform: translateY(3px); box-shadow: 0 0 0 #ccc; }
+        .key:disabled { background: #e0e0e0; color: #aaa; box-shadow: none; transform: none; cursor: default; }
+
+        /* --- 右側：倉鼠區 --- */
+        .hamster-section { border: 4px solid var(--primary); background: var(--hamster-bg); position: relative; }
+        
+        .hamster-stats { 
+            width: 100%; display: flex; justify-content: space-between; 
+            background: white; padding: 10px; border-radius: 15px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; box-sizing: border-box;
+        }
+        .stat { font-weight: bold; font-size: 1.1rem; color: #d63384; display: flex; align-items: center; gap: 5px; }
+        
+        /* 簡單的 CSS 倉鼠動畫 (代表) */
+        .hamster-cage {
+            flex: 1; width: 100%; border: 3px dashed #ffc0cb; border-radius: 20px;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            position: relative; overflow: hidden; background: #fff; min-height: 200px;
+        }
+        
+        .hamster-svg { width: 120px; height: 120px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2;}
+        .hamster-svg.happy { animation: jump 0.5s 2; }
+        .hamster-svg.eat { animation: chew 0.3s 3; }
+        @keyframes jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes chew { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.9) scaleX(1.1); } }
+
+        /* 飼料和動作按鈕 */
+        .pet-actions { display: flex; gap: 15px; margin-top: 15px; }
+        .action-btn {
+            background: white; border: 2px solid var(--primary); border-radius: 15px;
+            padding: 10px 15px; font-size: 1.2rem; cursor: pointer; display: flex; flex-direction: column;
+            align-items: center; font-weight: bold; color: var(--primary); transition: 0.2s;
+        }
+        .action-btn:hover { background: var(--primary); color: white; }
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        
+        /* 掉落的種子動畫 */
+        .falling-seed {
+            position: absolute; font-size: 2rem; z-index: 1;
+            animation: fall 1s ease-in forwards; pointer-events: none;
+        }
+        @keyframes fall {
+            0% { top: -30px; transform: rotate(0deg); }
+            100% { top: calc(100% - 40px); transform: rotate(360deg); opacity: 0; }
+        }
+
+        #game-message { height: 30px; font-weight: bold; color: var(--primary); font-size: 1.2rem; margin: 10px 0; text-align: center;}
+        
+        /* 匯出匯入區 (LocalStorage 備案) */
+        .sync-area { margin-top: 20px; font-size: 0.8rem; color: #888; text-align: center; }
+        .sync-area input { font-size: 0.8rem; padding: 2px; border: 1px solid #ccc; width: 100px; }
+        .sync-area button { font-size: 0.8rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Daisy's Hamster Adventure 🐹</h2>
+    
+    <div class="app-container">
+        <!-- 左側：拼字挑戰 10 關 -->
+        <div class="card game-section">
+            <div class="controls-row">
+                <select id="cat" onchange="setupWeek()"></select>
+                <select id="week" onchange="startLevel()"></select>
+            </div>
+            
+            <div id="stage-info">Stage 1 / 10</div>
+            <div id="progress-bar"><div id="progress-fill"></div></div>
+            
+            <button class="btn-speak" onclick="speakWord(currentWord)">🔊 聽發音</button>
+            <div id="target-slots"></div>
+            <div id="game-message">聽發音並拼出單字吧！</div>
+            <div id="keyboard"></div>
+        </div>
+
+        <!-- 右側：倉鼠養成 -->
+        <div class="card hamster-section">
+            <div class="hamster-stats">
+                <div class="stat">⭐ Lvl: <span id="h-lvl">1</span></div>
+                <div class="stat">🌻 瓜子: <span id="h-seeds">0</span></div>
+            </div>
+            <div class="hamster-cage" id="cage">
+                <!-- SVG Hamster -->
+                <svg class="hamster-svg" id="hamster" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="50" cy="65" rx="35" ry="30" fill="#f4a460" /> <!-- Body -->
+                    <circle cx="50" cy="45" r="25" fill="#deb887" /> <!-- Head -->
+                    <circle cx="35" cy="25" r="10" fill="#f4a460" /> <!-- Ear L -->
+                    <circle cx="65" cy="25" r="10" fill="#f4a460" /> <!-- Ear R -->
+                    <circle cx="35" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear L Inner -->
+                    <circle cx="65" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear R Inner -->
+                    <circle cx="40" cy="40" r="3" fill="#000" /> <!-- Eye L -->
+                    <circle cx="60" cy="40" r="3" fill="#000" /> <!-- Eye R -->
+                    <ellipse cx="50" cy="50" rx="6" ry="4" fill="#ffc0cb" /> <!-- Nose -->
+                    <path d="M 50 54 Q 45 60 40 55 M 50 54 Q 55 60 60 55" fill="none" stroke="#000" stroke-width="2" /> <!-- Mouth -->
+                    <ellipse cx="30" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot L -->
+                    <ellipse cx="70" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot R -->
+                    <circle cx="20" cy="60" r="5" fill="#f4a460" /> <!-- Arm L -->
+                    <circle cx="80" cy="60" r="5" fill="#f4a460" /> <!-- Arm R -->
+                </svg>
+            </div>
+            <div class="pet-actions">
+                <div class="action-btn" id="btn-feed" onclick="feedHamster()">
+                    <span>餵食 🌻</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;">(消耗 1 瓜子)</span>
+                </div>
+            </div>
+            
+            <!-- 手動備份區塊 (供跨裝置使用) -->
+            <div class="sync-area">
+                備份代碼: <input type="text" id="sync-code" readonly onclick="this.select()">
+                <button onclick="copyCode()">複製</button>
+                <br>
+                還原代碼: <input type="text" id="import-code" placeholder="貼上代碼">
+                <button onclick="importCode()">讀取</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const words = {
+            "FET Spelling": {
+                "Wk 2": ["beautiful", "calf", "graze", "forest", "angry", "catch", "sad", "promise", "grassy", "happy"],
+                "Wk 3": ["agree", "quickly", "return", "surprised", "pleased", "truth", "mad", "protect", "always", "promise"],
+                "Wk 4": ["school", "learn", "math", "problem", "important", "think", "art", "because", "creative", "imagination"],
+                "Wk 5": ["amazing", "music", "concentrate", "remember", "teamwork", "reason", "best", "learn"],
+                "Wk 6": ["baseball", "love", "sport", "college", "team", "allowed", "meet", "field", "cheer", "boo"],
+                "Wk 10": ["memory", "discovers", "amaze", "wonder", "tunes", "alone", "struggle", "dream", "achieve", "world"],
+                "Wk 11/12": ["wonder", "whisper", "bones", "delight", "children", "mountain", "artist", "surround", "desert", "season"],
+                "Wk 13": ["autumn", "spring", "summer", "winter", "speckled", "woven", "showers", "sprout", "bloom", "spread"],
+                "Wk 14": ["slither", "barefoot", "flutter", "taste", "scurry", "scatter", "jacket", "secret", "honk", "store"],
+                "Wk 15": ["crisp", "gray", "rush", "spider", "weave", "chilly", "zip", "agree", "chipmunk", "dig"],
+                "Wk 16": ["autumn", "whisper", "fly", "shake", "spin", "dash", "empty", "jar", "fetch", "lie"]
+            },
+            "CET Vocabulary": {
+                "Wk 1&2": ["cool", "fun", "world", "mall", "picnic", "basket", "office", "shop", "fold", "cross"],
+                "Wk 3": ["come", "piano", "violin", "music", "building", "cover", "glass", "stair", "shell", "sink"],
+                "Wk 4": ["visit", "community", "bookshelf", "library", "real", "front", "garage", "create", "elephant", "climb"],
+                "Wk 5": ["country", "hear", "quiet", "mouse", "letter", "cousin", "pick", "excited", "imagine", "phone"],
+                "Wk 6": ["feet", "scary", "street", "skateboard", "zoom", "shout", "behind", "jump", "garbage", "can"],
+                "Wk 7&8": ["ambulance", "hospital", "city", "busy", "loud", "sick", "tomorrow", "soon", "later"],
+                "Wk 10": ["field", "museum", "dinosaur", "drawing", "model", "fossil", "alive", "trip", "break"],
+                "Wk 11": ["cow", "together", "puzzle", "about", "could", "show", "chicken", "four", "bird"],
+                "Wk 12": ["claw", "catch", "horn", "teeth", "ate", "clue", "flat", "other", "meat", "past"],
+                "Wk 13": ["sky", "cloud", "float", "plane", "over", "dream", "stretch", "pilot", "doctor", "silly"],
+                "Wk 14": ["train", "neighbor", "ask", "tough", "brave", "remind", "talented", "wait", "minute", "job"],
+                "Wk 15&16": ["trick", "fly", "flew", "learn", "start", "famous", "stop"],
+                "Wk 18": ["elf", "shoemaker", "imagination", "leather", "shed", "pair", "shiny", "peek"]
+            }
+        };
+
+        // --- 倉鼠寵物系統資料 ---
+        let petData = {
+            level: 1,
+            exp: 0,
+            seeds: 0, // 瓜子數量 (貨幣)
+            totalWordsCleared: 0
+        };
+
+        const STORAGE_KEY = "daisy_hamster_save";
+
+        function loadPetData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if(saved) {
+                try { petData = JSON.parse(saved); } catch(e) {}
+            }
+            updatePetUI();
+            updateSyncCode();
+        }
+
+        function savePetData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(petData));
+            updateSyncCode();
+        }
+
+        function updatePetUI() {
+            document.getElementById('h-lvl').textContent = petData.level;
+            document.getElementById('h-seeds').textContent = petData.seeds;
+            const feedBtn = document.getElementById('btn-feed');
+            if(petData.seeds <= 0) {
+                feedBtn.classList.add('disabled');
+            } else {
+                feedBtn.classList.remove('disabled');
+            }
+            
+            // 根據等級改變倉鼠大小 (每2級放大一點點)
+            const scale = 1 + (Math.floor(petData.level/2) * 0.1);
+            const cappedScale = Math.min(scale, 1.6); // 最大1.6倍
+            const baseFontSize = petData.level > 10 ? 1.5 : 1; // 高等級特效
+            // 可以根據等級擴展外觀
+        }
+
+        // --- 遊戲邏輯變數 ---
+        let currentLevelQueue = []; // 目前這週的10個單字
+        let currentStage = 0; // 0~9
+        let currentWord = "";
+        let targetLetters = [];
+        let currentIndex = 0; // 單字拼到哪
+        
+        const catS = document.getElementById('cat');
+        const wkS = document.getElementById('week');
+        const msg = document.getElementById('game-message');
+
+        // 音效
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = type;
+                oscillator.frequency.value = freq;
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                oscillator.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function speakWord(w) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(w);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                utterance.pitch = 1.2;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function setupConfig() {
+            catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            setupWeek();
+        }
+        function setupWeek() {
+            wkS.innerHTML = Object.keys(words[catS.value]).map(w => `<option>${w}</option>`).join('');
+            // 不立刻開始，因為可能只是切換選單
+            startLevel();
+        }
+
+        function createKeyboard() {
+            const k = document.getElementById('keyboard');
+            k.innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').map(l => 
+                `<button class="key" id="key-${l}" onclick="handleKey('${l}')">${l}</button>`
+            ).join('');
+        }
+
+        // 開始選定週別的 10 關挑戰
+        function startLevel() {
+            let list = [...words[catS.value][wkS.value]];
+            // 取最多 10 個單字並打亂
+            list.sort(() => Math.random() - 0.5);
+            currentLevelQueue = list.slice(0, 10);
+            currentStage = 0;
+            loadStage();
+        }
+
+        function loadStage() {
+            if(currentStage >= currentLevelQueue.length) {
+                // 通關整週
+                msg.innerHTML = "🎉 <span style='color:green;'>關卡全破！獲得 5 顆瓜子獎勵！</span> 🎉";
+                petData.seeds += 5;
+                savePetData();
+                updatePetUI();
+                confetti({ particleCount: 200, spread: 160 });
+                playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(783.99, 'sine', 0.2), 200);
+                document.getElementById('keyboard').innerHTML = `<button onclick="startLevel()" style="grid-column: 1 / -1; padding: 20px; font-size: 1.5rem; background: var(--primary); color: white; border: none; border-radius: 10px; cursor:pointer;">再玩一次</button>`;
+                return;
+            }
+
+            // 更新 UI
+            document.getElementById('stage-info').textContent = `Stage ${currentStage + 1} / ${currentLevelQueue.length}`;
+            document.getElementById('progress-fill').style.width = `${(currentStage / currentLevelQueue.length) * 100}%`;
+            
+            currentWord = currentLevelQueue[currentStage].toUpperCase();
+            targetLetters = currentWord.split('');
+            currentIndex = 0;
+            msg.textContent = "聽發音並拼出單字吧！";
+            msg.style.color = "var(--primary)";
+
+            // 繪製格子
+            const slotsContainer = document.getElementById('target-slots');
+            slotsContainer.innerHTML = '';
+            targetLetters.forEach((_, i) => {
+                const slot = document.createElement('div');
+                slot.className = 'slot' + (i === 0 ? ' current' : '');
+                slotsContainer.appendChild(slot);
+            });
+
+            createKeyboard();
+            setTimeout(() => speakWord(currentWord), 400);
+        }
+
+        function handleKey(letter) {
+            const expect = targetLetters[currentIndex];
+            if(letter === expect) {
+                // 對了
+                playTone(600, 'sine', 0.1);
+                const slots = document.getElementsByClassName('slot');
+                slots[currentIndex].classList.remove('current');
+                slots[currentIndex].classList.add('filled');
+                slots[currentIndex].textContent = letter;
+                
+                // 鍵盤復原顏色但不 disabled，因為可能有重複字母
+                
+                currentIndex++;
+                if(currentIndex < targetLetters.length) {
+                    slots[currentIndex].classList.add('current');
+                } else {
+                    // 完成單字
+                    wordCleared();
+                }
+            } else {
+                // 錯了，抖動鍵盤按鈕，不扣分
+                playTone(200, 'sawtooth', 0.15);
+                const btn = document.getElementById(`key-${letter}`);
+                if(btn) {
+                    btn.style.backgroundColor = '#ff4757';
+                    btn.style.color = 'white';
+                    btn.style.transform = 'translateY(2px) translateX(-2px)';
+                    setTimeout(() => {
+                        btn.style.backgroundColor = '';
+                        btn.style.color = '';
+                        btn.style.transform = '';
+                    }, 300);
+                }
+            }
+        }
+
+        function wordCleared() {
+            msg.innerHTML = "答對了！<span style='color:#f39c12'>+1 瓜子 🌻</span>";
+            document.getElementById('keyboard').innerHTML = ''; // 清除鍵盤
+            
+            // 給獎勵
+            petData.seeds += 1;
+            petData.totalWordsCleared += 1;
+            
+            // 慶祝特效：讓瓜子從天而降掉進籠子
+            triggerSeedDrop();
+            
+            // 小倉鼠跳躍開心
+            const hamster = document.getElementById('hamster');
+            hamster.classList.remove('happy');
+            void hamster.offsetWidth;
+            hamster.classList.add('happy');
+
+            savePetData();
+            updatePetUI();
+            
+            speakWord(currentWord);
+
+            // 1.5秒後進入下一題
+            setTimeout(() => {
+                currentStage++;
+                loadStage();
+            }, 1800);
+        }
+
+        // --- 倉鼠互動特效 ---
+        function triggerSeedDrop() {
+            const cage = document.getElementById('cage');
+            const seed = document.createElement('div');
+            seed.className = 'falling-seed';
+            seed.textContent = '🌻';
+            seed.style.left = `${40 + Math.random() * 20}%`;
+            cage.appendChild(seed);
+            setTimeout(() => seed.remove(), 1000);
+        }
+
+        function feedHamster() {
+            if(petData.seeds <= 0) return;
+            
+            petData.seeds -= 1;
+            petData.exp += 10;
+            
+            // 升級邏輯 (每 50 exp 升一級)
+            if(petData.exp >= petData.level * 50) {
+                petData.level += 1;
+                petData.exp = 0;
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 , x: 0.75} }); // 在右側放煙火
+                playTone(800, 'sine', 0.3); // Level up sound
+                alert(`太棒了！小倉鼠升級到 Level ${petData.level} 啦！`);
+            }
+            
+            savePetData();
+            updatePetUI();
+            
+            // 動畫與音效
+            playTone(400, 'square', 0.1); setTimeout(()=>playTone(450, 'square', 0.1), 150);
+            
+            const hamster = document.getElementById('hamster');
+            hamster.classList.remove('eat');
+            void hamster.offsetWidth;
+            hamster.classList.add('eat');
+            
+            // 飄出愛心
+            const cage = document.getElementById('cage');
+            const heart = document.createElement('div');
+            heart.textContent = '❤️';
+            heart.style.position = 'absolute';
+            heart.style.left = '50%'; heart.style.bottom = '60px';
+            heart.style.fontSize = '2rem'; heart.style.transition = '1s ease-out';
+            heart.style.opacity = '1';
+            cage.appendChild(heart);
+            
+            setTimeout(() => {
+                heart.style.bottom = '120px';
+                heart.style.opacity = '0';
+            }, 50);
+            setTimeout(() => heart.remove(), 1050);
+        }
+
+        // --- 簡易的跨裝置備份/還原 (LocalStorage) ---
+        function updateSyncCode() {
+            // 將資料轉成 Base64 字串當作代碼
+            const code = btoa(JSON.stringify(petData));
+            document.getElementById('sync-code').value = code;
+        }
+
+        function copyCode() {
+            const copyText = document.getElementById("sync-code");
+            copyText.select();
+            document.execCommand("copy");
+            alert("已複製備份代碼！到另一台設備貼上即可還原。");
+        }
+
+        function importCode() {
+            const input = document.getElementById("import-code").value;
+            if(!input) return;
+            try {
+                const parsed = JSON.parse(atob(input));
+                if(parsed && typeof parsed.level === 'number') {
+                    petData = parsed;
+                    savePetData();
+                    updatePetUI();
+                    alert("成功讀取倉鼠進度！");
+                    document.getElementById("import-code").value = "";
+                } else {
+                    alert("代碼格式不對喔！");
+                }
+            } catch(e) {
+                alert("代碼無效或損壞！");
+            }
+        }
+
+        // 初始化
+        window.onload = () => {
+            loadPetData();
+            setupConfig();
+            
+            // 實體鍵盤支援
+            window.onkeydown = function(e) {
+                // 如果目前不在輸入代碼的框框裡面
+                if(document.activeElement.tagName === 'INPUT') return;
+                
+                const key = e.key.toUpperCase();
+                if(/^[A-Z]$/.test(key) && currentStage < currentLevelQueue.length) {
+                    handleKey(key);
+                }
+            }
+        };
+    </script>
+</body>
+</html>
