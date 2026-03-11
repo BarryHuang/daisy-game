@@ -1,0 +1,21 @@
+{
+  "name": "Daisy's Hamster Adventure",
+  "short_name": "Daisy Hamster",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./daisy_hamster.html",
+  "display": "standalone",
+  "background_color": "#fdfbfb",
+  "theme_color": "#ff85a2",
+  "orientation": "portrait"
+}

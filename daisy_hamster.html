@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daisy's Hamster Adventure 🐹</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff85a2">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <!-- 引入 Canvas Confetti 套件來實現全螢幕灑彩紙效果 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- 引入 Firebase -->
@@ -1014,23 +1018,19 @@
         }
 
         function speakWord(w) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(w);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.85;
-                
-                // 尋找美式高品質發音，如果有的話
-                const voices = window.speechSynthesis.getVoices();
-                let usVoice = voices.find(v => v.name.includes("Google US English")) || 
-                              voices.find(v => v.name === "Samantha" || v.name === "Alex" || v.name === "Victoria") || 
-                              voices.find(v => v.lang === 'en-US' && v.localService);
-                if (usVoice) {
-                    utterance.voice = usVoice;
+            // 使用 Google Translate 的非官方 TTS 語音 API，發音品質比大部份瀏覽器內建的好且穩定
+            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(w)}&tl=en&client=tw-ob`;
+            const audio = new Audio(url);
+            audio.play().catch(e => {
+                // 若被阻擋或出現問題，退回使用瀏覽器內建語音
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(w);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.85;
+                    window.speechSynthesis.speak(utterance);
                 }
-                
-                window.speechSynthesis.speak(utterance);
-            }
+            });
         }
 
         function setupConfig() {
@@ -1446,6 +1446,17 @@
                 }
             }
         };
+
+        // PWA Service Worker 註冊
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, (err) => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
