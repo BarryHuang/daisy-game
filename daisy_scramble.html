@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daisy's Bubble Word Scramble</title>
+    <!-- 引入 Canvas Confetti 套件來實現全螢幕灑彩紙效果 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Comic Sans MS', -apple-system, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; 
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); 
+            margin: 0; padding: 20px; min-height: 100vh;
+        }
+        .box { 
+            background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 20px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; 
+            width: 90%; max-width: 450px; 
+        }
+        select { 
+            padding: 10px; border-radius: 12px; border: 2px solid #8ba4f9; 
+            outline: none; font-size: 1.1rem; margin: 5px; width: 85%; 
+            background: white; color: #444; font-family: inherit;
+        }
+        #target-slots {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            margin: 30px 0; min-height: 60px;
+        }
+        .slot {
+            width: 45px; height: 50px; border-bottom: 4px solid #fff;
+            display: flex; justify-content: center; align-items: flex-end;
+            font-size: 2.2rem; font-weight: bold; color: #ffeb3b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-transform: uppercase; padding-bottom: 5px; transition: 0.3s;
+        }
+        .slot.filled { border-bottom-color: transparent; }
+        
+        #bubbles-container {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+            width: 100%; max-width: 400px; margin-bottom: 30px; min-height: 150px;
+        }
+        .bubble {
+            width: 55px; height: 55px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.8rem; font-weight: bold; color: white;
+            cursor: pointer; text-transform: uppercase;
+            box-shadow: inset -4px -4px 8px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s, opacity 0.3s; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bubble:active { transform: scale(0.9); }
+        .bubble.hidden { opacity: 0; pointer-events: none; transform: scale(0); }
+        
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); background-color: #ff4757 !important; }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+        
+        .pop-anim { animation: pop 0.4s ease-out forwards; }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+        .controls { display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+        .btn { 
+            padding: 12px 24px; border-radius: 30px; border: none; color: white; 
+            font-weight: bold; cursor: pointer; font-size: 1.1rem; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: 0.2s; font-family: inherit;
+        }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .btn-speak { background: #ff9800; }
+        .btn-primary { background: #e83e8c; }
+        
+        #message { font-size: 1.4rem; font-weight: bold; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); height: 35px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2 style="color:white; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); font-size: 2rem; margin-top: 5px;">🎈 字母泡泡龍 🎈</h2>
+    
+    <div class="box">
+        <select id="cat" onchange="setupWeek()"></select><br>
+        <select id="week" onchange="init()"></select>
+    </div>
+
+    <div class="controls" style="margin-bottom: 10px;">
+        <button class="btn btn-speak" onclick="speakWord()">🔊 聽聽看</button>
+    </div>
+
+    <div id="target-slots"></div>
+    <div id="message"></div>
+    <div id="bubbles-container"></div>
+    
+    <div class="controls">
+        <button class="btn btn-primary" onclick="init()">換個單字</button>
+    </div>
+
+    <script>
+        // 共用同一個康橋單字庫
+        const words = {
+            "FET Spelling": {
+                "Wk 2": ["beautiful", "calf", "graze", "forest", "angry", "catch", "sad", "promise", "grassy", "happy"],
+                "Wk 3": ["agree", "quickly", "return", "surprised", "pleased", "truth", "mad", "protect", "always", "promise"],
+                "Wk 4": ["school", "learn", "math", "problem", "important", "think", "art", "because", "creative", "imagination"],
+                "Wk 5": ["amazing", "music", "concentrate", "remember", "teamwork", "reason", "best", "learn"],
+                "Wk 6": ["baseball", "love", "sport", "college", "team", "allowed", "meet", "field", "cheer", "boo"],
+                "Wk 10": ["memory", "discovers", "amaze", "wonder", "tunes", "alone", "struggle", "dream", "achieve", "world"],
+                "Wk 11/12": ["wonder", "whisper", "bones", "delight", "children", "mountain", "artist", "surround", "desert", "season"],
+                "Wk 13": ["autumn", "spring", "summer", "winter", "speckled", "woven", "showers", "sprout", "bloom", "spread"],
+                "Wk 14": ["slither", "barefoot", "flutter", "taste", "scurry", "scatter", "jacket", "secret", "honk", "store"],
+                "Wk 15": ["crisp", "gray", "rush", "spider", "weave", "chilly", "zip", "agree", "chipmunk", "dig"],
+                "Wk 16": ["autumn", "whisper", "fly", "shake", "spin", "dash", "empty", "jar", "fetch", "lie"]
+            },
+            "CET Vocabulary": {
+                "Wk 1&2": ["cool", "fun", "world", "mall", "picnic", "basket", "office", "shop", "fold", "cross"],
+                "Wk 3": ["come", "piano", "violin", "music", "building", "cover", "glass", "stair", "shell", "sink"],
+                "Wk 4": ["visit", "community", "bookshelf", "library", "real", "front", "garage", "create", "elephant", "climb"],
+                "Wk 5": ["country", "hear", "quiet", "mouse", "letter", "cousin", "pick", "excited", "imagine", "phone"],
+                "Wk 6": ["feet", "scary", "street", "skateboard", "zoom", "shout", "behind", "jump", "garbage", "can"],
+                "Wk 7&8": ["ambulance", "hospital", "city", "busy", "loud", "sick", "tomorrow", "soon", "later"],
+                "Wk 10": ["field", "museum", "dinosaur", "drawing", "model", "fossil", "alive", "trip", "break"],
+                "Wk 11": ["cow", "together", "puzzle", "about", "could", "show", "chicken", "four", "bird"],
+                "Wk 12": ["claw", "catch", "horn", "teeth", "ate", "clue", "flat", "other", "meat", "past"],
+                "Wk 13": ["sky", "cloud", "float", "plane", "over", "dream", "stretch", "pilot", "doctor", "silly"],
+                "Wk 14": ["train", "neighbor", "ask", "tough", "brave", "remind", "talented", "wait", "minute", "job"],
+                "Wk 15&16": ["trick", "fly", "flew", "learn", "start", "famous", "stop"],
+                "Wk 18": ["elf", "shoemaker", "imagination", "leather", "shed", "pair", "shiny", "peek"]
+            }
+        };
+
+        const bubbleColors = ['#ff6b81', '#7bed9f', '#70a1ff', '#eccc68', '#a4b0be', '#ff7f50', '#2ed573', '#1e90ff', '#ffa502', '#ff4757'];
+        
+        let currentWord = "";
+        let currentIndex = 0; // 目前要填對第幾個字母
+        let targetLetters = [];
+        
+        const catS = document.getElementById('cat');
+        const wkS = document.getElementById('week');
+
+        // 音效系統
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = type;
+                oscillator.frequency.value = freq;
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                oscillator.stop(audioCtx.currentTime + duration);
+            } catch(e) { console.log(e); }
+        }
+
+        function speakWord() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(currentWord);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                utterance.pitch = 1.2;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function triggerConfetti() {
+            if(typeof confetti !== 'undefined') {
+                confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+            }
+        }
+
+        function setupConfig() {
+            catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            setupWeek();
+        }
+        function setupWeek() {
+            wkS.innerHTML = Object.keys(words[catS.value]).map(w => `<option>${w}</option>`).join('');
+            init();
+        }
+
+        // 隨機產生不相關的干擾字母
+        function getRandomLetter() {
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return letters[Math.floor(Math.random() * letters.length)];
+        }
+
+        function init() {
+            const list = words[catS.value][wkS.value];
+            currentWord = list[Math.floor(Math.random() * list.length)].toUpperCase();
+            targetLetters = currentWord.split('');
+            currentIndex = 0;
+            
+            document.getElementById('message').textContent = "聽發音，把泡泡拼出來！";
+            
+            // 建立目標空格
+            const slotsContainer = document.getElementById('target-slots');
+            slotsContainer.innerHTML = '';
+            targetLetters.forEach(() => {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slotsContainer.appendChild(slot);
+            });
+
+            // 準備泡泡字串 (包含正確字母)
+            let bubbleLetters = [...targetLetters];
+            
+            // 加入干擾字母 (單字越長，干擾可能越多，這裡預設加 2~3 個干擾)
+            let numDistractors = Math.floor(Math.random() * 2) + 2; 
+            for(let i=0; i<numDistractors; i++) {
+                let rLetter = getRandomLetter();
+                // 盡量確保干擾字母不是正確答案本來就有的字母 (雖然重複也沒關係，更有挑戰)
+                bubbleLetters.push(rLetter);
+            }
+
+            // 打亂泡泡陣列 (Fisher-Yates Shuffle)
+            for (let i = bubbleLetters.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [bubbleLetters[i], bubbleLetters[j]] = [bubbleLetters[j], bubbleLetters[i]];
+            }
+
+            // 繪製泡泡
+            const container = document.getElementById('bubbles-container');
+            container.innerHTML = '';
+            bubbleLetters.forEach((letter, i) => {
+                const b = document.createElement('div');
+                b.className = 'bubble pop-anim';
+                b.textContent = letter;
+                // 隨機給泡泡一個繽紛顏色
+                const color = bubbleColors[Math.floor(Math.random() * bubbleColors.length)];
+                b.style.backgroundColor = color;
+                // 稍微延遲動畫出場
+                b.style.animationDelay = `${i * 0.05}s`;
+                
+                b.onclick = () => handleBubbleClick(b, letter, color);
+                container.appendChild(b);
+            });
+            
+            // 自動發音一次
+            setTimeout(speakWord, 500);
+        }
+
+        function handleBubbleClick(bubbleEl, letter, originalColor) {
+            if(bubbleEl.classList.contains('hidden')) return;
+
+            // 檢查是否點擊了「正確順序」的下一個字母
+            if(letter === targetLetters[currentIndex]) {
+                // 答對了！
+                playTone(600, 'sine', 0.1); // Ding
+                bubbleEl.classList.add('hidden'); // 隱藏泡泡
+                
+                // 把字母填入底下的空格
+                const slots = document.getElementsByClassName('slot');
+                slots[currentIndex].textContent = letter;
+                slots[currentIndex].classList.add('filled');
+                slots[currentIndex].classList.add('pop-anim');
+                
+                currentIndex++;
+                
+                // 檢查是否拼完了
+                if(currentIndex === targetLetters.length) {
+                    document.getElementById('message').textContent = "Daisy 太強了！🎉";
+                    playTone(800, 'sine', 0.1); // 高音提示過關
+                    triggerConfetti();
+                    setTimeout(speakWord, 800);
+                    
+                    // 把剩下的干擾泡泡也隱藏起來
+                    document.querySelectorAll('.bubble').forEach(b => b.classList.add('hidden'));
+                }
+            } else {
+                // 答錯了！順序不對或是點到干擾字母
+                playTone(200, 'sawtooth', 0.2); // Buzz
+                bubbleEl.classList.remove('shake');
+                void bubbleEl.offsetWidth; // 觸發重繪 (Reflow) 讓動畫可以重複點擊重播
+                bubbleEl.classList.add('shake');
+                
+                // 讓答錯的泡泡閃一下紅色，0.4秒後變回原來的顏色
+                setTimeout(() => {
+                    bubbleEl.style.backgroundColor = originalColor;
+                }, 400);
+            }
+        }
+
+        setupConfig();
+    </script>
+</body>
+</html>
