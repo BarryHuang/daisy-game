@@ -626,6 +626,7 @@
         let currentWord = "";
         let targetLetters = [];
         let currentIndex = 0; // 單字拼到哪
+        let mistakeCount = 0; // 這一題按錯幾次
         
         const catS = document.getElementById('cat');
         const wkS = document.getElementById('week');
@@ -716,6 +717,7 @@
             currentWord = currentLevelQueue[currentStage].toUpperCase();
             targetLetters = currentWord.split('');
             currentIndex = 0;
+            mistakeCount = 0; // 每題重置錯誤次數
             msg.textContent = "聽發音並拼出單字吧！";
             msg.style.color = "var(--primary)";
 
@@ -753,6 +755,7 @@
                 }
             } else {
                 // 錯了，抖動鍵盤按鈕，不扣分
+                mistakeCount++;
                 playTone(200, 'sawtooth', 0.15);
                 const btn = document.getElementById(`key-${letter}`);
                 if(btn) {
@@ -769,15 +772,20 @@
         }
 
         function wordCleared() {
-            msg.innerHTML = "答對了！<span style='color:#f39c12'>+1 💰 金幣</span>";
+            // 根據錯誤次數計算金幣：0錯=3金, 1錯=2金, 2錯以上=1金
+            const reward = Math.max(1, 3 - mistakeCount);
+            const stars = mistakeCount === 0 ? '⭐⭐⭐' : (mistakeCount === 1 ? '⭐⭐' : '⭐');
+            msg.innerHTML = `答對了！${stars} <span style='color:#f39c12'>+${reward} 💰 金幣</span>`;
             document.getElementById('keyboard').innerHTML = ''; // 清除鍵盤
             
             // 給獎勵
-            petData.coins += 1;
+            petData.coins += reward;
             petData.totalWordsCleared += 1;
             
-            // 慶祝特效：金幣從天而降
-            triggerSeedDrop();
+            // 慶祝特效：金幣從天而降 (根據獎勵數量掉落)
+            for(let i = 0; i < reward; i++) {
+                setTimeout(() => triggerSeedDrop(), i * 200);
+            }
             
             // 小倉鼠跳躍開心
             const hamster = document.getElementById('hamster');
