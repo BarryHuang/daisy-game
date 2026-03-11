@@ -375,14 +375,37 @@
             
             // 監聽 Firebase 資料同步
             const petRef = db.ref('users/' + secretCode + '/petData');
-            petRef.on('value', (snapshot) => {
+            petRef.once('value', (snapshot) => {
                 const data = snapshot.val();
                 if(data) {
                     petData = data;
+                    // 開始持續監聽
+                    petRef.on('value', (snap) => {
+                        if(snap.val()) { petData = snap.val(); updatePetUI(); }
+                    });
                 } else {
-                    // 新玩家，給初始資料
-                    petData = { level: 1, exp: 0, seeds: 0, totalWordsCleared: 0 };
+                    // 新玩家：檢查有沒有舊版的 LocalStorage 端資料可以繼承
+                    const oldSaved = localStorage.getItem("daisy_hamster_save");
+                    if(oldSaved) {
+                        try { 
+                            let parsed = JSON.parse(oldSaved); 
+                            if(parsed && parsed.level) {
+                                petData = parsed;
+                                alert("🐰 發現你以前照顧過小倉鼠！已經幫你把舊進度升級上雲端囉！");
+                            }
+                        } catch(e) {}
+                        // 讀完舊機資料後，可以選擇清除避免重複讀取，但這裡先保留無妨
+                        localStorage.removeItem("daisy_hamster_save");
+                    } else {
+                        // 真的全新的玩家
+                        petData = { level: 1, exp: 0, seeds: 0, totalWordsCleared: 0 };
+                    }
                     petRef.set(petData);
+                    
+                    // 開始持續監聽
+                    petRef.on('value', (snap) => {
+                        if(snap.val()) { petData = snap.val(); updatePetUI(); }
+                    });
                 }
                 updatePetUI();
             });
