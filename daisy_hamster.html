@@ -397,6 +397,13 @@
                 const data = snapshot.val();
                 if(data) {
                     petData = migratePetData(data);
+                    
+                    // 測試帳號 BARRY 預設擁有 999 金幣
+                    if(secretCode === 'BARRY' && petData.coins < 999) {
+                        petData.coins = 999;
+                        petRef.set(petData);
+                    }
+                    
                     // 開始持續監聽
                     petRef.on('value', (snap) => {
                         if(snap.val()) { petData = migratePetData(snap.val()); updatePetUI(); }
@@ -417,6 +424,12 @@
                         // 真的全新的玩家
                         petData = migratePetData(null);
                     }
+                    
+                    // 測試帳號 BARRY 預設擁有 999 金幣
+                    if(secretCode === 'BARRY') {
+                        petData.coins = 999;
+                    }
+                    
                     petRef.set(petData);
                     
                     // 開始持續監聽
