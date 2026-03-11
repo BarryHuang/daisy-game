@@ -524,6 +524,12 @@
         }
 
         function updatePetUI() {
+            // 測試帳號 BARRY 每次更新 UI 時都確保有 999 金幣
+            if(secretCode === 'BARRY' && petData.coins < 999) {
+                petData.coins = 999;
+                savePetData();
+            }
+            
             document.getElementById('h-lvl').textContent = petData.level;
             document.getElementById('h-coins').textContent = petData.coins;
             
