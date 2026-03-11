@@ -113,29 +113,70 @@
         }
         .stat { font-weight: bold; font-size: 1.1rem; color: #d63384; display: flex; align-items: center; gap: 5px; }
         
-        /* 簡單的 CSS 倉鼠動畫 (代表) */
+        /* 升級版倉鼠豪宅與動畫 */
         .hamster-cage {
-            flex: 1; width: 100%; border: 3px dashed #ffc0cb; border-radius: 20px;
+            flex: 1; width: 100%; border: 4px solid #c8a2c8; border-radius: 20px;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            position: relative; overflow: hidden; background: #fff; min-height: 200px;
+            position: relative; overflow: hidden; min-height: 250px;
+            /* 背景：漸層天空與木屑地板 */
+            background: linear-gradient(to bottom, #e0f7fa 0%, #b2ebf2 60%, #d7ccc8 60%, #bcaaa4 100%);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
         }
         
-        .hamster-svg { width: 120px; height: 120px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2;}
+        /* 道具：跑輪 (預設隱藏，解鎖後顯示) */
+        .prop-wheel {
+            position: absolute; left: 10px; bottom: 40px; width: 100px; height: 100px;
+            border: 8px solid #ffcc80; border-radius: 50%; opacity: 0; pointer-events: none;
+            transition: opacity 0.5s; z-index: 1;
+        }
+        .prop-wheel.show { opacity: 0.8; }
+        .prop-wheel.spin { animation: spinWheel 1s linear infinite; opacity: 1; }
+        @keyframes spinWheel { 100% { transform: rotate(360deg); } }
+        
+        /* 道具：水瓶 */
+        .prop-water {
+            position: absolute; right: 20px; bottom: 80px; width: 20px; height: 50px;
+            background: rgba(255,255,255,0.8); border: 2px solid #ccc; border-radius: 10px;
+            opacity: 0; z-index: 1; transition: opacity 0.5s;
+        }
+        .prop-water::after {
+            content: ''; position: absolute; bottom: -10px; left: 6px;
+            width: 4px; height: 15px; background: silver; border-radius: 2px;
+        }
+        .prop-water.show { opacity: 0.9; }
+
+        .hamster-svg { width: 120px; height: 120px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2; position: relative;}
         .hamster-svg.happy { animation: jump 0.5s 2; }
         .hamster-svg.eat { animation: chew 0.3s 3; }
+        .hamster-svg.run { animation: runFast 0.2s infinite alternate; bottom: 50px; left: -30px; }
+        .hamster-svg.sleep { animation: breatheDeep 2s infinite ease-in-out; }
+        .hamster-svg.sleep .eye { display: none; } /* 睡覺閉眼 */
+        .hamster-svg.sleep .eye-closed { display: block !important; }
+
         @keyframes jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         @keyframes chew { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.9) scaleX(1.1); } }
+        @keyframes runFast { 0% { transform: translateY(0) rotate(-5deg); } 100% { transform: translateY(-5px) rotate(5deg); } }
+        @keyframes breatheDeep { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.95) scaleX(1.02); } }
 
-        /* 飼料和動作按鈕 */
-        .pet-actions { display: flex; gap: 15px; margin-top: 15px; }
+        /* 動作按鈕群組化 */
+        .pet-actions { 
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; 
+            margin-top: 15px; width: 100%;
+        }
         .action-btn {
             background: white; border: 2px solid var(--primary); border-radius: 15px;
-            padding: 10px 15px; font-size: 1.2rem; cursor: pointer; display: flex; flex-direction: column;
+            padding: 8px 5px; font-size: 1.1rem; cursor: pointer; display: flex; flex-direction: column;
             align-items: center; font-weight: bold; color: var(--primary); transition: 0.2s;
         }
         .action-btn:hover { background: var(--primary); color: white; }
         .action-btn:active { transform: scale(0.95); }
-        .action-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        .action-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; background: #f0f0f0; border-color: #ccc; color: #888;}
+        
+        .action-btn.free { border-color: #2ed573; color: #2ed573; }
+        .action-btn.free:hover { background: #2ed573; color: white; }
+        
+        .action-btn.locked { background: #eee; border-color: #aaa; color: #888; border-style: dashed;}
+        .action-btn.locked:hover { background: #eee; color: #888; cursor: not-allowed;}
         
         /* 掉落的種子動畫 */
         .falling-seed {
@@ -212,6 +253,10 @@
                 <div class="stat">🌻 瓜子: <span id="h-seeds">0</span></div>
             </div>
             <div class="hamster-cage" id="cage">
+                <!-- 背景玩具：跑輪 -->
+                <div class="prop-wheel" id="prop-wheel"></div>
+                <div class="prop-water" id="prop-water"></div>
+                
                 <!-- SVG Hamster -->
                 <svg class="hamster-svg" id="hamster" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <ellipse cx="50" cy="65" rx="35" ry="30" fill="#f4a460" /> <!-- Body -->
@@ -220,20 +265,40 @@
                     <circle cx="65" cy="25" r="10" fill="#f4a460" /> <!-- Ear R -->
                     <circle cx="35" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear L Inner -->
                     <circle cx="65" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear R Inner -->
-                    <circle cx="40" cy="40" r="3" fill="#000" /> <!-- Eye L -->
-                    <circle cx="60" cy="40" r="3" fill="#000" /> <!-- Eye R -->
+                    
+                    <!-- 眼睛設定：區分張眼與閉眼 -->
+                    <circle class="eye" cx="40" cy="40" r="3" fill="#000" /> <!-- Eye L -->
+                    <circle class="eye" cx="60" cy="40" r="3" fill="#000" /> <!-- Eye R -->
+                    <!-- 閉眼狀態 (預設隱藏) -->
+                    <path class="eye-closed" d="M 35 40 Q 40 43 45 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
+                    <path class="eye-closed" d="M 55 40 Q 60 43 65 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
+                    
                     <ellipse cx="50" cy="50" rx="6" ry="4" fill="#ffc0cb" /> <!-- Nose -->
-                    <path d="M 50 54 Q 45 60 40 55 M 50 54 Q 55 60 60 55" fill="none" stroke="#000" stroke-width="2" /> <!-- Mouth -->
+                    <path class="mouth" d="M 50 54 Q 45 60 40 55 M 50 54 Q 55 60 60 55" fill="none" stroke="#000" stroke-width="2" /> <!-- Mouth -->
                     <ellipse cx="30" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot L -->
                     <ellipse cx="70" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot R -->
-                    <circle cx="20" cy="60" r="5" fill="#f4a460" /> <!-- Arm L -->
-                    <circle cx="80" cy="60" r="5" fill="#f4a460" /> <!-- Arm R -->
+                    <circle class="arm-l" cx="20" cy="60" r="5" fill="#f4a460" /> <!-- Arm L -->
+                    <circle class="arm-r" cx="80" cy="60" r="5" fill="#f4a460" /> <!-- Arm R -->
                 </svg>
             </div>
+            
             <div class="pet-actions">
                 <div class="action-btn" id="btn-feed" onclick="feedHamster()">
                     <span>餵食 🌻</span>
-                    <span style="font-size: 0.8rem; font-weight: normal;">(消耗 1 瓜子)</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;">消耗 1</span>
+                </div>
+                <div class="action-btn free" onclick="petHamster()">
+                    <span>摸摸 🖐️</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;">免費呼嚕</span>
+                </div>
+                <!-- 跑輪按鈕 (等級限制) -->
+                <div class="action-btn locked" id="btn-run" onclick="playWheel()">
+                    <span>跑輪 🎡</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-run">Lvl 3 解鎖</span>
+                </div>
+                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()">
+                    <span>睡覺 💤</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;">休息一下</span>
                 </div>
             </div>
             <div style="margin-top:20px; font-size: 0.9rem; color:#888; font-weight:bold; text-align:center;">
@@ -355,9 +420,25 @@
             
             // 根據等級改變倉鼠大小 (每2級放大一點點)
             const scale = 1 + (Math.floor(petData.level/2) * 0.1);
-            const cappedScale = Math.min(scale, 1.6); // 最大1.6倍
-            const baseFontSize = petData.level > 10 ? 1.5 : 1; // 高等級特效
-            // 可以根據等級擴展外觀
+            // 處理按鈕解鎖狀態
+            const runBtn = document.getElementById('btn-run');
+            const wheel = document.getElementById('prop-wheel');
+            if(petData.level >= 3) {
+                runBtn.classList.remove('locked');
+                runBtn.classList.add('free'); // 跑輪免費
+                runBtn.querySelector('#txt-run').textContent = "消耗 0";
+                wheel.classList.add('show');
+            } else {
+                runBtn.classList.add('locked');
+                runBtn.classList.remove('free');
+                runBtn.querySelector('#txt-run').textContent = "Lvl 3 解鎖";
+                wheel.classList.remove('show');
+            }
+
+            // 處理場景解鎖
+            const water = document.getElementById('prop-water');
+            if(petData.level >= 5) { water.classList.add('show'); } else { water.classList.remove('show'); }
+
         }
 
         // --- 遊戲邏輯變數 ---
@@ -539,8 +620,108 @@
             setTimeout(() => seed.remove(), 1000);
         }
 
+        // --- 新增的互動系統 ---
+        let isSleeping = false;
+        let isRunning = false;
+
+        function wakeUp() {
+            if(!isSleeping) return;
+            isSleeping = false;
+            const hamster = document.getElementById('hamster');
+            hamster.classList.remove('sleep');
+            document.getElementById('btn-sleep').querySelector('span').textContent = "睡覺 💤";
+            playTone(800, 'sine', 0.1);
+        }
+
+        function petHamster() {
+            if(isRunning) return;
+            wakeUp();
+            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.15), 100); // 呼嚕聲模擬
+            const hamster = document.getElementById('hamster');
+            
+            // 讓嘴巴變成O型表示驚喜
+            const mouth = hamster.querySelector('.mouth');
+            const originalMouth = mouth.getAttribute('d');
+            mouth.setAttribute('d', "M 45 57 Q 50 63 55 57 Q 50 52 45 57");
+            
+            hamster.classList.add('happy');
+            createFloatingEmoji('💖', 1500, -30);
+            
+            setTimeout(() => {
+                hamster.classList.remove('happy');
+                mouth.setAttribute('d', originalMouth); // 恢復笑臉
+            }, 1000);
+        }
+
+        function playWheel() {
+            if(petData.level < 3 || isSleeping) return wakeUp(); // 不可玩或叫醒
+            if(isRunning) return; // 已經在跑
+            isRunning = true;
+            
+            const hamster = document.getElementById('hamster');
+            const wheel = document.getElementById('prop-wheel');
+            
+            // 移到跑輪上並開始跑
+            hamster.classList.add('run');
+            wheel.classList.add('spin');
+            playTone(300, 'triangle', 0.1);
+            
+            // 跑 3 秒
+            setTimeout(() => {
+                hamster.classList.remove('run');
+                wheel.classList.remove('spin');
+                isRunning = false;
+                petHamster(); // 跑完摸摸獎勵
+            }, 3000);
+        }
+
+        function sleepHamster() {
+            if(isRunning) return;
+            const hamster = document.getElementById('hamster');
+            const sleepBtnSpan = document.getElementById('btn-sleep').querySelector('span');
+
+            if(isSleeping) {
+                wakeUp();
+            } else {
+                isSleeping = true;
+                hamster.classList.add('sleep');
+                sleepBtnSpan.textContent = "叫醒 ☀️";
+                playTone(200, 'sine', 0.5); // ZZZ 聲音
+                
+                // 定期冒出 Zzz
+                let zzzInterval = setInterval(() => {
+                    if(!isSleeping) return clearInterval(zzzInterval);
+                    createFloatingEmoji('Zzz', 2000, -50);
+                }, 1500);
+            }
+        }
+
+        // 共用的飄浮表情小工具
+        function createFloatingEmoji(emojiText, duration, yOffset) {
+            const cage = document.getElementById('cage');
+            const emoji = document.createElement('div');
+            emoji.textContent = emojiText;
+            emoji.style.position = 'absolute';
+            emoji.style.left = '50%'; emoji.style.bottom = '60px'; // 倉鼠中心點
+            emoji.style.fontSize = '2rem'; emoji.style.fontWeight = 'bold'; emoji.style.color = '#ff6b81';
+            emoji.style.transition = `all ${duration}ms ease-out`;
+            emoji.style.opacity = '1'; emoji.style.transform = 'translate(-50%, 0)';
+            emoji.style.textShadow = "1px 1px 2px white";
+            emoji.style.pointerEvents = "none";
+            emoji.style.zIndex = "10";
+            cage.appendChild(emoji);
+            
+            // 觸發動畫
+            setTimeout(() => {
+                emoji.style.bottom = `calc(60px - ${yOffset}px)`;
+                emoji.style.opacity = '0';
+            }, 50);
+            setTimeout(() => emoji.remove(), duration);
+        }
+
         function feedHamster() {
-            if(petData.seeds <= 0) return;
+            if(petData.seeds <= 0 || isRunning) return;
+            wakeUp();
             
             petData.seeds -= 1;
             petData.exp += 10;
@@ -566,20 +747,7 @@
             hamster.classList.add('eat');
             
             // 飄出愛心
-            const cage = document.getElementById('cage');
-            const heart = document.createElement('div');
-            heart.textContent = '❤️';
-            heart.style.position = 'absolute';
-            heart.style.left = '50%'; heart.style.bottom = '60px';
-            heart.style.fontSize = '2rem'; heart.style.transition = '1s ease-out';
-            heart.style.opacity = '1';
-            cage.appendChild(heart);
-            
-            setTimeout(() => {
-                heart.style.bottom = '120px';
-                heart.style.opacity = '0';
-            }, 50);
-            setTimeout(() => heart.remove(), 1050);
+            createFloatingEmoji('❤️', 1000, -60);
         }
 
         // (舊的備份/還原邏輯已透過 Firebase 取代)
