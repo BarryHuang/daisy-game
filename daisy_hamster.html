@@ -6,6 +6,9 @@
     <title>Daisy's Hamster Adventure 🐹</title>
     <!-- 引入 Canvas Confetti 套件來實現全螢幕灑彩紙效果 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- 引入 Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
     <style>
         :root {
             --primary: #ff85a2;
@@ -146,13 +149,43 @@
 
         #game-message { height: 30px; font-weight: bold; color: var(--primary); font-size: 1.2rem; margin: 10px 0; text-align: center;}
         
-        /* 匯出匯入區 (LocalStorage 備案) */
-        .sync-area { margin-top: 20px; font-size: 0.8rem; color: #888; text-align: center; }
-        .sync-area input { font-size: 0.8rem; padding: 2px; border: 1px solid #ccc; width: 100px; }
-        .sync-area button { font-size: 0.8rem; cursor: pointer; }
+        /* 登入視窗 */
+        #login-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: white; padding: 30px; border-radius: 20px; text-align: center;
+            width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .login-box h3 { color: var(--primary); margin-top: 0; font-size: 1.8rem; }
+        .login-box input {
+            font-size: 1.5rem; padding: 10px; text-align: center; width: 80%;
+            text-transform: uppercase; border: 2px solid var(--primary);
+            border-radius: 10px; margin-bottom: 20px; outline: none;
+            font-family: inherit; font-weight: bold;
+        }
+        .btn-login {
+            background: var(--primary); color: white; border: none; padding: 12px 30px;
+            border-radius: 30px; font-size: 1.2rem; cursor: pointer; font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        .btn-login:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
+    <!-- 登入視窗 -->
+    <div id="login-modal">
+        <div class="login-box">
+            <h3>🌟 歡迎來到倉鼠樂園！</h3>
+            <p style="color: #666; font-weight: bold; margin-bottom: 20px;">請輸入你的「專屬通關密碼」<br><span style="font-size: 0.9rem; font-weight: normal;">同一組密碼可以在不同設備讀取進度</span></p>
+            <input type="text" id="secret-code-input" placeholder="密碼 (例如 DAISY)" autocomplete="off">
+            <br>
+            <button class="btn-login" onclick="login()">開始玩！</button>
+        </div>
+    </div>
+
     <h2>Daisy's Hamster Adventure 🐹</h2>
     
     <div class="app-container">
@@ -203,14 +236,9 @@
                     <span style="font-size: 0.8rem; font-weight: normal;">(消耗 1 瓜子)</span>
                 </div>
             </div>
-            
-            <!-- 手動備份區塊 (供跨裝置使用) -->
-            <div class="sync-area">
-                備份代碼: <input type="text" id="sync-code" readonly onclick="this.select()">
-                <button onclick="copyCode()">複製</button>
-                <br>
-                還原代碼: <input type="text" id="import-code" placeholder="貼上代碼">
-                <button onclick="importCode()">讀取</button>
+            <div style="margin-top:20px; font-size: 0.9rem; color:#888; font-weight:bold; text-align:center;">
+                登入帳號: <span id="current-user" style="color: var(--primary);">---</span>
+                <button onclick="logout()" style="margin-left: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid #ccc; background: white; cursor: pointer;">切換</button>
             </div>
         </div>
     </div>
@@ -247,28 +275,72 @@
             }
         };
 
+        // --- Firebase 初始化 ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaWfJnDdK4R2mv2Ht3dQm2lyHhmpWIjo4",
+            authDomain: "daisygame-30452.firebaseapp.com",
+            databaseURL: "https://daisygame-30452-default-rtdb.firebaseio.com",
+            projectId: "daisygame-30452",
+            storageBucket: "daisygame-30452.firebasestorage.app",
+            messagingSenderId: "548508102123",
+            appId: "1:548508102123:web:40f02b8557ecca99523dae",
+            measurementId: "G-B7N0LC0D6P"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let secretCode = "";
+
         // --- 倉鼠寵物系統資料 ---
         let petData = {
             level: 1,
             exp: 0,
-            seeds: 0, // 瓜子數量 (貨幣)
+            seeds: 0, 
             totalWordsCleared: 0
         };
 
-        const STORAGE_KEY = "daisy_hamster_save";
+        function login() {
+            const input = document.getElementById('secret-code-input').value.trim().toUpperCase();
+            if(!input) { alert("請輸入通關密碼喔！"); return; }
+            
+            secretCode = input;
+            localStorage.setItem("daisy_hamster_user", secretCode);
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('current-user').textContent = secretCode;
+            
+            // 監聽 Firebase 資料同步
+            const petRef = db.ref('users/' + secretCode + '/petData');
+            petRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    petData = data;
+                } else {
+                    // 新玩家，給初始資料
+                    petData = { level: 1, exp: 0, seeds: 0, totalWordsCleared: 0 };
+                    petRef.set(petData);
+                }
+                updatePetUI();
+            });
+            
+            // 如果還沒開始遊戲 (第一次登入)，初始化遊戲關卡
+            if (currentLevelQueue.length === 0) {
+                setupConfig();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("daisy_hamster_user");
+            window.location.reload();
+        }
 
         function loadPetData() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if(saved) {
-                try { petData = JSON.parse(saved); } catch(e) {}
-            }
-            updatePetUI();
-            updateSyncCode();
+            // 這個函數改成由 Firebase 的 on('value') 負責，不再使用
         }
 
         function savePetData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(petData));
-            updateSyncCode();
+            if(secretCode) {
+                db.ref('users/' + secretCode + '/petData').set(petData);
+            }
         }
 
         function updatePetUI() {
@@ -510,48 +582,26 @@
             setTimeout(() => heart.remove(), 1050);
         }
 
-        // --- 簡易的跨裝置備份/還原 (LocalStorage) ---
-        function updateSyncCode() {
-            // 將資料轉成 Base64 字串當作代碼
-            const code = btoa(JSON.stringify(petData));
-            document.getElementById('sync-code').value = code;
-        }
-
-        function copyCode() {
-            const copyText = document.getElementById("sync-code");
-            copyText.select();
-            document.execCommand("copy");
-            alert("已複製備份代碼！到另一台設備貼上即可還原。");
-        }
-
-        function importCode() {
-            const input = document.getElementById("import-code").value;
-            if(!input) return;
-            try {
-                const parsed = JSON.parse(atob(input));
-                if(parsed && typeof parsed.level === 'number') {
-                    petData = parsed;
-                    savePetData();
-                    updatePetUI();
-                    alert("成功讀取倉鼠進度！");
-                    document.getElementById("import-code").value = "";
-                } else {
-                    alert("代碼格式不對喔！");
-                }
-            } catch(e) {
-                alert("代碼無效或損壞！");
-            }
-        }
+        // (舊的備份/還原邏輯已透過 Firebase 取代)
 
         // 初始化
         window.onload = () => {
-            loadPetData();
-            setupConfig();
+            // 檢查有沒有存過密碼
+            const savedUser = localStorage.getItem("daisy_hamster_user");
+            if(savedUser) {
+                document.getElementById('secret-code-input').value = savedUser;
+                login(); // 自動登入
+            }
+            
+            // 如果沒登入，先不要初始化遊戲選單 (等到點擊登入再觸發)
             
             // 實體鍵盤支援
             window.onkeydown = function(e) {
-                // 如果目前不在輸入代碼的框框裡面
-                if(document.activeElement.tagName === 'INPUT') return;
+                if(document.activeElement.tagName === 'INPUT') {
+                    if(e.key === 'Enter') login();
+                    return;
+                }
+                if(document.getElementById('login-modal').style.display !== 'none') return; // 在登入畫面時禁用遊戲鍵盤
                 
                 const key = e.key.toUpperCase();
                 if(/^[A-Z]$/.test(key) && currentStage < currentLevelQueue.length) {
