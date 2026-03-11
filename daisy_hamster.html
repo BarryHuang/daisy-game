@@ -107,21 +107,54 @@
         .hamster-section { border: 4px solid var(--primary); background: var(--hamster-bg); position: relative; }
         
         .hamster-stats { 
-            width: 100%; display: flex; justify-content: space-between; 
+            width: 100%; display: flex; flex-wrap: wrap; gap: 8px;
             background: white; padding: 10px; border-radius: 15px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; box-sizing: border-box;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px; box-sizing: border-box;
         }
-        .stat { font-weight: bold; font-size: 1.1rem; color: #d63384; display: flex; align-items: center; gap: 5px; }
+        .stat { font-weight: bold; font-size: 1rem; color: #d63384; display: flex; align-items: center; gap: 4px; }
+        .stat-row { width: 100%; display: flex; justify-content: space-between; }
+        
+        /* EXP 進度條 */
+        .exp-bar-container { width: 100%; margin-top: 4px; }
+        .exp-bar-label { font-size: 0.75rem; color: #888; font-weight: bold; display: flex; justify-content: space-between; }
+        .exp-bar { width: 100%; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
+        .exp-bar-fill { height: 100%; background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%); transition: width 0.5s ease; border-radius: 5px; }
+        
+        /* 快樂度 */
+        .happiness-bar { width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin-top: 2px; }
+        .happiness-fill { height: 100%; background: linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%); transition: width 0.5s ease; border-radius: 4px; }
+        .happiness-label { font-size: 0.75rem; color: #888; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .mood-emoji { font-size: 1.2rem; }
         
         /* 升級版倉鼠豪宅與動畫 */
         .hamster-cage {
             flex: 1; width: 100%; border: 4px solid #c8a2c8; border-radius: 20px;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             position: relative; overflow: hidden; min-height: 250px;
-            /* 背景：漸層天空與木屑地板 */
-            background: linear-gradient(to bottom, #e0f7fa 0%, #b2ebf2 60%, #d7ccc8 60%, #bcaaa4 100%);
+            background: linear-gradient(to bottom, #87CEEB 0%, #b2ebf2 50%, #8BC34A 50%, #689F38 52%, #d7ccc8 52%, #bcaaa4 100%);
             box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
         }
+        /* 動畫雲朵和太陽 */
+        .cloud {
+            position: absolute; background: rgba(255,255,255,0.8); border-radius: 30px;
+            z-index: 0; pointer-events: none;
+        }
+        .cloud1 { width: 80px; height: 25px; top: 15px; animation: drift 12s linear infinite; }
+        .cloud2 { width: 50px; height: 18px; top: 35px; animation: drift 18s linear infinite; animation-delay: -5s; }
+        .cloud3 { width: 60px; height: 20px; top: 8px; animation: drift 15s linear infinite; animation-delay: -8s; }
+        @keyframes drift { 0% { left: -100px; } 100% { left: calc(100% + 100px); } }
+        .habitat-sun {
+            position: absolute; top: 8px; right: 12px; width: 35px; height: 35px;
+            background: radial-gradient(circle, #ffeb3b 40%, #ff980080 70%, transparent 71%);
+            border-radius: 50%; z-index: 0; animation: sunPulse 3s ease-in-out infinite;
+        }
+        @keyframes sunPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        /* 小花/小草裝飾 */
+        .ground-flower {
+            position: absolute; bottom: 38%; font-size: 0.8rem; z-index: 0; pointer-events: none;
+            animation: sway 2s ease-in-out infinite;
+        }
+        @keyframes sway { 0%,100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
         
         /* 道具：跑輪 (預設隱藏，解鎖後顯示) */
         .prop-wheel {
@@ -183,18 +216,37 @@
         }
         .prop-slide.show { opacity: 0.9; }
 
+        /* 倉鼠根據等級變大 */
         .hamster-svg { width: 120px; height: 120px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2; position: relative;}
+        .hamster-svg.lvl-3 { width: 130px; height: 130px; }
+        .hamster-svg.lvl-5 { width: 140px; height: 140px; }
+        .hamster-svg.lvl-8 { width: 150px; height: 150px; }
         .hamster-svg.happy { animation: jump 0.5s 2; }
         .hamster-svg.eat { animation: chew 0.3s 3; }
         .hamster-svg.run { animation: runFast 0.2s infinite alternate; bottom: 50px; left: -30px; }
         .hamster-svg.sleep { animation: breatheDeep 2s infinite ease-in-out; }
-        .hamster-svg.sleep .eye { display: none; } /* 睡覺閉眼 */
+        .hamster-svg.sleep .eye { display: none; }
         .hamster-svg.sleep .eye-closed { display: block !important; }
+        .hamster-svg.hide-in-house { animation: hideHamster 1s forwards; }
+        .hamster-svg.slide-down { animation: slideDown 1.5s ease-in-out; }
 
         @keyframes jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         @keyframes chew { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.9) scaleX(1.1); } }
         @keyframes runFast { 0% { transform: translateY(0) rotate(-5deg); } 100% { transform: translateY(-5px) rotate(5deg); } }
         @keyframes breatheDeep { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.95) scaleX(1.02); } }
+        @keyframes hideHamster { 0% { opacity:1; transform: translateX(0); } 50% { opacity:0.3; transform: translateX(-60px) scale(0.5); } 100% { opacity:0; transform: translateX(-60px) scale(0.3); } }
+        @keyframes slideDown { 0% { transform: translateX(-40px) translateY(-80px) rotate(-10deg); } 40% { transform: translateX(0) translateY(-40px) rotate(5deg); } 70% { transform: translateY(10px) rotate(-3deg); } 100% { transform: translateY(0) rotate(0); } }
+        
+        /* Combo 特效 */
+        .combo-display {
+            position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;
+            padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
+            z-index: 10; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+            box-shadow: 0 2px 8px rgba(240,60,100,0.4);
+        }
+        .combo-display.show { opacity: 1; animation: comboPulse 0.5s ease; }
+        @keyframes comboPulse { 0% { transform: translateX(-50%) scale(0.5); } 50% { transform: translateX(-50%) scale(1.2); } 100% { transform: translateX(-50%) scale(1); } }
 
         /* 動作按鈕群組化 */
         .pet-actions { 
@@ -287,10 +339,32 @@
         <!-- 右側：倉鼠養成 -->
         <div class="card hamster-section">
             <div class="hamster-stats">
-                <div class="stat">⭐ Lvl: <span id="h-lvl">1</span></div>
-                <div class="stat">💰 金幣: <span id="h-coins">0</span></div>
+                <div class="stat-row">
+                    <div class="stat">⭐ Lvl: <span id="h-lvl">1</span></div>
+                    <div class="stat">💰 金幣: <span id="h-coins">0</span></div>
+                </div>
+                <div class="exp-bar-container">
+                    <div class="exp-bar-label"><span>EXP</span><span id="exp-text">0 / 100</span></div>
+                    <div class="exp-bar"><div class="exp-bar-fill" id="exp-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="exp-bar-container">
+                    <div class="happiness-label"><span>快樂度</span><span class="mood-emoji" id="mood-emoji">😊</span></div>
+                    <div class="happiness-bar"><div class="happiness-fill" id="happiness-fill" style="width: 50%"></div></div>
+                </div>
             </div>
             <div class="hamster-cage" id="cage">
+                <!-- 天空裝飾 -->
+                <div class="habitat-sun"></div>
+                <div class="cloud cloud1"></div>
+                <div class="cloud cloud2"></div>
+                <div class="cloud cloud3"></div>
+                <!-- 小花裝飾 -->
+                <span class="ground-flower" style="left:5%">🌼</span>
+                <span class="ground-flower" style="left:25%; animation-delay:-0.5s">🌻</span>
+                <span class="ground-flower" style="left:55%; animation-delay:-1s">🌸</span>
+                <span class="ground-flower" style="left:80%; animation-delay:-1.5s">🌺</span>
+                <!-- Combo 顯示 -->
+                <div class="combo-display" id="combo-display"></div>
                 <!-- 背景玩具：解鎖道具區 -->
                 <div class="prop-house" id="prop-house"></div>
                 <div class="prop-slide" id="prop-slide"></div>
@@ -427,17 +501,20 @@
             exp: 0,
             coins: 0, 
             totalWordsCleared: 0,
+            happiness: 50,
             items: { wheel: false, water: false, house: false, slide: false }
         };
 
+        let comboCount = 0; // 連續全對次數
+
         function migratePetData(data) {
-            if(!data) return { level: 1, exp: 0, coins: 0, totalWordsCleared: 0, items: { wheel: false, water: false, house: false, slide: false } };
-            // 向下相容，把 seeds 轉成 coins 金幣
+            if(!data) return { level: 1, exp: 0, coins: 0, totalWordsCleared: 0, happiness: 50, items: { wheel: false, water: false, house: false, slide: false } };
             if(data.seeds !== undefined) {
                 data.coins = data.seeds;
                 delete data.seeds;
             }
             if(data.coins === undefined) data.coins = 0;
+            if(data.happiness === undefined) data.happiness = 50;
             if(!data.items) data.items = { wheel: false, water: false, house: false, slide: false };
             if(data.items.house === undefined) data.items.house = false;
             if(data.items.slide === undefined) data.items.slide = false;
@@ -536,6 +613,38 @@
             document.getElementById('h-lvl').textContent = petData.level;
             document.getElementById('h-coins').textContent = petData.coins;
             
+            // EXP 進度條
+            const expNeeded = petData.level * 100;
+            const expPercent = Math.min(100, (petData.exp / expNeeded) * 100);
+            document.getElementById('exp-fill').style.width = expPercent + '%';
+            document.getElementById('exp-text').textContent = `${petData.exp} / ${expNeeded}`;
+            
+            // 快樂度
+            const hap = Math.max(0, Math.min(100, petData.happiness || 50));
+            document.getElementById('happiness-fill').style.width = hap + '%';
+            const moodEmoji = hap >= 80 ? '😄' : (hap >= 50 ? '😊' : (hap >= 20 ? '😕' : '😢'));
+            document.getElementById('mood-emoji').textContent = moodEmoji;
+            
+            // 倉鼠等級外觀變化
+            const hamster = document.getElementById('hamster');
+            hamster.classList.remove('lvl-3', 'lvl-5', 'lvl-8');
+            if(petData.level >= 8) hamster.classList.add('lvl-8');
+            else if(petData.level >= 5) hamster.classList.add('lvl-5');
+            else if(petData.level >= 3) hamster.classList.add('lvl-3');
+            
+            // 等級外觀：高等級戴皇冠
+            let crown = document.getElementById('hamster-crown');
+            if(petData.level >= 10) {
+                if(!crown) {
+                    crown = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    crown.setAttribute('id', 'hamster-crown');
+                    crown.setAttribute('x', '50'); crown.setAttribute('y', '18');
+                    crown.setAttribute('text-anchor', 'middle'); crown.setAttribute('font-size', '20');
+                    crown.textContent = '👑';
+                    hamster.appendChild(crown);
+                }
+            } else if(crown) { crown.remove(); }
+            
             // 處理食物按鈕狀態
             ['seed', 'carrot', 'apple'].forEach(food => {
                 const btn = document.getElementById(`btn-feed-${food}`);
@@ -564,8 +673,8 @@
 
             // 處理場景解鎖 - 統一刷新 UI
             refreshShopItem('water', 30, '水瓶💧', '喝水 💧');
-            refreshShopItem('house', 100, '小木屋🏡', '有屋子了');
-            refreshShopItem('slide', 150, '溜滑梯🎢', '有滑梯了');
+            refreshShopItem('house', 100, '小木屋🏡', '進屋子 🏡');
+            refreshShopItem('slide', 150, '溜滑梯🎢', '玩滑梯 🎢');
         }
 
         function refreshShopItem(itemId, cost, buyLabel, ownedLabel) {
@@ -576,15 +685,8 @@
                 btn.classList.remove('locked');
                 btn.classList.add('free');
                 document.getElementById(`label-${itemId}`).textContent = ownedLabel;
-                btn.querySelector(`#txt-${itemId}`).textContent = "已擁有";
+                btn.querySelector(`#txt-${itemId}`).textContent = "可互動";
                 prop.classList.add('show');
-                
-                // 木屋和滑梯只做展示，不再點擊互動，可以把點擊關閉
-                if(itemId === 'house' || itemId === 'slide') {
-                    btn.classList.add('disabled');
-                    btn.classList.remove('free');
-                    btn.querySelector(`#txt-${itemId}`).textContent = "豪華設備";
-                }
             } else {
                 btn.classList.remove('free');
                 document.getElementById(`label-${itemId}`).textContent = `買${buyLabel}`;
@@ -601,14 +703,43 @@
             if (isRunning) return;
             
             if(petData.items[itemId]) {
-                // 已購買，如果有專屬互動在這裡呼叫
+                // 已購買，觸發專屬互動
                 if(itemId === 'water') {
-                    // 喝水動畫
                     const hamster = document.getElementById('hamster');
                     hamster.classList.add('happy');
                     playTone(800, 'sine', 0.1); setTimeout(()=>playTone(900, 'sine', 0.1), 150);
                     createFloatingEmoji('💧', 1200, -30);
+                    addHappiness(5);
                     setTimeout(() => hamster.classList.remove('happy'), 1000);
+                } else if(itemId === 'house') {
+                    // 倉鼠跑進屋子裡
+                    const hamster = document.getElementById('hamster');
+                    if(hamster.classList.contains('hide-in-house')) return;
+                    hamster.classList.add('hide-in-house');
+                    playTone(400, 'sine', 0.2);
+                    createFloatingEmoji('🏡', 1500, -40);
+                    addHappiness(10);
+                    setTimeout(() => {
+                        hamster.classList.remove('hide-in-house');
+                        hamster.classList.add('happy');
+                        createFloatingEmoji('❤️', 1200, -30);
+                        setTimeout(() => hamster.classList.remove('happy'), 800);
+                    }, 2000);
+                } else if(itemId === 'slide') {
+                    // 倉鼠溜滑梯
+                    const hamster = document.getElementById('hamster');
+                    if(hamster.classList.contains('slide-down')) return;
+                    hamster.classList.add('slide-down');
+                    playTone(600, 'triangle', 0.1);
+                    setTimeout(() => playTone(500, 'triangle', 0.1), 200);
+                    setTimeout(() => playTone(400, 'triangle', 0.1), 400);
+                    createFloatingEmoji('😆', 1500, -40);
+                    addHappiness(15);
+                    setTimeout(() => {
+                        hamster.classList.remove('slide-down');
+                        hamster.classList.add('happy');
+                        setTimeout(() => hamster.classList.remove('happy'), 600);
+                    }, 1500);
                 }
                 return;
             }
@@ -781,20 +912,48 @@
         }
 
         function wordCleared() {
-            // 根據錯誤次數計算金幣：0錯=3金, 1錯=2金, 2錯以上=1金
             const reward = Math.max(1, 3 - mistakeCount);
             const stars = mistakeCount === 0 ? '⭐⭐⭐' : (mistakeCount === 1 ? '⭐⭐' : '⭐');
-            msg.innerHTML = `答對了！${stars} <span style='color:#f39c12'>+${reward} 💰 金幣</span>`;
-            document.getElementById('keyboard').innerHTML = ''; // 清除鍵盤
             
-            // 給獎勵
-            petData.coins += reward;
+            // Combo 系統
+            if(mistakeCount === 0) {
+                comboCount++;
+            } else {
+                comboCount = 0;
+            }
+            
+            let bonusCoins = 0;
+            let comboText = '';
+            if(comboCount >= 3) {
+                bonusCoins = 5;
+                comboText = `🔥 ${comboCount} COMBO! +${bonusCoins} Bonus!`;
+            }
+            
+            const totalReward = reward + bonusCoins;
+            let displayText = `答對了！${stars} <span style='color:#f39c12'>+${reward} 💰</span>`;
+            if(bonusCoins > 0) displayText += ` <span style='color:#e74c3c; font-size:0.9rem'>+${bonusCoins} Combo!</span>`;
+            msg.innerHTML = displayText;
+            
+            // 顯示 Combo
+            if(comboText) {
+                const comboEl = document.getElementById('combo-display');
+                comboEl.textContent = comboText;
+                comboEl.classList.add('show');
+                setTimeout(() => comboEl.classList.remove('show'), 2000);
+            }
+            
+            document.getElementById('keyboard').innerHTML = '';
+            
+            petData.coins += totalReward;
             petData.totalWordsCleared += 1;
             
-            // 慶祝特效：金幣從天而降 (根據獎勵數量掉落)
-            for(let i = 0; i < reward; i++) {
+            // 慶祝特效
+            for(let i = 0; i < Math.min(totalReward, 5); i++) {
                 setTimeout(() => triggerSeedDrop(), i * 200);
             }
+            
+            // 快樂度提升
+            addHappiness(mistakeCount === 0 ? 8 : 3);
             
             // 小倉鼠跳躍開心
             const hamster = document.getElementById('hamster');
@@ -841,22 +1000,38 @@
         function petHamster() {
             if(isRunning) return;
             wakeUp();
-            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.15), 100); // 呼嚕聲模擬
+            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.15), 100);
             const hamster = document.getElementById('hamster');
             
-            // 讓嘴巴變成O型表示驚喜
             const mouth = hamster.querySelector('.mouth');
             const originalMouth = mouth.getAttribute('d');
             mouth.setAttribute('d', "M 45 57 Q 50 63 55 57 Q 50 52 45 57");
             
             hamster.classList.add('happy');
             createFloatingEmoji('💖', 1500, -30);
+            addHappiness(5);
             
             setTimeout(() => {
                 hamster.classList.remove('happy');
-                mouth.setAttribute('d', originalMouth); // 恢復笑臉
+                mouth.setAttribute('d', originalMouth);
             }, 1000);
         }
+
+        // 快樂度系統
+        function addHappiness(amount) {
+            petData.happiness = Math.min(100, (petData.happiness || 50) + amount);
+            savePetData();
+            updatePetUI();
+        }
+
+        // 快樂度隨時間緩慢下降
+        setInterval(() => {
+            if(petData.happiness > 0 && secretCode) {
+                petData.happiness = Math.max(0, petData.happiness - 1);
+                savePetData();
+                updatePetUI();
+            }
+        }, 60000); // 每分鐘減 1
 
         function playWheel() {
             if (isSleeping) return wakeUp(); // 先叫醒
@@ -881,16 +1056,16 @@
             const hamster = document.getElementById('hamster');
             const wheel = document.getElementById('prop-wheel');
             
-            // 開始跑
             hamster.classList.add('run');
             wheel.classList.add('spin');
             playTone(300, 'triangle', 0.1);
+            addHappiness(10);
             
             setTimeout(() => {
                 hamster.classList.remove('run');
                 wheel.classList.remove('spin');
                 isRunning = false;
-                petHamster(); // 跑完摸摸獎勵
+                petHamster();
             }, 3000);
         }
 
@@ -952,6 +1127,7 @@
             
             // 顯示食物掉落
             triggerSeedDrop(emoji);
+            addHappiness(exp >= 80 ? 15 : (exp >= 40 ? 10 : 5));
             
             // 升級邏輯 (這裡簡化，每 100 exp 升一級)
             if(petData.exp >= petData.level * 100) {
