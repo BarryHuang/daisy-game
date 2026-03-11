@@ -68,6 +68,16 @@
                     <div class="happiness-label"><span>快樂度</span><span class="mood-emoji" id="mood-emoji">😊</span></div>
                     <div class="happiness-bar"><div class="happiness-fill" id="happiness-fill" style="width: 50%"></div></div>
                 </div>
+                <!-- 飽食度 -->
+                <div class="exp-bar-container" style="width: 48%;">
+                    <div class="happiness-label"><span>飽食度 🍎</span></div>
+                    <div class="happiness-bar"><div class="happiness-fill" id="hunger-fill" style="background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); width: 100%"></div></div>
+                </div>
+                <!-- 清潔度 -->
+                <div class="exp-bar-container" style="width: 48%;">
+                    <div class="happiness-label"><span>清潔度 🛁</span></div>
+                    <div class="happiness-bar"><div class="happiness-fill" id="clean-fill" style="background: linear-gradient(90deg, #89f7fe 0%, #66a6ff 100%); width: 100%"></div></div>
+                </div>
             </div>
             <div class="hamster-cage" id="cage">
                 <!-- 天空裝飾 -->
@@ -108,8 +118,15 @@
                     <path class="mouth" d="M 50 54 Q 45 60 40 55 M 50 54 Q 55 60 60 55" fill="none" stroke="#000" stroke-width="2" /> <!-- Mouth -->
                     <ellipse cx="30" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot L -->
                     <ellipse cx="70" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot R -->
+                    
+                    <!-- 配件群組 -->
+                    <g id="hamster-bow"></g>
+                    
                     <circle class="arm-l" cx="20" cy="60" r="5" fill="#f4a460" /> <!-- Arm L -->
                     <circle class="arm-r" cx="80" cy="60" r="5" fill="#f4a460" /> <!-- Arm R -->
+                    
+                    <!-- 帽子群組 -->
+                    <g id="hamster-hat"></g>
                 </svg>
             </div>
             
@@ -132,10 +149,23 @@
                     <span>摸摸 🖐️</span>
                     <span style="font-size: 0.75rem; font-weight: normal;">免費呼嚕</span>
                 </div>
-                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 4;">
+                <!-- 洗澡海綿 (商店/消耗品) -->
+                <div class="action-btn" id="btn-bath" onclick="bathHamster()">
+                    <span>洗澡 🧽</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">5 💰/+潔淨</span>
+                </div>
+                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 3;">
                     <span>睡覺 💤 (讓倉鼠好好休息)</span>
                 </div>
-                <!-- 商店專區 -->
+                <div class="action-btn" id="btn-shop" onclick="openShop()" style="grid-column: span 2; border-color: #f1c40f; color: #f39c12;">
+                    <span>購物中心 🛍️</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">佈景與帽子</span>
+                </div>
+                <div class="action-btn" id="btn-trophy" onclick="openTrophies()" style="grid-column: span 2; border-color: #9b59b6; color: #8e44ad;">
+                    <span>榮譽獎盃 🏆</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">成就一覽</span>
+                </div>
+                <!-- 商店專區 (舊版用品) -->
                 <!-- 水瓶按鈕 (商店) -->
                 <div class="action-btn locked" id="btn-water" onclick="buyItem('water', 30, '水瓶💧')">
                     <span id="label-water">買水瓶 💧</span>
@@ -190,22 +220,32 @@
             coins: 0, 
             totalWordsCleared: 0,
             happiness: 50,
-            items: { wheel: false, water: false, house: false, slide: false }
+            hunger: 100,
+            cleanliness: 100,
+            items: { wheel: false, water: false, house: false, slide: false },
+            equipped: { scene: 'default', hat: 'none', bow: 'none' },
+            unlocks: { scenes: ['default'], hats: ['none'], bows: ['none'] },
+            stats: { maxCombo: 0 },
+            achievements: { combo30: false, richer: false, level10: false }
         };
 
         let comboCount = 0; // 連續全對次數
 
         function migratePetData(data) {
-            if(!data) return { level: 1, exp: 0, coins: 0, totalWordsCleared: 0, happiness: 50, items: { wheel: false, water: false, house: false, slide: false } };
-            if(data.seeds !== undefined) {
-                data.coins = data.seeds;
-                delete data.seeds;
-            }
+            if(!data) return JSON.parse(JSON.stringify(petData)); // 回傳預設乾淨結構
+            
+            if(data.seeds !== undefined) { data.coins = data.seeds; delete data.seeds; }
             if(data.coins === undefined) data.coins = 0;
             if(data.happiness === undefined) data.happiness = 50;
+            
+            if(data.hunger === undefined) data.hunger = 100;
+            if(data.cleanliness === undefined) data.cleanliness = 100;
+            
             if(!data.items) data.items = { wheel: false, water: false, house: false, slide: false };
-            if(data.items.house === undefined) data.items.house = false;
-            if(data.items.slide === undefined) data.items.slide = false;
+            if(!data.equipped) data.equipped = { scene: 'default', hat: 'none', bow: 'none' };
+            if(!data.unlocks) data.unlocks = { scenes: ['default'], hats: ['none'], bows: ['none'] };
+            if(!data.stats) data.stats = { maxCombo: 0 };
+            if(!data.achievements) data.achievements = { combo30: false, richer: false, level10: false };
             return data;
         }
 
@@ -307,39 +347,77 @@
             document.getElementById('exp-fill').style.width = expPercent + '%';
             document.getElementById('exp-text').textContent = `${petData.exp} / ${expNeeded}`;
             
-            // 快樂度
+            // 快樂度、飽食度、清潔度 Progress Bar 更新
             const hap = Math.max(0, Math.min(100, petData.happiness || 50));
             document.getElementById('happiness-fill').style.width = hap + '%';
             const moodEmoji = hap >= 80 ? '😄' : (hap >= 50 ? '😊' : (hap >= 20 ? '😕' : '😢'));
             document.getElementById('mood-emoji').textContent = moodEmoji;
             
-            // 倉鼠等級外觀變化
-            const hamster = document.getElementById('hamster');
-            hamster.classList.remove('lvl-3', 'lvl-5', 'lvl-8');
-            if(petData.level >= 8) hamster.classList.add('lvl-8');
-            else if(petData.level >= 5) hamster.classList.add('lvl-5');
-            else if(petData.level >= 3) hamster.classList.add('lvl-3');
+            const hun = Math.max(0, Math.min(100, petData.hunger || 100));
+            document.getElementById('hunger-fill').style.width = hun + '%';
             
-            // 等級外觀：高等級戴皇冠
+            const cln = Math.max(0, Math.min(100, petData.cleanliness || 100));
+            document.getElementById('clean-fill').style.width = cln + '%';
+            
+            // 倉鼠外觀變髒
+            const hamsterSvg = document.getElementById('hamster');
+            if(cln < 30) {
+                hamsterSvg.classList.add('dirty');
+            } else {
+                hamsterSvg.classList.remove('dirty');
+            }
+            
+            // 倉鼠等級外觀變化
+            hamsterSvg.classList.remove('lvl-3', 'lvl-5', 'lvl-8');
+            if(petData.level >= 8) hamsterSvg.classList.add('lvl-8');
+            else if(petData.level >= 5) hamsterSvg.classList.add('lvl-5');
+            else if(petData.level >= 3) hamsterSvg.classList.add('lvl-3');
+            
+            // 裝備配件 (帽子、蝴蝶結)
+            const hatGroup = document.getElementById('hamster-hat');
+            if(hatGroup) {
+                if(petData.equipped.hat === 'tophat') hatGroup.innerHTML = '<rect x="35" y="10" width="30" height="20" fill="#333" rx="2"/><rect x="30" y="30" width="40" height="5" fill="#111" rx="2"/>';
+                else if(petData.equipped.hat === 'party') hatGroup.innerHTML = '<polygon points="50,5 35,30 65,30" fill="#ff4757"/><circle cx="50" cy="5" r="5" fill="#fbc531"/>';
+                else hatGroup.innerHTML = '';
+            }
+            
+            const bowGroup = document.getElementById('hamster-bow');
+            if(bowGroup) {
+                if(petData.equipped.bow === 'red') bowGroup.innerHTML = '<polygon points="50,70 35,60 35,80" fill="#ff4757"/><polygon points="50,70 65,60 65,80" fill="#ff4757"/><circle cx="50" cy="70" r="4" fill="#ff6b81"/>';
+                else if(petData.equipped.bow === 'blue') bowGroup.innerHTML = '<polygon points="50,70 35,60 35,80" fill="#3498db"/><polygon points="50,70 65,60 65,80" fill="#3498db"/><circle cx="50" cy="70" r="4" fill="#2980b9"/>';
+                else bowGroup.innerHTML = '';
+            }
+            
+            // 場景替換
+            const cage = document.getElementById('cage');
+            cage.className = 'hamster-cage'; // Reset
+            if(petData.equipped.scene === 'beach') cage.classList.add('bg-beach');
+            else if(petData.equipped.scene === 'space') cage.classList.add('bg-space');
+            
+            // 等級外觀：高等級戴皇冠 (覆蓋其他帽子)
             let crown = document.getElementById('hamster-crown');
             if(petData.level >= 10) {
+                if(hatGroup) hatGroup.innerHTML = ''; // 移除一般帽子
                 if(!crown) {
                     crown = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     crown.setAttribute('id', 'hamster-crown');
                     crown.setAttribute('x', '50'); crown.setAttribute('y', '18');
                     crown.setAttribute('text-anchor', 'middle'); crown.setAttribute('font-size', '20');
                     crown.textContent = '👑';
-                    hamster.appendChild(crown);
+                    hamsterSvg.appendChild(crown);
                 }
             } else if(crown) { crown.remove(); }
             
-            // 處理食物按鈕狀態
+            // 處理食物與洗澡按鈕狀態
             ['seed', 'carrot', 'apple'].forEach(food => {
                 const btn = document.getElementById(`btn-feed-${food}`);
                 const cost = food === 'seed' ? 1 : (food === 'carrot' ? 3 : 5);
                 if(petData.coins < cost) btn.classList.add('disabled');
                 else btn.classList.remove('disabled');
             });
+            const btnBath = document.getElementById('btn-bath');
+            if(petData.coins < 5) btnBath.classList.add('disabled');
+            else btnBath.classList.remove('disabled');
             
             // 處理跑輪商店與解鎖
             const runBtn = document.getElementById('btn-run');
@@ -646,6 +724,9 @@
                 bonusCoins = 5;
                 comboText = `🔥 ${comboCount} COMBO! +${bonusCoins} Bonus!`;
             }
+            if(comboCount > petData.stats.maxCombo) {
+                petData.stats.maxCombo = comboCount;
+            }
             
             const totalReward = reward + bonusCoins;
             let displayText = `答對了！${stars} <span style='color:#f39c12'>+${reward} 💰</span>`;
@@ -673,11 +754,14 @@
             // 快樂度提升
             addHappiness(mistakeCount === 0 ? 8 : 3);
             
+            // 成就系統檢查
+            checkAchievements();
+            
             // 小倉鼠跳躍開心
-            const hamster = document.getElementById('hamster');
-            hamster.classList.remove('happy');
-            void hamster.offsetWidth;
-            hamster.classList.add('happy');
+            const hamsterSvg = document.getElementById('hamster');
+            hamsterSvg.classList.remove('happy');
+            void hamsterSvg.offsetWidth;
+            hamsterSvg.classList.add('happy');
 
             savePetData();
             updatePetUI();
@@ -753,12 +837,25 @@
 
         // 快樂度隨時間緩慢下降
         setInterval(() => {
+            // 快樂度隨時間緩慢下降，並且受飢餓和清潔度影響
             if(petData.happiness > 0 && secretCode) {
-                petData.happiness = Math.max(0, petData.happiness - 1);
-                savePetData();
-                updatePetUI();
+                let dropRate = 1;
+                // 太餓或太髒會讓快樂度掉更快
+                if(petData.hunger < 30) dropRate += 1;
+                if(petData.cleanliness < 30) dropRate += 1;
+                
+                petData.happiness = Math.max(0, petData.happiness - dropRate);
             }
-        }, 60000); // 每分鐘減 1
+            if(petData.hunger > 0 && secretCode) {
+                // 睡覺時肚子餓比較慢
+                petData.hunger = Math.max(0, petData.hunger - (isSleeping ? 1 : 2));
+            }
+            if(petData.cleanliness > 0 && secretCode) {
+                petData.cleanliness = Math.max(0, petData.cleanliness - (isSleeping ? 0 : 1));
+            }
+            savePetData();
+            updatePetUI();
+        }, 60000); // 每分鐘計算一次
 
         function playWheel() {
             if (isSleeping) return wakeUp(); // 先叫醒
@@ -847,14 +944,22 @@
                 if(petData.coins < cost && !isRunning) alert(`金幣不夠買${emoji}了！(需要 ${cost} 💰)`);
                 return;
             }
+            if(petData.hunger >= 100) {
+                alert("倉鼠現在很飽，吃不下囉！");
+                return;
+            }
             wakeUp();
             
             petData.coins -= cost;
             petData.exp += exp;
             
+            // 恢復飽食度和快樂
+            const hungerRestore = exp >= 80 ? 40 : (exp >= 40 ? 20 : 10);
+            petData.hunger = Math.min(100, petData.hunger + hungerRestore);
+            addHappiness(exp >= 80 ? 15 : (exp >= 40 ? 10 : 5));
+            
             // 顯示食物掉落
             triggerSeedDrop(emoji);
-            addHappiness(exp >= 80 ? 15 : (exp >= 40 ? 10 : 5));
             
             // 升級邏輯 (這裡簡化，每 100 exp 升一級)
             if(petData.exp >= petData.level * 100) {
@@ -878,6 +983,185 @@
             
             // 飄出愛心
             createFloatingEmoji('❤️', 1000, -60);
+        }
+
+        function bathHamster() {
+            if(petData.coins < 5 || isRunning) {
+                if(petData.coins < 5 && !isRunning) alert(`金幣不夠買海綿🧽了！(需要 5 💰)`);
+                return;
+            }
+            if(petData.cleanliness >= 100) {
+                alert("小倉鼠已經很乾淨囉！");
+                return;
+            }
+            wakeUp();
+            
+            petData.coins -= 5;
+            petData.cleanliness = 100; // 洗衣服直接全滿
+            addHappiness(5);
+            savePetData();
+            updatePetUI();
+            
+            // 泡泡動畫音效
+            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 150); setTimeout(()=>playTone(1200, 'sine', 0.2), 300);
+            
+            // 產生泡泡 Emoji
+            createFloatingEmoji('🫧', 1500, -50);
+            setTimeout(() => createFloatingEmoji('✨', 1200, -40), 500);
+        }
+
+        // --- 成就與商城系統 ---
+        function checkAchievements() {
+            let newlyUnlocked = false;
+            
+            if(!petData.achievements.combo30 && petData.stats.maxCombo >= 30) {
+                petData.achievements.combo30 = true;
+                showAchievementToast("🔥 Combo 大師 (連續 30 題)！");
+                newlyUnlocked = true;
+            }
+            if(!petData.achievements.richer && petData.coins >= 1000) {
+                petData.achievements.richer = true;
+                showAchievementToast("💰 倉鼠大富翁 (存到 1000 枚金幣)！");
+                newlyUnlocked = true;
+            }
+            if(!petData.achievements.level10 && petData.level >= 10) {
+                petData.achievements.level10 = true;
+                showAchievementToast("👑 頂級飼養員 (倉鼠達到 10 級)！");
+                newlyUnlocked = true;
+            }
+            
+            if(newlyUnlocked) {
+                playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(1046.50, 'sine', 0.3), 200);
+                confetti({ particleCount: 150, spread: 100 });
+                savePetData();
+            }
+        }
+
+        function showAchievementToast(text) {
+            const toast = document.createElement('div');
+            toast.textContent = `🏆 解鎖成就：${text}`;
+            toast.style.position = 'fixed';
+            toast.style.top = '20px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.background = 'linear-gradient(135deg, #f1c40f, #f39c12)';
+            toast.style.color = 'white';
+            toast.style.padding = '15px 30px';
+            toast.style.borderRadius = '30px';
+            toast.style.fontWeight = 'bold';
+            toast.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+            toast.style.zIndex = '9999';
+            toast.style.animation = 'slideDownFade 0.5s ease-out';
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideDownFadeOut 0.5s ease-in forwards';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
+        // --- 視窗開起關閉 (商城/成就) ---
+        function openShop() {
+            renderShop();
+            document.getElementById('shop-modal').style.display = 'flex';
+        }
+        function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
+        
+        function openTrophies() {
+            renderTrophies();
+            document.getElementById('trophy-modal').style.display = 'flex';
+        }
+        function closeTrophies() { document.getElementById('trophy-modal').style.display = 'none'; }
+        
+        function renderShop() {
+            const list = document.getElementById('shop-list');
+            list.innerHTML = '';
+            
+            const items = [
+                { id: 'beach', type: 'scenes', name: '沙灘渡假 🏖️', cost: 500, category: '場景' },
+                { id: 'space', type: 'scenes', name: '太空探險 🚀', cost: 800, category: '場景' },
+                { id: 'party', type: 'hats', name: '派對帽 🎉', cost: 150, category: '帽子' },
+                { id: 'tophat', type: 'hats', name: '紳士高帽 🎩', cost: 250, category: '帽子' },
+                { id: 'red', type: 'bows', name: '紅領結 🎀', cost: 100, category: '領結' },
+                { id: 'blue', type: 'bows', name: '藍領結 🎀', cost: 100, category: '領結' }
+            ];
+            
+            items.forEach(item => {
+                const isOwned = petData.unlocks[item.type] && petData.unlocks[item.type].includes(item.id);
+                const isEquipped = petData.equipped[item.type.slice(0, -1)] === item.id;
+                
+                let btnHtml = '';
+                if(isEquipped) {
+                    btnHtml = `<button class="btn-login" style="background:gray; cursor:default; padding: 5px 15px; font-size:1rem;">裝備中</button>`;
+                } else if(isOwned) {
+                    btnHtml = `<button class="btn-login" style="background:#2ed573; padding: 5px 15px; font-size:1rem;" onclick="equipCosmetic('${item.type}', '${item.id}')">換上</button>`;
+                } else {
+                    const afford = petData.coins >= item.cost;
+                    btnHtml = `<button class="btn-login" style="background:${afford ? 'var(--primary)' : '#ccc'}; padding: 5px 15px; font-size:1rem;" onclick="${afford ? `buyCosmetic('${item.type}', '${item.id}', ${item.cost}, '${item.name}')` : ''}">${item.cost} 💰</button>`;
+                }
+                
+                list.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #ddd;">
+                        <span style="font-weight:bold; font-size:1.1rem;">${item.name}</span>
+                        ${btnHtml}
+                    </div>
+                `;
+            });
+            
+            // 新增一個「還原預設」的按鈕
+            list.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-top:20px;">
+                    <span style="font-weight:bold; font-size:1.1rem;">還原原始造型</span>
+                    <button class="btn-login" style="background:#8ba4f9; padding: 5px 15px; font-size:1rem;" onclick="equipCosmetic('all', 'default')">重設</button>
+                </div>
+            `;
+        }
+
+        function buyCosmetic(type, id, cost, name) {
+            if(petData.coins >= cost) {
+                petData.coins -= cost;
+                petData.unlocks[type].push(id);
+                equipCosmetic(type, id);
+                alert(`✨ 購買成功！獲得了 ${name}！`);
+            }
+        }
+
+        function equipCosmetic(type, id) {
+            if(type === 'all') {
+                petData.equipped.scene = 'default';
+                petData.equipped.hat = 'none';
+                petData.equipped. bow = 'none';
+            } else {
+                const key = type.slice(0, -1); // scenes -> scene, hats -> hat, bows -> bow
+                petData.equipped[key] = id;
+            }
+            savePetData();
+            updatePetUI();
+            renderShop();
+        }
+
+        function renderTrophies() {
+            const list = document.getElementById('trophy-list');
+            list.innerHTML = '';
+            
+            const achs = [
+                { key: 'combo30', name: '🔥 Combo 大師', desc: '連續拼對 30 題' },
+                { key: 'richer', name: '💰 倉鼠大富翁', desc: '金幣累積達 1000 枚' },
+                { key: 'level10', name: '👑 頂級飼養員', desc: '倉鼠達到 Level 10' }
+            ];
+            
+            achs.forEach(a => {
+                const unlocked = petData.achievements[a.key];
+                list.innerHTML += `
+                    <div style="display:flex; align-items:center; padding:15px; margin-bottom:10px; border-radius:15px; background:${unlocked ? '#fff8e1' : '#f5f5f5'}; border: 2px solid ${unlocked ? '#f1c40f' : '#ddd'}; opacity: ${unlocked ? 1 : 0.6}">
+                        <div style="font-size:3rem; margin-right:15px; filter: ${unlocked ? 'none' : 'grayscale(100%)'}">🏆</div>
+                        <div style="text-align:left;">
+                            <div style="font-weight:bold; font-size:1.2rem; color:${unlocked ? '#d35400' : '#888'};">${a.name}</div>
+                            <div style="font-size:0.9rem; color:#666;">${a.desc}</div>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         // (舊的備份/還原邏輯已透過 Firebase 取代)
@@ -919,5 +1203,24 @@
             });
         }
     </script>
+    
+    <!-- 商城與成就視窗 -->
+    <div id="shop-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:90%; max-width:400px; max-height:80vh; overflow-y:auto; padding: 20px;">
+            <button onclick="closeShop()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 style="color:#f39c12; margin-top:10px;">購物中心 🛍️</h3>
+            <p style="color:#666; font-size:0.9rem;">用金幣幫小倉鼠買新衣服或換場景吧！</p>
+            <div id="shop-list" style="margin-top:20px;"></div>
+        </div>
+    </div>
+    
+    <div id="trophy-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:90%; max-width:400px; max-height:80vh; overflow-y:auto; padding: 20px;">
+            <button onclick="closeTrophies()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 style="color:#8e44ad; margin-top:10px;">榮譽獎盃 🏆</h3>
+            <p style="color:#666; font-size:0.9rem;">收集越多獎盃越厲害喔！</p>
+            <div id="trophy-list" style="margin-top:20px;"></div>
+        </div>
+    </div>
 </body>
 </html>

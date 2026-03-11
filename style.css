@@ -291,3 +291,16 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: 0.2s;
         }
         .btn-login:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+/* 變髒特效 */
+.hamster-svg.dirty { filter: sepia(0.6) brightness(0.9) contrast(1.1); }
+.hamster-svg.dirty::after { content: '泥土'; position: absolute; }
+
+/* 場景替換 */
+.hamster-cage.bg-beach { background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 50%, #f6d365 50%, #fda085 100%); }
+.hamster-cage.bg-space { background: linear-gradient(to bottom, #0f2027 0%, #203a43 50%, #2c5364 100%); }
+.hamster-cage.bg-space .cloud { opacity: 0.2; filter: brightness(2); }
+.hamster-cage.bg-space .habitat-sun { background: radial-gradient(circle, #e0e0e0 40%, #ffffff80 70%, transparent 71%); box-shadow: 0 0 20px #fff; }
+
+/* 成就彈出動畫 */
+@keyframes slideDownFade { 0% { top: -50px; opacity: 0; } 100% { top: 20px; opacity: 1; } }
+@keyframes slideDownFadeOut { 0% { top: 20px; opacity: 1; } 100% { top: -50px; opacity: 0; } }

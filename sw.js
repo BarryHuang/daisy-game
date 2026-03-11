@@ -1,5 +1,5 @@
-const CACHE_NAME = 'daisy-hamster-v3';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'daisy-hamster-v4';
+const urlsToCache = [
   './daisy_hamster.html',
   './manifest.json',
   './style.css',
