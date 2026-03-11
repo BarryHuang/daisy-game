@@ -250,7 +250,7 @@
         <div class="card hamster-section">
             <div class="hamster-stats">
                 <div class="stat">⭐ Lvl: <span id="h-lvl">1</span></div>
-                <div class="stat">🌻 瓜子: <span id="h-seeds">0</span></div>
+                <div class="stat">💰 金幣: <span id="h-coins">0</span></div>
             </div>
             <div class="hamster-cage" id="cage">
                 <!-- 背景玩具：跑輪 -->
@@ -285,18 +285,23 @@
             <div class="pet-actions">
                 <div class="action-btn" id="btn-feed" onclick="feedHamster()">
                     <span>餵食 🌻</span>
-                    <span style="font-size: 0.8rem; font-weight: normal;">消耗 1</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;">消耗 5 💰</span>
                 </div>
                 <div class="action-btn free" onclick="petHamster()">
                     <span>摸摸 🖐️</span>
                     <span style="font-size: 0.8rem; font-weight: normal;">免費呼嚕</span>
                 </div>
-                <!-- 跑輪按鈕 (等級限制) -->
-                <div class="action-btn locked" id="btn-run" onclick="playWheel()">
-                    <span>跑輪 🎡</span>
-                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-run">Lvl 3 解鎖</span>
+                <!-- 水瓶按鈕 (商店) -->
+                <div class="action-btn locked" id="btn-water" onclick="drinkWater()">
+                    <span id="label-water">買水瓶 💧</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-water">30 💰</span>
                 </div>
-                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()">
+                <!-- 跑輪按鈕 (商店) -->
+                <div class="action-btn locked" id="btn-run" onclick="playWheel()">
+                    <span id="label-run">買跑輪 🎡</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-run">50 💰</span>
+                </div>
+                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 2;">
                     <span>睡覺 💤</span>
                     <span style="font-size: 0.8rem; font-weight: normal;">休息一下</span>
                 </div>
@@ -360,9 +365,22 @@
         let petData = {
             level: 1,
             exp: 0,
-            seeds: 0, 
-            totalWordsCleared: 0
+            coins: 0, 
+            totalWordsCleared: 0,
+            items: { wheel: false, water: false }
         };
+
+        function migratePetData(data) {
+            if(!data) return { level: 1, exp: 0, coins: 0, totalWordsCleared: 0, items: { wheel: false, water: false } };
+            // 向下相容，把 seeds 轉成 coins 金幣
+            if(data.seeds !== undefined) {
+                data.coins = data.seeds;
+                delete data.seeds;
+            }
+            if(data.coins === undefined) data.coins = 0;
+            if(!data.items) data.items = { wheel: false, water: false };
+            return data;
+        }
 
         function login() {
             const input = document.getElementById('secret-code-input').value.trim().toUpperCase();
@@ -378,10 +396,10 @@
             petRef.once('value', (snapshot) => {
                 const data = snapshot.val();
                 if(data) {
-                    petData = data;
+                    petData = migratePetData(data);
                     // 開始持續監聽
                     petRef.on('value', (snap) => {
-                        if(snap.val()) { petData = snap.val(); updatePetUI(); }
+                        if(snap.val()) { petData = migratePetData(snap.val()); updatePetUI(); }
                     });
                 } else {
                     // 新玩家：檢查有沒有舊版的 LocalStorage 端資料可以繼承
@@ -390,15 +408,14 @@
                         try { 
                             let parsed = JSON.parse(oldSaved); 
                             if(parsed && parsed.level) {
-                                petData = parsed;
+                                petData = migratePetData(parsed);
                                 alert("🐰 發現你以前照顧過小倉鼠！已經幫你把舊進度升級上雲端囉！");
                             }
                         } catch(e) {}
-                        // 讀完舊機資料後，可以選擇清除避免重複讀取，但這裡先保留無妨
                         localStorage.removeItem("daisy_hamster_save");
                     } else {
                         // 真的全新的玩家
-                        petData = { level: 1, exp: 0, seeds: 0, totalWordsCleared: 0 };
+                        petData = migratePetData(null);
                     }
                     petRef.set(petData);
                     
@@ -433,35 +450,47 @@
 
         function updatePetUI() {
             document.getElementById('h-lvl').textContent = petData.level;
-            document.getElementById('h-seeds').textContent = petData.seeds;
-            const feedBtn = document.getElementById('btn-feed');
-            if(petData.seeds <= 0) {
-                feedBtn.classList.add('disabled');
-            } else {
-                feedBtn.classList.remove('disabled');
-            }
+            document.getElementById('h-coins').textContent = petData.coins;
             
-            // 根據等級改變倉鼠大小 (每2級放大一點點)
-            const scale = 1 + (Math.floor(petData.level/2) * 0.1);
-            // 處理按鈕解鎖狀態
+            const feedBtn = document.getElementById('btn-feed');
+            if(petData.coins < 5) feedBtn.classList.add('disabled');
+            else feedBtn.classList.remove('disabled');
+            
+            // 處理跑輪商店與解鎖
             const runBtn = document.getElementById('btn-run');
             const wheel = document.getElementById('prop-wheel');
-            if(petData.level >= 3) {
+            if(petData.items.wheel) {
                 runBtn.classList.remove('locked');
-                runBtn.classList.add('free'); // 跑輪免費
-                runBtn.querySelector('#txt-run').textContent = "消耗 0";
+                runBtn.classList.add('free');
+                document.getElementById('label-run').textContent = "玩跑輪 🎡";
+                runBtn.querySelector('#txt-run').textContent = "免費！";
                 wheel.classList.add('show');
             } else {
-                runBtn.classList.add('locked');
                 runBtn.classList.remove('free');
-                runBtn.querySelector('#txt-run').textContent = "Lvl 3 解鎖";
+                document.getElementById('label-run').textContent = "買跑輪 🎡";
+                runBtn.querySelector('#txt-run').textContent = "50 💰";
+                if(petData.coins >= 50) runBtn.classList.remove('locked');
+                else runBtn.classList.add('locked');
                 wheel.classList.remove('show');
             }
 
-            // 處理場景解鎖
-            const water = document.getElementById('prop-water');
-            if(petData.level >= 5) { water.classList.add('show'); } else { water.classList.remove('show'); }
-
+            // 處理水瓶商店與解鎖
+            const waterBtn = document.getElementById('btn-water');
+            const waterProp = document.getElementById('prop-water');
+            if(petData.items.water) {
+                waterBtn.classList.remove('locked');
+                waterBtn.classList.add('free');
+                document.getElementById('label-water').textContent = "喝水 💧";
+                waterBtn.querySelector('#txt-water').textContent = "免費！";
+                waterProp.classList.add('show');
+            } else {
+                waterBtn.classList.remove('free');
+                document.getElementById('label-water').textContent = "買水瓶 💧";
+                waterBtn.querySelector('#txt-water').textContent = "30 💰";
+                if(petData.coins >= 30) waterBtn.classList.remove('locked');
+                else waterBtn.classList.add('locked');
+                waterProp.classList.remove('show');
+            }
         }
 
         // --- 遊戲邏輯變數 ---
@@ -499,7 +528,16 @@
                 const utterance = new SpeechSynthesisUtterance(w);
                 utterance.lang = 'en-US';
                 utterance.rate = 0.85;
-                utterance.pitch = 1.2;
+                
+                // 尋找美式高品質發音，如果有的話
+                const voices = window.speechSynthesis.getVoices();
+                let usVoice = voices.find(v => v.name.includes("Google US English")) || 
+                              voices.find(v => v.name === "Samantha" || v.name === "Alex" || v.name === "Victoria") || 
+                              voices.find(v => v.lang === 'en-US' && v.localService);
+                if (usVoice) {
+                    utterance.voice = usVoice;
+                }
+                
                 window.speechSynthesis.speak(utterance);
             }
         }
@@ -534,8 +572,8 @@
         function loadStage() {
             if(currentStage >= currentLevelQueue.length) {
                 // 通關整週
-                msg.innerHTML = "🎉 <span style='color:green;'>關卡全破！獲得 5 顆瓜子獎勵！</span> 🎉";
-                petData.seeds += 5;
+                msg.innerHTML = "🎉 <span style='color:green;'>關卡全破！獲得 5 💰 獎勵！</span> 🎉";
+                petData.coins += 5;
                 savePetData();
                 updatePetUI();
                 confetti({ particleCount: 200, spread: 160 });
@@ -604,14 +642,14 @@
         }
 
         function wordCleared() {
-            msg.innerHTML = "答對了！<span style='color:#f39c12'>+1 瓜子 🌻</span>";
+            msg.innerHTML = "答對了！<span style='color:#f39c12'>+1 💰 金幣</span>";
             document.getElementById('keyboard').innerHTML = ''; // 清除鍵盤
             
             // 給獎勵
-            petData.seeds += 1;
+            petData.coins += 1;
             petData.totalWordsCleared += 1;
             
-            // 慶祝特效：讓瓜子從天而降掉進籠子
+            // 慶祝特效：金幣從天而降
             triggerSeedDrop();
             
             // 小倉鼠跳躍開心
@@ -637,7 +675,7 @@
             const cage = document.getElementById('cage');
             const seed = document.createElement('div');
             seed.className = 'falling-seed';
-            seed.textContent = '🌻';
+            seed.textContent = '💰';
             seed.style.left = `${40 + Math.random() * 20}%`;
             cage.appendChild(seed);
             setTimeout(() => seed.remove(), 1000);
@@ -677,25 +715,68 @@
         }
 
         function playWheel() {
-            if(petData.level < 3 || isSleeping) return wakeUp(); // 不可玩或叫醒
-            if(isRunning) return; // 已經在跑
-            isRunning = true;
+            if (isSleeping) return wakeUp(); // 先叫醒
+            if (isRunning) return;
             
+            // 處理購買邏輯
+            if (!petData.items.wheel) {
+                if (petData.coins >= 50) {
+                    petData.coins -= 50;
+                    petData.items.wheel = true;
+                    savePetData();
+                    updatePetUI();
+                    alert("🎡 購買成功！小倉鼠得到新玩具了！");
+                    // 買完可以繼續玩下去
+                } else {
+                    alert("金幣還不夠買跑輪喔！(需要 50 💰)");
+                    return;
+                }
+            }
+
+            isRunning = true;
             const hamster = document.getElementById('hamster');
             const wheel = document.getElementById('prop-wheel');
             
-            // 移到跑輪上並開始跑
+            // 開始跑
             hamster.classList.add('run');
             wheel.classList.add('spin');
             playTone(300, 'triangle', 0.1);
             
-            // 跑 3 秒
             setTimeout(() => {
                 hamster.classList.remove('run');
                 wheel.classList.remove('spin');
                 isRunning = false;
                 petHamster(); // 跑完摸摸獎勵
             }, 3000);
+        }
+
+        function drinkWater() {
+            if (isSleeping) return wakeUp();
+            if (isRunning) return;
+            
+            // 處理購買邏輯
+            if (!petData.items.water) {
+                if (petData.coins >= 30) {
+                    petData.coins -= 30;
+                    petData.items.water = true;
+                    savePetData();
+                    updatePetUI();
+                    alert("💧 購買成功！小倉鼠有新鮮的水可以喝了！");
+                } else {
+                    alert("金幣還不夠買水瓶喔！(需要 30 💰)");
+                    return;
+                }
+            }
+
+            const hamster = document.getElementById('hamster');
+            // 跳上去喝水
+            hamster.classList.add('happy');
+            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(900, 'sine', 0.1), 150);
+            createFloatingEmoji('💧', 1200, -30);
+            
+            setTimeout(() => {
+                hamster.classList.remove('happy');
+            }, 1000);
         }
 
         function sleepHamster() {
@@ -743,14 +824,17 @@
         }
 
         function feedHamster() {
-            if(petData.seeds <= 0 || isRunning) return;
+            if(petData.coins < 5 || isRunning) {
+                if(petData.coins < 5 && !isRunning) alert("金幣不夠買飼料了！(需要 5 💰)");
+                return;
+            }
             wakeUp();
             
-            petData.seeds -= 1;
-            petData.exp += 10;
+            petData.coins -= 5;
+            petData.exp += 30; // 餵食加30分經驗
             
-            // 升級邏輯 (每 50 exp 升一級)
-            if(petData.exp >= petData.level * 50) {
+            // 升級邏輯 (這裡簡化，每 100 exp 升一級)
+            if(petData.exp >= petData.level * 100) {
                 petData.level += 1;
                 petData.exp = 0;
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 , x: 0.75} }); // 在右側放煙火
