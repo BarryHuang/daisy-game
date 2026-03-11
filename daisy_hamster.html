@@ -98,7 +98,11 @@
                 <div class="prop-wheel" id="prop-wheel"></div>
                 <div class="prop-water" id="prop-water"></div>
                 
+                <!-- 抓黃金蝴蝶 -->
+                <div id="golden-butterfly" onclick="catchButterfly()" style="display:none; position:absolute; font-size:2rem; cursor:pointer; z-index:20; transition: left 15s linear, top 15s linear;">🦋</div>
+
                 <!-- SVG Hamster -->
+                <div id="hamster-wrapper" style="transition: transform 3s ease-in-out; transform: translateX(0px) scaleX(1);">
                 <svg class="hamster-svg" id="hamster" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <ellipse cx="50" cy="65" rx="35" ry="30" fill="#f4a460" /> <!-- Body -->
                     <circle cx="50" cy="45" r="25" fill="#deb887" /> <!-- Head -->
@@ -128,6 +132,7 @@
                     <!-- 帽子群組 -->
                     <g id="hamster-hat"></g>
                 </svg>
+                </div>
             </div>
             
             <div class="pet-actions">
@@ -244,7 +249,8 @@
             if(!data.items) data.items = { wheel: false, water: false, house: false, slide: false };
             if(!data.equipped) data.equipped = { scene: 'default', hat: 'none', bow: 'none' };
             if(!data.unlocks) data.unlocks = { scenes: ['default'], hats: ['none'], bows: ['none'] };
-            if(!data.stats) data.stats = { maxCombo: 0 };
+            if(!data.stats) data.stats = { maxCombo: 0, mistakeWords: [] };
+            if(!data.stats.mistakeWords) data.stats.mistakeWords = [];
             if(!data.achievements) data.achievements = { combo30: false, richer: false, level10: false };
             return data;
         }
@@ -592,9 +598,33 @@
         // 開始選定週別的 10 關挑戰
         function startLevel() {
             let list = [...words[catS.value][wkS.value]];
-            // 取最多 10 個單字並打亂
-            list.sort(() => Math.random() - 0.5);
-            currentLevelQueue = list.slice(0, 10);
+            
+            // 學習加強：出現過的錯誤單字加權 2 倍
+            let weightedList = [];
+            list.forEach(w => {
+                weightedList.push(w);
+                if(petData.stats && petData.stats.mistakeWords && petData.stats.mistakeWords.includes(w.toUpperCase())) {
+                    weightedList.push(w); // 放入兩次增加機率
+                }
+            });
+            weightedList.sort(() => Math.random() - 0.5);
+            
+            // 去除重複，收集滿10關
+            let finalQueue = [];
+            for(let w of weightedList) {
+                if(!finalQueue.includes(w)) finalQueue.push(w);
+                if(finalQueue.length === 10) break;
+            }
+            // 如果數量不夠 (清單較短時)，直接拿原始打亂的補滿
+            if(finalQueue.length < Math.min(10, list.length)) {
+                list.sort(() => Math.random() - 0.5);
+                for(let w of list) {
+                    if(!finalQueue.includes(w)) finalQueue.push(w);
+                    if(finalQueue.length === 10) break;
+                }
+            }
+            
+            currentLevelQueue = finalQueue;
             currentStage = 0;
             loadStage();
         }
@@ -639,6 +669,14 @@
             setTimeout(() => speakWord(currentWord), 400);
         }
 
+        function recordMistake(word) {
+            if(!petData.stats.mistakeWords) petData.stats.mistakeWords = [];
+            if(!petData.stats.mistakeWords.includes(word)) {
+                petData.stats.mistakeWords.push(word);
+                savePetData();
+            }
+        }
+
         function handleKey(letter) {
             const expect = targetLetters[currentIndex];
             if(letter === expect) {
@@ -648,8 +686,6 @@
                 slots[currentIndex].classList.remove('current');
                 slots[currentIndex].classList.add('filled');
                 slots[currentIndex].textContent = letter;
-                
-                // 鍵盤復原顏色但不 disabled，因為可能有重複字母
                 
                 currentIndex++;
                 if(currentIndex < targetLetters.length) {
@@ -661,6 +697,7 @@
             } else {
                 // 錯了，抖動鍵盤按鈕，不扣分
                 mistakeCount++;
+                recordMistake(currentWord);
                 playTone(200, 'sawtooth', 0.15);
                 const btn = document.getElementById(`key-${letter}`);
                 if(btn) {
@@ -688,6 +725,8 @@
             savePetData();
             updatePetUI();
             
+            recordMistake(currentWord); // 使用提示也算不熟
+            
             const expectedLetter = targetLetters[currentIndex];
             const btn = document.getElementById(`key-${expectedLetter}`);
             if (btn) {
@@ -714,6 +753,9 @@
             // Combo 系統
             if(mistakeCount === 0) {
                 comboCount++;
+                if(petData.stats && petData.stats.mistakeWords) {
+                    petData.stats.mistakeWords = petData.stats.mistakeWords.filter(w => w !== currentWord);
+                }
             } else {
                 comboCount = 0;
             }
@@ -822,6 +864,17 @@
             createFloatingEmoji('💖', 1500, -30);
             addHappiness(5);
             
+            // 摸摸驚喜：15% 機率掉落金幣
+            if(Math.random() < 0.15) {
+                setTimeout(() => {
+                    playTone(800, 'sine', 0.1);
+                    createFloatingEmoji('🪙', 1500, -50);
+                    petData.coins += 1;
+                    savePetData();
+                    updatePetUI();
+                }, 300);
+            }
+            
             setTimeout(() => {
                 hamster.classList.remove('happy');
                 mouth.setAttribute('d', originalMouth);
@@ -835,19 +888,19 @@
             updatePetUI();
         }
 
-        // 快樂度隨時間緩慢下降
+        // 持續迴圈 (每分鐘)：處理下降數值、隨機事件
         setInterval(() => {
-            // 快樂度隨時間緩慢下降，並且受飢餓和清潔度影響
+            // 每分鐘有 25% 機率出現蝴蝶 (平均約 4 分鐘一次)
+            if(Math.random() < 0.25) spawnButterfly();
+            
+            // 快樂度、飽食度、清潔度下降
             if(petData.happiness > 0 && secretCode) {
                 let dropRate = 1;
-                // 太餓或太髒會讓快樂度掉更快
                 if(petData.hunger < 30) dropRate += 1;
                 if(petData.cleanliness < 30) dropRate += 1;
-                
                 petData.happiness = Math.max(0, petData.happiness - dropRate);
             }
             if(petData.hunger > 0 && secretCode) {
-                // 睡覺時肚子餓比較慢
                 petData.hunger = Math.max(0, petData.hunger - (isSleeping ? 1 : 2));
             }
             if(petData.cleanliness > 0 && secretCode) {
@@ -856,6 +909,67 @@
             savePetData();
             updatePetUI();
         }, 60000); // 每分鐘計算一次
+        
+        // 倉鼠隨機散步 AI
+        setInterval(() => {
+            if (!secretCode || isSleeping || isRunning) return;
+            const hamsterSvg = document.getElementById('hamster');
+            // 如果正在進行其他動畫，不移動
+            if (hamsterSvg.classList.contains('eat') || hamsterSvg.classList.contains('happy') || hamsterSvg.classList.contains('hide-in-house') || hamsterSvg.classList.contains('slide-down')) return;
+            
+            const wrapper = document.getElementById('hamster-wrapper');
+            if(Math.random() < 0.5) { // 50% 機率決定走動
+                // 移動: -80px 到 80px 之間
+                const targetX = Math.floor(Math.random() * 160) - 80;
+                // 判斷面相：如果要往右走(目標變大)，不翻轉屬 1；往左走(目標變小) 翻轉屬 -1
+                const currentTransform = wrapper.style.transform || "";
+                let currentX = 0;
+                const match = currentTransform.match(/translateX\(([-0-9.]+)px\)/);
+                if(match) currentX = parseFloat(match[1]);
+                const direction = targetX > currentX ? 1 : -1;
+                
+                wrapper.style.transform = `translateX(${targetX}px) scaleX(${direction})`;
+            }
+        }, 6000); // 每 6 秒判斷一次
+
+        // 抓黃金蝴蝶事件
+        function spawnButterfly() {
+            if(!secretCode) return;
+            const butterfly = document.getElementById('golden-butterfly');
+            if(butterfly.style.display !== 'none') return; // 如果已經在場上
+            
+            // 決定起始位置
+            const fromLeft = Math.random() > 0.5;
+            butterfly.style.left = fromLeft ? '-10%' : '110%';
+            butterfly.style.top = `${20 + Math.random() * 40}%`; // 20% ~ 60% top
+            butterfly.style.transform = fromLeft ? 'scaleX(-1)' : 'scaleX(1)';
+            butterfly.style.display = 'block';
+            
+            // 給一小段時間生效
+            setTimeout(() => {
+                butterfly.style.left = fromLeft ? '110%' : '-10%';
+                butterfly.style.top = `${20 + Math.random() * 40}%`;
+            }, 100);
+            
+            // 15 秒後如果沒抓到自動消失
+            setTimeout(() => {
+                butterfly.style.display = 'none';
+            }, 15000);
+        }
+        
+        function catchButterfly() {
+            const butterfly = document.getElementById('golden-butterfly');
+            butterfly.style.display = 'none';
+            
+            petData.coins += 10;
+            petData.happiness = 100;
+            savePetData();
+            updatePetUI();
+            
+            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 100); setTimeout(()=>playTone(1200, 'sine', 0.3), 200);
+            confetti({ particleCount: 50, origin: { x: 0.5, y: 0.4 } });
+            createFloatingEmoji('🦋 +10 💰', 2000, -40);
+        }
 
         function playWheel() {
             if (isSleeping) return wakeUp(); // 先叫醒
