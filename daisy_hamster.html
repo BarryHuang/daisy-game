@@ -278,6 +278,9 @@
             localStorage.setItem("daisy_hamster_user", secretCode);
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('current-user').textContent = secretCode;
+
+            // iOS Audio Unlock: 必須在使用者點擊 (Click Event) 內初始化 AudioContext 與 HTMLAudioElement
+            unlockAudio();
             
             // 立刻先刷新一次 UI (讓 BARRY 測試帳號馬上生效)
             updatePetUI();
@@ -567,9 +570,38 @@
 
         // 音效
         let audioCtx;
+        let globalAudioPlayer;
+
+        // 在使用者第一次點擊畫面(例如登入或點擊鍵盤)時呼叫此函數解鎖 iOS 聲音限制
+        function unlockAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            // 播放一小段無聲音頻來強制解鎖 Web Audio API
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.value = 0;
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start(0);
+            oscillator.stop(audioCtx.currentTime + 0.1);
+
+            // 解鎖 HTML5 Audio 元素 (用於 TTS)
+            if (!globalAudioPlayer) {
+                globalAudioPlayer = new Audio();
+                globalAudioPlayer.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'; // 1ms 靜音
+                globalAudioPlayer.play().catch(e => { /* iOS 可能會在這裡擋一次，但元素已經被合法創建了 */ });
+            }
+        }
+
         function playTone(freq, type, duration) {
             try {
-                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if(!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
                 if(audioCtx.state === 'suspended') audioCtx.resume();
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
@@ -578,16 +610,32 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
                 oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-                oscillator.stop(audioCtx.currentTime + duration);
+                // 修正 iOS Webkit 上聲音切斷的爆音: 使用 currentTime
+                const now = audioCtx.currentTime;
+                gainNode.gain.setValueAtTime(1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, now + duration);
+                oscillator.stop(now + duration);
             } catch(e) {}
         }
 
         function speakWord(w) {
-            // 使用 Google Translate 的非官方 TTS 語音 API，發音品質比大部份瀏覽器內建的好且穩定
+            // 使用 Google Translate 的非官方 TTS 語音 API
             const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(w)}&tl=en&client=tw-ob`;
-            const audio = new Audio(url);
-            audio.play().catch(e => {
+            
+            try {
+                // 如果剛剛登入時有建立過 globalAudioPlayer，就重複使用它 (iOS 規定必須是 User Gesture 產生的 Audio 物件)
+                if (globalAudioPlayer) {
+                    globalAudioPlayer.src = url;
+                    globalAudioPlayer.play().catch(fallbackToSpeechSynthesis);
+                } else {
+                    const audio = new Audio(url);
+                    audio.play().catch(fallbackToSpeechSynthesis);
+                }
+            } catch(e) {
+                fallbackToSpeechSynthesis();
+            }
+
+            function fallbackToSpeechSynthesis() {
                 // 若被阻擋或出現問題，退回使用瀏覽器內建語音
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
@@ -596,7 +644,7 @@
                     utterance.rate = 0.85;
                     window.speechSynthesis.speak(utterance);
                 }
-            });
+            }
         }
 
         function setupConfig() {
