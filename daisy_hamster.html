@@ -205,6 +205,10 @@
                 登入帳號: <span id="current-user" style="color: var(--primary);">---</span>
                 <button onclick="logout()" style="margin-left: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid #ccc; background: white; cursor: pointer;">切換</button>
             </div>
+            <!-- 家長後台按鈕：只有 BARRY 登入時顯示 -->
+            <div id="parent-dashboard-btn" style="display:none; margin-top:10px; text-align:center;">
+                <a href="parent_dashboard.html" style="display:inline-block; padding:8px 20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:20px; font-weight:bold; font-size:0.9rem; text-decoration:none;">👨‍👩‍👧 家長學習後台</a>
+            </div>
         </div>
     </div>
 
@@ -365,6 +369,10 @@
                 petData.coins = 999;
                 savePetData();
             }
+
+            // 家長後台按鈕：只有 BARRY 才顯示
+            const parentBtn = document.getElementById('parent-dashboard-btn');
+            if(parentBtn) parentBtn.style.display = (secretCode === 'BARRY') ? 'block' : 'none';
             
             document.getElementById('h-lvl').textContent = petData.level;
             document.getElementById('h-coins').textContent = petData.coins;

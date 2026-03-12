@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家長觀察後台 👨‍👩‍👧</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            color: white;
+            font-size: 1.5rem;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.35); }
+
+        /* 使用者選擇 */
+        .user-select-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .user-select-card label { font-weight: bold; color: #555; }
+        #user-select {
+            flex: 1;
+            min-width: 140px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            font-size: 1rem;
+        }
+        .load-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* 卡片 */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 數字統計格 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        .stat-item {
+            background: #f8f9fa;
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-num {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #764ba2;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* 不熟單字清單 */
+        .word-chip {
+            display: inline-block;
+            background: #fff3e0;
+            border: 2px solid #f39c12;
+            color: #d35400;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1rem;
+            margin: 4px;
+            text-transform: uppercase;
+        }
+        .word-chip.empty {
+            background: #e8f8f5;
+            border-color: #2ecc71;
+            color: #27ae60;
+        }
+
+        /* 進度條（快樂/飽食/潔淨） */
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .bar-label { width: 60px; font-size: 0.85rem; color: #555; }
+        .bar-bg {
+            flex: 1;
+            background: #eee;
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        .bar-val { width: 36px; text-align: right; font-size: 0.85rem; color: #888; }
+
+        /* 成就 */
+        .ach-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .ach-item:last-child { border-bottom: none; }
+        .ach-icon { font-size: 1.8rem; filter: grayscale(1); }
+        .ach-icon.unlocked { filter: none; }
+        .ach-name { font-weight: bold; font-size: 0.9rem; color: #888; }
+        .ach-name.unlocked { color: #d35400; }
+        .ach-desc { font-size: 0.8rem; color: #aaa; }
+
+        /* 任務 */
+        .quest-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .quest-item:last-child { border-bottom: none; }
+        .quest-text { font-size: 0.9rem; color: #555; }
+        .quest-badge {
+            font-size: 0.8rem;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .quest-badge.done { background: #d5f5e3; color: #27ae60; }
+        .quest-badge.todo { background: #fdebd0; color: #e67e22; }
+
+        .loading { text-align: center; color: white; padding: 40px; font-size: 1.2rem; }
+        #dashboard { display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>👨‍👩‍👧 家長學習後台</h1>
+        <a href="daisy_hamster.html" class="back-btn">← 回到遊戲</a>
+    </header>
+
+    <!-- 帳號選擇 -->
+    <div class="user-select-card">
+        <label>📋 查看帳號：</label>
+        <input type="text" id="user-input" placeholder="輸入帳號（如 DAISY）"
+               style="flex:1; min-width:140px; padding:8px 12px; border-radius:10px; border:2px solid #ddd; font-size:1rem; text-transform:uppercase;"
+               value="DAISY">
+        <button class="load-btn" onclick="loadUserData()">🔍 查詢</button>
+    </div>
+
+    <div id="loading-msg" class="loading" style="display:none;">⏳ 載入資料中...</div>
+
+    <div id="dashboard">
+        <!-- 基本資訊 -->
+        <div class="card">
+            <h2>🐹 倉鼠狀態</h2>
+            <div class="stats-grid" id="stats-grid"></div>
+        </div>
+
+        <!-- 倉鼠健康 -->
+        <div class="card">
+            <h2>💓 寵物狀況</h2>
+            <div id="pet-bars"></div>
+        </div>
+
+        <!-- 今日任務 -->
+        <div class="card">
+            <h2>📜 今日任務</h2>
+            <div id="quest-info"></div>
+        </div>
+
+        <!-- 不熟單字 -->
+        <div class="card">
+            <h2>📚 複習單字清單</h2>
+            <p style="font-size:0.85rem; color:#aaa; margin-bottom:12px;">以下是 Daisy 曾猜錯或用過提示鍵的單字，系統正在加強出題。</p>
+            <div id="mistake-words"></div>
+        </div>
+
+        <!-- 成就 -->
+        <div class="card">
+            <h2>🏆 成就解鎖</h2>
+            <div id="achievement-list"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCaWfJnDdK4R2mv2Ht3dQm2lyHhmpWIjo4",
+        authDomain: "daisygame-30452.firebaseapp.com",
+        databaseURL: "https://daisygame-30452-default-rtdb.firebaseio.com",
+        projectId: "daisygame-30452",
+        storageBucket: "daisygame-30452.firebasestorage.app",
+        messagingSenderId: "548508102123",
+        appId: "1:548508102123:web:40f02b8557ecca99523dae"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function loadUserData() {
+        const code = document.getElementById('user-input').value.trim().toUpperCase();
+        if (!code) { alert('請輸入帳號！'); return; }
+
+        document.getElementById('loading-msg').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'none';
+
+        db.ref('users/' + code + '/petData').once('value', snap => {
+            document.getElementById('loading-msg').style.display = 'none';
+            const d = snap.val();
+            if (!d) { alert(`找不到帳號「${code}」的資料，請確認帳號名稱正確！`); return; }
+            renderDashboard(d);
+            document.getElementById('dashboard').style.display = 'block';
+        });
+    }
+
+    function renderDashboard(d) {
+        // 1. 基本統計
+        const statsGrid = document.getElementById('stats-grid');
+        const items = [
+            { num: d.level || 1, label: '🌟 等級' },
+            { num: d.coins || 0, label: '💰 金幣' },
+            { num: d.totalWordsCleared || 0, label: '✅ 通關單字數' },
+            { num: (d.stats && d.stats.maxCombo) || 0, label: '🔥 最高 Combo' },
+            { num: d.loginStreak || 0, label: '📅 連續登入天數' },
+        ];
+        statsGrid.innerHTML = items.map(i => `
+            <div class="stat-item">
+                <div class="stat-num">${i.num}</div>
+                <div class="stat-label">${i.label}</div>
+            </div>
+        `).join('');
+
+        // 2. 寵物狀況
+        const bars = [
+            { label: '😊 快樂', val: d.happiness || 0, color: '#ff6b81' },
+            { label: '🍎 飽食', val: d.hunger || 0, color: '#f39c12' },
+            { label: '🪥 潔淨', val: d.cleanliness || 0, color: '#3498db' },
+        ];
+        document.getElementById('pet-bars').innerHTML = bars.map(b => `
+            <div class="bar-row">
+                <span class="bar-label">${b.label}</span>
+                <div class="bar-bg">
+                    <div class="bar-fill" style="width:${b.val}%; background:${b.color};"></div>
+                </div>
+                <span class="bar-val">${b.val}%</span>
+            </div>
+        `).join('');
+
+        // 3. 每日任務
+        const questDiv = document.getElementById('quest-info');
+        if (d.quests && d.quests.list) {
+            questDiv.innerHTML = `<p style="font-size:0.8rem;color:#aaa;margin-bottom:8px;">日期：${d.quests.date}</p>` +
+                d.quests.list.map(q => `
+                    <div class="quest-item">
+                        <div>
+                            <div class="quest-text">${q.text}</div>
+                            <div style="font-size:0.75rem;color:#aaa;">進度: ${q.current} / ${q.target}</div>
+                        </div>
+                        <span class="quest-badge ${q.done ? 'done' : 'todo'}">${q.done ? '✅ 完成' : '⏳ 進行中'}</span>
+                    </div>
+                `).join('');
+        } else {
+            questDiv.innerHTML = '<p style="color:#aaa;font-size:0.9rem;">今天還沒有任務資料。</p>';
+        }
+
+        // 4. 不熟單字
+        const mistakeWordsDiv = document.getElementById('mistake-words');
+        const mw = (d.stats && d.stats.mistakeWords) ? d.stats.mistakeWords : [];
+        if (mw.length > 0) {
+            mistakeWordsDiv.innerHTML = mw.map(w =>
+                `<span class="word-chip">${w}</span>`
+            ).join('');
+        } else {
+            mistakeWordsDiv.innerHTML = '<span class="word-chip empty">🎉 目前沒有需要複習的單字！</span>';
+        }
+
+        // 5. 成就
+        const achs = [
+            { key: 'combo30', icon: '🔥', name: 'Combo 大師', desc: '連續拼對 30 題' },
+            { key: 'richer', icon: '💰', name: '倉鼠大富翁', desc: '金幣累積達 1000 枚' },
+            { key: 'level10', icon: '👑', name: '頂級飼養員', desc: '倉鼠達到 Level 10' },
+        ];
+        const achDiv = document.getElementById('achievement-list');
+        achDiv.innerHTML = achs.map(a => {
+            const unlocked = d.achievements && d.achievements[a.key];
+            return `<div class="ach-item">
+                <div class="ach-icon ${unlocked ? 'unlocked' : ''}">${a.icon}</div>
+                <div>
+                    <div class="ach-name ${unlocked ? 'unlocked' : ''}">${a.name} ${unlocked ? '✅' : '🔒 未解鎖'}</div>
+                    <div class="ach-desc">${a.desc}</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // 自動讀取預設帳號
+    window.onload = () => loadUserData();
+</script>
+</body>
+</html>
