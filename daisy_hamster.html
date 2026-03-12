@@ -593,7 +593,14 @@
             if (!globalAudioPlayer) {
                 globalAudioPlayer = new Audio();
                 globalAudioPlayer.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'; // 1ms 靜音
-                globalAudioPlayer.play().catch(e => { /* iOS 可能會在這裡擋一次，但元素已經被合法創建了 */ });
+                globalAudioPlayer.play().catch(e => { console.log('Audio init blocked', e); });
+            }
+
+            // 解鎖 SpeechSynthesis API (iOS 要求必須在使用者互動下啟動一次)
+            if ('speechSynthesis' in window) {
+                const dummy = new SpeechSynthesisUtterance('');
+                dummy.volume = 0.01;
+                window.speechSynthesis.speak(dummy);
             }
         }
 
