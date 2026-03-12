@@ -626,26 +626,31 @@
         }
 
         function speakWord(w) {
-            // 使用 Google Translate 的非官方 TTS 語音 API
-            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(w)}&tl=en&client=tw-ob`;
-            
-            try {
-                // 如果剛剛登入時有建立過 globalAudioPlayer，就重複使用它 (iOS 規定必須是 User Gesture 產生的 Audio 物件)
-                if (globalAudioPlayer) {
-                    globalAudioPlayer.src = url;
-                    globalAudioPlayer.play().catch(fallbackToSpeechSynthesis);
-                } else {
-                    const audio = new Audio(url);
-                    audio.play().catch(fallbackToSpeechSynthesis);
-                }
-            } catch(e) {
+            // 判斷是否為 iOS 裝置 (Safari/Webview 環境下 .catch() 的非同步會導致失去 User Gesture 權限)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+            if (isIOS) {
+                // iOS 裝置直接使用原生語音，不走 Google TTS 避免非同步阻擋
                 fallbackToSpeechSynthesis();
+            } else {
+                // 非 iOS 裝置使用 Google Translate TTS
+                const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(w)}&tl=en&client=tw-ob`;
+                try {
+                    if (globalAudioPlayer) {
+                        globalAudioPlayer.src = url;
+                        globalAudioPlayer.play().catch(fallbackToSpeechSynthesis);
+                    } else {
+                        const audio = new Audio(url);
+                        audio.play().catch(fallbackToSpeechSynthesis);
+                    }
+                } catch(e) {
+                    fallbackToSpeechSynthesis();
+                }
             }
 
             function fallbackToSpeechSynthesis() {
-                // 若被阻擋或出現問題，退回使用瀏覽器內建語音
                 if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.cancel(); // 停止先前的發音
                     const utterance = new SpeechSynthesisUtterance(w);
                     utterance.lang = 'en-US';
                     utterance.rate = 0.85;
