@@ -42,6 +42,11 @@
             
             <div id="stage-info">Stage 1 / 10</div>
             <div id="progress-bar"><div id="progress-fill"></div></div>
+
+            <!-- 複習單字按鈕 -->
+            <button id="btn-review" onclick="openReview()" style="width:100%; margin-bottom:12px; padding:10px; border-radius:15px; background:linear-gradient(135deg,#8ba4f9,#6c5ce7); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #4f3ce0;">
+                📖 先複習本週單字
+            </button>
             
             <div style="display: flex; gap: 10px; margin-bottom: 20px; width: 100%;">
                 <button class="btn-speak" style="flex: 1; margin-bottom: 0;" onclick="speakWord(currentWord)">🔊 聽發音</button>
@@ -352,6 +357,81 @@
             localStorage.removeItem("daisy_hamster_user");
             window.location.reload();
         }
+
+        // ========== 單字複習卡片系統 ==========
+        let reviewWords = [];
+        let reviewIndex = 0;
+
+        function openReview() {
+            unlockAudio();
+            const cat = document.getElementById('cat').value;
+            const wk = document.getElementById('week').value;
+            reviewWords = [...(words[cat][wk] || [])].map(w => w.toUpperCase());
+            reviewIndex = 0;
+            const modal = document.getElementById('review-modal');
+            modal.style.display = 'flex';
+            renderReviewCard();
+        }
+
+        function renderReviewCard() {
+            const w = reviewWords[reviewIndex];
+            const lw = w.toLowerCase();
+            document.getElementById('review-progress').textContent = `${reviewIndex + 1} / ${reviewWords.length}`;
+            document.getElementById('review-emoji').textContent = (wordImages && wordImages[lw]) || '📖';
+            document.getElementById('review-word').textContent = w;
+            document.getElementById('review-translation').textContent = (wordTranslations && wordTranslations[lw]) || '';
+            document.getElementById('review-example').textContent = (wordExamples && wordExamples[lw]) || '';
+
+            // 下一個/完成 按鈕
+            const isLast = (reviewIndex === reviewWords.length - 1);
+            const nextBtn = document.getElementById('review-next');
+            if (isLast) {
+                nextBtn.textContent = '🎮 開始遊戲！';
+                nextBtn.style.background = 'linear-gradient(135deg,#2ecc71,#27ae60)';
+            } else {
+                nextBtn.textContent = '下一個 →';
+                nextBtn.style.background = 'linear-gradient(135deg,#ff85a2,#d63384)';
+            }
+
+            // 上一個按鈕
+            document.getElementById('review-prev').style.opacity = reviewIndex === 0 ? '0.3' : '1';
+
+            // 指示點
+            const dots = document.getElementById('review-dots');
+            dots.innerHTML = reviewWords.map((_, i) =>
+                `<div style="width:8px; height:8px; border-radius:50%; background:${i === reviewIndex ? '#d63384' : '#ddd'}; transition:background 0.3s;"></div>`
+            ).join('');
+
+            // 自動朗讀
+            speakWord(reviewWords[reviewIndex].toLowerCase());
+        }
+
+        function reviewNav(dir) {
+            const newIndex = reviewIndex + dir;
+            if (newIndex < 0) return;
+            if (newIndex >= reviewWords.length) {
+                // 最後一張按「開始遊戲」
+                closeReview();
+                return;
+            }
+            reviewIndex = newIndex;
+
+            // 簡單的卡片淡入動畫
+            const card = document.querySelector('#review-modal > div');
+            card.style.opacity = '0';
+            card.style.transform = `translateX(${dir > 0 ? '30px' : '-30px'})`;
+            card.style.transition = 'opacity 0.15s, transform 0.15s';
+            setTimeout(() => {
+                renderReviewCard();
+                card.style.opacity = '1';
+                card.style.transform = 'translateX(0)';
+            }, 150);
+        }
+
+        function closeReview() {
+            document.getElementById('review-modal').style.display = 'none';
+        }
+        // ========================================
 
         function loadPetData() {
             // 這個函數改成由 Firebase 的 on('value') 負責，不再使用
@@ -1690,6 +1770,36 @@
         <div id="gacha-content" class="gacha-box shake">🎁</div>
         <h2 id="gacha-text" style="color:white; opacity:0; transition:opacity 0.5s;">點擊打開盲盒！</h2>
         <button id="gacha-close" class="btn-login" style="display:none; margin-top:20px;" onclick="closeGacha()">收下獎勵</button>
+    </div>
+
+    <!-- 單字複習卡片視窗 -->
+    <div id="review-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:3000; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
+        <div style="position:relative; background:white; border-radius:30px; width:100%; max-width:440px; padding:30px 25px; box-shadow:0 20px 60px rgba(0,0,0,0.4); text-align:center;">
+
+            <!-- 進度 -->
+            <div id="review-progress" style="font-size:0.85rem; color:#aaa; margin-bottom:10px;">1 / 10</div>
+
+            <!-- 卡片主體 -->
+            <div id="review-emoji" style="font-size:5rem; margin-bottom:10px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15));">😊</div>
+            <div id="review-word" style="font-size:2.5rem; font-weight:900; color:#3d3d3d; letter-spacing:2px; margin-bottom:8px;">HAPPY</div>
+            <div id="review-translation" style="font-size:1.3rem; color:#d63384; font-weight:bold; margin-bottom:14px;">快樂的 (ㄎㄨㄞˋ ㄌㄜˋ ㄉㄜ˙)</div>
+            <div id="review-example" style="font-size:1rem; color:#666; background:#f8f9fa; border-radius:12px; padding:12px 15px; margin-bottom:20px; font-style:italic; line-height:1.6;">She is happy to see you.</div>
+
+            <!-- 聽發音 -->
+            <button onclick="speakWord(reviewWords[reviewIndex].toLowerCase())" style="margin-bottom:16px; padding:8px 20px; border-radius:20px; background:#00bcd4; color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer;">🔊 聽發音</button>
+
+            <!-- 導航 -->
+            <div style="display:flex; gap:10px; margin-top:4px;">
+                <button id="review-prev" onclick="reviewNav(-1)" style="flex:1; padding:12px; border-radius:15px; background:#eee; color:#555; border:none; font-size:1.1rem; font-weight:bold; cursor:pointer;">← 上一個</button>
+                <button id="review-next" onclick="reviewNav(1)" style="flex:2; padding:12px; border-radius:15px; background:linear-gradient(135deg,#ff85a2,#d63384); color:white; border:none; font-size:1.1rem; font-weight:bold; cursor:pointer;">下一個 →</button>
+            </div>
+
+            <!-- 間隔指示點 -->
+            <div id="review-dots" style="display:flex; justify-content:center; gap:5px; margin-top:14px;"></div>
+        </div>
+
+        <!-- 關閉按鈕 -->
+        <button onclick="closeReview()" style="margin-top:20px; padding:8px 25px; border-radius:20px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.3); font-weight:bold; cursor:pointer; font-size:1rem;">✕ 關閉複習</button>
     </div>
 
 </body>
