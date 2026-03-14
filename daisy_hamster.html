@@ -679,18 +679,22 @@
 
         function createKeyboard() {
             const k = document.getElementById('keyboard');
+            // 強制套用 flex-column 到鍵盤容器（防止被舊快取的 CSS grid 覆蓋）
+            k.style.display = 'flex';
+            k.style.flexDirection = 'column';
+            k.style.alignItems = 'stretch';
+            k.style.width = '100%';
+            k.style.gap = '4px';
+
             const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
-            // 第一排 10 鍵為基準寬度，其他排的按鍵等寬，並左右 padding 讓排列看起來像真正鍵盤
-            const offsets = ['0', '4.5%', '13.5%']; // 每排相對於 Q 排的左移量
-            k.innerHTML = rows.map((row, i) => {
-                // 每個 key 的寬度以第一排 10 鍵為基準（含 gap）
-                const keyW = `calc((100% - ${offsets[i]} * 2 - ${(row.length - 1) * 4}px) / ${row.length})`;
-                return `<div style="display:flex; flex-direction:row; justify-content:center; gap:4px; margin-bottom:6px; box-sizing:border-box; padding:0 ${offsets[i]};">` +
+            const offsets = ['0%', '5%', '15%'];
+            k.innerHTML = rows.map((row, i) =>
+                `<div style="display:flex; flex-direction:row; justify-content:center; gap:4px; padding:0 ${offsets[i]}; box-sizing:border-box;">` +
                     row.split('').map(l =>
-                        `<button class="key" id="key-${l}" onclick="handleKey('${l}')">${l}</button>`
+                        `<button class="key" id="key-${l}" onclick="handleKey('${l}')" style="flex:1; min-width:0;">${l}</button>`
                     ).join('') +
-                `</div>`;
-            }).join('');
+                `</div>`
+            ).join('');
         }
 
         // 開始選定週別的 10 關挑戰
