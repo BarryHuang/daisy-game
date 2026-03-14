@@ -679,9 +679,15 @@
 
         function createKeyboard() {
             const k = document.getElementById('keyboard');
-            k.innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').map(l => 
-                `<button class="key" id="key-${l}" onclick="handleKey('${l}')">${l}</button>`
-            ).join('');
+            const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+            k.innerHTML = rows.map((row, i) => {
+                const indent = i === 1 ? '5%' : i === 2 ? '15%' : '0%';
+                return `<div style="display:flex; justify-content:center; gap:4px; margin-bottom:6px; padding-left:${indent}; padding-right:${indent};">` +
+                    row.split('').map(l =>
+                        `<button class="key" id="key-${l}" onclick="handleKey('${l}')" style="flex:1; min-width:0;">${l}</button>`
+                    ).join('') +
+                `</div>`;
+            }).join('');
         }
 
         // 開始選定週別的 10 關挑戰
