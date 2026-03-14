@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-hamster-v11';
+const CACHE_NAME = 'daisy-hamster-v12';
 const urlsToCache = [
   './daisy_hamster.html',
   './manifest.json',
