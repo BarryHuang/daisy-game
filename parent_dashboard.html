@@ -191,6 +191,44 @@
 
         .loading { text-align: center; color: white; padding: 40px; font-size: 1.2rem; }
         #dashboard { display: none; }
+
+        /* 所有使用者列表 */
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .users-table th {
+            background: #f0f0f0;
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #666;
+            cursor: pointer;
+            user-select: none;
+        }
+        .users-table th:hover { background: #e0e0e0; }
+        .users-table td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 0.95rem;
+        }
+        .users-table tr:last-child td { border-bottom: none; }
+        .users-table tr:hover td { background: #fafafa; }
+        .users-table .user-link {
+            color: #667eea;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .users-table .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .badge-level { background: #ede7f6; color: #6c5ce7; }
+        .badge-coins { background: #fff8e1; color: #f39c12; }
     </style>
 </head>
 <body>
@@ -199,6 +237,27 @@
         <h1>👨‍👩‍👧 家長學習後台</h1>
         <a href="daisy_hamster.html" class="back-btn">← 回到遊戲</a>
     </header>
+
+    <!-- 所有使用者列表 -->
+    <div class="card" id="all-users-card" style="margin-bottom:20px;">
+        <h2 style="font-size:1.1rem; color:#555; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+            <span>👥 所有玩家</span>
+            <span id="all-users-count" style="font-size:0.8rem; color:#aaa;"></span>
+        </h2>
+        <div id="all-users-loading" style="color:#aaa; font-size:0.9rem;">⏳ 載入中...</div>
+        <table class="users-table" id="users-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th onclick="sortUsers('name')">🆔 帳號</th>
+                    <th onclick="sortUsers('level')">🌟 等級</th>
+                    <th onclick="sortUsers('coins')">💰 金幣</th>
+                    <th onclick="sortUsers('combo')">🔥 最高 Combo</th>
+                    <th onclick="sortUsers('words')">✅ 通關字數</th>
+                </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+        </table>
+    </div>
 
     <!-- 帳號選擇 -->
     <div class="user-select-card">
@@ -358,7 +417,67 @@
     }
 
     // 自動讀取預設帳號
-    window.onload = () => loadUserData();
+    window.onload = () => {
+        loadAllUsers();
+        loadUserData();
+    };
+
+    // ======= 所有玩家列表 =======
+    let allUsersData = [];
+    let currentSort = { key: 'name', asc: true };
+
+    function loadAllUsers() {
+        db.ref('users').once('value', snap => {
+            const data = snap.val();
+            if (!data) { document.getElementById('all-users-loading').textContent = '無資料'; return; }
+
+            allUsersData = Object.entries(data).map(([name, val]) => {
+                const p = (val && val.petData) || {};
+                return {
+                    name,
+                    level: p.level || 1,
+                    coins: p.coins || 0,
+                    combo: (p.stats && p.stats.maxCombo) || 0,
+                    words: p.totalWordsCleared || 0,
+                };
+            });
+
+            document.getElementById('all-users-count').textContent = `${allUsersData.length} 位玩家`;
+            document.getElementById('all-users-loading').style.display = 'none';
+            document.getElementById('users-table').style.display = 'table';
+            renderUsersTable();
+        });
+    }
+
+    function sortUsers(key) {
+        if (currentSort.key === key) currentSort.asc = !currentSort.asc;
+        else { currentSort.key = key; currentSort.asc = key === 'name'; }
+        renderUsersTable();
+    }
+
+    function renderUsersTable() {
+        const { key, asc } = currentSort;
+        const sorted = [...allUsersData].sort((a, b) => {
+            if (typeof a[key] === 'string') return asc ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
+            return asc ? a[key] - b[key] : b[key] - a[key];
+        });
+
+        document.getElementById('users-tbody').innerHTML = sorted.map(u => `
+            <tr>
+                <td><span class="user-link" onclick="jumpToUser('${u.name}')">${u.name}</span></td>
+                <td><span class="badge badge-level">${u.level}</span></td>
+                <td><span class="badge badge-coins">${u.coins}</span></td>
+                <td>${u.combo}</td>
+                <td>${u.words}</td>
+            </tr>
+        `).join('');
+    }
+
+    function jumpToUser(name) {
+        document.getElementById('user-input').value = name;
+        loadUserData();
+        window.scrollTo({ top: document.getElementById('dashboard').offsetTop, behavior: 'smooth' });
+    }
 </script>
 </body>
 </html>
