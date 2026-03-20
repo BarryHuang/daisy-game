@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daisy's Hamster Adventure 🐹 [BETA]</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff85a2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Daisy Hamster">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- 引入 Canvas Confetti 套件來實現全螢幕灑彩紙效果 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- 引入 Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* === 版本更新提示框 === */
+        #update-modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:2000; display:none; justify-content:center; align-items:center; }
+        .update-box { background:white; padding:25px; border-radius:20px; max-width:360px; width:90%; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.4); }
+        .update-box h3 { color:#f39c12; margin-top:0; font-size:1.5rem; }
+        .update-box ul { text-align:left; line-height:1.8; color:#444; padding-left:20px; }
+        .btn-update-yes { background:linear-gradient(135deg,#f093fb,#f5576c); color:white; border:none; padding:12px 24px; border-radius:30px; font-size:1rem; font-weight:bold; cursor:pointer; margin:5px; }
+        .btn-update-no  { background:#eee; color:#888; border:none; padding:12px 24px; border-radius:30px; font-size:1rem; cursor:pointer; margin:5px; }
+        /* === 孵蛋進度 === */
+        .egg-bar-container { width:100%; margin-top:4px; }
+        .egg-bar-label { font-size:0.75rem; color:#888; font-weight:bold; display:flex; justify-content:space-between; }
+        .egg-bar { width:100%; height:12px; background:#eee; border-radius:6px; overflow:hidden; }
+        .egg-bar-fill { height:100%; background:linear-gradient(90deg,#ffecd2 0%,#fcb69f 100%); transition:width 0.5s ease; border-radius:6px; }
+        /* === 寵物切換面板 === */
+        #petbox-modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1500; display:none; justify-content:center; align-items:center; }
+        .petbox { background:white; padding:20px; border-radius:20px; max-width:340px; width:90%; text-align:center; }
+        .petbox h3 { color:var(--primary); margin-top:0; }
+        .pet-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:10px 0; }
+        .pet-card { border:3px solid #eee; border-radius:15px; padding:10px; cursor:pointer; transition:0.2s; font-size:1.8rem; }
+        .pet-card:hover { border-color:var(--primary); background:#fff5f8; }
+        .pet-card.active { border-color:#f39c12; background:#fff8e1; }
+        .pet-card.locked { opacity:0.4; cursor:not-allowed; filter:grayscale(1); }
+        @keyframes eggShake { 0% { transform:translate(-50%,-50%) rotate(-10deg); } 100% { transform:translate(-50%,-50%) rotate(10deg) scale(1.1); } }
+    </style>
+</head>
+<body>
+    <!-- 版本更新提示框 -->
+    <div id="update-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:2000; justify-content:center; align-items:center;">
+        <div class="update-box">
+            <h3>🎉 新版本已發布！</h3>
+            <div id="update-notes"></div>
+            <button class="btn-update-yes" onclick="doUpdate()">✅ 立刻更新</button>
+            <button class="btn-update-no" onclick="skipUpdate()">之後再說</button>
+        </div>
+    </div>
+    <!-- 寵物切換面板 -->
+    <div id="petbox-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1500; justify-content:center; align-items:center;">
+        <div class="petbox">
+            <h3>🐾 我的寵物</h3>
+            <div class="pet-grid" id="pet-grid"></div>
+            <button onclick="closePetBox()" style="margin-top:10px; padding:8px 20px; border-radius:20px; background:var(--primary); color:white; border:none; cursor:pointer; font-weight:bold;">關閉</button>
+        </div>
+    </div>
+    <!-- 登入視窗 -->
+    <div id="login-modal">
+        <div class="login-box">
+            <h3>🌟 歡迎來到倉鼠樂園！</h3>
+            <p style="color: #666; font-weight: bold; margin-bottom: 20px;">請輸入你的「專屬通關密碼」<br><span style="font-size: 0.9rem; font-weight: normal;">同一組密碼可以在不同設備讀取進度</span></p>
+            <input type="text" id="secret-code-input" placeholder="密碼 (例如 DAISY)" autocomplete="off">
+            <br>
+            <button class="btn-login" onclick="login()">開始玩！</button>
+        </div>
+    </div>
+
+    <h2>Daisy's Hamster Adventure 🐹</h2>
+    
+    <div class="app-container">
+        <!-- 左側：拼字挑戰 10 關 -->
+        <div class="card game-section">
+            <div class="controls-row">
+                <select id="cat" onchange="setupWeek()"></select>
+                <select id="week" onchange="startLevel()"></select>
+            </div>
+            
+            <div id="stage-info">Stage 1 / 10</div>
+            <div id="progress-bar"><div id="progress-fill"></div></div>
+
+            <!-- 複習單字按鈕 -->
+            <button id="btn-review" onclick="openReview()" style="width:100%; margin-bottom:12px; padding:10px; border-radius:15px; background:linear-gradient(135deg,#8ba4f9,#6c5ce7); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #4f3ce0;">
+                📖 先複習本週單字
+            </button>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; width: 100%;">
+                <button class="btn-speak" style="flex: 1; margin-bottom: 0;" onclick="speakWord(currentWord)">🔊 聽發音</button>
+                <button class="btn-speak" style="flex: 1; margin-bottom: 0; background: #00bcd4; box-shadow: 0 4px 0 #0097a7;" id="btn-hint" onclick="useHint()">💡 提示 (2💰)</button>
+            </div>
+            <div id="target-slots"></div>
+            <div id="game-message">聽發音並拼出單字吧！</div>
+            <div id="word-translation" style="font-size: 1.5rem; color: #d63384; font-weight: bold; margin-bottom: 15px; text-align: center; display: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); min-height: 40px;"></div>
+            <div id="keyboard"></div>
+        </div>
+
+        <!-- 右側：倉鼠養成 -->
+        <div class="card hamster-section">
+            <div class="hamster-stats">
+                <div class="stat-row">
+                    <div class="stat">⭐ Lvl: <span id="h-lvl">1</span></div>
+                    <div class="stat">💰 金幣: <span id="h-coins">0</span></div>
+                </div>
+                <div class="exp-bar-container">
+                    <div class="exp-bar-label"><span>EXP</span><span id="exp-text">0 / 100</span></div>
+                    <div class="exp-bar"><div class="exp-bar-fill" id="exp-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="exp-bar-container">
+                    <div class="happiness-label"><span>快樂度</span><span class="mood-emoji" id="mood-emoji">😊</span></div>
+                    <div class="happiness-bar"><div class="happiness-fill" id="happiness-fill" style="width: 50%"></div></div>
+                </div>
+                <!-- 孵蛋進度條 -->
+                <div class="egg-bar-container">
+                    <div class="egg-bar-label"><span>🥚 孵蛋進度</span><span id="egg-text">0 / 30</span></div>
+                    <div class="egg-bar"><div class="egg-bar-fill" id="egg-fill" style="width: 0%"></div></div>
+                </div>
+                <!-- 飽食度 -->
+                <div class="exp-bar-container" style="width: 48%;">
+                    <div class="happiness-label"><span>飽食度 🍎</span></div>
+                    <div class="happiness-bar"><div class="happiness-fill" id="hunger-fill" style="background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); width: 100%"></div></div>
+                </div>
+                <!-- 清潔度 -->
+                <div class="exp-bar-container" style="width: 48%;">
+                    <div class="happiness-label"><span>清潔度 🛁</span></div>
+                    <div class="happiness-bar"><div class="happiness-fill" id="clean-fill" style="background: linear-gradient(90deg, #89f7fe 0%, #66a6ff 100%); width: 100%"></div></div>
+                </div>
+            </div>
+            <div class="hamster-cage" id="cage">
+                <!-- 天空裝飾 -->
+                <div class="habitat-sun"></div>
+                <div class="cloud cloud1"></div>
+                <div class="cloud cloud2"></div>
+                <div class="cloud cloud3"></div>
+                <!-- 小花裝飾 -->
+                <span class="ground-flower" style="left:5%">🌼</span>
+                <span class="ground-flower" style="left:25%; animation-delay:-0.5s">🌻</span>
+                <span class="ground-flower" style="left:55%; animation-delay:-1s">🌸</span>
+                <span class="ground-flower" style="left:80%; animation-delay:-1.5s">🌺</span>
+                <!-- Combo 顯示 -->
+                <div class="combo-display" id="combo-display"></div>
+                <!-- 背景玩具：解鎖道具區 -->
+                <div class="prop-house" id="prop-house"></div>
+                <div class="prop-slide" id="prop-slide"></div>
+                <div class="prop-wheel" id="prop-wheel"></div>
+                <div class="prop-water" id="prop-water"></div>
+                
+                <!-- 抓黃金蝴蝶 -->
+                <div id="golden-butterfly" onclick="catchButterfly()" style="display:none; position:absolute; font-size:2rem; cursor:pointer; z-index:20; transition: left 15s linear, top 15s linear;">🦋</div>
+
+                <!-- 訪客系統 -->
+                <div id="visitor" class="visitor-sprite" style="display:none; bottom:10px; left:10px;" onclick="tapVisitor()">
+                    <div id="visitor-emoji">🐸</div>
+                    <div id="visitor-bubble" class="visitor-bubble" style="display:none;">Hello!</div>
+                </div>
+
+                <!-- 每日任務按鈕 -->
+                <div class="quest-btn bounce" id="btn-daily-quest" onclick="openQuests()">📜</div>
+
+                <!-- SVG Hamster -->
+                <div id="hamster-wrapper" style="transition: transform 3s ease-in-out; transform: translateX(0px) scaleX(1);">
+                <svg class="hamster-svg" id="hamster" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="50" cy="65" rx="35" ry="30" fill="#f4a460" /> <!-- Body -->
+                    <circle cx="50" cy="45" r="25" fill="#deb887" /> <!-- Head -->
+                    <circle cx="35" cy="25" r="10" fill="#f4a460" /> <!-- Ear L -->
+                    <circle cx="65" cy="25" r="10" fill="#f4a460" /> <!-- Ear R -->
+                    <circle cx="35" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear L Inner -->
+                    <circle cx="65" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear R Inner -->
+                    
+                    <!-- 眼睛設定：區分張眼與閉眼 -->
+                    <circle class="eye" cx="40" cy="40" r="3" fill="#000" /> <!-- Eye L -->
+                    <circle class="eye" cx="60" cy="40" r="3" fill="#000" /> <!-- Eye R -->
+                    <!-- 閉眼狀態 (預設隱藏) -->
+                    <path class="eye-closed" d="M 35 40 Q 40 43 45 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
+                    <path class="eye-closed" d="M 55 40 Q 60 43 65 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
+                    
+                    <ellipse cx="50" cy="50" rx="6" ry="4" fill="#ffc0cb" /> <!-- Nose -->
+                    <path class="mouth" d="M 50 54 Q 45 60 40 55 M 50 54 Q 55 60 60 55" fill="none" stroke="#000" stroke-width="2" /> <!-- Mouth -->
+                    <ellipse cx="30" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot L -->
+                    <ellipse cx="70" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot R -->
+                    
+                    <!-- 配件群組 -->
+                    <g id="hamster-bow"></g>
+                    
+                    <circle class="arm-l" cx="20" cy="60" r="5" fill="#f4a460" /> <!-- Arm L -->
+                    <circle class="arm-r" cx="80" cy="60" r="5" fill="#f4a460" /> <!-- Arm R -->
+                    
+                    <!-- 帽子群組 -->
+                    <g id="hamster-hat"></g>
+                </svg>
+                </div>
+            </div>
+            
+            <div class="pet-actions">
+                <!-- 食物專區 -->
+                <div class="action-btn" id="btn-feed-seed" onclick="feedHamster('seed', 1, 10, '🌻')">
+                    <span>瓜子🌻</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">1 💰/+10 Exp</span>
+                </div>
+                <div class="action-btn" id="btn-feed-carrot" onclick="feedHamster('carrot', 3, 40, '🥕')">
+                    <span>胡蘿蔔🥕</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">3 💰/+40 Exp</span>
+                </div>
+                <div class="action-btn" id="btn-feed-apple" onclick="feedHamster('apple', 5, 80, '🍎')">
+                    <span>蘋果🍎</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">5 💰/+80 Exp</span>
+                </div>
+                <!-- 互動專區 -->
+                <div class="action-btn free" onclick="petHamster()">
+                    <span>摸摸 🖐️</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">免費呼嚕</span>
+                </div>
+                <!-- 寵物盒 -->
+                <div class="action-btn" onclick="openPetBox()" style="border-color:#9b59b6; color:#8e44ad;">
+                    <span>寵物盒 🥚</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;" id="petbox-count">1 隻</span>
+                </div>
+                <!-- 洗澡海綿 (商店/消耗品) -->
+                <div class="action-btn" id="btn-bath" onclick="bathHamster()">
+                    <span>洗澡 🧽</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">5 💰/+潔淨</span>
+                </div>
+                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 3;">
+                    <span>睡覺 💤 (讓倉鼠好好休息)</span>
+                </div>
+                <div class="action-btn" id="btn-shop" onclick="openShop()" style="grid-column: span 2; border-color: #f1c40f; color: #f39c12;">
+                    <span>購物中心 🛍️</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">佈景與帽子</span>
+                </div>
+                <div class="action-btn" id="btn-trophy" onclick="openTrophies()" style="grid-column: span 2; border-color: #9b59b6; color: #8e44ad;">
+                    <span>榮譽獎盃 🏆</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">成就一覽</span>
+                </div>
+                <!-- 商店專區 (舊版用品) -->
+                <!-- 水瓶按鈕 (商店) -->
+                <div class="action-btn locked" id="btn-water" onclick="buyItem('water', 30, '水瓶💧')">
+                    <span id="label-water">買水瓶 💧</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-water">30 💰</span>
+                </div>
+                <!-- 小木屋 (商店) -->
+                <div class="action-btn locked" id="btn-house" onclick="buyItem('house', 100, '小木屋🏡')">
+                    <span id="label-house">買木屋 🏡</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-house">100 💰</span>
+                </div>
+                <!-- 溜滑梯 (商店) -->
+                <div class="action-btn locked" id="btn-slide" onclick="buyItem('slide', 150, '溜滑梯🎢')">
+                    <span id="label-slide">溜滑梯 🎢</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-slide">150 💰</span>
+                </div>
+                <!-- 跑輪按鈕 (商店) -->
+                <div class="action-btn locked" id="btn-run" onclick="playWheel()">
+                    <span id="label-run">買跑輪 🎡</span>
+                    <span style="font-size: 0.8rem; font-weight: normal;" id="txt-run">50 💰</span>
+                </div>
+            </div>
+            <div style="margin-top:20px; font-size: 0.9rem; color:#888; font-weight:bold; text-align:center;">
+                登入帳號: <span id="current-user" style="color: var(--primary);">---</span>
+                <button onclick="logout()" style="margin-left: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid #ccc; background: white; cursor: pointer;">切換</button>
+            </div>
+            <!-- 家長後台按鈕：只有 BARRY 登入時顯示 -->
+            <div id="parent-dashboard-btn" style="display:none; margin-top:10px; text-align:center;">
+                <a href="parent_dashboard.html" style="display:inline-block; padding:8px 20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:20px; font-weight:bold; font-size:0.9rem; text-decoration:none;">👨‍👩‍👧 家長學習後台</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="words.js"></script>
+    <script>
+
+        // --- Firebase 初始化 ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaWfJnDdK4R2mv2Ht3dQm2lyHhmpWIjo4",
+            authDomain: "daisygame-30452.firebaseapp.com",
+            databaseURL: "https://daisygame-30452-default-rtdb.firebaseio.com",
+            projectId: "daisygame-30452",
+            storageBucket: "daisygame-30452.firebasestorage.app",
+            messagingSenderId: "548508102123",
+            appId: "1:548508102123:web:40f02b8557ecca99523dae",
+            measurementId: "G-B7N0LC0D6P"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 版本識別
+        const GAME_VERSION = '2.0-beta';
+        const BETA_USER_PREFIX = 'users_beta'; // 測試用路徑，不會唤到正式玩家
+
+        // 寵物池定義
+        const PET_POOL = [
+            { id: 'hamster', emoji: '🐹', name: '倉鼠', weight: 0, default: true }, // 預設不用抽
+            { id: 'chick',   emoji: '🐥', name: '小雞',  weight: 35 },
+            { id: 'cat',     emoji: '🐱', name: '小貓',  weight: 30 },
+            { id: 'rabbit',  emoji: '🐰', name: '兔子',  weight: 20 },
+            { id: 'penguin', emoji: '🐧', name: '企鵝',  weight: 10 },
+            { id: 'dino',    emoji: '🦖', name: '小恐龍', weight: 5 },
+        ];
+
+        let secretCode = '';
+
+        // --- 倉鼠寵物系統資料 ---
+        let petData = {
+            level: 1,
+            exp: 0,
+            coins: 0, 
+            totalWordsCleared: 0,
+            happiness: 50,
+            hunger: 100,
+            cleanliness: 100,
+            lastLoginDate: '',
+            loginStreak: 0,
+            quests: null,
+            items: { wheel: false, water: false, house: false, slide: false },
+            equipped: { scene: 'default', hat: 'none', bow: 'none' },
+            unlocks: { scenes: ['default'], hats: ['none'], bows: ['none'] },
+            stats: { maxCombo: 0 },
+            achievements: { combo30: false, richer: false, level10: false }
+        };
+
+        let comboCount = 0; // 連續全對次數
+
+        function migratePetData(data) {
+            if(!data) return JSON.parse(JSON.stringify(petData)); // 回傳預設乾淨結構
+            
+            if(data.seeds !== undefined) { data.coins = data.seeds; delete data.seeds; }
+            if(data.coins === undefined) data.coins = 0;
+            if(data.happiness === undefined) data.happiness = 50;
+            
+            if(data.hunger === undefined) data.hunger = 100;
+            if(data.cleanliness === undefined) data.cleanliness = 100;
+            if(data.lastLoginDate === undefined) data.lastLoginDate = '';
+            if(data.loginStreak === undefined) data.loginStreak = 0;
+            if(data.eggCoins === undefined) data.eggCoins = 0;
+            if(!data.ownedPets) data.ownedPets = ['hamster'];
+            if(!data.currentPet) data.currentPet = 'hamster';
+            if(data.quests === undefined) data.quests = null;
+            
+            if(!data.items) data.items = { wheel: false, water: false, house: false, slide: false };
+            if(!data.equipped) data.equipped = { scene: 'default', hat: 'none', bow: 'none' };
+            if(!data.unlocks) data.unlocks = { scenes: ['default'], hats: ['none'], bows: ['none'] };
+            if(!data.stats) data.stats = { maxCombo: 0, mistakeWords: [] };
+            if(!data.stats.mistakeWords) data.stats.mistakeWords = [];
+            if(!data.achievements) data.achievements = { combo30: false, richer: false, level10: false };
+            return data;
+        }
+
+        function login() {
+            const input = document.getElementById('secret-code-input').value.trim().toUpperCase();
+            if(!input) { alert("請輸入通關密碼喔！"); return; }
+            
+            secretCode = input;
+            localStorage.setItem("daisy_hamster_user", secretCode);
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('current-user').textContent = secretCode;
+
+            // iOS Audio Unlock: 必須在使用者點擊 (Click Event) 內初始化 AudioContext 與 HTMLAudioElement
+            unlockAudio();
+            
+            // 立刻先刷新一次 UI (讓 BARRY 測試帳號馬上生效)
+            updatePetUI();
+            
+            // 監聽 Firebase 資料同步
+            const petRef = db.ref('users/' + secretCode + '/petData');
+            petRef.once('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    petData = migratePetData(data);
+                    
+                    // 測試帳號 BARRY 預設擁有 999 金幣
+                    if(secretCode === 'BARRY' && petData.coins < 999) {
+                        petData.coins = 999;
+                        petRef.set(petData);
+                    }
+                    
+                    // 開始持續監聽
+                    petRef.on('value', (snap) => {
+                        if(snap.val()) { petData = migratePetData(snap.val()); updatePetUI(); }
+                    });
+                } else {
+                    // 新玩家：檢查有沒有舊版的 LocalStorage 端資料可以繼承
+                    const oldSaved = localStorage.getItem("daisy_hamster_save");
+                    if(oldSaved) {
+                        try { 
+                            let parsed = JSON.parse(oldSaved); 
+                            if(parsed && parsed.level) {
+                                petData = migratePetData(parsed);
+                                alert("🐰 發現你以前照顧過小倉鼠！已經幫你把舊進度升級上雲端囉！");
+                            }
+                        } catch(e) {}
+                        localStorage.removeItem("daisy_hamster_save");
+                    } else {
+                        // 真的全新的玩家
+                        petData = migratePetData(null);
+                    }
+                    
+                    // 測試帳號 BARRY 預設擁有 999 金幣
+                    if(secretCode === 'BARRY') {
+                        petData.coins = 999;
+                    }
+                    
+                    petRef.set(petData);
+                    
+                    // 開始持續監聽
+                    petRef.on('value', (snap) => {
+                        if(snap.val()) { petData = snap.val(); updatePetUI(); }
+                    });
+                }
+                
+                checkDailyLogin();
+                checkDailyQuests();
+                
+                updatePetUI();
+            });
+            
+            // 如果還沒開始遊戲 (第一次登入)，初始化遊戲關卡
+            if (currentLevelQueue.length === 0) {
+                setupConfig();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("daisy_hamster_user");
+            window.location.reload();
+        }
+
+        // ========== 單字複習卡片系統 ==========
+        let reviewWords = [];
+        let reviewIndex = 0;
+
+        function openReview() {
+            unlockAudio();
+            const cat = document.getElementById('cat').value;
+            const wk = document.getElementById('week').value;
+            reviewWords = [...(words[cat][wk] || [])].map(w => w.toUpperCase());
+            reviewIndex = 0;
+            const modal = document.getElementById('review-modal');
+            modal.style.display = 'flex';
+            renderReviewCard();
+        }
+
+        function renderReviewCard() {
+            const w = reviewWords[reviewIndex];
+            const lw = w.toLowerCase();
+            document.getElementById('review-progress').textContent = `${reviewIndex + 1} / ${reviewWords.length}`;
+            document.getElementById('review-emoji').textContent = (wordImages && wordImages[lw]) || '📖';
+            document.getElementById('review-word').textContent = w;
+            document.getElementById('review-translation').textContent = (wordTranslations && wordTranslations[lw]) || '';
+            document.getElementById('review-example').textContent = (wordExamples && wordExamples[lw]) || '';
+
+            // 下一個/完成 按鈕
+            const isLast = (reviewIndex === reviewWords.length - 1);
+            const nextBtn = document.getElementById('review-next');
+            if (isLast) {
+                nextBtn.textContent = '🎮 開始遊戲！';
+                nextBtn.style.background = 'linear-gradient(135deg,#2ecc71,#27ae60)';
+            } else {
+                nextBtn.textContent = '下一個 →';
+                nextBtn.style.background = 'linear-gradient(135deg,#ff85a2,#d63384)';
+            }
+
+            // 上一個按鈕
+            document.getElementById('review-prev').style.opacity = reviewIndex === 0 ? '0.3' : '1';
+
+            // 指示點
+            const dots = document.getElementById('review-dots');
+            dots.innerHTML = reviewWords.map((_, i) =>
+                `<div style="width:8px; height:8px; border-radius:50%; background:${i === reviewIndex ? '#d63384' : '#ddd'}; transition:background 0.3s;"></div>`
+            ).join('');
+
+            // 自動朗讀
+            speakWord(reviewWords[reviewIndex].toLowerCase());
+        }
+
+        function reviewNav(dir) {
+            const newIndex = reviewIndex + dir;
+            if (newIndex < 0) return;
+            if (newIndex >= reviewWords.length) {
+                // 最後一張按「開始遊戲」
+                closeReview();
+                return;
+            }
+            reviewIndex = newIndex;
+
+            // 簡單的卡片淡入動畫
+            const card = document.querySelector('#review-modal > div');
+            card.style.opacity = '0';
+            card.style.transform = `translateX(${dir > 0 ? '30px' : '-30px'})`;
+            card.style.transition = 'opacity 0.15s, transform 0.15s';
+            setTimeout(() => {
+                renderReviewCard();
+                card.style.opacity = '1';
+                card.style.transform = 'translateX(0)';
+            }, 150);
+        }
+
+        function closeReview() {
+            document.getElementById('review-modal').style.display = 'none';
+        }
+        // ========================================
+
+        function loadPetData() {}
+
+        // === 版本更新模組 ===
+        function checkVersion() {
+            db.ref('meta/latestVersion').once('value', snap => {
+                const latest = snap.val();
+                if(!latest || latest === GAME_VERSION) return;
+                const skipped = localStorage.getItem('skip_version_' + latest);
+                if(skipped) return;
+                // 顯示更新提示
+                const notes = document.getElementById('update-notes');
+                notes.innerHTML = `<p><strong>v${latest}</strong> 新功能：</p><ul><li>🥚 寵物孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵<br>剀抖自區区区区区医<br>  布景填填填填填填填填填填填填填<br>宰孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵孵<br>孵孵名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名名`;
+                document.getElementById('update-modal').style.display = 'flex';
+                window._pendingVersion = latest;
+            });
+        }
+        function doUpdate() {
+            location.reload(true);
+        }
+        function skipUpdate() {
+            if(window._pendingVersion) localStorage.setItem('skip_version_' + window._pendingVersion, '1');
+            document.getElementById('update-modal').style.display = 'none';
+        }
+
+        // === 孵蛋系統模組 ===
+        function updateEggProgressBar() {
+            const eggs = Math.min(30, petData.eggCoins || 0);
+            document.getElementById('egg-fill').style.width = (eggs / 30 * 100) + '%';
+            document.getElementById('egg-text').textContent = eggs + ' / 30';
+        }
+
+        function getRandomPet(ownedList) {
+            const available = PET_POOL.filter(p => !p.default && !ownedList.includes(p.id));
+            if(available.length === 0) return null;
+            const total = available.reduce((s, p) => s + p.weight, 0);
+            let r = Math.random() * total;
+            for(const p of available) {
+                r -= p.weight;
+                if(r <= 0) return p;
+            }
+            return available[available.length - 1];
+        }
+
+        function triggerEggHatch() {
+            const owned = petData.ownedPets || ['hamster'];
+            const newPet = getRandomPet(owned);
+            if(!newPet) {
+                alert('🎉 恭喜！你已經取得所有寵物了！');
+                petData.eggCoins = 0;
+                savePetData();
+                return;
+            }
+            // 變異效果
+            const cage = document.getElementById('cage');
+            const eggEl = document.createElement('div');
+            eggEl.textContent = '🥚';
+            eggEl.style.cssText = 'position:absolute;font-size:4rem;z-index:20;top:30%;left:50%;transform:translate(-50%,-50%);animation:eggShake 0.5s infinite alternate;';
+            cage.appendChild(eggEl);
+            playTone(400, 'sine', 0.1);
+            setTimeout(() => playTone(600, 'sine', 0.1), 300);
+            setTimeout(() => playTone(800, 'sine', 0.1), 600);
+            setTimeout(() => {
+                eggEl.textContent = newPet.emoji;
+                eggEl.style.fontSize = '5rem';
+                eggEl.style.animation = 'none';
+                confetti({ particleCount: 100, spread: 80, origin: { y: 0.5, x: 0.75 } });
+                alert(`🎉 孵蛋孵化囀！得到了 ${newPet.emoji} ${newPet.name}！`);
+                petData.ownedPets = owned.concat([newPet.id]);
+                petData.eggCoins = 0;
+                savePetData();
+                updatePetUI();
+                setTimeout(() => eggEl.remove(), 1500);
+            }, 1500);
+        }
+
+        // === 寵物盒模組 ===
+        function openPetBox() {
+            const owned = petData.ownedPets || ['hamster'];
+            const current = petData.currentPet || 'hamster';
+            const grid = document.getElementById('pet-grid');
+            grid.innerHTML = PET_POOL.map(p => {
+                const isOwned = p.default || owned.includes(p.id);
+                const isActive = p.id === current;
+                return `<div class="pet-card ${isActive ? 'active' : ''} ${!isOwned ? 'locked' : ''}" 
+                    onclick="${isOwned ? `switchPet('${p.id}')` : ""}"
+                    title="${isOwned ? p.name : '???\u5c1a未解鎖'}"
+                >
+                    <div>${isOwned ? p.emoji : '❓'}</div>
+                    <div style="font-size:0.7rem; margin-top:4px;">${isOwned ? p.name : '???'}</div>
+                    ${isActive ? '<div style="font-size:0.65rem;color:#f39c12">★目前</div>' : ''}
+                </div>`;
+            }).join('');
+            document.getElementById('petbox-modal').style.display = 'flex';
+        }
+        function closePetBox() {
+            document.getElementById('petbox-modal').style.display = 'none';
+        }
+        function switchPet(petId) {
+            petData.currentPet = petId;
+            savePetData();
+            renderPet(petId);
+            updatePetUI();
+            closePetBox();
+        }
+        function renderPet(petId) {
+            const pet = PET_POOL.find(p => p.id === petId) || PET_POOL[0];
+            const hamsterSvg = document.getElementById('hamster');
+            // 更改色調模擬不同寵物
+            const colorMap = {
+                hamster: ['#f4a460','#deb887'],
+                chick:   ['#FFD700','#FFC200'],
+                cat:     ['#B0B0B0','#D0D0D0'],
+                rabbit:  ['#FFFFFF','#F0F0F0'],
+                penguin: ['#2C2C2C','#FFFFFF'],
+                dino:    ['#6DB33F','#8FD14F'],
+            };
+            const colors = colorMap[petId] || colorMap.hamster;
+            hamsterSvg.querySelectorAll('ellipse,circle:not(.eye)').forEach((el,i) => {
+                if (i === 0) el.setAttribute('fill', colors[0]);
+                else if (i === 1) el.setAttribute('fill', colors[1]);
+            });
+        }
+
+        function savePetData() {
+            if(secretCode) {
+                // Beta 版使用獨立路徑，不歡据正式玩家
+                db.ref(BETA_USER_PREFIX + '/' + secretCode + '/petData').set(petData);
+            }
+        }
+
+        function updatePetUI() {
+            // 測試帳號 BARRY 每次更新 UI 時都確保有 999 金幣
+            if(secretCode === 'BARRY' && petData.coins < 999) {
+                petData.coins = 999;
+                savePetData();
+            }
+
+            // 家長後台按鈕：只有 BARRY 才顯示
+            const parentBtn = document.getElementById('parent-dashboard-btn');
+            if(parentBtn) parentBtn.style.display = (secretCode === 'BARRY') ? 'block' : 'none';
+            
+            document.getElementById('h-lvl').textContent = petData.level;
+            document.getElementById('h-coins').textContent = petData.coins;
+            
+            // 孵蛋進度條
+            updateEggProgressBar();
+            
+            // 寵物盒數字
+            const ownedCount = (petData.ownedPets || ['hamster']).length;
+            const el = document.getElementById('petbox-count');
+            if(el) el.textContent = ownedCount + ' 隻';
+            
+            // EXP 進度條
+            const expNeeded = petData.level * 100;
+            const expPercent = Math.min(100, (petData.exp / expNeeded) * 100);
+            document.getElementById('exp-fill').style.width = expPercent + '%';
+            document.getElementById('exp-text').textContent = `${petData.exp} / ${expNeeded}`;
+            
+            // 快樂度、飽食度、清潔度 Progress Bar 更新
+            const hap = Math.max(0, Math.min(100, petData.happiness || 50));
+            document.getElementById('happiness-fill').style.width = hap + '%';
+            const moodEmoji = hap >= 80 ? '😄' : (hap >= 50 ? '😊' : (hap >= 20 ? '😕' : '😢'));
+            document.getElementById('mood-emoji').textContent = moodEmoji;
+            
+            const hun = Math.max(0, Math.min(100, petData.hunger || 100));
+            document.getElementById('hunger-fill').style.width = hun + '%';
+            
+            const cln = Math.max(0, Math.min(100, petData.cleanliness || 100));
+            document.getElementById('clean-fill').style.width = cln + '%';
+            
+            // 倉鼠外觀變髒
+            const hamsterSvg = document.getElementById('hamster');
+            if(cln < 30) {
+                hamsterSvg.classList.add('dirty');
+            } else {
+                hamsterSvg.classList.remove('dirty');
+            }
+            
+            // 倉鼠等級外觀變化
+            hamsterSvg.classList.remove('lvl-3', 'lvl-5', 'lvl-8');
+            if(petData.level >= 8) hamsterSvg.classList.add('lvl-8');
+            else if(petData.level >= 5) hamsterSvg.classList.add('lvl-5');
+            else if(petData.level >= 3) hamsterSvg.classList.add('lvl-3');
+            
+        // 裝備配件 (帽子、蝴蝶結、披風、魔法棒)
+            const hatGroup = document.getElementById('hamster-hat');
+            if(hatGroup) {
+                if(petData.equipped.hat === 'tophat') hatGroup.innerHTML = '<rect x="35" y="10" width="30" height="20" fill="#333" rx="2"/><rect x="30" y="30" width="40" height="5" fill="#111" rx="2"/>';
+                else if(petData.equipped.hat === 'party') hatGroup.innerHTML = '<polygon points="50,5 35,30 65,30" fill="#ff4757"/><circle cx="50" cy="5" r="5" fill="#fbc531"/>';
+                else if(petData.equipped.hat === 'magic') hatGroup.innerHTML = '<rect x="75" y="30" width="4" height="40" fill="#8e44ad" transform="rotate(30 75 30)"/><polygon points="85,25 90,15 95,25 105,30 95,35 90,45 85,35 75,30" fill="#f1c40f"/>';
+                else hatGroup.innerHTML = '';
+            }
+            
+            const bowGroup = document.getElementById('hamster-bow');
+            if(bowGroup) {
+                if(petData.equipped.bow === 'red') bowGroup.innerHTML = '<polygon points="50,70 35,60 35,80" fill="#ff4757"/><polygon points="50,70 65,60 65,80" fill="#ff4757"/><circle cx="50" cy="70" r="4" fill="#ff6b81"/>';
+                else if(petData.equipped.bow === 'blue') bowGroup.innerHTML = '<polygon points="50,70 35,60 35,80" fill="#3498db"/><polygon points="50,70 65,60 65,80" fill="#3498db"/><circle cx="50" cy="70" r="4" fill="#2980b9"/>';
+                else if(petData.equipped.bow === 'cape') bowGroup.innerHTML = '<path d="M 30 65 Q 10 90 20 110 L 80 110 Q 90 90 70 65 Z" fill="#e74c3c" opacity="0.9"/>';
+                else bowGroup.innerHTML = '';
+            }
+            
+            // 場景替換
+            const cage = document.getElementById('cage');
+            cage.className = 'hamster-cage'; // Reset
+            if(petData.equipped.scene === 'beach') cage.classList.add('bg-beach');
+            else if(petData.equipped.scene === 'space') cage.classList.add('bg-space');
+            
+            // 等級外觀：高等級戴皇冠 (覆蓋其他帽子)
+            let crown = document.getElementById('hamster-crown');
+            if(petData.level >= 10) {
+                if(hatGroup) hatGroup.innerHTML = ''; // 移除一般帽子
+                if(!crown) {
+                    crown = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    crown.setAttribute('id', 'hamster-crown');
+                    crown.setAttribute('x', '50'); crown.setAttribute('y', '18');
+                    crown.setAttribute('text-anchor', 'middle'); crown.setAttribute('font-size', '20');
+                    crown.textContent = '👑';
+                    hamsterSvg.appendChild(crown);
+                }
+            } else if(crown) { crown.remove(); }
+            
+            // 處理食物與洗澡按鈕狀態
+            ['seed', 'carrot', 'apple'].forEach(food => {
+                const btn = document.getElementById(`btn-feed-${food}`);
+                const cost = food === 'seed' ? 1 : (food === 'carrot' ? 3 : 5);
+                if(petData.coins < cost) btn.classList.add('disabled');
+                else btn.classList.remove('disabled');
+            });
+            const btnBath = document.getElementById('btn-bath');
+            if(petData.coins < 5) btnBath.classList.add('disabled');
+            else btnBath.classList.remove('disabled');
+            
+            // 處理跑輪商店與解鎖
+            const runBtn = document.getElementById('btn-run');
+            const wheel = document.getElementById('prop-wheel');
+            if(petData.items.wheel) {
+                runBtn.classList.remove('locked');
+                runBtn.classList.add('free');
+                document.getElementById('label-run').textContent = "玩跑輪 🎡";
+                runBtn.querySelector('#txt-run').textContent = "免費！";
+                wheel.classList.add('show');
+            } else {
+                runBtn.classList.remove('free');
+                document.getElementById('label-run').textContent = "買跑輪 🎡";
+                runBtn.querySelector('#txt-run').textContent = "50 💰";
+                if(petData.coins >= 50) runBtn.classList.remove('locked');
+                else runBtn.classList.add('locked');
+                wheel.classList.remove('show');
+            }
+
+            // 處理場景解鎖 - 統一刷新 UI
+            refreshShopItem('water', 30, '水瓶💧', '喝水 💧');
+            refreshShopItem('house', 100, '小木屋🏡', '進屋子 🏡');
+            refreshShopItem('slide', 150, '溜滑梯🎢', '玩滑梯 🎢');
+        }
+
+        function refreshShopItem(itemId, cost, buyLabel, ownedLabel) {
+            const btn = document.getElementById(`btn-${itemId}`);
+            const prop = document.getElementById(`prop-${itemId}`);
+            
+            if(petData.items[itemId]) {
+                btn.classList.remove('locked');
+                btn.classList.add('free');
+                document.getElementById(`label-${itemId}`).textContent = ownedLabel;
+                btn.querySelector(`#txt-${itemId}`).textContent = "可互動";
+                prop.classList.add('show');
+            } else {
+                btn.classList.remove('free');
+                document.getElementById(`label-${itemId}`).textContent = `買${buyLabel}`;
+                btn.querySelector(`#txt-${itemId}`).textContent = `${cost} 💰`;
+                if(petData.coins >= cost) btn.classList.remove('locked');
+                else btn.classList.add('locked');
+                prop.classList.remove('show');
+            }
+        }
+
+        // 通用的購買功能
+        function buyItem(itemId, cost, itemName) {
+            if (isSleeping) return wakeUp();
+            if (isRunning) return;
+            
+            if(petData.items[itemId]) {
+                // 已購買，觸發專屬互動
+                if(itemId === 'water') {
+                    const hamster = document.getElementById('hamster');
+                    hamster.classList.add('happy');
+                    playTone(800, 'sine', 0.1); setTimeout(()=>playTone(900, 'sine', 0.1), 150);
+                    createFloatingEmoji('💧', 1200, -30);
+                    addHappiness(5);
+                    setTimeout(() => hamster.classList.remove('happy'), 1000);
+                } else if(itemId === 'house') {
+                    // 倉鼠跑進屋子裡
+                    const hamster = document.getElementById('hamster');
+                    if(hamster.classList.contains('hide-in-house')) return;
+                    hamster.classList.add('hide-in-house');
+                    playTone(400, 'sine', 0.2);
+                    createFloatingEmoji('🏡', 1500, -40);
+                    addHappiness(10);
+                    setTimeout(() => {
+                        hamster.classList.remove('hide-in-house');
+                        hamster.classList.add('happy');
+                        createFloatingEmoji('❤️', 1200, -30);
+                        setTimeout(() => hamster.classList.remove('happy'), 800);
+                    }, 2000);
+                } else if(itemId === 'slide') {
+                    // 倉鼠溜滑梯
+                    const hamster = document.getElementById('hamster');
+                    if(hamster.classList.contains('slide-down')) return;
+                    hamster.classList.add('slide-down');
+                    playTone(600, 'triangle', 0.1);
+                    setTimeout(() => playTone(500, 'triangle', 0.1), 200);
+                    setTimeout(() => playTone(400, 'triangle', 0.1), 400);
+                    createFloatingEmoji('😆', 1500, -40);
+                    addHappiness(15);
+                    setTimeout(() => {
+                        hamster.classList.remove('slide-down');
+                        hamster.classList.add('happy');
+                        setTimeout(() => hamster.classList.remove('happy'), 600);
+                    }, 1500);
+                }
+                return;
+            }
+            
+            // 購買邏輯
+            if (petData.coins >= cost) {
+                petData.coins -= cost;
+                petData.items[itemId] = true;
+                savePetData();
+                updatePetUI();
+                alert(`🎊 購買成功！小倉鼠擁有 ${itemName} 了！`);
+                
+                // 放個慶祝煙火
+                confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 , x: 0.75} }); 
+                playTone(600, 'sine', 0.1); setTimeout(()=>playTone(800, 'sine', 0.2), 150);
+            } else {
+                alert(`金幣還不夠買 ${itemName} 喔！(需要 ${cost} 💰)`);
+            }
+        }
+
+        // --- 遊戲邏輯變數 ---
+        let currentLevelQueue = []; // 目前這週的10個單字
+        let currentStage = 0; // 0~9
+        let currentWord = "";
+        let targetLetters = [];
+        let currentIndex = 0; // 單字拼到哪
+        let mistakeCount = 0; // 這一題按錯幾次
+        
+        const catS = document.getElementById('cat');
+        const wkS = document.getElementById('week');
+        const msg = document.getElementById('game-message');
+
+        // 音效
+        let audioCtx;
+        let globalAudioPlayer;
+
+        // 在使用者第一次點擊畫面(例如登入或點擊鍵盤)時呼叫此函數解鎖 iOS 聲音限制
+        function unlockAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            // 播放一小段無聲音頻來強制解鎖 Web Audio API
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.value = 0;
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start(0);
+            oscillator.stop(audioCtx.currentTime + 0.1);
+
+            // 解鎖 HTML5 Audio 元素 (用於 TTS)
+            if (!globalAudioPlayer) {
+                globalAudioPlayer = new Audio();
+                globalAudioPlayer.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'; // 1ms 靜音
+                globalAudioPlayer.play().catch(e => { console.log('Audio init blocked', e); });
+            }
+
+            // 解鎖 SpeechSynthesis API (iOS 要求必須在使用者互動下啟動一次)
+            if ('speechSynthesis' in window) {
+                const dummy = new SpeechSynthesisUtterance('');
+                dummy.volume = 0.01;
+                window.speechSynthesis.speak(dummy);
+            }
+        }
+
+        function playTone(freq, type, duration) {
+            try {
+                if(!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = type;
+                oscillator.frequency.value = freq;
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                // 修正 iOS Webkit 上聲音切斷的爆音: 使用 currentTime
+                const now = audioCtx.currentTime;
+                gainNode.gain.setValueAtTime(1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, now + duration);
+                oscillator.stop(now + duration);
+            } catch(e) {}
+        }
+
+        function speakWord(w) {
+            // 判斷是否為 iOS 裝置 (Safari/Webview 環境下 .catch() 的非同步會導致失去 User Gesture 權限)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+            if (isIOS) {
+                // iOS 裝置直接使用原生語音，不走 Google TTS 避免非同步阻擋
+                fallbackToSpeechSynthesis();
+            } else {
+                // 非 iOS 裝置使用 Google Translate TTS
+                const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(w)}&tl=en&client=tw-ob`;
+                try {
+                    if (globalAudioPlayer) {
+                        globalAudioPlayer.src = url;
+                        globalAudioPlayer.play().catch(fallbackToSpeechSynthesis);
+                    } else {
+                        const audio = new Audio(url);
+                        audio.play().catch(fallbackToSpeechSynthesis);
+                    }
+                } catch(e) {
+                    fallbackToSpeechSynthesis();
+                }
+            }
+
+            function fallbackToSpeechSynthesis() {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel(); // 停止先前的發音
+                    const utterance = new SpeechSynthesisUtterance(w);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.85;
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+        }
+
+        function setupConfig() {
+            catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            setupWeek();
+        }
+        function setupWeek() {
+            wkS.innerHTML = Object.keys(words[catS.value]).map(w => `<option>${w}</option>`).join('');
+            // 不立刻開始，因為可能只是切換選單
+            startLevel();
+        }
+
+        function createKeyboard() {
+            const k = document.getElementById('keyboard');
+            // 強制套用 flex-column 到鍵盤容器（防止被舊快取的 CSS grid 覆蓋）
+            k.style.display = 'flex';
+            k.style.flexDirection = 'column';
+            k.style.alignItems = 'stretch';
+            k.style.width = '100%';
+            k.style.gap = '4px';
+
+            const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+            const offsets = ['0%', '5%', '15%'];
+            k.innerHTML = rows.map((row, i) =>
+                `<div style="display:flex; flex-direction:row; justify-content:center; gap:4px; padding:0 ${offsets[i]}; box-sizing:border-box;">` +
+                    row.split('').map(l =>
+                        `<button class="key" id="key-${l}" onclick="handleKey('${l}')" style="flex:1; min-width:0;">${l}</button>`
+                    ).join('') +
+                `</div>`
+            ).join('');
+        }
+
+        // 開始選定週別的 10 關挑戰
+        function startLevel() {
+            let list = [...words[catS.value][wkS.value]];
+            
+            // 學習加強：出現過的錯誤單字加權 2 倍
+            let weightedList = [];
+            list.forEach(w => {
+                weightedList.push(w);
+                if(petData.stats && petData.stats.mistakeWords && petData.stats.mistakeWords.includes(w.toUpperCase())) {
+                    weightedList.push(w); // 放入兩次增加機率
+                }
+            });
+            weightedList.sort(() => Math.random() - 0.5);
+            
+            // 去除重複，收集滿10關
+            let finalQueue = [];
+            for(let w of weightedList) {
+                if(!finalQueue.includes(w)) finalQueue.push(w);
+                if(finalQueue.length === 10) break;
+            }
+            // 如果數量不夠 (清單較短時)，直接拿原始打亂的補滿
+            if(finalQueue.length < Math.min(10, list.length)) {
+                list.sort(() => Math.random() - 0.5);
+                for(let w of list) {
+                    if(!finalQueue.includes(w)) finalQueue.push(w);
+                    if(finalQueue.length === 10) break;
+                }
+            }
+            
+            currentLevelQueue = finalQueue;
+            currentStage = 0;
+            loadStage();
+        }
+
+        function loadStage() {
+            if(currentStage >= currentLevelQueue.length) {
+                // 通關整週
+                msg.innerHTML = "🎉 <span style='color:green;'>關卡全破！獲得 5 💰 獎勵！</span> 🎉";
+                petData.coins += 5;
+                savePetData();
+                updatePetUI();
+                confetti({ particleCount: 200, spread: 160 });
+                playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(783.99, 'sine', 0.2), 200);
+                document.getElementById('keyboard').innerHTML = `<button onclick="startLevel()" style="grid-column: 1 / -1; padding: 20px; font-size: 1.5rem; background: var(--primary); color: white; border: none; border-radius: 10px; cursor:pointer;">再玩一次</button>`;
+                return;
+            }
+
+            // 更新 UI
+            document.getElementById('stage-info').textContent = `Stage ${currentStage + 1} / ${currentLevelQueue.length}`;
+            document.getElementById('progress-fill').style.width = `${(currentStage / currentLevelQueue.length) * 100}%`;
+            
+            currentWord = currentLevelQueue[currentStage].toUpperCase();
+            targetLetters = currentWord.split('');
+            currentIndex = 0;
+            mistakeCount = 0; // 每題重置錯誤次數
+            msg.textContent = "聽發音並拼出單字吧！";
+            msg.style.color = "var(--primary)";
+            
+            // 隱藏翻譯
+            document.getElementById('word-translation').style.display = 'none';
+
+            // 繪製格子
+            const slotsContainer = document.getElementById('target-slots');
+            slotsContainer.innerHTML = '';
+            targetLetters.forEach((_, i) => {
+                const slot = document.createElement('div');
+                slot.className = 'slot' + (i === 0 ? ' current' : '');
+                slotsContainer.appendChild(slot);
+            });
+
+            createKeyboard();
+            setTimeout(() => speakWord(currentWord), 400);
+        }
+
+        function recordMistake(word) {
+            if(!petData.stats.mistakeWords) petData.stats.mistakeWords = [];
+            if(!petData.stats.mistakeWords.includes(word)) {
+                petData.stats.mistakeWords.push(word);
+                savePetData();
+            }
+        }
+
+        function handleKey(letter) {
+            const expect = targetLetters[currentIndex];
+            if(letter === expect) {
+                // 對了
+                playTone(600, 'sine', 0.1);
+                const slots = document.getElementsByClassName('slot');
+                slots[currentIndex].classList.remove('current');
+                slots[currentIndex].classList.add('filled');
+                slots[currentIndex].textContent = letter;
+                
+                currentIndex++;
+                if(currentIndex < targetLetters.length) {
+                    slots[currentIndex].classList.add('current');
+                } else {
+                    // 完成單字
+                    wordCleared();
+                }
+            } else {
+                // 錯了，抖動鍵盤按鈕，不扣分
+                mistakeCount++;
+                recordMistake(currentWord);
+                playTone(200, 'sawtooth', 0.15);
+                const btn = document.getElementById(`key-${letter}`);
+                if(btn) {
+                    btn.style.backgroundColor = '#ff4757';
+                    btn.style.color = 'white';
+                    btn.style.transform = 'translateY(2px) translateX(-2px)';
+                    setTimeout(() => {
+                        btn.style.backgroundColor = '';
+                        btn.style.color = '';
+                        btn.style.transform = '';
+                    }, 300);
+                }
+            }
+        }
+
+        function useHint() {
+            if(currentStage >= currentLevelQueue.length) return;
+            if(currentIndex >= targetLetters.length) return;
+            
+            if(petData.coins < 2) {
+                alert("金幣不夠使用提示喔！你需要 2 💰");
+                return;
+            }
+            petData.coins -= 2;
+            savePetData();
+            updatePetUI();
+            
+            recordMistake(currentWord); // 使用提示也算不熟
+            
+            const expectedLetter = targetLetters[currentIndex];
+            const btn = document.getElementById(`key-${expectedLetter}`);
+            if (btn) {
+                playTone(500, 'triangle', 0.1);
+                // Highlight blink animation
+                btn.style.transition = 'all 0.2s';
+                btn.style.backgroundColor = '#ffeb3b';
+                btn.style.color = '#333';
+                btn.style.boxShadow = '0 0 15px #fbc531';
+                btn.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                    btn.style.boxShadow = '0 3px 0 #ccc';
+                    btn.style.transform = '';
+                }, 1000);
+            }
+        }
+
+        function wordCleared() {
+            const reward = Math.max(1, 3 - mistakeCount);
+            const stars = mistakeCount === 0 ? '⭐⭐⭐' : (mistakeCount === 1 ? '⭐⭐' : '⭐');
+            
+            // Combo 系統
+            if(mistakeCount === 0) {
+                comboCount++;
+                if(petData.stats && petData.stats.mistakeWords) {
+                    petData.stats.mistakeWords = petData.stats.mistakeWords.filter(w => w !== currentWord);
+                }
+            } else {
+                comboCount = 0;
+            }
+            
+            let bonusCoins = 0;
+            let comboText = '';
+            if(comboCount >= 3) {
+                bonusCoins = 5;
+                comboText = `🔥 ${comboCount} COMBO! +${bonusCoins} Bonus!`;
+            }
+            if(comboCount > petData.stats.maxCombo) {
+                petData.stats.maxCombo = comboCount;
+            }
+            
+            const totalReward = reward + bonusCoins;
+            let displayText = `答對了！${stars} <span style='color:#f39c12'>+${reward} 💰</span>`;
+            if(bonusCoins > 0) displayText += ` <span style='color:#e74c3c; font-size:0.9rem'>+${bonusCoins} Combo!</span>`;
+            msg.innerHTML = displayText;
+            
+            // 顯示 Combo
+            if(comboText) {
+                const comboEl = document.getElementById('combo-display');
+                comboEl.textContent = comboText;
+                comboEl.classList.add('show');
+                setTimeout(() => comboEl.classList.remove('show'), 2000);
+            }
+            
+            document.getElementById('keyboard').innerHTML = '';
+            
+            petData.coins += totalReward;
+            petData.totalWordsCleared += 1;
+            
+            // 孵蛋進度同步增加
+            petData.eggCoins = (petData.eggCoins || 0) + totalReward;
+            if(petData.eggCoins >= 30) {
+                setTimeout(() => triggerEggHatch(), 1000);
+            }
+            
+            // 慶祝特效
+            for(let i = 0; i < Math.min(totalReward, 5); i++) {
+                setTimeout(() => triggerSeedDrop(), i * 200);
+            }
+            
+            // 快樂度提升
+            addHappiness(mistakeCount === 0 ? 8 : 3);
+            
+            // 成就系統檢查
+            checkAchievements();
+            
+            // 小倉鼠跳躍開心
+            const hamsterSvg = document.getElementById('hamster');
+            hamsterSvg.classList.remove('happy');
+            void hamsterSvg.offsetWidth;
+            hamsterSvg.classList.add('happy');
+
+            savePetData();
+            updatePetUI();
+            
+            speakWord(currentWord);
+
+            // 任務進度檢查
+            if(mistakeCount === 0) updateQuestProgress('word', 1);
+
+            // 顯示中文翻譯
+            const transDiv = document.getElementById('word-translation');
+            const translation = wordTranslations[currentWord.toLowerCase()] || "";
+            if (translation) {
+                transDiv.style.display = 'block';
+                transDiv.textContent = translation;
+                transDiv.style.animation = 'jump 0.5s ease-out';
+            }
+
+            // 3秒後進入下一題
+            setTimeout(() => {
+                currentStage++;
+                loadStage();
+            }, 3000);
+        }
+
+        // --- 倉鼠互動特效 ---
+        function triggerSeedDrop(emoji = '💰') {
+            const cage = document.getElementById('cage');
+            const seed = document.createElement('div');
+            seed.className = 'falling-seed';
+            seed.textContent = emoji;
+            seed.style.left = `${40 + Math.random() * 20}%`;
+            cage.appendChild(seed);
+            setTimeout(() => seed.remove(), 1000);
+        }
+
+        // --- 新增的互動系統 ---
+        let isSleeping = false;
+        let isRunning = false;
+
+        function wakeUp() {
+            if(!isSleeping) return;
+            isSleeping = false;
+            const hamster = document.getElementById('hamster');
+            hamster.classList.remove('sleep');
+            document.getElementById('btn-sleep').querySelector('span').textContent = "睡覺 💤";
+            playTone(800, 'sine', 0.1);
+        }
+
+        function petHamster() {
+            if(isRunning) return;
+            wakeUp();
+            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.15), 100);
+            const hamster = document.getElementById('hamster');
+            
+            const mouth = hamster.querySelector('.mouth');
+            const originalMouth = mouth.getAttribute('d');
+            mouth.setAttribute('d', "M 45 57 Q 50 63 55 57 Q 50 52 45 57");
+            
+            hamster.classList.add('happy');
+            createFloatingEmoji('💖', 1500, -30);
+            addHappiness(5);
+            
+            // 摸摸驚喜：15% 機率掉落金幣
+            if(Math.random() < 0.15) {
+                setTimeout(() => {
+                    playTone(800, 'sine', 0.1);
+                    createFloatingEmoji('🪙', 1500, -50);
+                    petData.coins += 1;
+                    savePetData();
+                    updatePetUI();
+                }, 300);
+            }
+            
+            setTimeout(() => {
+                hamster.classList.remove('happy');
+                mouth.setAttribute('d', originalMouth);
+            }, 1000);
+        }
+
+        // 快樂度系統
+        function addHappiness(amount) {
+            petData.happiness = Math.min(100, (petData.happiness || 50) + amount);
+            savePetData();
+            updatePetUI();
+        }
+
+        // 持續迴圈 (每分鐘)：處理下降數值、隨機事件
+        setInterval(() => {
+            // 每分鐘有 25% 機率出現蝴蝶 (平均約 4 分鐘一次)
+            if(Math.random() < 0.25) spawnButterfly();
+            
+            // 快樂度、飽食度、清潔度下降
+            if(petData.happiness > 0 && secretCode) {
+                let dropRate = 1;
+                if(petData.hunger < 30) dropRate += 1;
+                if(petData.cleanliness < 30) dropRate += 1;
+                petData.happiness = Math.max(0, petData.happiness - dropRate);
+            }
+            if(petData.hunger > 0 && secretCode) {
+                petData.hunger = Math.max(0, petData.hunger - (isSleeping ? 1 : 2));
+            }
+            if(petData.cleanliness > 0 && secretCode) {
+                petData.cleanliness = Math.max(0, petData.cleanliness - (isSleeping ? 0 : 1));
+            }
+            savePetData();
+            updatePetUI();
+        }, 60000); // 每分鐘計算一次
+        
+        // 倉鼠隨機散步 AI
+        setInterval(() => {
+            if (!secretCode || isSleeping || isRunning) return;
+            const hamsterSvg = document.getElementById('hamster');
+            // 如果正在進行其他動畫，不移動
+            if (hamsterSvg.classList.contains('eat') || hamsterSvg.classList.contains('happy') || hamsterSvg.classList.contains('hide-in-house') || hamsterSvg.classList.contains('slide-down')) return;
+            
+            const wrapper = document.getElementById('hamster-wrapper');
+            if(Math.random() < 0.5) { // 50% 機率決定走動
+                // 移動: -80px 到 80px 之間
+                const targetX = Math.floor(Math.random() * 160) - 80;
+                // 判斷面相：如果要往右走(目標變大)，不翻轉屬 1；往左走(目標變小) 翻轉屬 -1
+                const currentTransform = wrapper.style.transform || "";
+                let currentX = 0;
+                const match = currentTransform.match(/translateX\(([-0-9.]+)px\)/);
+                if(match) currentX = parseFloat(match[1]);
+                const direction = targetX > currentX ? 1 : -1;
+                
+                wrapper.style.transform = `translateX(${targetX}px) scaleX(${direction})`;
+            }
+        }, 6000); // 每 6 秒判斷一次
+
+        // 抓黃金蝴蝶事件
+        function spawnButterfly() {
+            if(!secretCode) return;
+            const butterfly = document.getElementById('golden-butterfly');
+            if(butterfly.style.display !== 'none') return; // 如果已經在場上
+            
+            // 決定起始位置
+            const fromLeft = Math.random() > 0.5;
+            butterfly.style.left = fromLeft ? '-10%' : '110%';
+            butterfly.style.top = `${20 + Math.random() * 40}%`; // 20% ~ 60% top
+            butterfly.style.transform = fromLeft ? 'scaleX(-1)' : 'scaleX(1)';
+            butterfly.style.display = 'block';
+            
+            // 給一小段時間生效
+            setTimeout(() => {
+                butterfly.style.left = fromLeft ? '110%' : '-10%';
+                butterfly.style.top = `${20 + Math.random() * 40}%`;
+            }, 100);
+            
+            // 15 秒後如果沒抓到自動消失
+            setTimeout(() => {
+                butterfly.style.display = 'none';
+            }, 15000);
+        }
+        
+        function catchButterfly() {
+            const butterfly = document.getElementById('golden-butterfly');
+            butterfly.style.display = 'none';
+            
+            petData.coins += 10;
+            petData.happiness = 100;
+            savePetData();
+            updatePetUI();
+            
+            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 100); setTimeout(()=>playTone(1200, 'sine', 0.3), 200);
+            confetti({ particleCount: 50, origin: { x: 0.5, y: 0.4 } });
+            createFloatingEmoji('🦋 +10 💰', 2000, -40);
+        }
+
+        function playWheel() {
+            if (isSleeping) return wakeUp(); // 先叫醒
+            if (isRunning) return;
+            
+            // 處理購買邏輯
+            if (!petData.items.wheel) {
+                if (petData.coins >= 50) {
+                    petData.coins -= 50;
+                    petData.items.wheel = true;
+                    savePetData();
+                    updatePetUI();
+                    alert("🎡 購買成功！小倉鼠得到新玩具了！");
+                    // 買完可以繼續玩下去
+                } else {
+                    alert("金幣還不夠買跑輪喔！(需要 50 💰)");
+                    return;
+                }
+            }
+
+            isRunning = true;
+            const hamster = document.getElementById('hamster');
+            const wheel = document.getElementById('prop-wheel');
+            
+            hamster.classList.add('run');
+            wheel.classList.add('spin');
+            playTone(300, 'triangle', 0.1);
+            addHappiness(10);
+            
+            setTimeout(() => {
+                hamster.classList.remove('run');
+                wheel.classList.remove('spin');
+                isRunning = false;
+                petHamster();
+            }, 3000);
+        }
+
+        // (使用新的通用 buyItem)
+
+        function sleepHamster() {
+            if(isRunning) return;
+            const hamster = document.getElementById('hamster');
+            const sleepBtnSpan = document.getElementById('btn-sleep').querySelector('span');
+
+            if(isSleeping) {
+                wakeUp();
+            } else {
+                isSleeping = true;
+                hamster.classList.add('sleep');
+                sleepBtnSpan.textContent = "叫醒 ☀️";
+                playTone(200, 'sine', 0.5); // ZZZ 聲音
+                
+                // 定期冒出 Zzz
+                let zzzInterval = setInterval(() => {
+                    if(!isSleeping) return clearInterval(zzzInterval);
+                    createFloatingEmoji('Zzz', 2000, -50);
+                }, 1500);
+            }
+        }
+
+        // 共用的飄浮表情小工具
+        function createFloatingEmoji(emojiText, duration, yOffset) {
+            const cage = document.getElementById('cage');
+            const emoji = document.createElement('div');
+            emoji.textContent = emojiText;
+            emoji.style.position = 'absolute';
+            emoji.style.left = '50%'; emoji.style.bottom = '60px'; // 倉鼠中心點
+            emoji.style.fontSize = '2rem'; emoji.style.fontWeight = 'bold'; emoji.style.color = '#ff6b81';
+            emoji.style.transition = `all ${duration}ms ease-out`;
+            emoji.style.opacity = '1'; emoji.style.transform = 'translate(-50%, 0)';
+            emoji.style.textShadow = "1px 1px 2px white";
+            emoji.style.pointerEvents = "none";
+            emoji.style.zIndex = "10";
+            cage.appendChild(emoji);
+            
+            // 觸發動畫
+            setTimeout(() => {
+                emoji.style.bottom = `calc(60px - ${yOffset}px)`;
+                emoji.style.opacity = '0';
+            }, 50);
+            setTimeout(() => emoji.remove(), duration);
+        }
+
+        function feedHamster(foodType = 'seed', cost = 1, exp = 10, emoji = '🌻') {
+            if(petData.coins < cost || isRunning) {
+                if(petData.coins < cost && !isRunning) alert(`金幣不夠買${emoji}了！(需要 ${cost} 💰)`);
+                return;
+            }
+            if(petData.hunger >= 100) {
+                alert("倉鼠現在很飽，吃不下囉！");
+                return;
+            }
+            wakeUp();
+            
+            petData.coins -= cost;
+            petData.exp += exp;
+            
+            // 恢復飽食度和快樂
+            const hungerRestore = exp >= 80 ? 40 : (exp >= 40 ? 20 : 10);
+            petData.hunger = Math.min(100, petData.hunger + hungerRestore);
+            addHappiness(exp >= 80 ? 15 : (exp >= 40 ? 10 : 5));
+            
+            // 顯示食物掉落
+            triggerSeedDrop(emoji);
+            
+            // 升級邏輯 (這裡簡化，每 100 exp 升一級)
+            if(petData.exp >= petData.level * 100) {
+                petData.level += 1;
+                petData.exp = 0;
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 , x: 0.75} }); // 在右側放煙火
+                playTone(800, 'sine', 0.3); // Level up sound
+                alert(`太棒了！小倉鼠升級到 Level ${petData.level} 啦！`);
+            }
+            
+            savePetData();
+            updatePetUI();
+            updateQuestProgress('feed', 1);
+            
+            // 動畫與音效
+            playTone(400, 'square', 0.1); setTimeout(()=>playTone(450, 'square', 0.1), 150);
+            
+            const hamster = document.getElementById('hamster');
+            hamster.classList.remove('eat');
+            void hamster.offsetWidth;
+            hamster.classList.add('eat');
+            
+            // 飄出愛心
+            createFloatingEmoji('❤️', 1000, -60);
+        }
+
+        function bathHamster() {
+            if(petData.coins < 5 || isRunning) {
+                if(petData.coins < 5 && !isRunning) alert(`金幣不夠買海綿🧽了！(需要 5 💰)`);
+                return;
+            }
+            if(petData.cleanliness >= 100) {
+                alert("小倉鼠已經很乾淨囉！");
+                return;
+            }
+            wakeUp();
+            
+            petData.coins -= 5;
+            petData.cleanliness = 100; // 洗衣服直接全滿
+            addHappiness(5);
+            savePetData();
+            updatePetUI();
+            updateQuestProgress('bath', 1);
+            
+            // 泡泡動畫音效
+            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 150); setTimeout(()=>playTone(1200, 'sine', 0.2), 300);
+            
+            // 產生泡泡 Emoji
+            createFloatingEmoji('🫧', 1500, -50);
+            setTimeout(() => createFloatingEmoji('✨', 1200, -40), 500);
+        }
+
+        // --- 成就與商城系統 ---
+        function checkAchievements() {
+            let newlyUnlocked = false;
+            
+            if(!petData.achievements.combo30 && petData.stats.maxCombo >= 30) {
+                petData.achievements.combo30 = true;
+                showAchievementToast("🔥 Combo 大師 (連續 30 題)！");
+                newlyUnlocked = true;
+            }
+            if(!petData.achievements.richer && petData.coins >= 1000) {
+                petData.achievements.richer = true;
+                showAchievementToast("💰 倉鼠大富翁 (存到 1000 枚金幣)！");
+                newlyUnlocked = true;
+            }
+            if(!petData.achievements.level10 && petData.level >= 10) {
+                petData.achievements.level10 = true;
+                showAchievementToast("👑 頂級飼養員 (倉鼠達到 10 級)！");
+                newlyUnlocked = true;
+            }
+            
+            if(newlyUnlocked) {
+                playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(1046.50, 'sine', 0.3), 200);
+                confetti({ particleCount: 150, spread: 100 });
+                savePetData();
+            }
+        }
+
+        function showAchievementToast(text) {
+            const toast = document.createElement('div');
+            toast.textContent = `🏆 解鎖成就：${text}`;
+            toast.style.position = 'fixed';
+            toast.style.top = '20px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.background = 'linear-gradient(135deg, #f1c40f, #f39c12)';
+            toast.style.color = 'white';
+            toast.style.padding = '15px 30px';
+            toast.style.borderRadius = '30px';
+            toast.style.fontWeight = 'bold';
+            toast.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+            toast.style.zIndex = '9999';
+            toast.style.animation = 'slideDownFade 0.5s ease-out';
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideDownFadeOut 0.5s ease-in forwards';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
+        // --- 進階遊戲系統 (簽到 / 任務 / 盲盒 / 訪客) ---
+
+        // 1. 每日簽到
+        function checkDailyLogin() {
+            const today = new Date().toLocaleDateString();
+            if(petData.lastLoginDate !== today) {
+                petData.lastLoginDate = today;
+                petData.loginStreak = (petData.loginStreak || 0) + 1;
+                if(petData.loginStreak > 7) petData.loginStreak = 1; // 7天一輪
+                
+                const rewards = [5, 10, 15, 20, 25, 30, 100]; // 每天簽到金幣
+                const reward = rewards[petData.loginStreak - 1];
+                petData.coins += reward;
+                savePetData();
+                updatePetUI();
+                
+                setTimeout(() => renderLoginReward(reward), 1500); // 延遲顯示
+            }
+        }
+        
+        function renderLoginReward(reward) {
+            const daysDiv = document.getElementById('login-days');
+            daysDiv.innerHTML = '';
+            for(let i=1; i<=7; i++) {
+                const past = i < petData.loginStreak;
+                const today = i === petData.loginStreak;
+                
+                let html = `<div style="display:flex; flex-direction:column; align-items:center; opacity:${past ? 0.5 : 1}; margin: 5px;">
+                    <div style="background:${today ? '#f39c12' : '#ecf0f1'}; border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-weight:bold; color:${today ? 'white' : '#7f8c8d'}; border: 2px solid ${today ? '#f39c12' : '#bdc3c7'};">${past ? '✓' : i}</div>
+                    <div style="font-size:0.8rem; margin-top:5px; color:#555;">${i===7 ? '100💰' : '🪙'}</div>
+                </div>`;
+                daysDiv.innerHTML += html;
+            }
+            confetti({ particleCount: 100, spread: 70 });
+            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.2), 150);
+            document.getElementById('login-reward-modal').style.display = 'flex';
+        }
+        function closeLoginReward() { document.getElementById('login-reward-modal').style.display = 'none'; }
+
+        // 2. 每日任務
+        function checkDailyQuests() {
+            const today = new Date().toLocaleDateString();
+            if(!petData.quests || petData.quests.date !== today) {
+                // 產生新任務
+                petData.quests = {
+                    date: today,
+                    list: [
+                        { id: 'word', text: '拼對 10 個單字', target: 10, current: 0, reward: 5, done: false },
+                        { id: 'bath', text: '幫倉鼠洗澡 1 次', target: 1, current: 0, reward: 2, done: false },
+                        { id: 'feed', text: '餵食倉鼠 3 次', target: 3, current: 0, reward: 3, done: false }
+                    ]
+                };
+                savePetData();
+            }
+        }
+        
+        function updateQuestProgress(id, amount) {
+            if(!petData.quests) return;
+            const q = petData.quests.list.find(x => x.id === id);
+            if(q && !q.done) {
+                q.current += amount;
+                if(q.current >= q.target) {
+                    q.current = q.target;
+                    q.done = true;
+                    showAchievementToast(`完成任務：${q.text}！獲得 ${q.reward} 💰`);
+                    petData.coins += q.reward;
+                }
+                savePetData();
+                updatePetUI();
+            }
+        }
+        
+        function openQuests() {
+            const list = document.getElementById('quest-list');
+            list.innerHTML = '';
+            petData.quests.list.forEach(q => {
+                const color = q.done ? '#2ed573' : '#3498db';
+                const pct = (q.current / q.target) * 100;
+                list.innerHTML += `
+                    <div style="margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:15px; border-left: 5px solid ${color};">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="font-weight:bold; color:#333; text-decoration: ${q.done ? 'line-through' : 'none'};">${q.text}</span>
+                            <span style="color:#e67e22; font-weight:bold;">${q.reward} 💰</span>
+                        </div>
+                        <div style="background:#eee; height:10px; border-radius:5px; overflow:hidden;">
+                            <div style="height:100%; width:${pct}%; background:${color};"></div>
+                        </div>
+                        <div style="text-align:right; font-size:0.8rem; color:#888; margin-top:5px;">進度: ${q.current} / ${q.target}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('quest-modal').style.display = 'flex';
+            document.getElementById('btn-daily-quest').classList.remove('bounce'); // 取消跳動
+        }
+        function closeQuests() { document.getElementById('quest-modal').style.display = 'none'; }
+
+        // 3. 驚喜盲盒
+        function buyGacha() {
+            if(petData.coins < 100) { alert("金幣不足 100 💰，無法抽盲盒喔！"); return; }
+            petData.coins -= 100;
+            savePetData();
+            updatePetUI();
+            
+            closeShop();
+            const modal = document.getElementById('gacha-modal');
+            const box = document.getElementById('gacha-content');
+            const txt = document.getElementById('gacha-text');
+            const btn = document.getElementById('gacha-close');
+            
+            modal.style.display = 'flex';
+            box.textContent = '🎁';
+            box.className = 'gacha-box shake';
+            txt.textContent = '點擊盒子打開盲盒！';
+            txt.style.opacity = '1';
+            btn.style.display = 'none';
+            box.onclick = () => openGacha();
+        }
+        
+        function openGacha() {
+            const box = document.getElementById('gacha-content');
+            box.onclick = null;
+            box.className = 'gacha-box'; // 停止震動
+            
+            playTone(400, 'triangle', 0.1); setTimeout(()=>playTone(500, 'triangle', 0.1), 150); setTimeout(()=>playTone(800, 'triangle', 0.3), 300);
+            confetti({ particleCount: 200, spread: 160 });
+            
+            // 決定獎勵
+            const rand = Math.random();
+            let rewardType = ''; // coins, apples, cosmetic
+            let cosmeticId = '';
+            let emoji = '';
+            let msg = '';
+            
+            if(rand < 0.2 && (!petData.unlocks.hats.includes('magic') || !petData.unlocks.bows.includes('cape'))) {
+                // 20% 機率抽到特等大獎 (外觀)
+                rewardType = 'cosmetic';
+                if(!petData.unlocks.hats.includes('magic')) {
+                    cosmeticId = 'magic'; emoji = '🪄'; msg = "限定大獎：魔法棒！";
+                    petData.unlocks.hats.push('magic');
+                    petData.equipped.hat = 'magic';
+                } else {
+                    cosmeticId = 'cape'; emoji = '🦸'; msg = "限定大獎：超人披風！";
+                    petData.unlocks.bows.push('cape');
+                    petData.equipped.bow = 'cape';
+                }
+            } else if (rand < 0.6) {
+                // 40% 機率中獎金幣
+                const coinPrize = Math.floor(Math.random() * 150) + 50; // 50~200
+                rewardType = 'coins'; emoji = '💰'; msg = `現金大獎：${coinPrize} 枚金幣！`;
+                petData.coins += coinPrize;
+            } else {
+                // 40% 機率蘋果禮包
+                rewardType = 'food'; emoji = '🍎x3'; msg = "美食禮包：吃蘋果超開心！";
+                addHappiness(50);
+                petData.hunger = 100;
+                petData.exp += 150; // 加很多經驗
+            }
+            
+            box.style.transform = 'scale(1.5)';
+            box.textContent = emoji;
+            document.getElementById('gacha-text').textContent = msg;
+            document.getElementById('gacha-close').style.display = 'block';
+            
+            savePetData();
+            updatePetUI();
+        }
+        function closeGacha() { document.getElementById('gacha-modal').style.display = 'none'; }
+        
+        // 4. 小夥伴來訪 (Visitor)
+        setInterval(() => {
+            if(!secretCode || isSleeping) return;
+            const visitor = document.getElementById('visitor');
+            if(visitor.style.display !== 'none') return; // 如果已經有訪客
+            
+            // 每分鐘有 10% 機率來訪
+            if(Math.random() < 0.10) {
+                const isFrog = Math.random() > 0.5;
+                document.getElementById('visitor-emoji').textContent = isFrog ? '🐸' : '🐦';
+                visitor.style.left = isFrog ? '10px' : '80%';
+                visitor.style.bottom = isFrog ? '10px' : '70%';
+                visitor.style.animation = 'bounce 1s infinite alternate';
+                visitor.style.display = 'block';
+                
+                // 5分鐘後如果沒點自動離開
+                visitor.leaveTimeout = setTimeout(() => {
+                    visitor.style.display = 'none';
+                }, 300000);
+            }
+        }, 60000);
+        
+        function tapVisitor() {
+            const visitor = document.getElementById('visitor');
+            clearTimeout(visitor.leaveTimeout);
+            
+            // 冒出問候語
+            const bubble = document.getElementById('visitor-bubble');
+            const greetings = ["Hello!", "Good job!", "Smile!", "Awesome!"];
+            bubble.textContent = greetings[Math.floor(Math.random() * greetings.length)];
+            bubble.style.display = 'block';
+            
+            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 150);
+            
+            petData.coins += 5; // 送 5 塊錢
+            savePetData();
+            updatePetUI();
+            createFloatingEmoji('💖 +5 💰', 2000, -30);
+            
+            // 2秒後飛走
+            setTimeout(() => {
+                visitor.style.display = 'none';
+                bubble.style.display = 'none';
+            }, 2000);
+        }
+
+        // --- 視窗開起關閉 (商城/成就) ---
+        function openShop() {
+            renderShop();
+            document.getElementById('shop-modal').style.display = 'flex';
+        }
+        function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
+        
+        function openTrophies() {
+            renderTrophies();
+            document.getElementById('trophy-modal').style.display = 'flex';
+        }
+        function closeTrophies() { document.getElementById('trophy-modal').style.display = 'none'; }
+        
+        function renderShop() {
+            const list = document.getElementById('shop-list');
+            list.innerHTML = '';
+            
+            const items = [
+                { id: 'beach', type: 'scenes', name: '沙灘渡假 🏖️', cost: 500, category: '場景' },
+                { id: 'space', type: 'scenes', name: '太空探險 🚀', cost: 800, category: '場景' },
+                { id: 'party', type: 'hats', name: '派對帽 🎉', cost: 150, category: '帽子' },
+                { id: 'tophat', type: 'hats', name: '紳士高帽 🎩', cost: 250, category: '帽子' },
+                { id: 'red', type: 'bows', name: '紅領結 🎀', cost: 100, category: '領結' },
+                { id: 'blue', type: 'bows', name: '藍領結 🎀', cost: 100, category: '領結' }
+            ];
+            
+            items.forEach(item => {
+                const isOwned = petData.unlocks[item.type] && petData.unlocks[item.type].includes(item.id);
+                const isEquipped = petData.equipped[item.type.slice(0, -1)] === item.id;
+                
+                let btnHtml = '';
+                if(isEquipped) {
+                    btnHtml = `<button class="btn-login" style="background:gray; cursor:default; padding: 5px 15px; font-size:1rem;">裝備中</button>`;
+                } else if(isOwned) {
+                    btnHtml = `<button class="btn-login" style="background:#2ed573; padding: 5px 15px; font-size:1rem;" onclick="equipCosmetic('${item.type}', '${item.id}')">換上</button>`;
+                } else {
+                    const afford = petData.coins >= item.cost;
+                    btnHtml = `<button class="btn-login" style="background:${afford ? 'var(--primary)' : '#ccc'}; padding: 5px 15px; font-size:1rem;" onclick="${afford ? `buyCosmetic('${item.type}', '${item.id}', ${item.cost}, '${item.name}')` : ''}">${item.cost} 💰</button>`;
+                }
+                
+                list.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #ddd;">
+                        <span style="font-weight:bold; font-size:1.1rem;">${item.name}</span>
+                        ${btnHtml}
+                    </div>
+                `;
+            });
+            
+            // 新增盲盒扭蛋機
+            list.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-top:20px; border-radius:10px; background:linear-gradient(45deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);">
+                    <span style="font-weight:bold; font-size:1.1rem; color:#d63031;">🎁 驚喜盲盒</span>
+                    <button class="btn-login" style="background:#ff7675; padding: 5px 15px; font-size:1rem; border:2px solid #d63031;" onclick="buyGacha()">100 💰</button>
+                </div>
+            `;
+            
+            // 新增一個「還原預設」的按鈕
+            list.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-top:10px;">
+                    <span style="font-weight:bold; font-size:1.1rem;">還原原始造型</span>
+                    <button class="btn-login" style="background:#8ba4f9; padding: 5px 15px; font-size:1rem;" onclick="equipCosmetic('all', 'default')">重設</button>
+                </div>
+            `;
+        }
+
+        function buyCosmetic(type, id, cost, name) {
+            if(petData.coins >= cost) {
+                petData.coins -= cost;
+                petData.unlocks[type].push(id);
+                equipCosmetic(type, id);
+                alert(`✨ 購買成功！獲得了 ${name}！`);
+            }
+        }
+
+        function equipCosmetic(type, id) {
+            if(type === 'all') {
+                petData.equipped.scene = 'default';
+                petData.equipped.hat = 'none';
+                petData.equipped. bow = 'none';
+            } else {
+                const key = type.slice(0, -1); // scenes -> scene, hats -> hat, bows -> bow
+                petData.equipped[key] = id;
+            }
+            savePetData();
+            updatePetUI();
+            renderShop();
+        }
+
+        function renderTrophies() {
+            const list = document.getElementById('trophy-list');
+            list.innerHTML = '';
+            
+            const achs = [
+                { key: 'combo30', name: '🔥 Combo 大師', desc: '連續拼對 30 題' },
+                { key: 'richer', name: '💰 倉鼠大富翁', desc: '金幣累積達 1000 枚' },
+                { key: 'level10', name: '👑 頂級飼養員', desc: '倉鼠達到 Level 10' }
+            ];
+            
+            achs.forEach(a => {
+                const unlocked = petData.achievements[a.key];
+                list.innerHTML += `
+                    <div style="display:flex; align-items:center; padding:15px; margin-bottom:10px; border-radius:15px; background:${unlocked ? '#fff8e1' : '#f5f5f5'}; border: 2px solid ${unlocked ? '#f1c40f' : '#ddd'}; opacity: ${unlocked ? 1 : 0.6}">
+                        <div style="font-size:3rem; margin-right:15px; filter: ${unlocked ? 'none' : 'grayscale(100%)'}">🏆</div>
+                        <div style="text-align:left;">
+                            <div style="font-weight:bold; font-size:1.2rem; color:${unlocked ? '#d35400' : '#888'};">${a.name}</div>
+                            <div style="font-size:0.9rem; color:#666;">${a.desc}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // (舊的備份/還原邏輯已透過 Firebase 取代)
+
+        // 初始化
+        window.onload = () => {
+            // 檢查有沒有存過密碼
+            const savedUser = localStorage.getItem("daisy_hamster_user");
+            if(savedUser) {
+                document.getElementById('secret-code-input').value = savedUser;
+                login(); // 自動登入
+            }
+            
+            // 如果沒登入，先不要初始化遊戲選單 (等到點擊登入再觸發)
+            
+            // 實體鍵盤支援
+            window.onkeydown = function(e) {
+                if(document.activeElement.tagName === 'INPUT') {
+                    if(e.key === 'Enter') login();
+                    return;
+                }
+                if(document.getElementById('login-modal').style.display !== 'none') return; // 在登入畫面時禁用遊戲鍵盤
+                
+                const key = e.key.toUpperCase();
+                if(/^[A-Z]$/.test(key) && currentStage < currentLevelQueue.length) {
+                    handleKey(key);
+                }
+            }
+        };
+
+        // PWA Service Worker 註冊
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, (err) => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+    
+    <!-- 商城與成就視窗 -->
+    <div id="shop-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:90%; max-width:400px; max-height:80vh; overflow-y:auto; padding: 20px;">
+            <button onclick="closeShop()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 style="color:#f39c12; margin-top:10px;">購物中心 🛍️</h3>
+            <p style="color:#666; font-size:0.9rem;">用金幣幫小倉鼠買新衣服或換場景吧！</p>
+            <div id="shop-list" style="margin-top:20px;"></div>
+        </div>
+    </div>
+    
+    <div id="trophy-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:90%; max-width:400px; max-height:80vh; overflow-y:auto; padding: 20px;">
+            <button onclick="closeTrophies()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 style="color:#8e44ad; margin-top:10px;">榮譽獎盃 🏆</h3>
+            <p style="color:#666; font-size:0.9rem;">收集越多獎盃越厲害喔！</p>
+            <div id="trophy-list" style="margin-top:20px;"></div>
+        </div>
+    </div>
+    <!-- 每日登入獎勵視窗 -->
+    <div id="login-reward-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:90%; max-width:400px; padding: 20px;">
+            <h3 style="color:#e74c3c; margin-top:10px;">📅 每日簽到</h3>
+            <p style="color:#666; font-size:0.9rem;">每天來找小倉鼠玩，領取禮物吧！</p>
+            <div id="login-days" style="display:flex; justify-content:space-around; flex-wrap:wrap; margin-top:20px;"></div>
+            <button class="btn-login" style="margin-top:20px; width:100%;" onclick="closeLoginReward()">領取獎勵！</button>
+        </div>
+    </div>
+    
+    <!-- 每日任務視窗 -->
+    <div id="quest-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:90%; max-width:400px; max-height:80vh; overflow-y:auto; padding: 20px;">
+            <button onclick="closeQuests()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;">✕</button>
+            <h3 style="color:#f39c12; margin-top:10px;">📜 今日任務</h3>
+            <p style="color:#666; font-size:0.9rem;">完成這些任務可以獲得額外金幣喔！</p>
+            <div id="quest-list" style="margin-top:20px;"></div>
+        </div>
+    </div>
+    
+    <!-- 驚喜盲盒開啟畫面 -->
+    <div id="gacha-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; flex-direction:column;">
+        <div id="gacha-content" class="gacha-box shake">🎁</div>
+        <h2 id="gacha-text" style="color:white; opacity:0; transition:opacity 0.5s;">點擊打開盲盒！</h2>
+        <button id="gacha-close" class="btn-login" style="display:none; margin-top:20px;" onclick="closeGacha()">收下獎勵</button>
+    </div>
+
+    <!-- 單字複習卡片視窗 -->
+    <div id="review-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:3000; justify-content:center; align-items:center; flex-direction:column; padding:20px; box-sizing:border-box;">
+        <div style="position:relative; background:white; border-radius:30px; width:100%; max-width:440px; padding:30px 25px; box-shadow:0 20px 60px rgba(0,0,0,0.4); text-align:center;">
+
+            <!-- 進度 -->
+            <div id="review-progress" style="font-size:0.85rem; color:#aaa; margin-bottom:10px;">1 / 10</div>
+
+            <!-- 卡片主體 -->
+            <div id="review-emoji" style="font-size:5rem; margin-bottom:10px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15));">😊</div>
+            <div id="review-word" style="font-size:2.5rem; font-weight:900; color:#3d3d3d; letter-spacing:2px; margin-bottom:8px;">HAPPY</div>
+            <div id="review-translation" style="font-size:1.3rem; color:#d63384; font-weight:bold; margin-bottom:14px;">快樂的 (ㄎㄨㄞˋ ㄌㄜˋ ㄉㄜ˙)</div>
+            <div id="review-example" style="font-size:1rem; color:#666; background:#f8f9fa; border-radius:12px; padding:12px 15px; margin-bottom:20px; font-style:italic; line-height:1.6;">She is happy to see you.</div>
+
+            <!-- 聽發音 -->
+            <button onclick="speakWord(reviewWords[reviewIndex].toLowerCase())" style="margin-bottom:16px; padding:8px 20px; border-radius:20px; background:#00bcd4; color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer;">🔊 聽發音</button>
+
+            <!-- 導航 -->
+            <div style="display:flex; gap:10px; margin-top:4px;">
+                <button id="review-prev" onclick="reviewNav(-1)" style="flex:1; padding:12px; border-radius:15px; background:#eee; color:#555; border:none; font-size:1.1rem; font-weight:bold; cursor:pointer;">← 上一個</button>
+                <button id="review-next" onclick="reviewNav(1)" style="flex:2; padding:12px; border-radius:15px; background:linear-gradient(135deg,#ff85a2,#d63384); color:white; border:none; font-size:1.1rem; font-weight:bold; cursor:pointer;">下一個 →</button>
+            </div>
+
+            <!-- 間隔指示點 -->
+            <div id="review-dots" style="display:flex; justify-content:center; gap:5px; margin-top:14px;"></div>
+        </div>
+
+        <!-- 關閉按鈕 -->
+        <button onclick="closeReview()" style="margin-top:20px; padding:8px 25px; border-radius:20px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.3); font-weight:bold; cursor:pointer; font-size:1rem;">✕ 關閉複習</button>
+    </div>
+
+</body>
+</html>
