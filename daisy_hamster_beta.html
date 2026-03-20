@@ -360,6 +360,10 @@
             if(data.loginStreak === undefined) data.loginStreak = 0;
             if(data.eggCoins === undefined) data.eggCoins = 0;
             if(!data.ownedPets) data.ownedPets = ['hamster'];
+            // 確保所有玩家都有 3 隻初始寵物
+            ['hamster', 'chick', 'cat'].forEach(p => {
+                if(!data.ownedPets.includes(p)) data.ownedPets.push(p);
+            });
             if(!data.currentPet) data.currentPet = 'hamster';
             if(data.quests === undefined) data.quests = null;
             
