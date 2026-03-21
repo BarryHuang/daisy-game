@@ -56,7 +56,13 @@
             width: 0%; transition: width 0.3s ease;
         }
         
-        #stage-info { font-weight: bold; color: var(--secondary); margin-bottom: 5px; font-size: 1.2rem; }
+        #stage-info {
+            font-weight: bold; color: white; margin-bottom: 5px; font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--secondary), #6c5ce7);
+            padding: 6px 20px; border-radius: 20px;
+            box-shadow: 0 3px 8px rgba(107,92,231,0.3);
+            letter-spacing: 0.05em;
+        }
 
         .btn-speak { 
             background: #ff9800; color: white; border: none; padding: 10px 20px;
@@ -68,28 +74,47 @@
 
         /* 拼字格子 */
         #target-slots {
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
-            margin-bottom: 20px; min-height: 50px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            margin-bottom: 16px; min-height: 56px;
         }
         .slot {
-            width: 35px; height: 40px; border-bottom: 3px solid #ccc;
-            display: flex; justify-content: center; align-items: flex-end;
-            font-size: 1.8rem; font-weight: bold; color: var(--primary);
-            text-transform: uppercase; padding-bottom: 5px; transition: 0.3s;
+            width: 40px; height: 48px;
+            background: white;
+            border: 2px solid #e0d4f7;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(107,92,231,0.12), inset 0 1px 2px rgba(255,255,255,0.8);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.6rem; font-weight: bold; color: var(--primary);
+            text-transform: uppercase; transition: 0.25s;
         }
-        .slot.filled { border-bottom-color: transparent; }
-        .slot.current { border-bottom-color: var(--primary); animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .slot.filled {
+            background: linear-gradient(135deg, #ffeef6, #f8e8ff);
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(255,133,162,0.25);
+            transform: scale(1.05);
+        }
+        .slot.current {
+            border-color: var(--primary); border-width: 2px;
+            box-shadow: 0 0 0 3px rgba(255,133,162,0.25);
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         /* 鍵盤 */
-        #keyboard { display: flex; flex-direction: column; gap: 0; width: 100%; max-width: 360px; }
+        #keyboard { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 380px; }
+        .key-row { display: flex; justify-content: center; gap: 5px; }
         .key { 
-            padding: 12px 0; font-size: 1.2rem; border: none; background: #f0f0f0; 
-            color: var(--text); border-radius: 8px; cursor: pointer; font-weight: bold;
-            box-shadow: 0 3px 0 #ccc; transition: 0.1s; user-select: none;
+            flex: 1; max-width: 48px; padding: 11px 0; font-size: 1.05rem;
+            border: none; border-radius: 10px; cursor: pointer; font-weight: 800;
+            transition: transform 0.08s, box-shadow 0.08s; user-select: none;
+            letter-spacing: 0.02em;
         }
-        .key:active { transform: translateY(3px); box-shadow: 0 0 0 #ccc; }
-        .key:disabled { background: #e0e0e0; color: #aaa; box-shadow: none; transform: none; cursor: default; }
+        /* 行別類別顏色 */
+        .key-row:nth-child(1) .key { background: linear-gradient(135deg,#a29bfe,#6c5ce7); color:white; box-shadow: 0 4px 0 #4b3bcc; }
+        .key-row:nth-child(2) .key { background: linear-gradient(135deg,#fd79a8,#e84393); color:white; box-shadow: 0 4px 0 #b82e6e; }
+        .key-row:nth-child(3) .key { background: linear-gradient(135deg,#00cec9,#0984e3); color:white; box-shadow: 0 4px 0 #0564a8; }
+        .key:active { transform: translateY(4px); box-shadow: 0 0 0 !important; }
+        .key:disabled { background: #e8e8e8 !important; color: #bbb !important; box-shadow: none !important; transform: none !important; cursor: default; opacity: 0.6; }
 
         /* --- 右側：倉鼠區 --- */
         .hamster-section { border: 4px solid var(--primary); background: var(--hamster-bg); position: relative; }

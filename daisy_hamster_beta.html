@@ -1207,9 +1207,9 @@
             const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
             const offsets = ['0%', '5%', '15%'];
             k.innerHTML = rows.map((row, i) =>
-                `<div style="display:flex; flex-direction:row; justify-content:center; gap:4px; padding:0 ${offsets[i]}; box-sizing:border-box;">` +
+                `<div class="key-row" style="padding:0 ${offsets[i]}; box-sizing:border-box;">` +
                     row.split('').map(l =>
-                        `<button class="key" id="key-${l}" onclick="handleKey('${l}')" style="flex:1; min-width:0;">${l}</button>`
+                        `<button class="key" id="key-${l}" onclick="handleKey('${l}')">${l}</button>`
                     ).join('') +
                 `</div>`
             ).join('');
