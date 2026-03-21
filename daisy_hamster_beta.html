@@ -97,23 +97,72 @@
     </div>
 
     <h2>Daisy's Hamster Adventure 🐹</h2>
-    
-    <div class="app-container">
-        <!-- 左側：拼字挑戰 10 關 -->
+
+    <!-- 頂部狀態徽章列 (始終可見) -->
+    <div class="stat-pills">
+        <span class="pill">⭐ Lv <span id="h-lvl">1</span></span>
+        <span class="pill pill-coins">💰 <span id="h-coins">0</span></span>
+        <span class="pill"><span id="mood-emoji">😊</span></span>
+        <span class="pill">🥚 <span id="egg-text-pill">0/30</span></span>
+    </div>
+
+    <!-- 寵物棲息地 (始終可見) -->
+    <div class="hamster-cage" id="cage">
+        <div class="habitat-sun"></div>
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+        <span class="ground-flower" style="left:5%">🌼</span>
+        <span class="ground-flower" style="left:25%; animation-delay:-0.5s">🌻</span>
+        <span class="ground-flower" style="left:55%; animation-delay:-1s">🌸</span>
+        <span class="ground-flower" style="left:80%; animation-delay:-1.5s">🌺</span>
+        <div class="combo-display" id="combo-display"></div>
+        <div class="prop-house" id="prop-house"></div>
+        <div class="prop-slide" id="prop-slide"></div>
+        <div class="prop-wheel" id="prop-wheel"></div>
+        <div class="prop-water" id="prop-water"></div>
+        <div id="golden-butterfly" onclick="catchButterfly()" style="display:none; position:absolute; font-size:2rem; cursor:pointer; z-index:20; transition: left 15s linear, top 15s linear;">🦋</div>
+        <div id="visitor" class="visitor-sprite" style="display:none; bottom:10px; left:10px;" onclick="tapVisitor()">
+            <div id="visitor-emoji">🐸</div>
+            <div id="visitor-bubble" class="visitor-bubble" style="display:none;">Hello!</div>
+        </div>
+        <div class="quest-btn bounce" id="btn-daily-quest" onclick="openQuests()">📜</div>
+        <div id="hamster-wrapper" style="transition: transform 3s ease-in-out; transform: translateX(0px) scaleX(1);">
+        <svg class="hamster-svg" id="hamster" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="50" cy="65" rx="35" ry="30" fill="#f4a460" />
+            <circle cx="50" cy="45" r="25" fill="#deb887" />
+            <circle cx="35" cy="25" r="10" fill="#f4a460" />
+            <circle cx="65" cy="25" r="10" fill="#f4a460" />
+            <circle cx="35" cy="25" r="5" fill="#ffc0cb" />
+            <circle cx="65" cy="25" r="5" fill="#ffc0cb" />
+            <circle class="eye" cx="40" cy="40" r="3" fill="#000" />
+            <circle class="eye" cx="60" cy="40" r="3" fill="#000" />
+            <path class="eye-closed" d="M 35 40 Q 40 43 45 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
+            <path class="eye-closed" d="M 55 40 Q 60 43 65 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
+            <ellipse cx="50" cy="50" rx="6" ry="4" fill="#ffc0cb" />
+            <path class="mouth" d="M 50 54 Q 45 60 40 55 M 50 54 Q 55 60 60 55" fill="none" stroke="#000" stroke-width="2" />
+            <ellipse cx="30" cy="85" rx="8" ry="4" fill="#ffc0cb" />
+            <ellipse cx="70" cy="85" rx="8" ry="4" fill="#ffc0cb" />
+            <g id="hamster-bow"></g>
+            <circle class="arm-l" cx="20" cy="60" r="5" fill="#f4a460" />
+            <circle class="arm-r" cx="80" cy="60" r="5" fill="#f4a460" />
+            <g id="hamster-hat"></g>
+        </svg>
+        </div>
+    </div>
+
+    <!-- Tab 1: 🎮 遊戲 -->
+    <div class="tab-content active" id="tab-game">
         <div class="card game-section">
             <div class="controls-row">
                 <select id="cat" onchange="setupWeek()"></select>
                 <select id="week" onchange="startLevel()"></select>
             </div>
-            
             <div id="stage-info">Stage 1 / 10</div>
             <div id="progress-bar"><div id="progress-fill"></div></div>
-
-            <!-- 複習單字按鈕 -->
             <button id="btn-review" onclick="openReview()" style="width:100%; margin-bottom:12px; padding:10px; border-radius:15px; background:linear-gradient(135deg,#8ba4f9,#6c5ce7); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #4f3ce0;">
                 📖 先複習本週單字
             </button>
-            
             <div style="display: flex; gap: 10px; margin-bottom: 20px; width: 100%;">
                 <button class="btn-speak" style="flex: 1; margin-bottom: 0;" onclick="speakWord(currentWord)">🔊 聽發音</button>
                 <button class="btn-speak" style="flex: 1; margin-bottom: 0; background: #00bcd4; box-shadow: 0 4px 0 #0097a7;" id="btn-hint" onclick="useHint()">💡 提示 (2💰)</button>
@@ -123,175 +172,132 @@
             <div id="word-translation" style="font-size: 1.5rem; color: #d63384; font-weight: bold; margin-bottom: 15px; text-align: center; display: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); min-height: 40px;"></div>
             <div id="keyboard"></div>
         </div>
+    </div>
 
-        <!-- 右側：倉鼠養成 -->
-        <div class="card hamster-section">
-            <div class="hamster-stats">
-                <div class="stat-row">
-                    <div class="stat">⭐ Lvl: <span id="h-lvl">1</span></div>
-                    <div class="stat">💰 金幣: <span id="h-coins">0</span></div>
-                </div>
-                <div class="exp-bar-container">
-                    <div class="exp-bar-label"><span>EXP</span><span id="exp-text">0 / 100</span></div>
-                    <div class="exp-bar"><div class="exp-bar-fill" id="exp-fill" style="width: 0%"></div></div>
-                </div>
-                <div class="exp-bar-container">
-                    <div class="happiness-label"><span>快樂度</span><span class="mood-emoji" id="mood-emoji">😊</span></div>
-                    <div class="happiness-bar"><div class="happiness-fill" id="happiness-fill" style="width: 50%"></div></div>
-                </div>
-                <!-- 孵蛋進度條 -->
-                <div class="egg-bar-container">
-                    <div class="egg-bar-label"><span>🥚 孵蛋進度</span><span id="egg-text">0 / 30</span></div>
-                    <div class="egg-bar"><div class="egg-bar-fill" id="egg-fill" style="width: 0%"></div></div>
-                </div>
-                <!-- 飽食度 -->
-                <div class="exp-bar-container" style="width: 48%;">
+    <!-- Tab 2: 🐾 寵物 -->
+    <div class="tab-content" id="tab-pet">
+        <div class="card">
+            <div class="exp-bar-container" style="width:100%">
+                <div class="exp-bar-label"><span>⭐ EXP</span><span id="exp-text">0 / 100</span></div>
+                <div class="exp-bar"><div class="exp-bar-fill" id="exp-fill" style="width: 0%"></div></div>
+            </div>
+            <div class="exp-bar-container" style="width:100%; margin-top:8px">
+                <div class="happiness-label"><span>😊 快樂度</span></div>
+                <div class="happiness-bar"><div class="happiness-fill" id="happiness-fill" style="width: 50%"></div></div>
+            </div>
+            <div class="egg-bar-container" style="margin-top:8px">
+                <div class="egg-bar-label"><span>🥚 孵蛋進度</span><span id="egg-text">0 / 30</span></div>
+                <div class="egg-bar"><div class="egg-bar-fill" id="egg-fill" style="width: 0%"></div></div>
+            </div>
+            <div style="display:flex; gap:10px; width:100%; margin-top:8px">
+                <div class="exp-bar-container" style="flex:1">
                     <div class="happiness-label"><span>飽食度 🍎</span></div>
                     <div class="happiness-bar"><div class="happiness-fill" id="hunger-fill" style="background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); width: 100%"></div></div>
                 </div>
-                <!-- 清潔度 -->
-                <div class="exp-bar-container" style="width: 48%;">
+                <div class="exp-bar-container" style="flex:1">
                     <div class="happiness-label"><span>清潔度 🛁</span></div>
                     <div class="happiness-bar"><div class="happiness-fill" id="clean-fill" style="background: linear-gradient(90deg, #89f7fe 0%, #66a6ff 100%); width: 100%"></div></div>
                 </div>
             </div>
-            <div class="hamster-cage" id="cage">
-                <!-- 天空裝飾 -->
-                <div class="habitat-sun"></div>
-                <div class="cloud cloud1"></div>
-                <div class="cloud cloud2"></div>
-                <div class="cloud cloud3"></div>
-                <!-- 小花裝飾 -->
-                <span class="ground-flower" style="left:5%">🌼</span>
-                <span class="ground-flower" style="left:25%; animation-delay:-0.5s">🌻</span>
-                <span class="ground-flower" style="left:55%; animation-delay:-1s">🌸</span>
-                <span class="ground-flower" style="left:80%; animation-delay:-1.5s">🌺</span>
-                <!-- Combo 顯示 -->
-                <div class="combo-display" id="combo-display"></div>
-                <!-- 背景玩具：解鎖道具區 -->
-                <div class="prop-house" id="prop-house"></div>
-                <div class="prop-slide" id="prop-slide"></div>
-                <div class="prop-wheel" id="prop-wheel"></div>
-                <div class="prop-water" id="prop-water"></div>
-                
-                <!-- 抓黃金蝴蝶 -->
-                <div id="golden-butterfly" onclick="catchButterfly()" style="display:none; position:absolute; font-size:2rem; cursor:pointer; z-index:20; transition: left 15s linear, top 15s linear;">🦋</div>
-
-                <!-- 訪客系統 -->
-                <div id="visitor" class="visitor-sprite" style="display:none; bottom:10px; left:10px;" onclick="tapVisitor()">
-                    <div id="visitor-emoji">🐸</div>
-                    <div id="visitor-bubble" class="visitor-bubble" style="display:none;">Hello!</div>
-                </div>
-
-                <!-- 每日任務按鈕 -->
-                <div class="quest-btn bounce" id="btn-daily-quest" onclick="openQuests()">📜</div>
-
-                <!-- SVG Hamster -->
-                <div id="hamster-wrapper" style="transition: transform 3s ease-in-out; transform: translateX(0px) scaleX(1);">
-                <svg class="hamster-svg" id="hamster" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="50" cy="65" rx="35" ry="30" fill="#f4a460" /> <!-- Body -->
-                    <circle cx="50" cy="45" r="25" fill="#deb887" /> <!-- Head -->
-                    <circle cx="35" cy="25" r="10" fill="#f4a460" /> <!-- Ear L -->
-                    <circle cx="65" cy="25" r="10" fill="#f4a460" /> <!-- Ear R -->
-                    <circle cx="35" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear L Inner -->
-                    <circle cx="65" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear R Inner -->
-                    
-                    <!-- 眼睛設定：區分張眼與閉眼 -->
-                    <circle class="eye" cx="40" cy="40" r="3" fill="#000" /> <!-- Eye L -->
-                    <circle class="eye" cx="60" cy="40" r="3" fill="#000" /> <!-- Eye R -->
-                    <!-- 閉眼狀態 (預設隱藏) -->
-                    <path class="eye-closed" d="M 35 40 Q 40 43 45 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
-                    <path class="eye-closed" d="M 55 40 Q 60 43 65 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
-                    
-                    <ellipse cx="50" cy="50" rx="6" ry="4" fill="#ffc0cb" /> <!-- Nose -->
-                    <path class="mouth" d="M 50 54 Q 45 60 40 55 M 50 54 Q 55 60 60 55" fill="none" stroke="#000" stroke-width="2" /> <!-- Mouth -->
-                    <ellipse cx="30" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot L -->
-                    <ellipse cx="70" cy="85" rx="8" ry="4" fill="#ffc0cb" /> <!-- Foot R -->
-                    
-                    <!-- 配件群組 -->
-                    <g id="hamster-bow"></g>
-                    
-                    <circle class="arm-l" cx="20" cy="60" r="5" fill="#f4a460" /> <!-- Arm L -->
-                    <circle class="arm-r" cx="80" cy="60" r="5" fill="#f4a460" /> <!-- Arm R -->
-                    
-                    <!-- 帽子群組 -->
-                    <g id="hamster-hat"></g>
-                </svg>
-                </div>
-            </div>
-            
-            <div class="pet-actions">
-                <!-- 食物專區 -->
-                <div class="action-btn" id="btn-feed-seed" onclick="feedHamster('seed', 1, 10, '🌻')">
-                    <span>瓜子🌻</span>
-                    <span style="font-size: 0.75rem; font-weight: normal;">1 💰/+10 Exp</span>
-                </div>
-                <div class="action-btn" id="btn-feed-carrot" onclick="feedHamster('carrot', 3, 40, '🥕')">
-                    <span>胡蘿蔔🥕</span>
-                    <span style="font-size: 0.75rem; font-weight: normal;">3 💰/+40 Exp</span>
-                </div>
-                <div class="action-btn" id="btn-feed-apple" onclick="feedHamster('apple', 5, 80, '🍎')">
-                    <span>蘋果🍎</span>
-                    <span style="font-size: 0.75rem; font-weight: normal;">5 💰/+80 Exp</span>
-                </div>
-                <!-- 互動專區 -->
-                <div class="action-btn free" onclick="petHamster()">
-                    <span>摸摸 🖐️</span>
-                    <span style="font-size: 0.75rem; font-weight: normal;">免費呼嚕</span>
-                </div>
-                <!-- 寵物盒 -->
-                <div class="action-btn" onclick="openPetBox()" style="border-color:#9b59b6; color:#8e44ad;">
+            <!-- 寵物盒 + 獎盃 -->
+            <div style="display:flex; gap:10px; width:100%; margin-top:14px">
+                <div class="action-btn" onclick="openPetBox()" style="flex:1; border-color:#9b59b6; color:#8e44ad;">
                     <span>寵物盒 🥚</span>
                     <span style="font-size: 0.75rem; font-weight: normal;" id="petbox-count">1 隻</span>
                 </div>
-                <!-- 洗澡海綿 (商店/消耗品) -->
-                <div class="action-btn" id="btn-bath" onclick="bathHamster()">
-                    <span>洗澡 🧽</span>
-                    <span style="font-size: 0.75rem; font-weight: normal;">5 💰/+潔淨</span>
-                </div>
-                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()" style="grid-column: span 3;">
-                    <span>睡覺 💤 (讓倉鼠好好休息)</span>
-                </div>
-                <div class="action-btn" id="btn-shop" onclick="openShop()" style="grid-column: span 2; border-color: #f1c40f; color: #f39c12;">
-                    <span>購物中心 🛍️</span>
-                    <span style="font-size: 0.75rem; font-weight: normal;">佈景與帽子</span>
-                </div>
-                <div class="action-btn" id="btn-trophy" onclick="openTrophies()" style="grid-column: span 2; border-color: #9b59b6; color: #8e44ad;">
+                <div class="action-btn" id="btn-trophy" onclick="openTrophies()" style="flex:1; border-color:#9b59b6; color:#8e44ad;">
                     <span>榮譽獎盃 🏆</span>
-                    <span style="font-size: 0.75rem; font-weight: normal;">成就一覽</span>
                 </div>
-                <!-- 商店專區 (舊版用品) -->
-                <!-- 水瓶按鈕 (商店) -->
+            </div>
+            <!-- 道具 -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; width:100%; margin-top:10px">
                 <div class="action-btn locked" id="btn-water" onclick="buyItem('water', 30, '水瓶💧')">
                     <span id="label-water">買水瓶 💧</span>
                     <span style="font-size: 0.8rem; font-weight: normal;" id="txt-water">30 💰</span>
                 </div>
-                <!-- 小木屋 (商店) -->
                 <div class="action-btn locked" id="btn-house" onclick="buyItem('house', 100, '小木屋🏡')">
                     <span id="label-house">買木屋 🏡</span>
                     <span style="font-size: 0.8rem; font-weight: normal;" id="txt-house">100 💰</span>
                 </div>
-                <!-- 溜滑梯 (商店) -->
                 <div class="action-btn locked" id="btn-slide" onclick="buyItem('slide', 150, '溜滑梯🎢')">
                     <span id="label-slide">溜滑梯 🎢</span>
                     <span style="font-size: 0.8rem; font-weight: normal;" id="txt-slide">150 💰</span>
                 </div>
-                <!-- 跑輪按鈕 (商店) -->
                 <div class="action-btn locked" id="btn-run" onclick="playWheel()">
                     <span id="label-run">買跑輪 🎡</span>
                     <span style="font-size: 0.8rem; font-weight: normal;" id="txt-run">50 💰</span>
                 </div>
             </div>
-            <div style="margin-top:20px; font-size: 0.9rem; color:#888; font-weight:bold; text-align:center;">
+            <!-- 帳號 -->
+            <div style="margin-top:14px; font-size: 0.9rem; color:#888; font-weight:bold; text-align:center;">
                 登入帳號: <span id="current-user" style="color: var(--primary);">---</span>
                 <button onclick="logout()" style="margin-left: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid #ccc; background: white; cursor: pointer;">切換</button>
             </div>
-            <!-- 家長後台按鈕：只有 BARRY 登入時顯示 -->
             <div id="parent-dashboard-btn" style="display:none; margin-top:10px; text-align:center;">
                 <a href="parent_dashboard.html" style="display:inline-block; padding:8px 20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:20px; font-weight:bold; font-size:0.9rem; text-decoration:none;">👨‍👩‍👧 家長學習後台</a>
             </div>
         </div>
     </div>
+
+    <!-- Tab 3: 🍎 餵食 -->
+    <div class="tab-content" id="tab-feed">
+        <div class="card">
+            <div class="feed-grid">
+                <div class="action-btn" id="btn-feed-seed" onclick="feedHamster('seed', 1, 10, '🌻')">
+                    <span style="font-size:1.8rem">🌻</span>
+                    <span>瓜子</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">1 💰/+10 Exp</span>
+                </div>
+                <div class="action-btn" id="btn-feed-carrot" onclick="feedHamster('carrot', 3, 40, '🥕')">
+                    <span style="font-size:1.8rem">🥕</span>
+                    <span>胡蘿蔔</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">3 💰/+40 Exp</span>
+                </div>
+                <div class="action-btn" id="btn-feed-apple" onclick="feedHamster('apple', 5, 80, '🍎')">
+                    <span style="font-size:1.8rem">🍎</span>
+                    <span>蘋果</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">5 💰/+80 Exp</span>
+                </div>
+                <div class="action-btn free" onclick="petHamster()">
+                    <span style="font-size:1.8rem">🖐️</span>
+                    <span>摸摸</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">免費呼嚕</span>
+                </div>
+                <div class="action-btn" id="btn-bath" onclick="bathHamster()">
+                    <span style="font-size:1.8rem">🧽</span>
+                    <span>洗澡</span>
+                    <span style="font-size: 0.75rem; font-weight: normal;">5 💰/+潔淨</span>
+                </div>
+                <div class="action-btn free" id="btn-sleep" onclick="sleepHamster()">
+                    <span>💤 睡覺</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部導覽列 -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-tab="game" onclick="showTab('game')">
+            <span class="nav-icon">🎮</span>
+            <span class="nav-label">遊戲</span>
+        </button>
+        <button class="nav-btn" data-tab="pet" onclick="showTab('pet')">
+            <span class="nav-icon">🐾</span>
+            <span class="nav-label">寵物</span>
+        </button>
+        <button class="nav-btn" data-tab="feed" onclick="showTab('feed')">
+            <span class="nav-icon">🍎</span>
+            <span class="nav-label">餵食</span>
+        </button>
+        <button class="nav-btn" data-tab="shop" onclick="showTab('shop')">
+            <span class="nav-icon">🛍️</span>
+            <span class="nav-label">商店</span>
+        </button>
+        <button class="nav-btn" data-tab="quest" onclick="showTab('quest')">
+            <span class="nav-icon">📜</span>
+            <span class="nav-label">任務</span>
+        </button>
+    </nav>
 
     <script src="words.js"></script>
     <script>
@@ -574,6 +580,8 @@
             const eggs = Math.min(30, petData.eggCoins || 0);
             document.getElementById('egg-fill').style.width = (eggs / 30 * 100) + '%';
             document.getElementById('egg-text').textContent = eggs + ' / 30';
+            const pill = document.getElementById('egg-text-pill');
+            if(pill) pill.textContent = eggs + '/30';
         }
 
         function getRandomPet(ownedList) {
@@ -861,6 +869,18 @@
             };
             const content = svgTemplates[petId] || svgTemplates.hamster;
             svg.innerHTML = content;
+        }
+
+        // === 底部分頁導覽 ===
+        function showTab(tabId) {
+            if (tabId === 'shop') { openShop(); return; }
+            if (tabId === 'quest') { openQuests(); return; }
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const tab = document.getElementById('tab-' + tabId);
+            if (tab) tab.classList.add('active');
+            const btn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+            if (btn) btn.classList.add('active');
         }
 
         function savePetData() {

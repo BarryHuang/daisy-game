@@ -14,20 +14,15 @@
             margin: 0; padding: 10px; min-height: 100vh;
             display: flex; flex-direction: column; align-items: center;
             color: var(--text);
+            padding-bottom: 80px; box-sizing: border-box;
         }
 
         h2 { text-align: center; color: var(--primary); text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin: 10px 0; }
 
-        /* 雙欄版面配置：左側遊戲，右側倉鼠 */
+        /* 單欄版面 */
         .app-container {
-            display: flex; flex-direction: row; width: 100%; max-width: 900px;
-            gap: 20px; align-items: stretch;
-        }
-
-        /* 手機版：疊加顯示 (倉鼠在上，遊戲在下) */
-        @media (max-width: 768px) {
-            .app-container { flex-direction: column; }
-            .hamster-section { min-height: 250px; }
+            display: flex; flex-direction: column; width: 100%; max-width: 700px;
+            align-items: center;
         }
 
         /* 共同的卡片樣式 */
@@ -116,11 +111,11 @@
         
         /* 升級版倉鼠豪宅與動畫 */
         .hamster-cage {
-            flex: 1; width: 100%; border: 4px solid #c8a2c8; border-radius: 20px;
+            width: 100%; max-width: 700px; border: 4px solid #c8a2c8; border-radius: 20px;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            position: relative; overflow: hidden; min-height: 250px;
+            position: relative; overflow: hidden; height: 230px;
             background: linear-gradient(to bottom, #87CEEB 0%, #b2ebf2 50%, #8BC34A 50%, #689F38 52%, #d7ccc8 52%, #bcaaa4 100%);
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1); box-sizing: border-box;
         }
         /* 動畫雲朵和太陽 */
         .cloud {
@@ -320,3 +315,26 @@
 /* 訪客系統 */
 .visitor-sprite { position: absolute; font-size: 2.5rem; cursor: pointer; z-index: 5; transition: all 0.5s ease; }
 .visitor-bubble { position: absolute; top: -30px; left: -20px; background: white; padding: 5px 10px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; color: #333; pointer-events: none; border: 2px solid #ddd; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+/* === Stat Pills (頂部徽章) === */
+.stat-pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 6px 0 8px; width: 100%; max-width: 700px; }
+.pill { background: white; border-radius: 20px; padding: 5px 14px; font-weight: bold; font-size: 0.95rem; color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.1); white-space: nowrap; }
+.pill-coins { color: #e67e22; }
+
+/* === Tab 切換內容區 === */
+.tab-content { display: none; width: 100%; max-width: 700px; }
+.tab-content.active { display: block; }
+.tab-content .card { border-radius: 16px; margin-top: 8px; }
+.game-section { border: 4px solid var(--secondary) !important; }
+
+/* === 餵食格子 === */
+.feed-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; }
+.feed-grid .action-btn { padding: 14px 4px; font-size: 1rem; }
+
+/* === 底部導覽列 === */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: white; box-shadow: 0 -2px 12px rgba(0,0,0,0.12); z-index: 100; border-top: 1px solid #f0f0f0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0 6px; background: none; border: none; cursor: pointer; color: #bbb; transition: color 0.2s; font-family: inherit; }
+.nav-icon { font-size: 1.5rem; line-height: 1; }
+.nav-label { font-size: 0.62rem; font-weight: bold; margin-top: 3px; }
+.nav-btn.active { color: var(--primary); }
+.nav-btn.active .nav-icon { display: inline-block; transform: scale(1.15); }
