@@ -96,7 +96,7 @@
         </div>
     </div>
 
-    <h2>Daisy's Hamster Adventure 🐹</h2>
+    <h2><span id="user-name">Daisy</span>'s Hamster Adventure 🐹</h2>
     
     <div class="app-container">
         <!-- 左側：拼字挑戰 10 關 -->
@@ -385,6 +385,9 @@
             localStorage.setItem("daisy_hamster_user", secretCode);
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('current-user').textContent = secretCode;
+            // 更新標題名稱
+            const displayName = secretCode.charAt(0).toUpperCase() + secretCode.slice(1).toLowerCase();
+            document.getElementById('user-name').textContent = displayName;
 
             // iOS Audio Unlock: 必須在使用者點擊 (Click Event) 內初始化 AudioContext 與 HTMLAudioElement
             unlockAudio();
