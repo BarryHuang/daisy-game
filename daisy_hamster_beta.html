@@ -979,18 +979,21 @@
             const runBtn = document.getElementById('btn-run');
             const wheel = document.getElementById('prop-wheel');
             if(petData.items.wheel) {
-                runBtn.classList.remove('locked');
-                runBtn.classList.add('free');
-                document.getElementById('label-run').textContent = "玩跑輪 🎡";
-                runBtn.querySelector('#txt-run').textContent = "免費！";
+                runBtn.style.display = 'none'; // 隱藏購買按鈕
                 wheel.classList.add('show');
+                // 綁定點擊事件
+                wheel.onclick = () => { playWheel(); };
+                wheel.style.cursor = 'pointer';
             } else {
+                runBtn.style.display = ''; // 恢復顯示
                 runBtn.classList.remove('free');
                 document.getElementById('label-run').textContent = "買跑輪 🎡";
                 runBtn.querySelector('#txt-run').textContent = "50 💰";
                 if(petData.coins >= 50) runBtn.classList.remove('locked');
                 else runBtn.classList.add('locked');
                 wheel.classList.remove('show');
+                wheel.onclick = null;
+                wheel.style.cursor = 'default';
             }
 
             // 處理場景解鎖 - 統一刷新 UI
@@ -1004,18 +1007,21 @@
             const prop = document.getElementById(`prop-${itemId}`);
             
             if(petData.items[itemId]) {
-                btn.classList.remove('locked');
-                btn.classList.add('free');
-                document.getElementById(`label-${itemId}`).textContent = ownedLabel;
-                btn.querySelector(`#txt-${itemId}`).textContent = "可互動";
+                btn.style.display = 'none'; // 隱藏購買按鈕
                 prop.classList.add('show');
+                // 綁定點擊場景道具互動
+                prop.onclick = () => { buyItem(itemId, cost, buyLabel); };
+                prop.style.cursor = 'pointer';
             } else {
+                btn.style.display = ''; // 恢復顯示
                 btn.classList.remove('free');
                 document.getElementById(`label-${itemId}`).textContent = `買${buyLabel}`;
                 btn.querySelector(`#txt-${itemId}`).textContent = `${cost} 💰`;
                 if(petData.coins >= cost) btn.classList.remove('locked');
                 else btn.classList.add('locked');
                 prop.classList.remove('show');
+                prop.onclick = null;
+                prop.style.cursor = 'default';
             }
         }
 

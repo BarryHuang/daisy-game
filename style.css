@@ -231,14 +231,13 @@
         
         /* 道具：跑輪 (預設隱藏，解鎖後顯示) */
         .prop-wheel {
-            position: absolute; right: 10px; bottom: 40px; width: 100px; height: 100px;
-            border: 8px solid #ffcc80; border-radius: 50%; opacity: 0; pointer-events: none;
+            position: absolute; right: 5%; bottom: 38%; width: 68px; height: 68px;
+            border: 6px solid #ffcc80; border-radius: 50%; opacity: 0; pointer-events: none;
             transition: opacity 0.5s; z-index: 1;
-            /* 跑輪支架 */
-            box-shadow: 0 5px 0 5px #e6b800;
+            box-shadow: 0 4px 0 4px #e6b800;
         }
         .prop-wheel::before {
-            content:''; position: absolute; top:50%; left:50%; width: 10px; height: 10px;
+            content:''; position: absolute; top:50%; left:50%; width: 8px; height: 8px;
             background: #d35400; border-radius: 50%; transform: translate(-50%, -50%);
         }
         .prop-wheel.show { opacity: 0.9; }
@@ -247,45 +246,45 @@
         
         /* 道具：水瓶 */
         .prop-water {
-            position: absolute; right: 120px; bottom: 85px; width: 20px; height: 45px;
-            background: rgba(220, 248, 255, 0.9); border: 2px solid #90caf9; border-radius: 10px;
-            opacity: 0; z-index: 1; transition: opacity 0.5s;
+            position: absolute; left: 62%; bottom: 47%; width: 14px; height: 32px;
+            background: rgba(200, 240, 255, 0.92); border: 2px solid #90caf9; border-radius: 7px;
+            opacity: 0; z-index: 2; transition: opacity 0.5s;
         }
         .prop-water::after {
-            content: ''; position: absolute; bottom: -12px; left: 6px;
-            width: 4px; height: 15px; background: silver; border-radius: 2px;
+            content: ''; position: absolute; bottom: -10px; left: 4px;
+            width: 3px; height: 12px; background: silver; border-radius: 2px;
         }
-        .prop-water.show { opacity: 0.9; }
+        .prop-water.show { opacity: 0.95; }
 
         /* 新道具：溫馨小木屋 */
         .prop-house {
-            position: absolute; left: 10px; bottom: 40px; width: 100px; height: 80px;
-            background: #d7ccc8; border: 3px solid #8d6e63; border-radius: 10px;
+            position: absolute; left: 3%; bottom: 38%; width: 72px; height: 56px;
+            background: #d7ccc8; border: 2px solid #8d6e63; border-radius: 8px;
             opacity: 0; z-index: 0; transition: opacity 0.5s;
         }
         .prop-house::before { /* 屋頂 */
-            content: ''; position: absolute; top: -35px; left: -10px;
-            border-left: 60px solid transparent; border-right: 60px solid transparent;
-            border-bottom: 35px solid #a1887f;
+            content: ''; position: absolute; top: -24px; left: -8px;
+            border-left: 44px solid transparent; border-right: 44px solid transparent;
+            border-bottom: 24px solid #a1887f;
         }
         .prop-house::after { /* 門 */
-            content: ''; position: absolute; bottom: 0; left: 35px;
-            width: 30px; height: 40px; background: #3e2723; border-radius: 15px 15px 0 0;
+            content: ''; position: absolute; bottom: 0; left: 24px;
+            width: 22px; height: 30px; background: #3e2723; border-radius: 11px 11px 0 0;
         }
         .prop-house.show { opacity: 1; }
 
         /* 新道具：溜滑梯 */
         .prop-slide {
-            position: absolute; left: 130px; bottom: 40px; width: 80px; height: 60px;
+            position: absolute; left: 22%; bottom: 38%; width: 56px; height: 44px;
             opacity: 0; z-index: 1; transition: opacity 0.5s;
         }
         .prop-slide::before { /* 承載面 */
-            content: ''; position: absolute; top: 0; left: 0; width: 100px; height: 10px;
-            background: #ff5252; transform: rotate(30deg); transform-origin: left top; border-radius: 5px;
+            content: ''; position: absolute; top: 0; left: 0; width: 70px; height: 7px;
+            background: #ff5252; transform: rotate(30deg); transform-origin: left top; border-radius: 4px;
         }
         .prop-slide::after { /* 樓梯 */
-            content: ''; position: absolute; top: 0; left: 0; width: 10px; height: 50px;
-            background: #ffb74d; border-radius: 5px;
+            content: ''; position: absolute; top: 0; left: 0; width: 7px; height: 36px;
+            background: #ffb74d; border-radius: 4px;
         }
         .prop-slide.show { opacity: 0.9; }
 
