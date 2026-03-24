@@ -174,28 +174,27 @@
             position: relative; overflow: hidden; min-height: 250px;
             background:
                 linear-gradient(to bottom,
-                    #aee6ff 0%,
-                    #c9f0ff 38%,
-                    #e0f9d8 38%,
-                    #c5f0b0 45%,
-                    #8BC34A 100%
+                    #74ebd5 0%,
+                    #9face6 40%,
+                    #e0f9d8 40%,
+                    #a8e063 70%,
+                    #56ab2f 100%
                 );
             box-shadow: inset 0 0 30px rgba(0,0,0,0.08), 0 4px 16px rgba(180,100,200,0.1);
-            perspective: 800px; /* 為內部 3D 元素準備 */
         }
         /* 2.5D 透視木地板 / 室內草皮 */
         .hamster-cage::after {
             content: '';
             position: absolute;
-            bottom: -20px; left: -10%; right: -10%;
-            height: 120px; /* 地板涵蓋範圍 */
+            bottom: -30px; left: -20%; right: -20%;
+            height: 100px; /* 地板涵蓋範圍 */
             background: 
-                linear-gradient(to top, rgba(0,0,0,0.2) 0%, transparent 100%),
+                linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 80%),
                 repeating-linear-gradient(90deg, #d2a679 0, #d2a679 40px, #c69b6e 40px, #c69b6e 42px);
-            transform: rotateX(60deg);
+            transform: perspective(600px) rotateX(60deg);
             transform-origin: bottom center;
             z-index: 0;
-            border-top: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid rgba(255,255,255,0.4);
             pointer-events: none;
         }
         /* 動畫雲朵和太陽 */
@@ -287,7 +286,7 @@
 
         /* 新道具：溫馨小木屋 (2.5D 透視視角) */
         .prop-house {
-            position: absolute; left: 3%; bottom: 20%; width: 72px; height: 56px;
+            position: absolute; left: 3%; bottom: 15%; width: 72px; height: 56px;
             background: linear-gradient(to bottom, #d7ccc8, #a1887f); 
             border-radius: 6px;
             opacity: 0; z-index: 1; transition: opacity 0.5s;
@@ -312,7 +311,7 @@
 
         /* 新道具：溜滑梯 (2.5D 透視) */
         .prop-slide {
-            position: absolute; left: 24%; bottom: 18%; width: 68px; height: 50px;
+            position: absolute; left: 24%; bottom: 14%; width: 68px; height: 50px;
             opacity: 0; z-index: 1; transition: opacity 0.5s;
             filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.25));
         }
