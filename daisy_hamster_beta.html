@@ -197,8 +197,8 @@
                     <circle cx="65" cy="25" r="5" fill="#ffc0cb" /> <!-- Ear R Inner -->
                     
                     <!-- 眼睛設定：區分張眼與閉眼 -->
-                    <circle class="eye" cx="40" cy="40" r="3" fill="#000" /> <!-- Eye L -->
-                    <circle class="eye" cx="60" cy="40" r="3" fill="#000" /> <!-- Eye R -->
+                    <circle class="eye eye-pupil" cx="40" cy="40" r="3" fill="#000" /> <!-- Eye L -->
+                    <circle class="eye eye-pupil" cx="60" cy="40" r="3" fill="#000" /> <!-- Eye R -->
                     <!-- 閉眼狀態 (預設隱藏) -->
                     <path class="eye-closed" d="M 35 40 Q 40 43 45 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
                     <path class="eye-closed" d="M 55 40 Q 60 43 65 40" fill="none" stroke="#000" stroke-width="2" style="display:none;" />
@@ -1496,7 +1496,15 @@
             mouth.setAttribute('d', "M 45 57 Q 50 63 55 57 Q 50 52 45 57");
             
             hamster.classList.add('happy');
-            createFloatingEmoji('💖', 1500, -30);
+            
+            // 多重愛心特效
+            for(let i=0; i<5; i++) {
+                setTimeout(() => {
+                    const size = 1 + Math.random();
+                    const xOffset = (Math.random() - 0.5) * 60;
+                    createFloatingEmoji('💖', 1200 + Math.random()*500, -30 - Math.random()*20, size, xOffset);
+                }, i * 150);
+            }
             addHappiness(5);
             
             // 摸摸驚喜：15% 機率掉落金幣
@@ -1586,6 +1594,74 @@
             setTimeout(() => fly.remove(), 10000);
         }
         
+        // 在籠子內顯示飄浮跳動表情
+        function createFloatingEmoji(emoji, duration, yOffset, scale=1, xOffset=0) {
+            const cage = document.getElementById('cage');
+            const el = document.createElement('div');
+            el.textContent = emoji;
+            el.style.position = 'absolute';
+            el.style.left = `calc(50% + ${xOffset}px)`;
+            el.style.bottom = '80px';
+            el.style.fontSize = `${2 * scale}rem`;
+            el.style.pointerEvents = 'none';
+            el.style.zIndex = 10;
+            // 動畫
+            el.style.transition = `all ${duration}ms linear`;
+            cage.appendChild(el);
+            
+            setTimeout(() => {
+                el.style.bottom = `${80 - yOffset}px`;
+                el.style.opacity = '0';
+                el.style.transform = `scale(${1.5 * scale}) rotate(${(Math.random()-0.5)*30}deg)`;
+            }, 50);
+            
+            setTimeout(() => el.remove(), duration);
+        }
+
+        // 滑鼠互動：倉鼠眼神看著游標
+        document.addEventListener('DOMContentLoaded', () => {
+            const cage = document.getElementById('cage');
+            cage.addEventListener('mousemove', (e) => {
+                // 若正在睡覺或跑步則不追蹤
+                if(isSleeping || isRunning) {
+                    resetEyes();
+                    return;
+                }
+                const svg = document.getElementById('hamster');
+                const rect = svg.getBoundingClientRect();
+                // 計算滑鼠相對於倉鼠中心的偏移
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = (e.clientX - cx) / rect.width; // 比例限制在 -1 到 1 左右
+                const dy = (e.clientY - cy) / rect.height;
+                
+                // 限制移動範圍
+                const moveX = Math.max(-3, Math.min(3, dx * 5));
+                const moveY = Math.max(-2, Math.min(2, dy * 5));
+                
+                const eyes = svg.querySelectorAll('.eye-pupil'); // 需要在 SVG 建立這些 class
+                if(eyes.length > 0) {
+                    eyes.forEach(eye => {
+                        eye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                    });
+                }
+            });
+            cage.addEventListener('mouseleave', resetEyes);
+        });
+
+        function resetEyes() {
+            const eyes = document.querySelectorAll('.eye-pupil');
+            eyes.forEach(eye => eye.style.transform = 'translate(0, 0)');
+        }
+
+        // 當點擊籠子非按鈕區域時，可以產生驚奇符號
+        document.getElementById('cage').addEventListener('click', (e) => {
+            if(e.target.closest('button') || e.target.closest('.action-btn')) return;
+            if(!isSleeping && !isRunning && Math.random() < 0.3) {
+                createFloatingEmoji('❓', 1000, -20, 0.8, (Math.random()-0.5)*40);
+                playTone(600, 'sine', 0.05);
+            }
+        });
         // 倉鼠隨機散步 AI
         setInterval(() => {
             if (!secretCode || isSleeping || isRunning) return;
