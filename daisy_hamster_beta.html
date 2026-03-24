@@ -1524,10 +1524,14 @@
         }
 
         // 持續迴圈 (每分鐘)：處理下降數值、隨機事件
+        // 持續迴圈 (每分鐘)：處理下降數值、隨機事件、時間系統
         setInterval(() => {
             // 每分鐘有 25% 機率出現蝴蝶 (平均約 4 分鐘一次)
             if(Math.random() < 0.25) spawnButterfly();
             
+            // 更新真實時間場景
+            updateTimeOfDay();
+
             // 快樂度、飽食度、清潔度下降
             if(petData.happiness > 0 && secretCode) {
                 let dropRate = 1;
@@ -1544,6 +1548,43 @@
             savePetData();
             updatePetUI();
         }, 60000); // 每分鐘計算一次
+        
+        // 動態時間與天候系統
+        function updateTimeOfDay() {
+            const hour = new Date().getHours();
+            const cage = document.getElementById('cage');
+            cage.classList.remove('time-day', 'time-sunset', 'time-night');
+
+            if (hour >= 6 && hour < 16) {
+                cage.classList.add('time-day');
+            } else if (hour >= 16 && hour < 18) {
+                cage.classList.add('time-sunset');
+            } else {
+                cage.classList.add('time-night');
+                // 夜晚隨機產生螢火蟲
+                if(Math.random() > 0.5) spawnFirefly();
+            }
+        }
+
+        // 螢火蟲粒子
+        function spawnFirefly() {
+            const cage = document.getElementById('cage');
+            if(document.querySelectorAll('.firefly').length > 5) return;
+            const size = 3 + Math.random() * 4;
+            const fly = document.createElement('div');
+            fly.className = 'firefly';
+            fly.style.cssText = `
+                position: absolute; width: ${size}px; height: ${size}px;
+                background: #cddc39; border-radius: 50%;
+                box-shadow: 0 0 ${size*2}px #ffd54f;
+                left: ${10 + Math.random() * 80}%;
+                bottom: ${10 + Math.random() * 40}%;
+                animation: floatUp ${5 + Math.random() * 5}s ease-in-out forwards, blink 1.5s infinite alternate;
+                z-index: 3; pointer-events: none;
+            `;
+            cage.appendChild(fly);
+            setTimeout(() => fly.remove(), 10000);
+        }
         
         // 倉鼠隨機散步 AI
         setInterval(() => {

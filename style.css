@@ -172,15 +172,25 @@
             border-radius: 22px;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             position: relative; overflow: hidden; min-height: 250px;
-            background:
-                linear-gradient(to bottom,
-                    #74ebd5 0%,
-                    #9face6 40%,
-                    #e0f9d8 40%,
-                    #a8e063 70%,
-                    #56ab2f 100%
-                );
             box-shadow: inset 0 0 30px rgba(0,0,0,0.08), 0 4px 16px rgba(180,100,200,0.1);
+            transition: background 2s ease-in-out; /* 切換時段的漸變 */
+        }
+        
+        /* 動態時段背景 */
+        .hamster-cage.time-day {
+            background: linear-gradient(to bottom, #74ebd5 0%, #9face6 40%, #e0f9d8 40%, #a8e063 70%, #56ab2f 100%);
+        }
+        .hamster-cage.time-sunset {
+            background: linear-gradient(to bottom, #ff7e5f 0%, #feb47b 40%, #ffdfba 40%, #e8a05c 70%, #8b5a2b 100%);
+        }
+        .hamster-cage.time-sunset::after {
+            filter: sepia(0.4) saturate(1.2) brightness(0.9);
+        }
+        .hamster-cage.time-night {
+            background: linear-gradient(to bottom, #0f2027 0%, #203a43 40%, #2c5364 40%, #1e3c72 70%, #2a5298 100%);
+        }
+        .hamster-cage.time-night::after {
+            filter: brightness(0.6) sepia(0.3) hue-rotate(180deg);
         }
         /* 2.5D 透視木地板 / 室內草皮 */
         .hamster-cage::after {
@@ -226,17 +236,48 @@
 
         @keyframes drift { 0% { left: -130px; } 100% { left: calc(100% + 130px); } }
 
-        /* 太陽 + 光暈 */
+        /* 太陽 / 滿月光暈 */
         .habitat-sun {
             position: absolute; top: 10px; right: 14px; width: 42px; height: 42px;
-            background: radial-gradient(circle, #fff9b0 28%, #ffd600 52%, transparent 72%);
             border-radius: 50%; z-index: 1;
+            transition: all 2s ease-in-out;
+        }
+        
+        .time-day .habitat-sun {
+            background: radial-gradient(circle, #fff9b0 28%, #ffd600 52%, transparent 72%);
             animation: sunPulse 3s ease-in-out infinite;
             box-shadow: 0 0 18px 8px rgba(255,215,0,0.4);
         }
+        .time-sunset .habitat-sun {
+            background: radial-gradient(circle, #ffe0b2 28%, #ff8a65 52%, transparent 72%);
+            top: 25%; /* 夕陽西下 */
+            animation: sunPulse 4s ease-in-out infinite;
+            box-shadow: 0 0 25px 12px rgba(255,100,0,0.5);
+        }
+        .time-night .habitat-sun { /* 變成月亮 */
+            background: radial-gradient(circle, #ffffff 40%, #e0e0e0 70%, transparent 80%);
+            animation: none;
+            box-shadow: 0 0 20px 8px rgba(200,220,255,0.6);
+        }
         @keyframes sunPulse {
-            0%,100% { transform: scale(1);    box-shadow: 0 0 18px 8px rgba(255,215,0,0.4); }
-            50%      { transform: scale(1.14); box-shadow: 0 0 30px 14px rgba(255,215,0,0.6); }
+            0%,100% { transform: scale(1); filter: brightness(1); }
+            50%      { transform: scale(1.14); filter: brightness(1.2); }
+        }
+        
+        /* 夜間雲朵變暗 */
+        .time-night .cloud { opacity: 0.3; filter: brightness(0.6) drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
+        .time-sunset .cloud { background: rgba(255,220,200,0.9); filter: drop-shadow(0 4px 8px rgba(255,150,100,0.3)); }
+        
+        /* 螢火蟲動畫 */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; }
+            100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+        }
+        @keyframes blink {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
         }
 
         /* 小花/小草裝飾 - 配合地板調整位置 */
