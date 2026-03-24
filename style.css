@@ -181,16 +181,16 @@
             background: linear-gradient(to bottom, #74ebd5 0%, #9face6 40%, #e0f9d8 40%, #a8e063 70%, #56ab2f 100%);
         }
         .hamster-cage.time-sunset {
-            background: linear-gradient(to bottom, #ff7e5f 0%, #feb47b 40%, #ffdfba 40%, #e8a05c 70%, #8b5a2b 100%);
+            background: linear-gradient(to bottom, #f29492 0%, #ff8a65 30%, #ffdfba 50%, #e8a05c 70%, #d84315 100%);
         }
         .hamster-cage.time-sunset::after {
-            filter: sepia(0.4) saturate(1.2) brightness(0.9);
+            filter: sepia(0.3) saturate(1.4) brightness(0.85);
         }
         .hamster-cage.time-night {
             background: linear-gradient(to bottom, #0f2027 0%, #203a43 40%, #2c5364 40%, #1e3c72 70%, #2a5298 100%);
         }
         .hamster-cage.time-night::after {
-            filter: brightness(0.6) sepia(0.3) hue-rotate(180deg);
+            filter: brightness(0.5) saturate(0.8);
         }
         /* 2.5D 透視木地板 / 室內草皮 */
         .hamster-cage::after {

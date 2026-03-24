@@ -2182,6 +2182,8 @@
 
         // 初始化
         window.onload = () => {
+            updateTimeOfDay(); // 頁面載入時立刻套用時段背景
+            
             // 檢查有沒有存過密碼
             const savedUser = localStorage.getItem("daisy_hamster_user");
             if(savedUser) {
