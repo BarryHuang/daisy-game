@@ -214,8 +214,46 @@
             <div id="parent-dashboard-btn" style="display:none; margin-top:10px; text-align:center;">
                 <a href="parent_dashboard.html" style="display:inline-block; padding:8px 20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:20px; font-weight:bold; font-size:0.9rem; text-decoration:none;">👨‍👩‍👧 家長學習後台</a>
             </div>
+
+            <!-- ✨ 彩虹蟲蟲貪食蛇遊戲入口 ✨ -->
+            <div style="margin-top:16px; text-align:center;">
+                <a href="daisy_snake.html" class="snake-portal-btn">
+                    🐛 去玩彩虹蟲蟲！🌈
+                </a>
+            </div>
         </div>
     </div>
+
+    <style>
+      /* ── 彩虹蟲蟲按鈕 ── */
+      .snake-portal-btn {
+        display: inline-block;
+        padding: 12px 28px;
+        /* Rainbow gradient matching the snake game palette */
+        background: linear-gradient(135deg, #FF3D82 0%, #FF7050 30%, #FFB800 55%, #3CC47C 75%, #4DA6FF 100%);
+        color: white;
+        border: 3px solid white;
+        border-radius: 30px;
+        font-weight: 800;
+        font-size: 1rem;
+        text-decoration: none;
+        box-shadow: 0 4px 0 rgba(200, 50, 100, 0.35), 0 6px 20px rgba(255,100,150,0.35);
+        letter-spacing: 0.04em;
+        /* Breathing pulse — same technique as the snake game's start btn */
+        animation: snakeBtnBreathe 2s ease-in-out infinite;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform .12s, box-shadow .12s;
+      }
+      .snake-portal-btn:active {
+        transform: scale(.95) translateY(2px);
+        box-shadow: 0 2px 0 rgba(200,50,100,.3), 0 4px 12px rgba(255,100,150,.25);
+        animation: none;
+      }
+      @keyframes snakeBtnBreathe {
+        0%,100% { transform: scale(1);    box-shadow: 0 4px 0 rgba(200,50,100,.35), 0 6px 20px rgba(255,100,150,.35); }
+        50%      { transform: scale(1.06); box-shadow: 0 4px 0 rgba(200,50,100,.40), 0 8px 28px rgba(255,100,150,.50); }
+      }
+    </style>
 
     <script src="words.js"></script>
     <script>

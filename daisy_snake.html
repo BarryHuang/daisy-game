@@ -443,14 +443,16 @@ let CS = 22;
 // Cycles continuously: pink → peach → yellow →
 // mint → sky blue → lavender → back to pink.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Vivid-pastel palette — saturated enough to contrast clearly
+// against the sky-blue canvas background, cute enough for kids.
 const RAINBOW = [
-  '#FF9EBC',  // pink
-  '#FFBEBC',  // salmon
-  '#FFD6A5',  // peach
-  '#FFFAB5',  // butter yellow
-  '#B5FFD4',  // mint
-  '#B5DEFF',  // sky blue
-  '#D4B5FF',  // lavender
+  '#FF3D82',  // vivid bubblegum pink
+  '#FF7050',  // vivid coral
+  '#FFB800',  // vivid golden yellow
+  '#3CC47C',  // vivid mint green
+  '#4DA6FF',  // vivid cornflower blue
+  '#B46FFF',  // vivid lavender purple
+  '#FF60A8',  // vivid hot pink (loop back)
 ];
 
 // Food emoji pool — each new food picks one randomly
@@ -702,16 +704,21 @@ function drawParticles() {
 // =========================================================================
 
 function drawBackground() {
-  // Light cream-pink fill
-  ctx.fillStyle = '#FFF5FA';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Sky-blue canvas base — warm rainbow colours (pink/coral/yellow/green)
+  // all pop clearly against this cool hue.  Enough saturation to provide
+  // clear contrast, soft enough to stay cute and eye-friendly.
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, '#BFE8FF');
+  grad.addColorStop(1, '#D4DBFF');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Subtle polka dots at each cell centre — looks playful, not grid-like
-  ctx.fillStyle = 'rgba(255,182,193,0.16)';
+  // Polka dots — pink-purple, visible on blue bg but not distracting
+  ctx.fillStyle = 'rgba(200,150,255,0.18)';
   for (let x=0; x<COLS; x++) {
     for (let y=0; y<ROWS; y++) {
       ctx.beginPath();
-      ctx.arc(x*CS+CS/2, y*CS+CS/2, CS*0.07, 0, Math.PI*2);
+      ctx.arc(x*CS+CS/2, y*CS+CS/2, CS*0.065, 0, Math.PI*2);
       ctx.fill();
     }
   }
@@ -728,7 +735,7 @@ function drawBackground() {
 function drawFood() {
   const cx = food.x*CS + CS/2;
   const cy = food.y*CS + CS/2;
-  const sz = CS * 0.88;
+  const sz = CS * 0.9;
   const scale = 1 + Math.sin(foodPhase) * 0.11;
   const rot   = Math.sin(foodPhase * .6) * 0.18;
 
@@ -736,6 +743,14 @@ function drawFood() {
   ctx.translate(cx, cy);
   ctx.scale(scale, scale);
   ctx.rotate(rot);
+
+  // White circular backdrop ensures the emoji is legible on any bg colour
+  ctx.fillStyle  = 'rgba(255,255,255,0.92)';
+  ctx.shadowColor = 'rgba(100,80,200,0.18)';
+  ctx.shadowBlur  = 10;
+  ctx.beginPath(); ctx.arc(0, 0, CS*0.46, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+
   ctx.font = `${sz}px serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -760,17 +775,23 @@ function drawSnake() {
     const col = RAINBOW[i % RAINBOW.length];
 
     ctx.save();
-    // Soft shadow matching segment colour
-    ctx.shadowColor = col;
-    ctx.shadowBlur  = 7;
+    // Drop shadow for depth
+    ctx.shadowColor = 'rgba(0,0,0,0.20)';
+    ctx.shadowBlur  = 5;
+    ctx.shadowOffsetY = 2;
     ctx.fillStyle   = col;
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
 
+    // White outline stroke — separates segments from each other and the bg
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.strokeStyle = 'rgba(255,255,255,0.82)';
+    ctx.lineWidth   = Math.max(1.5, CS * 0.09);
+    ctx.stroke();
+
     // Candy-ball shine: small white highlight offset toward top-left
-    ctx.shadowBlur = 0;
     ctx.fillStyle  = 'rgba(255,255,255,0.55)';
     ctx.beginPath();
-    ctx.arc(cx - r*.26, cy - r*.26, r*.32, 0, Math.PI*2);
+    ctx.arc(cx - r*.26, cy - r*.26, r*.30, 0, Math.PI*2);
     ctx.fill();
 
     ctx.restore();
@@ -804,10 +825,16 @@ function drawHead() {
   ctx.rotate(Math.atan2(dir.y, dir.x));
   // Now: forward = +x, right = +y
 
-  // ── Head circle ─────────────────────────────────��────────────
-  ctx.shadowColor = '#FF9EBC'; ctx.shadowBlur = 10;
-  ctx.fillStyle = '#FF9EBC';
+  // ── Head circle — vivid pink for max visibility ───────────────
+  ctx.shadowColor = 'rgba(0,0,0,0.22)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+  ctx.fillStyle = '#FF3D82';
   ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
+
+  // White outline (same treatment as body segments)
+  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth   = Math.max(1.5, CS * 0.09);
+  ctx.stroke();
 
   // ── Shine ────────────────────────────────────────────────────
   ctx.shadowBlur = 0;
