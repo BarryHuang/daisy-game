@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Soft neon glow filter for snake body -->
+    <filter id="glow-body" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Stronger glow for head and food -->
+    <filter id="glow-strong" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Background gradient -->
+    <radialGradient id="bg-grad" cx="30%" cy="20%" r="80%">
+      <stop offset="0%"   stop-color="#0a0a2e"/>
+      <stop offset="100%" stop-color="#04060f"/>
+    </radialGradient>
+  </defs>
+
+  <!-- App icon background with rounded corners -->
+  <rect width="512" height="512" rx="110" fill="url(#bg-grad)"/>
+
+  <!-- Ambient light blobs -->
+  <circle cx="100" cy="100" r="160" fill="rgba(79,172,254,0.06)"/>
+  <circle cx="420" cy="420" r="140" fill="rgba(168,85,247,0.05)"/>
+
+  <!-- Snake body — S-curve path from head (top-right) to tail (bottom-left) -->
+  <path
+    d="M 360 90
+       Q 430 90  430 170
+       Q 430 255 355 255
+       L 158 255
+       Q 82  255 82  335
+       Q 82  420 158 420"
+    fill="none"
+    stroke="#4facfe"
+    stroke-width="54"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#glow-body)"
+  />
+  <!-- Same path in brighter cyan overlaid for double-glow -->
+  <path
+    d="M 360 90
+       Q 430 90  430 170
+       Q 430 255 355 255
+       L 158 255
+       Q 82  255 82  335
+       Q 82  420 158 420"
+    fill="none"
+    stroke="#00f2fe"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Snake head — bright white dot with strong glow -->
+  <circle cx="360" cy="90" r="36" fill="#ffffff" filter="url(#glow-strong)"/>
+  <circle cx="360" cy="90" r="20" fill="#00f2fe"/>
+
+  <!-- Food — pulsing pink orb at tail end -->
+  <circle cx="158" cy="420" r="26" fill="#f472b6" filter="url(#glow-strong)"/>
+  <circle cx="158" cy="420" r="12" fill="#ffffff"/>
+</svg>
