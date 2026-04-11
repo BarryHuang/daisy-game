@@ -13,6 +13,10 @@ const words = {
                 "Wk 15": ["crisp", "gray", "rush", "spider", "weave", "chilly", "zip", "agree", "chipmunk", "dig"],
                 "Wk 16": ["autumn", "whisper", "fly", "shake", "spin", "dash", "empty", "jar", "fetch", "lie"]
             },
+            "常用單字": {
+                "星期": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                "月份": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+            },
             "CET Vocabulary": {
                 "Wk 1&2": ["cool", "fun", "world", "mall", "picnic", "basket", "office", "shop", "fold", "cross"],
                 "Wk 3": ["come", "piano", "violin", "music", "building", "cover", "glass", "stair", "shell", "sink"],
@@ -254,6 +258,25 @@ const words = {
             "pair": "一對 (ㄧˊ ㄉㄨㄟˋ)",
             "shiny": "閃亮的 (ㄕㄢˇ ㄌㄧㄤˋ ㄉㄜ˙)",
             "peek": "偷看 (ㄊㄡ ㄎㄢˋ)",
+            "Monday": "星期一 (ㄒㄧㄥ ㄑㄧ ㄧ)",
+            "Tuesday": "星期二 (ㄒㄧㄥ ㄑㄧ ㄦˋ)",
+            "Wednesday": "星期三 (ㄒㄧㄥ ㄑㄧ ㄙㄢ)",
+            "Thursday": "星期四 (ㄒㄧㄥ ㄑㄧ ㄙˋ)",
+            "Friday": "星期五 (ㄒㄧㄥ ㄑㄧ ㄨˇ)",
+            "Saturday": "星期六 (ㄒㄧㄥ ㄑㄧ ㄌㄧㄡˋ)",
+            "Sunday": "星期日 (ㄒㄧㄥ ㄑㄧ ㄖˋ)",
+            "January": "一月 (ㄧ ㄩㄝˋ)",
+            "February": "二月 (ㄦˋ ㄩㄝˋ)",
+            "March": "三月 (ㄙㄢ ㄩㄝˋ)",
+            "April": "四月 (ㄙˋ ㄩㄝˋ)",
+            "May": "五月 (ㄨˇ ㄩㄝˋ)",
+            "June": "六月 (ㄌㄧㄡˋ ㄩㄝˋ)",
+            "July": "七月 (ㄑㄧ ㄩㄝˋ)",
+            "August": "八月 (ㄅㄚ ㄩㄝˋ)",
+            "September": "九月 (ㄐㄧㄡˇ ㄩㄝˋ)",
+            "October": "十月 (ㄕˊ ㄩㄝˋ)",
+            "November": "十一月 (ㄕˊ ㄧ ㄩㄝˋ)",
+            "December": "十二月 (ㄕˊ ㄦˋ ㄩㄝˋ)",
         };
 
         const wordExamples = {
@@ -280,7 +303,9 @@ const words = {
             "clue": "Look for a clue to solve the mystery.", "flat": "The road is flat and smooth.", "other": "Do you have any other ideas?", "meat": "The lion hunts for meat.", "past": "Walk past the red building.", "sky": "The sky is bright blue.", "cloud": "That cloud looks like a fluffy sheep!", "float": "Watch the balloon float away.", "plane": "The plane flew above the clouds.", "over": "She jumped over the puddle.",
             "stretch": "Stretch your arms up high!", "pilot": "The pilot flew the plane.", "doctor": "The doctor helped me feel better.", "silly": "He made a silly face.", "train": "The train went choo choo!", "neighbor": "Our neighbor baked us cookies.", "ask": "Ask your teacher if you need help.", "tough": "It was a tough race but she won!", "brave": "The brave girl spoke in front of the class.", "remind": "Remind me to buy milk.",
             "talented": "She is a very talented singer.", "wait": "Wait for the green light.", "minute": "I will be there in one minute.", "job": "His job is to take care of animals.", "trick": "The magician did a cool trick.", "flew": "The bird flew over the mountain.", "start": "Ready, set, start!", "famous": "She is a famous author.", "stop": "Stop at the red light.", "elf": "An elf helped the shoemaker.",
-            "shoemaker": "The shoemaker made shoes all day.", "leather": "The bag is made of leather.", "shed": "Grandpa kept tools in the shed.", "pair": "She bought a new pair of shoes.", "shiny": "The star was shiny and bright.", "peek": "She peeked through the curtain."
+            "shoemaker": "The shoemaker made shoes all day.", "leather": "The bag is made of leather.", "shed": "Grandpa kept tools in the shed.", "pair": "She bought a new pair of shoes.", "shiny": "The star was shiny and bright.", "peek": "She peeked through the curtain.",
+            "Monday": "School starts on Monday.", "Tuesday": "We have P.E. on Tuesday.", "Wednesday": "Wednesday is in the middle of the week.", "Thursday": "I have piano class on Thursday.", "Friday": "Friday is my favorite day!", "Saturday": "We go to the park on Saturday.", "Sunday": "Sunday is a day to rest.",
+            "January": "January is the first month.", "February": "Valentine's Day is in February.", "March": "Spring begins in March.", "April": "April showers bring May flowers.", "May": "Mother's Day is in May.", "June": "School ends in June.", "July": "July is very hot!", "August": "We go to the beach in August.", "September": "Leaves fall in September.", "October": "Halloween is in October.", "November": "November is chilly.", "December": "Christmas is in December!"
         };
 
         const wordImages = {
@@ -307,5 +332,7 @@ const words = {
             "clue": "🔍", "flat": "🛣️", "other": "🔁", "meat": "🥩", "past": "⬅️", "sky": "🌤️", "cloud": "☁️", "float": "🎈", "plane": "✈️", "over": "🦅",
             "stretch": "🙆", "pilot": "✈️", "doctor": "👨‍⚕️", "silly": "🤪", "train": "🚂", "neighbor": "🏘️", "ask": "🙋", "tough": "💪", "brave": "🦁", "remind": "🔔",
             "talented": "🎤", "wait": "⏳", "minute": "⏱️", "job": "💼", "trick": "🎩", "flew": "🦅", "start": "🚦", "famous": "⭐", "stop": "🛑", "elf": "🧝",
-            "shoemaker": "👞", "leather": "👜", "shed": "🛖", "pair": "👟", "shiny": "✨", "peek": "🙈"
+            "shoemaker": "👞", "leather": "👜", "shed": "🛖", "pair": "👟", "shiny": "✨", "peek": "🙈",
+            "Monday": "📅", "Tuesday": "📅", "Wednesday": "📅", "Thursday": "📅", "Friday": "📅", "Saturday": "📅", "Sunday": "📅",
+            "January": "❄️", "February": "💝", "March": "🌸", "April": "🌧️", "May": "🌹", "June": "🎓", "July": "☀️", "August": "🏖️", "September": "🍂", "October": "🎃", "November": "🧥", "December": "🎄"
         };

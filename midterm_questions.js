@@ -8,7 +8,6 @@
 const midtermQuestions = [
 
   // ── FET Week 2 ──────────────────────────────────────────────────────────
-  // Theme: farm animals, nature, emotions (calf, graze, forest, promise…)
   {
     sentence: "The little ___ runs in the green field with its mother.",
     answer: "calf",
@@ -60,7 +59,6 @@ const midtermQuestions = [
   },
 
   // ── FET Week 3 ──────────────────────────────────────────────────────────
-  // Theme: honesty, promises, returning (agree, truth, protect, always…)
   {
     sentence: "She was ___ to see her best friend come back after a long time.",
     answer: "surprised",
@@ -112,7 +110,6 @@ const midtermQuestions = [
   },
 
   // ── FET Week 4 ──────────────────────────────────────────────────────────
-  // Theme: school subjects, creativity (school, math, art, imagination…)
   {
     sentence: "I love ___ class! We draw pictures and make crafts.",
     answer: "art",
@@ -157,7 +154,6 @@ const midtermQuestions = [
   },
 
   // ── FET Week 5 ──────────────────────────────────────────────────────────
-  // Theme: music, focus, working together (amazing, concentrate, teamwork…)
   {
     sentence: "We need good ___ to win. Everyone must work together!",
     answer: "teamwork",
@@ -195,7 +191,6 @@ const midtermQuestions = [
   },
 
   // ── FET Week 6 ──────────────────────────────────────────────────────────
-  // Theme: baseball, sports, teams (baseball, team, field, cheer, college…)
   {
     sentence: "The players run across the ___ to catch the ball.",
     answer: "field",
@@ -240,7 +235,6 @@ const midtermQuestions = [
   },
 
   // ── FET Week 7 ──────────────────────────────────────────────────────────
-  // Theme: baseball season, hard work, sportsmanship (hard, season, admire…)
   {
     sentence: "Summer is my favorite ___ because I love swimming!",
     answer: "season",
@@ -285,7 +279,6 @@ const midtermQuestions = [
   },
 
   // ── CET Week 1 & 2 ──────────────────────────────────────────────────────
-  // Theme: everyday life, shopping, family outings (mall, picnic, basket…)
   {
     sentence: "We went to the ___ to buy new shoes and clothes.",
     answer: "mall",
@@ -330,7 +323,6 @@ const midtermQuestions = [
   },
 
   // ── CET Week 3 ──────────────────────────────────────────────────────────
-  // Theme: music, home objects (piano, violin, glass, stair, building…)
   {
     sentence: "She practices ___ for one hour every evening.",
     answer: "piano",
@@ -368,7 +360,6 @@ const midtermQuestions = [
   },
 
   // ── CET Week 4 ──────────────────────────────────────────────────────────
-  // Theme: community, library, places (library, garage, elephant, climb…)
   {
     sentence: "I go to the ___ every week to borrow books.",
     answer: "library",
@@ -406,7 +397,6 @@ const midtermQuestions = [
   },
 
   // ── CET Week 5 ──────────────────────────────────────────────────────────
-  // Theme: feelings, family, communication (excited, hear, cousin, letter…)
   {
     sentence: "She was so ___ about her birthday party tomorrow!",
     answer: "excited",
@@ -444,7 +434,6 @@ const midtermQuestions = [
   },
 
   // ── CET Week 6 ──────────────────────────────────────────────────────────
-  // Theme: city, streets, actions (skateboard, shout, scary, jump, behind…)
   {
     sentence: "He rides his ___ to school every morning.",
     answer: "skateboard",
@@ -482,7 +471,6 @@ const midtermQuestions = [
   },
 
   // ── CET Week 7 & 8 ──────────────────────────────────────────────────────
-  // Theme: health, city life, time (ambulance, hospital, sick, loud, city…)
   {
     sentence: "The ___ rushed to the accident with its lights flashing.",
     answer: "ambulance",
@@ -531,144 +519,6 @@ const midtermQuestions = [
     options: ["busy", "quiet", "empty"],
     hint: "忙碌的 🏃",
     source: "CET Wk 7&8"
-  },
-
-
-  // ── 常用單字：星期 ──────────────────────────────────────────────────────
-  {
-    sentence: "School starts again on ___. It is the first day of the week.",
-    answer: "Monday",
-    options: ["Monday", "Friday", "Sunday"],
-    hint: "星期一 📅",
-    source: "常用單字"
-  },
-  {
-    sentence: "We have P.E. class on ___. I love running outside!",
-    answer: "Tuesday",
-    options: ["Tuesday", "Monday", "Thursday"],
-    hint: "星期二 📅",
-    source: "常用單字"
-  },
-  {
-    sentence: "We cook lunch together every ___ at home.",
-    answer: "Wednesday",
-    options: ["Wednesday", "Tuesday", "Saturday"],
-    hint: "星期三 📅",
-    source: "常用單字"
-  },
-  {
-    sentence: "Mom picks me up early every ___ for my piano lesson.",
-    answer: "Thursday",
-    options: ["Thursday", "Wednesday", "Sunday"],
-    hint: "星期四 📅",
-    source: "常用單字"
-  },
-  {
-    sentence: "I am so happy because today is ___. The weekend is here!",
-    answer: "Friday",
-    options: ["Friday", "Monday", "Tuesday"],
-    hint: "星期五 📅",
-    source: "常用單字"
-  },
-  {
-    sentence: "We go to the park every ___ morning as a family.",
-    answer: "Saturday",
-    options: ["Saturday", "Friday", "Wednesday"],
-    hint: "星期六 📅",
-    source: "常用單字"
-  },
-  {
-    sentence: "We rest and go to grandma's house on ___.",
-    answer: "Sunday",
-    options: ["Sunday", "Saturday", "Thursday"],
-    hint: "星期日 📅",
-    source: "常用單字"
-  },
-
-  // ── 常用單字：月份 ──────────────────────────────────────────────────────
-  {
-    sentence: "The new year starts in ___. Everyone makes a wish!",
-    answer: "January",
-    options: ["January", "March", "October"],
-    hint: "一月 🎆",
-    source: "常用單字"
-  },
-  {
-    sentence: "Valentine's Day is in ___. We give cards to our friends.",
-    answer: "February",
-    options: ["February", "January", "April"],
-    hint: "二月 💝",
-    source: "常用單字"
-  },
-  {
-    sentence: "Spring arrives in ___. Flowers begin to bloom everywhere.",
-    answer: "March",
-    options: ["March", "February", "July"],
-    hint: "三月 🌸",
-    source: "常用單字"
-  },
-  {
-    sentence: "It rains a lot in ___. I always bring my umbrella.",
-    answer: "April",
-    options: ["April", "June", "August"],
-    hint: "四月 🌧️",
-    source: "常用單字"
-  },
-  {
-    sentence: "Mother's Day is in ___. I made a card for my mom.",
-    answer: "May",
-    options: ["May", "March", "September"],
-    hint: "五月 🌹",
-    source: "常用單字"
-  },
-  {
-    sentence: "School ends in ___. Summer vacation is about to begin!",
-    answer: "June",
-    options: ["June", "May", "July"],
-    hint: "六月 🎓",
-    source: "常用單字"
-  },
-  {
-    sentence: "It is very hot in ___. We love to swim in the pool.",
-    answer: "July",
-    options: ["July", "April", "November"],
-    hint: "七月 ☀️",
-    source: "常用單字"
-  },
-  {
-    sentence: "We go to the beach every ___ because the weather is warm.",
-    answer: "August",
-    options: ["August", "December", "February"],
-    hint: "八月 🏖️",
-    source: "常用單字"
-  },
-  {
-    sentence: "Leaves turn red and yellow in ___. Fall has arrived!",
-    answer: "September",
-    options: ["September", "June", "January"],
-    hint: "九月 🍂",
-    source: "常用單字"
-  },
-  {
-    sentence: "Halloween is at the end of ___. I dress up as a witch!",
-    answer: "October",
-    options: ["October", "August", "March"],
-    hint: "十月 🎃",
-    source: "常用單字"
-  },
-  {
-    sentence: "It gets cold in ___. I wear a thick coat to school.",
-    answer: "November",
-    options: ["November", "September", "May"],
-    hint: "十一月 🧥",
-    source: "常用單字"
-  },
-  {
-    sentence: "Christmas is in ___. Santa brings presents for everyone!",
-    answer: "December",
-    options: ["December", "October", "July"],
-    hint: "十二月 🎄",
-    source: "常用單字"
   }
 
 ]; // end midtermQuestions
