@@ -931,12 +931,14 @@ function tick() {
   const h = snake[0];
   const nx = h.x + dir.x, ny = h.y + dir.y;
 
-  if (nx<0||nx>=COLS||ny<0||ny>=ROWS) { die(); return; }
-  if (snake.some(s=>s.x===nx&&s.y===ny)) { die(); return; }
+  // Wrap-around: exit one side, appear on the opposite side
+  const wx = (nx + COLS) % COLS;
+  const wy = (ny + ROWS) % ROWS;
+  if (snake.some(s=>s.x===wx&&s.y===wy)) { die(); return; }
 
-  snake.unshift({x:nx,y:ny});
+  snake.unshift({x:wx,y:wy});
 
-  if (nx===food.x && ny===food.y) {
+  if (wx===food.x && wy===food.y) {
     addScore(10); playEat();
     spawnSparkles(food.x, food.y);
     spawnFood();
