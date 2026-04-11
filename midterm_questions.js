@@ -531,7 +531,7 @@ const midtermQuestions = [
     options: ["busy", "quiet", "empty"],
     hint: "忙碌的 🏃",
     source: "CET Wk 7&8"
-  }
+  },
 
 
   // ── 常用單字：星期 ──────────────────────────────────────────────────────
