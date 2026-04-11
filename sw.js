@@ -1,10 +1,11 @@
-const CACHE_NAME = 'daisy-games-v1';
+const CACHE_NAME = 'daisy-games-v2';
 const urlsToCache = [
   './daisy_hamster.html',
   './daisy_snake.html',
   './manifest.json',
   './style.css',
   './words.js',
+  './midterm_questions.js',
   './snake_icon.svg',
   'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js',
   'https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js',
