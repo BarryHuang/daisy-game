@@ -1828,8 +1828,12 @@
             document.getElementById('midterm-sentence').innerHTML =
                 q.sentence.replace('___', blankHtml);
 
-            // Hint
-            document.getElementById('midterm-hint').textContent = '💡 ' + q.hint;
+            // Hint — set content but keep hidden until player taps the button
+            const hintEl  = document.getElementById('midterm-hint');
+            const hintBtn = document.getElementById('midterm-hint-btn');
+            hintEl.textContent  = '💡 ' + q.hint;
+            hintEl.style.display  = 'none';
+            hintBtn.style.display = 'inline-block';
 
             // Hide feedback
             const fb = document.getElementById('midterm-feedback');
@@ -1966,6 +1970,11 @@
             }
         }
 
+        function showMidtermHint() {
+            document.getElementById('midterm-hint').style.display = 'inline-block';
+            document.getElementById('midterm-hint-btn').style.display = 'none';
+        }
+
         function restartMidterm() {
             document.getElementById('midterm-result-modal').style.display = 'none';
             openMidterm();
@@ -2056,8 +2065,11 @@
         <!-- Sentence with blank -->
         <div id="midterm-sentence" style="font-size:1.18rem; font-weight:700; color:#2d2d2d; line-height:1.7; margin-bottom:8px; min-height:60px;"></div>
 
-        <!-- Hint chip -->
-        <div id="midterm-hint" style="font-size:0.9rem; color:#d63384; background:#fce4ec; border-radius:20px; display:inline-block; padding:4px 14px; margin-bottom:18px; font-weight:600;"></div>
+        <!-- Hint toggle button -->
+        <button id="midterm-hint-btn" onclick="showMidtermHint()" style="margin-bottom:6px; padding:5px 16px; border-radius:20px; background:#fff0f6; color:#d63384; border:1.5px solid #f8bbd0; font-size:0.85rem; font-weight:700; cursor:pointer;">💡 顯示提示</button>
+
+        <!-- Hint chip — hidden until button clicked -->
+        <div id="midterm-hint" style="font-size:0.9rem; color:#d63384; background:#fce4ec; border-radius:20px; display:none; padding:4px 14px; margin-bottom:12px; font-weight:600;"></div>
 
         <!-- Answer options (3 buttons, shuffled) -->
         <div id="midterm-options" style="display:flex; flex-direction:column; gap:10px;"></div>
