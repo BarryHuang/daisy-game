@@ -533,4 +533,142 @@ const midtermQuestions = [
     source: "CET Wk 7&8"
   }
 
+
+  // ── 常用單字：星期 ──────────────────────────────────────────────────────
+  {
+    sentence: "School starts again on ___. It is the first day of the week.",
+    answer: "Monday",
+    options: ["Monday", "Friday", "Sunday"],
+    hint: "星期一 📅",
+    source: "常用單字"
+  },
+  {
+    sentence: "We have P.E. class on ___. I love running outside!",
+    answer: "Tuesday",
+    options: ["Tuesday", "Monday", "Thursday"],
+    hint: "星期二 📅",
+    source: "常用單字"
+  },
+  {
+    sentence: "We cook lunch together every ___ at home.",
+    answer: "Wednesday",
+    options: ["Wednesday", "Tuesday", "Saturday"],
+    hint: "星期三 📅",
+    source: "常用單字"
+  },
+  {
+    sentence: "Mom picks me up early every ___ for my piano lesson.",
+    answer: "Thursday",
+    options: ["Thursday", "Wednesday", "Sunday"],
+    hint: "星期四 📅",
+    source: "常用單字"
+  },
+  {
+    sentence: "I am so happy because today is ___. The weekend is here!",
+    answer: "Friday",
+    options: ["Friday", "Monday", "Tuesday"],
+    hint: "星期五 📅",
+    source: "常用單字"
+  },
+  {
+    sentence: "We go to the park every ___ morning as a family.",
+    answer: "Saturday",
+    options: ["Saturday", "Friday", "Wednesday"],
+    hint: "星期六 📅",
+    source: "常用單字"
+  },
+  {
+    sentence: "We rest and go to grandma's house on ___.",
+    answer: "Sunday",
+    options: ["Sunday", "Saturday", "Thursday"],
+    hint: "星期日 📅",
+    source: "常用單字"
+  },
+
+  // ── 常用單字：月份 ──────────────────────────────────────────────────────
+  {
+    sentence: "The new year starts in ___. Everyone makes a wish!",
+    answer: "January",
+    options: ["January", "March", "October"],
+    hint: "一月 🎆",
+    source: "常用單字"
+  },
+  {
+    sentence: "Valentine's Day is in ___. We give cards to our friends.",
+    answer: "February",
+    options: ["February", "January", "April"],
+    hint: "二月 💝",
+    source: "常用單字"
+  },
+  {
+    sentence: "Spring arrives in ___. Flowers begin to bloom everywhere.",
+    answer: "March",
+    options: ["March", "February", "July"],
+    hint: "三月 🌸",
+    source: "常用單字"
+  },
+  {
+    sentence: "It rains a lot in ___. I always bring my umbrella.",
+    answer: "April",
+    options: ["April", "June", "August"],
+    hint: "四月 🌧️",
+    source: "常用單字"
+  },
+  {
+    sentence: "Mother's Day is in ___. I made a card for my mom.",
+    answer: "May",
+    options: ["May", "March", "September"],
+    hint: "五月 🌹",
+    source: "常用單字"
+  },
+  {
+    sentence: "School ends in ___. Summer vacation is about to begin!",
+    answer: "June",
+    options: ["June", "May", "July"],
+    hint: "六月 🎓",
+    source: "常用單字"
+  },
+  {
+    sentence: "It is very hot in ___. We love to swim in the pool.",
+    answer: "July",
+    options: ["July", "April", "November"],
+    hint: "七月 ☀️",
+    source: "常用單字"
+  },
+  {
+    sentence: "We go to the beach every ___ because the weather is warm.",
+    answer: "August",
+    options: ["August", "December", "February"],
+    hint: "八月 🏖️",
+    source: "常用單字"
+  },
+  {
+    sentence: "Leaves turn red and yellow in ___. Fall has arrived!",
+    answer: "September",
+    options: ["September", "June", "January"],
+    hint: "九月 🍂",
+    source: "常用單字"
+  },
+  {
+    sentence: "Halloween is at the end of ___. I dress up as a witch!",
+    answer: "October",
+    options: ["October", "August", "March"],
+    hint: "十月 🎃",
+    source: "常用單字"
+  },
+  {
+    sentence: "It gets cold in ___. I wear a thick coat to school.",
+    answer: "November",
+    options: ["November", "September", "May"],
+    hint: "十一月 🧥",
+    source: "常用單字"
+  },
+  {
+    sentence: "Christmas is in ___. Santa brings presents for everyone!",
+    answer: "December",
+    options: ["December", "October", "July"],
+    hint: "十二月 🎄",
+    source: "常用單字"
+  }
+
 ]; // end midtermQuestions
