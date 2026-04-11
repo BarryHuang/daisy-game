@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-games-v2';
+const CACHE_NAME = 'daisy-games-v3';
 const urlsToCache = [
   './daisy_hamster.html',
   './daisy_snake.html',
