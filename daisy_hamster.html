@@ -50,7 +50,7 @@
 
             <!-- 期中測驗按鈕 — gold/orange 專屬配色，呼吸脈衝吸引點擊 -->
             <button id="btn-midterm" onclick="openMidterm()" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #bf360c; animation:midtermBtnPulse 2.4s ease-in-out infinite;">
-                📝 期中測驗 <span style="font-size:0.8rem; font-weight:normal;">（FET &amp; CET Wk 1-8）</span>
+                📝 期中測驗 <span style="font-size:0.8rem; font-weight:normal;">（FET、CET、常用單字）</span>
             </button>
             <style>
               @keyframes midtermBtnPulse {
@@ -1775,20 +1775,32 @@
         let midtermCoins    = 0;    // 本次賺取金幣
         let midtermAnswered = false;// 防止重複點擊
 
-        /** 隨機抽取 20 題（全題庫打亂後取前 20） */
-        function drawMidtermQuestions() {
-            const shuffled = [...midtermQuestions].sort(() => Math.random() - 0.5);
+        /** 隨機抽取題目，可依 source 篩選 */
+        function drawMidtermQuestions(filter) {
+            let pool = midtermQuestions;
+            if (filter === 'FET')  pool = midtermQuestions.filter(q => q.source.startsWith('FET'));
+            if (filter === 'CET')  pool = midtermQuestions.filter(q => q.source.startsWith('CET'));
+            if (filter === '常用單字') pool = midtermQuestions.filter(q => q.source === '常用單字');
+            const shuffled = [...pool].sort(() => Math.random() - 0.5);
             return shuffled.slice(0, Math.min(20, shuffled.length));
         }
 
         function openMidterm() {
             unlockAudio();
-            midtermQueue    = drawMidtermQuestions();
+            // 顯示分類選擇畫面，隱藏題目卡片
+            document.getElementById('midterm-modal').style.display = 'flex';
+            document.getElementById('midterm-category-screen').style.display = 'flex';
+            document.getElementById('midterm-card').style.display = 'none';
+        }
+
+        function startMidtermWithFilter(filter) {
+            document.getElementById('midterm-category-screen').style.display = 'none';
+            document.getElementById('midterm-card').style.display = 'block';
+            midtermQueue    = drawMidtermQuestions(filter);
             midtermIndex    = 0;
             midtermScore    = 0;
             midtermCoins    = 0;
             midtermAnswered = false;
-            document.getElementById('midterm-modal').style.display = 'flex';
             renderMidtermQuestion();
         }
 
@@ -1977,7 +1989,7 @@
 
         function restartMidterm() {
             document.getElementById('midterm-result-modal').style.display = 'none';
-            openMidterm();
+            openMidterm(); // 回到分類選擇
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -2044,11 +2056,22 @@
     ══════════════════════════════════════════════════════ -->
     <div id="midterm-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:3500; justify-content:center; align-items:center; flex-direction:column; padding:16px; box-sizing:border-box;">
 
+      <!-- 分類選擇畫面 -->
+      <div id="midterm-category-screen" style="display:none; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:360px;">
+        <div style="font-size:1.6rem; font-weight:900; color:white; text-align:center; margin-bottom:4px;">📝 選擇測驗分類</div>
+        <div style="font-size:0.9rem; color:rgba(255,255,255,0.7); margin-bottom:8px;">選一個分類開始挑戰！</div>
+        <button onclick="startMidtermWithFilter('all')"   style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #bf360c;">🎲 全部混合</button>
+        <button onclick="startMidtermWithFilter('FET')"   style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#42a5f5,#1565c0); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #0d47a1;">📘 FET 課程</button>
+        <button onclick="startMidtermWithFilter('CET')"   style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#66bb6a,#2e7d32); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #1b5e20;">📗 CET 課程</button>
+        <button onclick="startMidtermWithFilter('常用單字')" style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#ab47bc,#6a1b9a); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #4a148c;">⭐ 常用單字</button>
+        <button onclick="closeMidterm()" style="margin-top:6px; padding:9px 26px; border-radius:20px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.3); font-weight:bold; cursor:pointer; font-size:1rem;">✕ 取消</button>
+      </div>
+
       <div id="midterm-card" style="position:relative; background:white; border-radius:28px; width:100%; max-width:460px; padding:26px 22px 22px; box-shadow:0 20px 60px rgba(0,0,0,0.5); text-align:center;">
 
         <!-- Header -->
         <div style="font-size:1.05rem; font-weight:800; color:#e65100; margin-bottom:4px; letter-spacing:.04em;">
-          📝 期中測驗 <span style="font-size:0.78rem; font-weight:600; color:#999;">(FET &amp; CET Wk 1-8)</span>
+          📝 期中測驗
         </div>
 
         <!-- Progress bar -->
