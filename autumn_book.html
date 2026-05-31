@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>My Autumn Book 🍂</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(160deg, #fff8f0 0%, #ffecd2 50%, #fff3e0 100%);
+            min-height: 100vh;
+            padding-bottom: 32px;
+        }
+
+        /* ===== HEADER ===== */
+        .page-header {
+            background: linear-gradient(135deg, #bf360c 0%, #e65100 50%, #ff8f00 100%);
+            padding: 14px 16px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.22);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.45);
+            padding: 7px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .page-header h1 {
+            color: white;
+            font-size: 1.25rem;
+            flex: 1;
+            text-shadow: 1px 2px 5px rgba(0,0,0,0.35);
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+            overflow-x: auto;
+            scrollbar-width: none;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex: 1;
+            min-width: 75px;
+            padding: 10px 4px 8px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: #aaa;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-family: inherit;
+        }
+        .tab-btn .tab-icon { font-size: 1.35rem; }
+        .tab-btn.active { color: var(--tc, #e65100); border-bottom-color: var(--tc, #e65100); }
+
+        /* ===== LAYOUT ===== */
+        .game-container { max-width: 480px; margin: 0 auto; padding: 16px 14px; }
+        .game-section { display: none; }
+        .game-section.active { display: block; }
+
+        /* ===== CARDS ===== */
+        .game-card {
+            background: white;
+            border-radius: 22px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.09);
+            margin-bottom: 14px;
+        }
+        .section-title {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 14px;
+        }
+
+        /* ===== SHARED BUTTONS ===== */
+        .big-btn {
+            width: 100%; padding: 13px; border-radius: 16px; border: none;
+            font-size: 1rem; font-weight: bold; cursor: pointer; color: white;
+            background: linear-gradient(135deg, #ff8f00 0%, #e65100 100%);
+            box-shadow: 0 4px 0 #bf360c;
+            transition: transform 0.1s, box-shadow 0.1s;
+            font-family: inherit;
+        }
+        .big-btn:active { transform: translateY(4px); box-shadow: none; }
+        .big-btn.green { background: linear-gradient(135deg, #43a047, #2e7d32); box-shadow: 0 4px 0 #1b5e20; }
+        .big-btn.blue  { background: linear-gradient(135deg, #1e88e5, #1565c0); box-shadow: 0 4px 0 #0d47a1; }
+        .big-btn.purple { background: linear-gradient(135deg, #8e24aa, #6a1b9a); box-shadow: 0 4px 0 #4a0072; }
+
+        /* ======================================================
+           GAME 1: VOCAB FLASHCARDS
+           ====================================================== */
+        .flashcard-wrap {
+            perspective: 1000px;
+            height: 210px;
+            cursor: pointer;
+            margin-bottom: 18px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .flashcard {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(.4,0,.2,1);
+            border-radius: 20px;
+        }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        }
+        .card-front {
+            background: linear-gradient(135deg, #ff8f00 0%, #bf360c 100%);
+            color: white;
+        }
+        .card-front .cf-word { font-size: 2.6rem; font-weight: bold; text-shadow: 2px 2px 6px rgba(0,0,0,0.25); }
+        .card-front .cf-hint { font-size: 0.82rem; opacity: 0.8; margin-top: 10px; }
+        .card-back {
+            background: linear-gradient(135deg, #fff9c4, #fff3e0);
+            color: #333;
+            transform: rotateY(180deg);
+            padding: 16px; text-align: center;
+        }
+        .card-back .cb-emoji { font-size: 2.8rem; margin-bottom: 6px; }
+        .card-back .cb-zh { font-size: 1.5rem; font-weight: bold; color: #e65100; }
+        .card-back .cb-example { font-size: 0.82rem; color: #777; font-style: italic; margin-top: 8px; line-height: 1.5; }
+
+        .vocab-nav {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+        }
+        .nav-btn {
+            background: #ff8f00; color: white; border: none; border-radius: 50%;
+            width: 42px; height: 42px; font-size: 1.3rem; cursor: pointer;
+            box-shadow: 0 4px 0 #e65100; transition: 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nav-btn:active { transform: translateY(4px); box-shadow: none; }
+        .nav-btn:disabled { background: #ddd; box-shadow: 0 4px 0 #bbb; cursor: default; }
+        .vocab-counter { font-weight: bold; color: #777; font-size: 1rem; }
+
+        .status-row { display: flex; gap: 10px; margin-top: 2px; }
+        .status-btn {
+            flex: 1; padding: 10px; border-radius: 12px; border: 2px solid;
+            font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.15s; font-family: inherit;
+        }
+        .status-btn.know    { background: #e8f5e9; border-color: #43a047; color: #2e7d32; }
+        .status-btn.review  { background: #fff3e0; border-color: #ff8f00; color: #e65100; }
+        .status-btn:active  { transform: scale(0.95); }
+
+        .vocab-dots {
+            display: flex; flex-wrap: wrap; gap: 5px; margin-top: 14px;
+        }
+        .vdot {
+            width: 11px; height: 11px; border-radius: 50%; background: #e0e0e0;
+            transition: all 0.3s; cursor: pointer;
+        }
+        .vdot.know    { background: #43a047; }
+        .vdot.review  { background: #ff8f00; }
+        .vdot.current { background: #bf360c; transform: scale(1.6); }
+        .vocab-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 0.78rem; color: #888; }
+
+        /* ======================================================
+           GAME 2: STORY SEQUENCE
+           ====================================================== */
+        .seq-instruction {
+            background: #fff8e1; border: 1px solid #ffe082; border-radius: 12px;
+            padding: 10px 14px; font-size: 0.82rem; color: #888;
+            text-align: center; margin-bottom: 14px; line-height: 1.5;
+        }
+        .seq-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
+        .seq-card {
+            background: #fff8f0; border: 3px solid #ffe0b2; border-radius: 16px;
+            padding: 12px 14px; cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+            transition: all 0.18s; user-select: none; -webkit-user-select: none;
+        }
+        .seq-card.selected {
+            border-color: #ff8f00; background: #fff3e0;
+            box-shadow: 0 0 0 3px rgba(255,143,0,0.3); transform: scale(1.02);
+        }
+        .seq-card.correct { border-color: #43a047 !important; background: #e8f5e9 !important; }
+        .seq-card.wrong   { border-color: #e53935 !important; background: #ffebee !important; animation: shake 0.4s ease; }
+        @keyframes shake {
+            0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
+            40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+        }
+        .seq-num {
+            width: 30px; height: 30px; border-radius: 50%; background: #ff8f00;
+            color: white; font-weight: bold; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .seq-icon { font-size: 1.7rem; flex-shrink: 0; }
+        .seq-text { font-size: 0.88rem; color: #555; line-height: 1.4; flex: 1; }
+
+        /* ======================================================
+           GAME 3: FILL IN BLANK
+           ====================================================== */
+        .fill-qnum { font-size: 0.8rem; color: #aaa; font-weight: bold; margin-bottom: 10px; }
+        .fill-sentence {
+            font-size: 1.15rem; color: #333; line-height: 1.8;
+            text-align: center; font-style: italic; margin-bottom: 20px;
+        }
+        .fill-blank {
+            display: inline-block; min-width: 80px;
+            border-bottom: 3px solid #ff8f00; color: #ff8f00;
+            font-weight: bold; font-style: normal; text-align: center; padding: 0 4px;
+        }
+        .fill-blank.correct-ans { color: #2e7d32; border-color: #2e7d32; }
+        .fill-blank.wrong-ans   { color: #c62828; border-color: #c62828; }
+
+        .fill-opts {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+        }
+        .fill-opt {
+            background: #fff8f0; border: 3px solid #ffe0b2; border-radius: 14px;
+            padding: 12px 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
+            text-align: center; color: #555; transition: 0.15s; font-family: inherit;
+        }
+        .fill-opt:active  { transform: scale(0.96); }
+        .fill-opt.correct { border-color: #43a047 !important; background: #e8f5e9 !important; color: #2e7d32 !important; }
+        .fill-opt.wrong   { border-color: #e53935 !important; background: #ffebee !important; color: #c62828 !important; }
+        .fill-opt.off     { pointer-events: none; opacity: 0.55; }
+
+        .fill-feedback {
+            text-align: center; font-weight: bold; min-height: 28px; font-size: 1rem;
+        }
+        .fill-done {
+            text-align: center; padding: 24px 16px;
+        }
+        .fill-done .big-emoji { font-size: 3.5rem; margin-bottom: 10px; }
+        .fill-done .done-title { font-size: 1.4rem; font-weight: bold; color: #e65100; margin-bottom: 6px; }
+        .fill-done .done-msg   { color: #888; margin-bottom: 20px; }
+
+        /* ======================================================
+           GAME 4: MATCH
+           ====================================================== */
+        .match-instruction {
+            background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 12px;
+            padding: 10px 14px; font-size: 0.82rem; color: #555;
+            text-align: center; margin-bottom: 14px; line-height: 1.5;
+        }
+        .match-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+        .match-col-h { font-weight: bold; color: #aaa; font-size: 0.75rem; text-align: center; padding: 4px 0; }
+        .match-item {
+            background: #f5f5f5; border: 3px solid #e0e0e0; border-radius: 14px;
+            padding: 10px 7px; font-size: 0.85rem; font-weight: bold;
+            cursor: pointer; text-align: center; color: #555; transition: 0.18s;
+            min-height: 58px; display: flex; align-items: center; justify-content: center;
+            line-height: 1.35; margin-bottom: 7px;
+            user-select: none; -webkit-user-select: none;
+        }
+        .match-item.sel {
+            border-color: #ff8f00; background: #fff3e0;
+            box-shadow: 0 0 0 3px rgba(255,143,0,0.3);
+        }
+        .match-item.matched { cursor: default; }
+        .match-item.flash-wrong { animation: mwrong 0.4s ease; }
+        @keyframes mwrong {
+            0%,100%{background:#f5f5f5; border-color:#e0e0e0;}
+            50%{background:#ffebee; border-color:#e53935;}
+        }
+        /* 6 pair colors */
+        .mc0 { background:#fce4ec!important; border-color:#f48fb1!important; color:#880e4f!important; }
+        .mc1 { background:#e8eaf6!important; border-color:#9fa8da!important; color:#1a237e!important; }
+        .mc2 { background:#e8f5e9!important; border-color:#a5d6a7!important; color:#1b5e20!important; }
+        .mc3 { background:#fff3e0!important; border-color:#ffcc80!important; color:#e65100!important; }
+        .mc4 { background:#f3e5f5!important; border-color:#ce93d8!important; color:#4a148c!important; }
+        .mc5 { background:#e0f7fa!important; border-color:#80deea!important; color:#006064!important; }
+
+        .match-fb { text-align:center; font-weight:bold; min-height:26px; font-size:0.9rem; }
+        .match-done { text-align:center; padding:16px; }
+        .match-done .big-emoji { font-size:3rem; margin-bottom:8px; }
+        .match-done .done-title { font-size:1.3rem; font-weight:bold; color:#2e7d32; margin-bottom:6px; }
+        .match-done .done-msg   { color:#888; margin-bottom:16px; }
+
+        /* ======================================================
+           RESULT OVERLAY
+           ====================================================== */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            display: none; align-items: center; justify-content: center; z-index: 200;
+        }
+        .overlay.show { display: flex; }
+        .result-box {
+            background: white; border-radius: 26px; padding: 34px 24px; text-align: center;
+            max-width: 320px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            animation: popIn 0.35s cubic-bezier(.175,.885,.32,1.275);
+        }
+        @keyframes popIn { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+        .result-box .r-emoji { font-size: 4rem; margin-bottom: 12px; }
+        .result-box .r-title { font-size: 1.5rem; font-weight: bold; color: #333; margin-bottom: 8px; }
+        .result-box .r-msg   { color: #777; margin-bottom: 22px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="page-header">
+    <a href="daisy_hamster.html" class="back-btn">← 返回</a>
+    <h1>🍂 My Autumn Book</h1>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+    <button class="tab-btn active" style="--tc:#ff8f00" onclick="switchTab('vocab',0)">
+        <span class="tab-icon">📚</span><span>單字卡</span>
+    </button>
+    <button class="tab-btn" style="--tc:#8ba4f9" onclick="switchTab('seq',1)">
+        <span class="tab-icon">🧩</span><span>故事排序</span>
+    </button>
+    <button class="tab-btn" style="--tc:#f39c12" onclick="switchTab('fill',2)">
+        <span class="tab-icon">✏️</span><span>填填看</span>
+    </button>
+    <button class="tab-btn" style="--tc:#27ae60" onclick="switchTab('match',3)">
+        <span class="tab-icon">🔗</span><span>配對</span>
+    </button>
+</div>
+
+<div class="game-container">
+
+    <!-- ======================== VOCAB ======================== -->
+    <div id="g-vocab" class="game-section active">
+        <div class="section-title">📚 單字閃卡</div>
+        <div class="game-card">
+            <div class="vocab-nav">
+                <button class="nav-btn" id="v-prev" onclick="vPrev()">◀</button>
+                <span class="vocab-counter" id="v-count">1 / 30</span>
+                <button class="nav-btn" id="v-next" onclick="vNext()">▶</button>
+            </div>
+            <div class="flashcard-wrap" onclick="vFlip()">
+                <div class="flashcard" id="flashcard">
+                    <div class="card-face card-front">
+                        <div class="cf-word" id="cf-word">crisp</div>
+                        <div class="cf-hint">點一下看中文 👆</div>
+                    </div>
+                    <div class="card-face card-back">
+                        <div class="cb-emoji" id="cb-emoji">🌬️</div>
+                        <div class="cb-zh"   id="cb-zh">清爽的</div>
+                        <div class="cb-example" id="cb-ex">"The air is crisp."</div>
+                    </div>
+                </div>
+            </div>
+            <div class="status-row">
+                <button class="status-btn know"   onclick="vMark('know')">✅ 我會了！</button>
+                <button class="status-btn review" onclick="vMark('review')">🔁 再練習</button>
+            </div>
+        </div>
+        <div class="game-card">
+            <div style="font-size:.82rem;font-weight:bold;color:#aaa;margin-bottom:8px;">學習進度</div>
+            <div class="vocab-dots" id="v-dots"></div>
+            <div class="vocab-legend">
+                <span>🟢 會了 <b id="vc-know">0</b></span>
+                <span>🟠 練習 <b id="vc-rev">0</b></span>
+                <span style="color:#ccc">⚪ 未學 <b id="vc-new">30</b></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================== SEQUENCE ======================== -->
+    <div id="g-seq" class="game-section">
+        <div class="section-title">🧩 故事排序</div>
+        <div class="seq-instruction">
+            點選一張卡片（它會變橘色），<br>再點另一張來交換位置。<br>把 8 個場景排成正確順序！
+        </div>
+        <div class="game-card">
+            <div class="seq-list" id="seq-list"></div>
+            <button class="big-btn" onclick="checkSeq()">✅ 確認順序</button>
+        </div>
+    </div>
+
+    <!-- ======================== FILL ======================== -->
+    <div id="g-fill" class="game-section">
+        <div class="section-title">✏️ 填填看</div>
+        <div class="game-card" id="fill-card">
+            <!-- rendered by JS -->
+        </div>
+    </div>
+
+    <!-- ======================== MATCH ======================== -->
+    <div id="g-match" class="game-section">
+        <div class="section-title">🔗 配對遊戲</div>
+        <div class="match-instruction">
+            先點左邊的動物，再點右邊牠在秋天的行為來配對！
+        </div>
+        <div class="game-card" id="match-card">
+            <!-- rendered by JS -->
+        </div>
+    </div>
+
+</div>
+
+<!-- Result Overlay -->
+<div class="overlay" id="overlay">
+    <div class="result-box">
+        <div class="r-emoji" id="r-emoji">🎉</div>
+        <div class="r-title" id="r-title">做得好！</div>
+        <div class="r-msg"   id="r-msg">你已完成遊戲！</div>
+        <button class="big-btn" onclick="closeOverlay()">再玩一次 🔄</button>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+
+const VOCAB = [
+    { w:'crisp',        e:'🌬️', zh:'清爽的',         ex:'"The air is crisp."' },
+    { w:'investigate',  e:'🔍', zh:'調查、探索',       ex:'"To go outside and investigate."' },
+    { w:'silken',       e:'🕸️', zh:'像絲綢般的、柔滑的', ex:'"Spider spins a silken thread."' },
+    { w:'thread',       e:'🧵', zh:'絲線',             ex:'"Spider spins a silken thread."' },
+    { w:'weaving',      e:'🕷️', zh:'編織',             ex:'"What are you weaving?"' },
+    { w:'chirruping',   e:'🦗', zh:'（蟲）鳴叫聲',     ex:'"Crickets chirruping in the clover."' },
+    { w:'clover',       e:'🍀', zh:'三葉草',           ex:'"Crickets chirruping in the clover."' },
+    { w:'chilly',       e:'🥶', zh:'寒冷的',           ex:'"A chilly wind blows."' },
+    { w:'racket',       e:'📢', zh:'嘈雜聲',           ex:'"From the treetops I hear a racket."' },
+    { w:'cicada',       e:'🎵', zh:'蟬',               ex:'"Cicada is warning us: Better beware!"' },
+    { w:'beware',       e:'⚠️', zh:'小心、注意',       ex:'"Cicada is warning us: Better beware!"' },
+    { w:'woodpecker',   e:'🐦', zh:'啄木鳥',           ex:'"Woodpecker agrees, rap-a-tap drumming."' },
+    { w:'chipmunk',     e:'🐿️', zh:'花栗鼠',           ex:'"Chipmunk scampers past."' },
+    { w:'scampers',     e:'🏃', zh:'快速跑跳',         ex:'"Chipmunk scampers past."' },
+    { w:'treasure',     e:'💎', zh:'寶藏',             ex:'"Squirrel digs a hole to bury its treasure."' },
+    { w:'caterpillar',  e:'🐛', zh:'毛毛蟲',           ex:'"Caterpillar knows it\'s time to cocoon."' },
+    { w:'cocoon',       e:'🫘', zh:'繭、結繭',         ex:'"Caterpillar knows it\'s time to cocoon."' },
+    { w:'formation',    e:'✈️', zh:'隊形',             ex:'"Fly south in formation."' },
+    { w:'celebration',  e:'🎉', zh:'慶典、慶祝',       ex:'"Trees dressing up for the fall celebration."' },
+    { w:'crimson',      e:'🔴', zh:'深紅色',           ex:'"Dogwood shows off a new crimson gown."' },
+    { w:'gown',         e:'👗', zh:'長袍、禮服',       ex:'"Dogwood shows off a new crimson gown."' },
+    { w:'cloaked',      e:'🧥', zh:'披覆著',           ex:'"Ash cloaked in yellow."' },
+    { w:'breeze',       e:'💨', zh:'微風',             ex:'"Together they sway in the breeze."' },
+    { w:'acorns',       e:'🌰', zh:'橡實',             ex:'"Shaking loose acorns and batches of leaves."' },
+    { w:'whirlwind',    e:'🌪️', zh:'旋風',             ex:'"A whirlwind of color that blankets the ground."' },
+    { w:'ginkgo',       e:'🌿', zh:'銀杏',             ex:'"A ginkgo, a willow, an elm, birch, and beech."' },
+    { w:'birch',        e:'🌲', zh:'樺樹',             ex:'"An elm, birch, and beech."' },
+    { w:'beech',        e:'🌳', zh:'山毛櫸',           ex:'"An elm, birch, and beech."' },
+    { w:'delay',        e:'⏰', zh:'耽擱、延遲',       ex:'"No time to delay."' },
+    { w:'fetch',        e:'🤲', zh:'去拿、取來',       ex:'"Fetch scissors and glue."' },
+];
+
+const SEQ_SCENES = [
+    { icon:'🌤️', text:'The air is crisp. The sky turns gray.',           order:0 },
+    { icon:'🕷️', text:'Spider spins a silken thread in the garden shed.', order:1 },
+    { icon:'💨', text:'Chilly wind blows. Cicada warns! Woodpecker drums.', order:2 },
+    { icon:'🐿️', text:'Chipmunk scampers. Squirrel buries its treasure.',  order:3 },
+    { icon:'🐛', text:'Caterpillar cocoons. Blue Jay cries "Ker-YAK!"',     order:4 },
+    { icon:'🪿', text:'Geese fly south in formation. Trees dress up.',      order:5 },
+    { icon:'🍂', text:'Trees change colors. Leaves swirl and twirl.',       order:6 },
+    { icon:'📚', text:'Collects leaves. Goes home. Makes the Autumn Book!', order:7 },
+];
+
+const FILL_QS = [
+    { b:'The air is',                       blank:'crisp',     a:'.',              opts:['crisp','cold','blue','gray'] },
+    { b:'Downstairs I',                     blank:'rush',      a:'.',              opts:['rush','walk','fly','sleep'] },
+    { b:'Spider spins a silken',            blank:'thread',    a:'.',              opts:['thread','web','rope','silk'] },
+    { b:'Crickets chirruping in the',       blank:'clover',    a:'…',              opts:['clover','grass','garden','field'] },
+    { b:'A chilly wind blows. I zip my',    blank:'jacket',    a:'.',              opts:['jacket','coat','hat','shoes'] },
+    { b:'Caterpillar knows it\'s time to',  blank:'cocoon',    a:'.',              opts:['cocoon','fly','hide','sleep'] },
+    { b:'Geese fly south in',               blank:'formation', a:'.',              opts:['formation','groups','lines','rows'] },
+    { b:'Maple wears',                      blank:'red',       a:'.',              opts:['red','orange','yellow','gold'] },
+    { b:'Shaking loose',                    blank:'acorns',    a:'and batches of leaves.', opts:['acorns','seeds','nuts','leaves'] },
+    { b:'Until autumn returns once more in', blank:'September', a:'.', opts:['September','October','November','December'] },
+];
+
+const MATCH_PAIRS = [
+    { animal:'🕷️ Spider',      action:'spins a silken thread',        id:0 },
+    { animal:'🐿️ Chipmunk',    action:'scampers with seeds in cheeks', id:1 },
+    { animal:'🐿️ Squirrel',    action:'digs a hole to bury treasure',  id:2 },
+    { animal:'🐛 Caterpillar', action:'knows it\'s time to cocoon',    id:3 },
+    { animal:'🐦 Blue Jay',    action:'cries "Ker-YAK!"',              id:4 },
+    { animal:'🪿 Geese',       action:'fly south in formation',        id:5 },
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let vIdx = 0, vFlipped = false;
+const vStatus = new Array(VOCAB.length).fill(null); // null | 'know' | 'review'
+
+let seqOrder = [], seqSel = null, seqInitDone = false;
+
+let fIdx = 0, fScore = 0, fAnswered = false, fInitDone = false;
+
+let mSel = null, mPairs = {}, mCount = 0, mInitDone = false;
+
+/* ============================================================
+   TAB SWITCH
+   ============================================================ */
+function switchTab(name, idx) {
+    document.querySelectorAll('.game-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('g-' + name).classList.add('active');
+    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    if (name === 'seq'  && !seqInitDone) { seqInitDone = true; initSeq(); }
+    if (name === 'fill' && !fInitDone)   { fInitDone = true; renderFill(); }
+    if (name === 'match'&& !mInitDone)   { mInitDone = true; initMatch(); }
+}
+
+/* ============================================================
+   VOCAB
+   ============================================================ */
+function vRender() {
+    const v = VOCAB[vIdx];
+    document.getElementById('cf-word').textContent  = v.w;
+    document.getElementById('cb-emoji').textContent = v.e;
+    document.getElementById('cb-zh').textContent    = v.zh;
+    document.getElementById('cb-ex').textContent    = v.ex;
+    document.getElementById('v-count').textContent  = `${vIdx+1} / ${VOCAB.length}`;
+    document.getElementById('v-prev').disabled = vIdx === 0;
+    document.getElementById('v-next').disabled = vIdx === VOCAB.length - 1;
+    vFlipped = false;
+    document.getElementById('flashcard').classList.remove('flipped');
+    vDots();
+}
+function vFlip() {
+    vFlipped = !vFlipped;
+    document.getElementById('flashcard').classList.toggle('flipped', vFlipped);
+}
+function vPrev() { if (vIdx > 0)                  { vIdx--; vRender(); } }
+function vNext() { if (vIdx < VOCAB.length - 1)   { vIdx++; vRender(); } }
+function vMark(s) {
+    vStatus[vIdx] = s;
+    vDots(); vCounts();
+    if (vIdx < VOCAB.length - 1) { vIdx++; vRender(); }
+}
+function vDots() {
+    document.getElementById('v-dots').innerHTML =
+        vStatus.map((s,i) =>
+            `<div class="vdot ${s||''} ${i===vIdx?'current':''}" onclick="vJump(${i})"></div>`
+        ).join('');
+}
+function vJump(i) { vIdx = i; vRender(); }
+function vCounts() {
+    const k = vStatus.filter(x=>x==='know').length;
+    const r = vStatus.filter(x=>x==='review').length;
+    document.getElementById('vc-know').textContent = k;
+    document.getElementById('vc-rev').textContent  = r;
+    document.getElementById('vc-new').textContent  = VOCAB.length - k - r;
+}
+
+/* ============================================================
+   SEQUENCE
+   ============================================================ */
+function initSeq() {
+    seqOrder = SEQ_SCENES.map((_,i)=>i);
+    shuffle(seqOrder);
+    seqSel = null;
+    renderSeq();
+}
+function renderSeq() {
+    document.getElementById('seq-list').innerHTML = seqOrder.map((di, pos) => {
+        const s = SEQ_SCENES[di];
+        return `<div class="seq-card" id="sc${pos}" onclick="seqTap(${pos})">
+            <div class="seq-num">${pos+1}</div>
+            <div class="seq-icon">${s.icon}</div>
+            <div class="seq-text">${s.text}</div>
+        </div>`;
+    }).join('');
+}
+function seqTap(pos) {
+    if (seqSel === null) {
+        seqSel = pos;
+        document.getElementById(`sc${pos}`).classList.add('selected');
+    } else if (seqSel === pos) {
+        document.getElementById(`sc${pos}`).classList.remove('selected');
+        seqSel = null;
+    } else {
+        [seqOrder[seqSel], seqOrder[pos]] = [seqOrder[pos], seqOrder[seqSel]];
+        seqSel = null;
+        renderSeq();
+    }
+}
+function checkSeq() {
+    const ok = seqOrder.every((di, pos) => SEQ_SCENES[di].order === pos);
+    seqOrder.forEach((di, pos) => {
+        const el = document.getElementById(`sc${pos}`);
+        if (SEQ_SCENES[di].order === pos) el.classList.add('correct');
+        else el.classList.add('wrong');
+    });
+    if (ok) {
+        setTimeout(() => showOverlay('🎊','順序完全正確！','Daisy 完全掌握了故事！太棒了！','seq'), 350);
+    } else {
+        setTimeout(() => {
+            document.querySelectorAll('.seq-card').forEach(c => c.classList.remove('wrong','correct'));
+        }, 900);
+    }
+}
+
+/* ============================================================
+   FILL IN BLANK
+   ============================================================ */
+function renderFill() {
+    const card = document.getElementById('fill-card');
+    if (fIdx >= FILL_QS.length) {
+        const emoji = fScore >= 9 ? '🏆' : fScore >= 7 ? '⭐' : fScore >= 5 ? '👍' : '💪';
+        const msg   = fScore >= 9 ? 'Daisy 是填空高手！完美！' :
+                      fScore >= 7 ? '做得很好！再練習更完美！' : '繼續加油！再試一次！';
+        card.innerHTML = `<div class="fill-done">
+            <div class="big-emoji">${emoji}</div>
+            <div class="done-title">完成！${fScore} / ${FILL_QS.length} 題答對</div>
+            <div class="done-msg">${msg}</div>
+            <button class="big-btn" onclick="resetFill()">再玩一次 🔄</button>
+        </div>`;
+        return;
+    }
+    const q = FILL_QS[fIdx];
+    const opts = shuffle([...q.opts]);
+    card.innerHTML = `
+        <div class="fill-qnum">第 ${fIdx+1} 題 / 共 ${FILL_QS.length} 題</div>
+        <div class="fill-sentence" id="fill-sent">
+            &ldquo;${esc(q.b)} <span class="fill-blank" id="fill-blank">______</span> ${esc(q.a)}&rdquo;
+        </div>
+        <div class="fill-opts" id="fill-opts">
+            ${opts.map(o => `<button class="fill-opt" onclick="answerFill(this,'${o}','${q.blank}')">${o}</button>`).join('')}
+        </div>
+        <div class="fill-feedback" id="fill-fb"></div>`;
+    fAnswered = false;
+}
+function answerFill(btn, ans, correct) {
+    if (fAnswered) return;
+    fAnswered = true;
+    document.querySelectorAll('.fill-opt').forEach(b => b.classList.add('off'));
+    const fb = document.getElementById('fill-fb');
+    const bl = document.getElementById('fill-blank');
+    bl.textContent = correct;
+    if (ans === correct) {
+        btn.classList.add('correct');
+        bl.classList.add('correct-ans');
+        fb.textContent = '🎉 Correct! Well done!';
+        fb.style.color = '#2e7d32';
+        fScore++;
+    } else {
+        btn.classList.add('wrong');
+        bl.classList.add('wrong-ans');
+        document.querySelectorAll('.fill-opt').forEach(b => { if (b.textContent === correct) b.classList.add('correct'); });
+        fb.textContent = `✏️ 正確答案是 "${correct}"`;
+        fb.style.color = '#c62828';
+    }
+    setTimeout(() => { fIdx++; renderFill(); }, 1600);
+}
+function resetFill() {
+    fIdx = 0; fScore = 0; fAnswered = false;
+    renderFill();
+}
+
+/* ============================================================
+   MATCH
+   ============================================================ */
+function initMatch() {
+    mSel = null; mPairs = {}; mCount = 0;
+    const actions = shuffle([...MATCH_PAIRS]);
+    document.getElementById('match-card').innerHTML = `
+        <div class="match-cols">
+            <div>
+                <div class="match-col-h">🐾 動物</div>
+                ${MATCH_PAIRS.map(p=>`<div class="match-item" id="ma${p.id}" onclick="mClickAnimal(${p.id})">${p.animal}</div>`).join('')}
+            </div>
+            <div>
+                <div class="match-col-h">🍂 秋天的行為</div>
+                ${actions.map(p=>`<div class="match-item" id="mb${p.id}" onclick="mClickAction(${p.id})">${p.action}</div>`).join('')}
+            </div>
+        </div>
+        <div class="match-fb" id="match-fb"></div>`;
+}
+function mClickAnimal(id) {
+    if (mPairs[id] !== undefined) return;
+    if (mSel !== null) document.getElementById(`ma${mSel}`).classList.remove('sel');
+    mSel = (mSel === id) ? null : id;
+    if (mSel !== null) {
+        document.getElementById(`ma${mSel}`).classList.add('sel');
+        setMatchFb('現在點選右邊對應的行為！', '#ff8f00');
+    } else {
+        setMatchFb('', '');
+    }
+}
+function mClickAction(id) {
+    if (mPairs[id] !== undefined) return;
+    if (mSel === null) { setMatchFb('請先點選左邊的動物！', '#c62828'); return; }
+    const aEl = document.getElementById(`ma${mSel}`);
+    const bEl = document.getElementById(`mb${id}`);
+    if (mSel === id) {
+        const ci = mCount;
+        aEl.classList.remove('sel');
+        aEl.classList.add('matched', `mc${ci}`);
+        bEl.classList.add('matched', `mc${ci}`);
+        mPairs[id] = ci;
+        mCount++;
+        mSel = null;
+        setMatchFb(`✅ 配對正確！${mCount}/${MATCH_PAIRS.length}`, '#2e7d32');
+        if (mCount === MATCH_PAIRS.length) {
+            setTimeout(() => showOverlay('🎊','全部配對完成！','Daisy 完全掌握了秋天動物的習性！','match'), 400);
+        }
+    } else {
+        aEl.classList.add('flash-wrong'); bEl.classList.add('flash-wrong');
+        setTimeout(() => { aEl.classList.remove('flash-wrong'); bEl.classList.remove('flash-wrong'); }, 400);
+        aEl.classList.remove('sel');
+        mSel = null;
+        setMatchFb('❌ 不對哦，再想想！', '#c62828');
+    }
+}
+function setMatchFb(txt, color) {
+    const el = document.getElementById('match-fb');
+    if (!el) return;
+    el.textContent = txt;
+    el.style.color = color;
+}
+
+/* ============================================================
+   OVERLAY
+   ============================================================ */
+let overlayGame = null;
+function showOverlay(emoji, title, msg, game) {
+    overlayGame = game;
+    document.getElementById('r-emoji').textContent = emoji;
+    document.getElementById('r-title').textContent = title;
+    document.getElementById('r-msg').textContent   = msg;
+    document.getElementById('overlay').classList.add('show');
+}
+function closeOverlay() {
+    document.getElementById('overlay').classList.remove('show');
+    if (overlayGame === 'seq')   { initSeq(); }
+    if (overlayGame === 'match') { mInitDone = false; initMatch(); }
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ============================================================
+   INIT
+   ============================================================ */
+vRender();
+vDots();
+</script>
+</body>
+</html>
