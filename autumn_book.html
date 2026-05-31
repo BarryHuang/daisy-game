@@ -298,6 +298,75 @@
         .match-done .done-msg   { color:#888; margin-bottom:16px; }
 
         /* ======================================================
+           STORY READER
+           ====================================================== */
+        .story-nav {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+        }
+        .story-progress-bar {
+            flex: 1; height: 6px; background: #ffe0b2; border-radius: 3px; margin: 0 12px; overflow: hidden;
+        }
+        .story-progress-fill {
+            height: 100%; background: linear-gradient(90deg,#ff8f00,#e65100);
+            border-radius: 3px; transition: width 0.35s;
+        }
+        .story-section-badge {
+            font-size: 0.75rem; font-weight: bold; color: #ff8f00; white-space: nowrap;
+        }
+        .story-header {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+            padding-bottom: 12px; border-bottom: 2px dashed #ffe0b2;
+        }
+        .story-header-icon { font-size: 2.4rem; }
+        .story-header-title { font-size: 1.15rem; font-weight: bold; color: #e65100; }
+        .story-header-zh    { font-size: 0.82rem; color: #aaa; margin-top: 2px; }
+
+        .story-lines {
+            font-size: 1.12rem; line-height: 2.1; color: #333;
+            margin-bottom: 18px; min-height: 120px;
+        }
+        .story-line { display: block; }
+        .story-line.blank { height: 0.6em; display: block; }
+
+        /* tappable vocab word */
+        .kw {
+            color: #e65100; font-weight: bold; border-bottom: 2px dotted #ff8f00;
+            cursor: pointer; position: relative; display: inline-block;
+        }
+        .kw:active { background: rgba(255,143,0,0.15); border-radius: 4px; }
+
+        /* popup tooltip */
+        .kw-popup {
+            position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 10px 18px;
+            border-radius: 16px; font-size: 0.95rem; font-weight: bold;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.35); z-index: 300;
+            display: none; align-items: center; gap: 10px;
+            white-space: nowrap; pointer-events: none;
+            animation: popUp 0.2s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .kw-popup.show { display: flex; }
+        @keyframes popUp { from{transform:translateX(-50%) scale(0.7);opacity:0} to{transform:translateX(-50%) scale(1);opacity:1} }
+        .kw-popup .kp-word { color: #ffcc80; }
+        .kw-popup .kp-arrow { color: #aaa; }
+        .kw-popup .kp-zh   { color: white; }
+
+        .story-speak-btn {
+            width: 100%; padding: 11px; border-radius: 14px; border: none;
+            background: linear-gradient(135deg, #1e88e5, #1565c0);
+            color: white; font-size: 1rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 0 #0d47a1; transition: 0.1s; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-bottom: 10px;
+        }
+        .story-speak-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .story-page-btns {
+            display: flex; gap: 10px;
+        }
+        .story-page-btns .big-btn { flex: 1; }
+
+        /* ======================================================
            RESULT OVERLAY
            ====================================================== */
         .overlay {
@@ -337,6 +406,9 @@
     </button>
     <button class="tab-btn" style="--tc:#27ae60" onclick="switchTab('match',3)">
         <span class="tab-icon">🔗</span><span>配對</span>
+    </button>
+    <button class="tab-btn" style="--tc:#e91e63" onclick="switchTab('story',4)">
+        <span class="tab-icon">📖</span><span>課文複習</span>
     </button>
 </div>
 
@@ -411,6 +483,19 @@
         </div>
     </div>
 
+    <!-- ======================== STORY REVIEW ======================== -->
+    <div id="g-story" class="game-section">
+        <div class="section-title">📖 課文複習</div>
+        <div class="game-card" id="story-card"><!-- rendered by JS --></div>
+    </div>
+
+</div>
+
+<!-- kw popup -->
+<div class="kw-popup" id="kw-popup">
+    <span class="kp-word" id="kp-word"></span>
+    <span class="kp-arrow">→</span>
+    <span class="kp-zh"   id="kp-zh"></span>
 </div>
 
 <!-- Result Overlay -->
@@ -505,6 +590,7 @@ let seqOrder = [], seqSel = null, seqInitDone = false;
 let fIdx = 0, fScore = 0, fAnswered = false, fInitDone = false;
 
 let mSel = null, mPairs = {}, mCount = 0, mInitDone = false;
+let sIdx = 0, storyInitDone = false;
 
 /* ============================================================
    TAB SWITCH
@@ -514,9 +600,10 @@ function switchTab(name, idx) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('g-' + name).classList.add('active');
     document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-    if (name === 'seq'  && !seqInitDone) { seqInitDone = true; initSeq(); }
-    if (name === 'fill' && !fInitDone)   { fInitDone = true; renderFill(); }
-    if (name === 'match'&& !mInitDone)   { mInitDone = true; initMatch(); }
+    if (name === 'seq'  && !seqInitDone)   { seqInitDone = true; initSeq(); }
+    if (name === 'fill' && !fInitDone)     { fInitDone = true; renderFill(); }
+    if (name === 'match'&& !mInitDone)     { mInitDone = true; initMatch(); }
+    if (name === 'story'&& !storyInitDone) { storyInitDone = true; renderStory(); }
 }
 
 /* ============================================================
@@ -743,7 +830,220 @@ function closeOverlay() {
     document.getElementById('overlay').classList.remove('show');
     if (overlayGame === 'seq')   { initSeq(); }
     if (overlayGame === 'match') { mInitDone = false; initMatch(); }
+    if (overlayGame === 'story') { sIdx = 0; renderStory(); }
 }
+
+/* ============================================================
+   STORY READER
+   ============================================================ */
+
+const STORY = [
+  {
+    emoji:'🌤️', title:'Noticing Autumn', zh:'察覺秋天',
+    lines:[
+      'The air is {{crisp:清爽的}}.',
+      'The sky turns gray.',
+      'Is autumn really on the way?',
+      'Downstairs I rush.',
+      'I can hardly wait,',
+      'To go outside and {{investigate:探索、調查}}.',
+    ],
+    speak:"The air is crisp. The sky turns gray. Is autumn really on the way? Downstairs I rush. I can hardly wait, to go outside and investigate.",
+  },
+  {
+    emoji:'🕷️', title:'Spider & Crickets', zh:'蜘蛛與蟋蟀',
+    lines:[
+      'In a corner of the garden shed,',
+      'Spider spins a {{silken:像絲綢般}} {{thread:絲線}}.',
+      'Hello, Spider!',
+      'What are you {{weaving:編織}}?',
+      'Is it true that summer',
+      'Is leaving?',
+      'Crickets {{chirruping:鳴叫}} in the {{clover:三葉草}} …',
+      'Another sign that warm days are over.',
+    ],
+    speak:"In a corner of the garden shed, Spider spins a silken thread. Hello, Spider! What are you weaving? Is it true that summer is leaving? Crickets chirruping in the clover. Another sign that warm days are over.",
+  },
+  {
+    emoji:'💨', title:'Cicada & Woodpecker', zh:'蟬與啄木鳥',
+    lines:[
+      'A {{chilly:寒冷的}} wind blows. I zip my jacket.',
+      'From the treetops I hear a {{racket:嘈雜聲}}.',
+      'The buzzing gets louder. It fills the air.',
+      '{{Cicada:蟬}} is warning us: Better {{beware:小心注意}}!',
+      'Summer is leaving! Autumn coming!',
+      '{{Woodpecker:啄木鳥}} agrees, rap-a-tap drumming.',
+    ],
+    speak:"A chilly wind blows. I zip my jacket. From the treetops I hear a racket. The buzzing gets louder. It fills the air. Cicada is warning us: Better beware! Summer is leaving! Autumn coming! Woodpecker agrees, rap-a-tap drumming.",
+  },
+  {
+    emoji:'🐿️', title:'Chipmunk & Squirrel', zh:'花栗鼠與松鼠',
+    lines:[
+      '{{Chipmunk:花栗鼠}} {{scampers:快速跑跳}} past,',
+      'Seeds packed in its cheeks,',
+      'Finding food for the upcoming weeks.',
+      'Squirrel digs a hole to bury its {{treasure:寶藏}}.',
+      'Squirrel is expecting a change in the weather.',
+    ],
+    speak:"Chipmunk scampers past, seeds packed in its cheeks, finding food for the upcoming weeks. Squirrel digs a hole to bury its treasure. Squirrel is expecting a change in the weather.",
+  },
+  {
+    emoji:'🐛', title:'Caterpillar & Blue Jay', zh:'毛毛蟲與藍鳥',
+    lines:[
+      '{{Caterpillar:毛毛蟲}} knows it\'s time to {{cocoon:結繭}}.',
+      'Ker-YAK! Blue Jay cries.',
+      'Autumn so soon?',
+    ],
+    speak:"Caterpillar knows it's time to cocoon. Ker-YAK! Blue Jay cries. Autumn so soon?",
+  },
+  {
+    emoji:'🪿', title:'Geese & Trees', zh:'大雁與樹木',
+    lines:[
+      'Geese honk above,',
+      'Fly south in {{formation:隊形}}.',
+      'Trees dressing up for the fall {{celebration:慶典}}.',
+    ],
+    speak:"Geese honk above, fly south in formation. Trees dressing up for the fall celebration.",
+  },
+  {
+    emoji:'🍂', title:'Tree Colors', zh:'樹葉變色',
+    lines:[
+      'Dogwood shows off',
+      'A new {{crimson:深紅色}} {{gown:長袍}}.',
+      'Oak changes into',
+      'A suit of rust brown.',
+      'Ash {{cloaked:披覆著}} in yellow.',
+      'Maple wears red.',
+      'Aspen, a crown of gold',
+      'on its head.',
+    ],
+    speak:"Dogwood shows off a new crimson gown. Oak changes into a suit of rust brown. Ash cloaked in yellow. Maple wears red. Aspen, a crown of gold on its head.",
+  },
+  {
+    emoji:'🌪️', title:'Leaves Swirling', zh:'樹葉旋舞',
+    lines:[
+      'Together they whisper and sway in the {{breeze:微風}},',
+      'Shaking loose {{acorns:橡實}} and batches of leaves.',
+      'Swirling and twirling, leaves spinning round,',
+      'A {{whirlwind:旋風}} of color that blankets the ground.',
+    ],
+    speak:"Together they whisper and sway in the breeze, shaking loose acorns and batches of leaves. Swirling and twirling, leaves spinning round, a whirlwind of color that blankets the ground.",
+  },
+  {
+    emoji:'🍃', title:'Collecting Leaves', zh:'收集樹葉',
+    lines:[
+      'I search high and low,',
+      'Find one of each—',
+      'A {{ginkgo:銀杏}}, a willow,',
+      'An elm, {{birch:樺樹}}, and {{beech:山毛櫸}}.',
+      'Summer is leaving, fall\'s on its way.',
+      'The seasons are changing,',
+      'No time to {{delay:耽擱}}.',
+    ],
+    speak:"I search high and low, find one of each: a ginkgo, a willow, an elm, birch, and beech. Summer is leaving, fall's on its way. The seasons are changing, no time to delay.",
+  },
+  {
+    emoji:'📦', title:'Back at Home', zh:'回到家',
+    lines:[
+      'I dash up to my room',
+      'And open the door.',
+      'Empty my pack,',
+      'Spread things on the floor.',
+      '',
+      'I find a jar for the {{acorns:橡實}} …',
+      '{{Fetch:去拿取}} scissors and glue—',
+      'A pad of paper,',
+      'And crayons, too.',
+    ],
+    speak:"I dash up to my room and open the door. Empty my pack, spread things on the floor. I find a jar for the acorns. Fetch scissors and glue, a pad of paper, and crayons too.",
+  },
+  {
+    emoji:'📚', title:'The Autumn Book', zh:'秋天之書',
+    lines:[
+      'I decorate pages,',
+      'Arrange to make space ...',
+      'There, it\'s all done!',
+      'Everything is in place.',
+      '',
+      'When crickets no longer sing late at night',
+      'And the world outside',
+      'Has turned cold, black and white …',
+      '… I\'ll lie by the fire',
+      'With my book and remember,',
+      'Until autumn returns',
+      'Once more in September.',
+    ],
+    speak:"I decorate pages, arrange to make space. There, it's all done! Everything is in place. When crickets no longer sing late at night, and the world outside has turned cold, black and white. I'll lie by the fire with my book and remember, until autumn returns once more in September.",
+  },
+];
+
+// Parse {{word:zh}} → <span class="kw" ...>
+function parseStoryLine(line) {
+    if (line === '') return '<span class="story-line blank"></span>';
+    const html = line.replace(/\{\{([^:]+):([^}]+)\}\}/g, (_, w, zh) =>
+        `<span class="kw" onclick="showKw(this,'${w.replace(/'/g,"\\'")}','${zh.replace(/'/g,"\\'")}',event)">${w}</span>`
+    );
+    return `<span class="story-line">${html}</span>`;
+}
+
+function renderStory() {
+    const s = STORY[sIdx];
+    const pct = Math.round(((sIdx + 1) / STORY.length) * 100);
+    document.getElementById('story-card').innerHTML = `
+        <div class="story-nav">
+            <span class="story-section-badge">${sIdx + 1} / ${STORY.length}</span>
+            <div class="story-progress-bar">
+                <div class="story-progress-fill" style="width:${pct}%"></div>
+            </div>
+            <span class="story-section-badge">${pct}%</span>
+        </div>
+        <div class="story-header">
+            <div class="story-header-icon">${s.emoji}</div>
+            <div>
+                <div class="story-header-title">${s.title}</div>
+                <div class="story-header-zh">${s.zh}</div>
+            </div>
+        </div>
+        <div class="story-lines">
+            ${s.lines.map(parseStoryLine).join('\n')}
+        </div>
+        <button class="story-speak-btn" onclick="storySpeak(${sIdx})">🔊 朗讀這一段</button>
+        <div class="story-page-btns">
+            <button class="big-btn blue" onclick="storyPrev()" ${sIdx === 0 ? 'disabled style="opacity:.4"' : ''}>◀ 上一段</button>
+            <button class="big-btn" onclick="storyNext()"
+                ${sIdx === STORY.length - 1 ? 'style="background:linear-gradient(135deg,#43a047,#2e7d32);box-shadow:0 4px 0 #1b5e20"' : ''}>
+                ${sIdx === STORY.length - 1 ? '✅ 讀完了！' : '下一段 ▶'}
+            </button>
+        </div>`;
+}
+
+function storyPrev() { if (sIdx > 0) { sIdx--; renderStory(); } }
+function storyNext() {
+    if (sIdx < STORY.length - 1) { sIdx++; renderStory(); }
+    else { showOverlay('🎉','課文讀完了！','Daisy 讀完了整首 My Autumn Book！加油！','story'); }
+}
+
+function storySpeak(idx) {
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(STORY[idx].speak);
+    u.lang = 'en-US'; u.rate = 0.82; u.pitch = 1.05;
+    window.speechSynthesis && window.speechSynthesis.speak(u);
+}
+
+let kwTimer = null;
+function showKw(el, word, zh, e) {
+    e.stopPropagation();
+    const popup = document.getElementById('kw-popup');
+    document.getElementById('kp-word').textContent = word;
+    document.getElementById('kp-zh').textContent   = zh;
+    popup.classList.add('show');
+    clearTimeout(kwTimer);
+    kwTimer = setTimeout(() => popup.classList.remove('show'), 2400);
+}
+document.addEventListener('click', () => {
+    clearTimeout(kwTimer);
+    document.getElementById('kw-popup').classList.remove('show');
+});
 
 /* ============================================================
    UTILS
