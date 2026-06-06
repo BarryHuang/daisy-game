@@ -405,6 +405,25 @@
     .opt-btn { font-size: 15px; }
     .score-table { font-size: 11px; }
   }
+
+  /* ── Speak button ── */
+  .speak-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #7c4dff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 12px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+  }
+  .speak-btn:active { opacity: 0.8; transform: scale(0.97); }
 </style>
 </head>
 <body>
@@ -475,87 +494,101 @@
 
 <script>
 // =====================================================================
+// SPEECH
+// =====================================================================
+function speakWord(word) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(word);
+    utt.lang = 'en-US';
+    utt.rate = 0.75;
+    utt.pitch = 1;
+    window.speechSynthesis.speak(utt);
+  }
+}
+
+// =====================================================================
 // DATA — all 10 parts
 // =====================================================================
 const PARTS = [
   {
     id: 'A',
-    title: 'r-Controlled Vowel: ar — 選出正確單字',
-    instruction: '根據提示選出正確的英文單字。',
+    title: 'r-Controlled Vowel: ar — 聽發音，選出你聽到的單字',
+    instruction: '先按 🔊 聽發音，再作答。',
     pointEach: 2,
     maxScore: 10,
     questions: [
-      { text: 'You park your car here at night.', options: ['garage', 'garden', 'grass'], answer: 'garage' },
-      { text: 'The dog makes this sound.', options: ['bark', 'burn', 'born'], answer: 'bark' },
-      { text: 'You can see it in the sky at night.', options: ['star', 'store', 'stir'], answer: 'star' },
-      { text: "It's the opposite of easy.", options: ['hard', 'herd', 'heard'], answer: 'hard' },
-      { text: 'Animals live here on a farm.', options: ['bar', 'barn', 'burn'], answer: 'barn' }
+      { text: 'You park your car here at night.', options: ['garage', 'garden', 'grass'], answer: 'garage', speak: 'garage' },
+      { text: 'The dog makes this sound.', options: ['bark', 'burn', 'born'], answer: 'bark', speak: 'bark' },
+      { text: 'You can see it in the sky at night.', options: ['star', 'store', 'stir'], answer: 'star', speak: 'star' },
+      { text: "It's the opposite of easy.", options: ['hard', 'herd', 'heard'], answer: 'hard', speak: 'hard' },
+      { text: 'Animals live here on a farm.', options: ['bar', 'barn', 'burn'], answer: 'barn', speak: 'barn' }
     ]
   },
   {
     id: 'B',
-    title: 'r-Controlled Vowels: er / ir / ur — 選出正確母音',
-    instruction: '選出正確的母音字母組合（er、ir 或 ur）來完成單字。',
+    title: 'r-Controlled Vowels: er / ir / ur — 聽發音，選出正確的母音組合',
+    instruction: '先按 🔊 聽發音，再作答。',
     pointEach: 1,
     maxScore: 10,
     questions: [
-      { text: 'f___n', sub: '(a bird)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'fern' },
-      { text: 'b___n', sub: '(fire!)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'burn' },
-      { text: 'f___st', sub: '(number one)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'first' },
-      { text: 'st___', sub: '(mix it up)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'stir' },
-      { text: 'ch___ch', sub: '(go on Sunday)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'church' },
-      { text: 'v___b', sub: '(action word)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'verb' },
-      { text: 'h___', sub: '(she / not him)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'her' },
-      { text: 'sh___t', sub: '(wear it)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'shirt' },
-      { text: 'tw___l', sub: '(spin around)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'twirl' },
-      { text: 'sl___p', sub: '(drink fast)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'slurp' }
+      { text: 'f___n', sub: '(a bird)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'fern', speak: 'fern' },
+      { text: 'b___n', sub: '(fire!)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'burn', speak: 'burn' },
+      { text: 'f___st', sub: '(number one)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'first', speak: 'first' },
+      { text: 'st___', sub: '(mix it up)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'stir', speak: 'stir' },
+      { text: 'ch___ch', sub: '(go on Sunday)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'church', speak: 'church' },
+      { text: 'v___b', sub: '(action word)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'verb', speak: 'verb' },
+      { text: 'h___', sub: '(she / not him)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'her', speak: 'her' },
+      { text: 'sh___t', sub: '(wear it)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'shirt', speak: 'shirt' },
+      { text: 'tw___l', sub: '(spin around)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'twirl', speak: 'twirl' },
+      { text: 'sl___p', sub: '(drink fast)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'slurp', speak: 'slurp' }
     ]
   },
   {
     id: 'C',
-    title: 'Long o Vowel Teams: oa / ow / oe — 選出正確母音組合',
-    instruction: '選出正確的母音字母組合來完成單字。',
+    title: 'Long o Vowel Teams: oa / ow / oe — 聽發音，選出正確的拼字方式',
+    instruction: '先按 🔊 聽發音，再作答。',
     pointEach: 1,
     maxScore: 10,
     questions: [
-      { text: 'r___d', sub: '(you drive on it)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'road' },
-      { text: 'bl___', sub: '(wind does this)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'blow' },
-      { text: 't___', sub: '(on your foot)', options: ['oa', 'ow', 'oe'], answer: 'oe', word: 'toe' },
-      { text: 'fl___t', sub: '(in water)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'float' },
-      { text: 'sh___', sub: '(a performance)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'show' },
-      { text: 'c___t', sub: '(you wear it in winter)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'coat' },
-      { text: 'd___', sub: '(female deer)', options: ['oa', 'ow', 'oe'], answer: 'oe', word: 'doe' },
-      { text: 'gl___', sub: '(shine softly)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'glow' },
-      { text: 't___d', sub: '(an amphibian)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'toad' },
-      { text: 'sn___', sub: '(falls in winter)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'snow' }
+      { text: 'r___d', sub: '(you drive on it)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'road', speak: 'road' },
+      { text: 'bl___', sub: '(wind does this)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'blow', speak: 'blow' },
+      { text: 't___', sub: '(on your foot)', options: ['oa', 'ow', 'oe'], answer: 'oe', word: 'toe', speak: 'toe' },
+      { text: 'fl___t', sub: '(in water)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'float', speak: 'float' },
+      { text: 'sh___', sub: '(a performance)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'show', speak: 'show' },
+      { text: 'c___t', sub: '(you wear it in winter)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'coat', speak: 'coat' },
+      { text: 'd___', sub: '(female deer)', options: ['oa', 'ow', 'oe'], answer: 'oe', word: 'doe', speak: 'doe' },
+      { text: 'gl___', sub: '(shine softly)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'glow', speak: 'glow' },
+      { text: 't___d', sub: '(an amphibian)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'toad', speak: 'toad' },
+      { text: 'sn___', sub: '(falls in winter)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'snow', speak: 'snow' }
     ]
   },
   {
     id: 'D',
-    title: 'Consonant Blends: str / spr / spl / scr / squ — 選出正確字首',
-    instruction: '選出正確的子音組合來完成單字。',
+    title: 'Consonant Blends: str / spr / spl / scr / squ — 聽發音，選出正確的字首',
+    instruction: '先按 🔊 聽發音，再作答。',
     pointEach: 2,
     maxScore: 10,
     questions: [
-      { text: '___ip', sub: '(a narrow piece)', options: ['str', 'spr', 'spl'], answer: 'str', word: 'strip' },
-      { text: '___ash', sub: '(water flying up)', options: ['spl', 'str', 'scr'], answer: 'spl', word: 'splash' },
-      { text: '___ay', sub: '(mist from water)', options: ['spr', 'str', 'squ'], answer: 'spr', word: 'spray' },
-      { text: '___ing', sub: '(season after winter)', options: ['spr', 'str', 'squ'], answer: 'spr', word: 'spring' },
-      { text: '___ish', sub: '(press something soft)', options: ['squ', 'spl', 'scr'], answer: 'squ', word: 'squish' }
+      { text: '___ip', sub: '(a narrow piece)', options: ['str', 'spr', 'spl'], answer: 'str', word: 'strip', speak: 'strip' },
+      { text: '___ash', sub: '(water flying up)', options: ['spl', 'str', 'scr'], answer: 'spl', word: 'splash', speak: 'splash' },
+      { text: '___ay', sub: '(mist from water)', options: ['spr', 'str', 'squ'], answer: 'spr', word: 'spray', speak: 'spray' },
+      { text: '___ing', sub: '(season after winter)', options: ['spr', 'str', 'squ'], answer: 'spr', word: 'spring', speak: 'spring' },
+      { text: '___ish', sub: '(press something soft)', options: ['squ', 'spl', 'scr'], answer: 'squ', word: 'squish', speak: 'squish' }
     ]
   },
   {
     id: 'E',
-    title: 'Vowel Teams: ue / ew / ui — 選出正確母音組合',
-    instruction: '選出正確的母音字母組合來完成單字。',
+    title: 'Vowel Teams: ue / ew / ui — 聽發音，選出正確的母音組合',
+    instruction: '先按 🔊 聽發音，再作答。',
     pointEach: 2,
     maxScore: 10,
     questions: [
-      { text: 's___t', sub: '(formal clothes)', options: ['ue', 'ew', 'ui'], answer: 'ui', word: 'suit' },
-      { text: 'tr___', sub: '(not false)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'true' },
-      { text: 'fr___t', sub: '(apples, bananas...)', options: ['ue', 'ew', 'ui'], answer: 'ui', word: 'fruit' },
-      { text: 'bl___', sub: '(color of sky)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'blue' },
-      { text: 'd___', sub: '(something owed)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'due' }
+      { text: 's___t', sub: '(formal clothes)', options: ['ue', 'ew', 'ui'], answer: 'ui', word: 'suit', speak: 'suit' },
+      { text: 'tr___', sub: '(not false)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'true', speak: 'true' },
+      { text: 'fr___t', sub: '(apples, bananas...)', options: ['ue', 'ew', 'ui'], answer: 'ui', word: 'fruit', speak: 'fruit' },
+      { text: 'bl___', sub: '(color of sky)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'blue', speak: 'blue' },
+      { text: 'd___', sub: '(something owed)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'due', speak: 'due' }
     ]
   },
   {
@@ -579,32 +612,32 @@ const PARTS = [
   },
   {
     id: 'G',
-    title: 'Open & Closed Syllables — 選出正確音節切割',
-    instruction: '選出正確的音節切割方式。',
+    title: 'Open & Closed Syllables — 聽發音，選出正確的音節分割',
+    instruction: '先按 🔊 聽發音，再作答。',
     pointEach: 1,
     maxScore: 8,
     questions: [
-      { text: 'spider', sub: 'How do you divide this word?', options: ['spi/der', 'sp/ider', 'spid/er'], answer: 'spi/der' },
-      { text: 'begin', sub: 'How do you divide this word?', options: ['beg/in', 'be/gin', 'b/egin'], answer: 'be/gin' },
-      { text: 'topic', sub: 'How do you divide this word?', options: ['to/pic', 'top/ic', 't/opic'], answer: 'top/ic' },
-      { text: 'today', sub: 'How do you divide this word?', options: ['tod/ay', 'to/day', 't/oday'], answer: 'to/day' },
-      { text: 'seven', sub: 'How do you divide this word?', options: ['sev/en', 'se/ven', 's/even'], answer: 'sev/en' },
-      { text: 'music', sub: 'How do you divide this word?', options: ['mu/sic', 'mus/ic', 'm/usic'], answer: 'mu/sic' },
-      { text: 'robot', sub: 'How do you divide this word?', options: ['rob/ot', 'ro/bot', 'r/obot'], answer: 'ro/bot' },
-      { text: 'upon', sub: 'How do you divide this word?', options: ['u/pon', 'up/on', 'upo/n'], answer: 'u/pon' }
+      { text: 'spider', sub: 'How do you divide this word?', options: ['spi/der', 'sp/ider', 'spid/er'], answer: 'spi/der', speak: 'spider' },
+      { text: 'begin', sub: 'How do you divide this word?', options: ['beg/in', 'be/gin', 'b/egin'], answer: 'be/gin', speak: 'begin' },
+      { text: 'topic', sub: 'How do you divide this word?', options: ['to/pic', 'top/ic', 't/opic'], answer: 'top/ic', speak: 'topic' },
+      { text: 'today', sub: 'How do you divide this word?', options: ['tod/ay', 'to/day', 't/oday'], answer: 'to/day', speak: 'today' },
+      { text: 'seven', sub: 'How do you divide this word?', options: ['sev/en', 'se/ven', 's/even'], answer: 'sev/en', speak: 'seven' },
+      { text: 'music', sub: 'How do you divide this word?', options: ['mu/sic', 'mus/ic', 'm/usic'], answer: 'mu/sic', speak: 'music' },
+      { text: 'robot', sub: 'How do you divide this word?', options: ['rob/ot', 'ro/bot', 'r/obot'], answer: 'ro/bot', speak: 'robot' },
+      { text: 'upon', sub: 'How do you divide this word?', options: ['u/pon', 'up/on', 'upo/n'], answer: 'u/pon', speak: 'upon' }
     ]
   },
   {
     id: 'H',
     title: 'Vowel Sound: oo — 選出含 /oo/ 長音的單字',
-    instruction: '哪個單字有 moon 一樣的長 /oo/ 音？(Long /oo/ sound)',
+    instruction: '哪個單字有 moon 一樣的長 /oo/ 音？先按 🔊 聽發音，再作答。(Long /oo/ sound)',
     pointEach: 2,
     maxScore: 8,
     questions: [
-      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(1)', options: ['pool', 'book'], answer: 'pool' },
-      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(2)', options: ['soon', 'wood'], answer: 'soon' },
-      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(3)', options: ['food', 'look'], answer: 'food' },
-      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(4)', options: ['cool', 'foot'], answer: 'cool' }
+      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(1)', options: ['pool', 'book'], answer: 'pool', speakPair: ['pool', 'book'] },
+      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(2)', options: ['soon', 'wood'], answer: 'soon', speakPair: ['soon', 'wood'] },
+      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(3)', options: ['food', 'look'], answer: 'food', speakPair: ['food', 'look'] },
+      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(4)', options: ['cool', 'foot'], answer: 'cool', speakPair: ['cool', 'foot'] }
     ]
   },
   {
@@ -682,9 +715,11 @@ function renderExam() {
 
     // Passage (Part J)
     if (part.passage) {
+      const passageText = "Fern is a bird. She sits on her perch. She sees the sun start to come up. Fern chirps and twirls! Spring makes her perk up. She flaps her wings and goes far. She goes to the park. She sees grass and dirt. She sees bugs and twigs. Then she feels a thirst. She sips from the pond. Slurp, slurp!";
       const pb = document.createElement('div');
       pb.className = 'passage-box';
       pb.innerHTML = `
+        <button class="speak-btn" onclick="speakWord('${passageText.replace(/'/g, "\\'")}')">🔊 朗讀課文</button>
         <h3>Fern the Bird</h3>
         <p>Fern is a bird. She sits on her <strong>perch</strong>. She sees the sun start to come up.
         Fern <strong>chirps</strong> and <strong>twirls</strong>! Spring makes her perk up.
@@ -715,6 +750,19 @@ function renderExam() {
       }).join('');
 
       const subHtml = q.sub ? `<div class="q-sub">${q.sub}</div>` : '';
+
+      // Build speak button(s)
+      let speakHtml = '';
+      if (q.speak) {
+        const safeWord = q.speak.replace(/'/g, "\\'");
+        speakHtml = `<button class="speak-btn" onclick="speakWord('${safeWord}')">🔊 ${q.speak}</button>`;
+      } else if (q.speakPair) {
+        speakHtml = q.speakPair.map(w => {
+          const safeW = w.replace(/'/g, "\\'");
+          return `<button class="speak-btn" onclick="speakWord('${safeW}')">🔊 ${w}</button>`;
+        }).join(' ');
+      }
+
       card.innerHTML = `
         <div class="q-num-row">
           <span class="q-num-badge">${globalQ}</span>
@@ -723,6 +771,7 @@ function renderExam() {
             ${subHtml}
           </div>
         </div>
+        ${speakHtml ? `<div style="margin-bottom:4px;">${speakHtml}</div>` : ''}
         <div class="options-wrap" id="opts_${key}">${optsHtml}</div>
         <div id="feedback_${key}" style="display:none;"></div>
       `;
