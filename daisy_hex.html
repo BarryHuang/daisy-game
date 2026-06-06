@@ -48,10 +48,18 @@
       border: 2px solid #ffb74d; font-weight: 800;
     }
 
-    /* Main Area: Canvas */
+    /* Main Area */
     .main-area {
       display: flex; align-items: center; justify-content: center;
       flex: 1; width: 100%; position: relative;
+    }
+    @media (orientation: portrait) {
+      .main-area { flex-direction: column; }
+    }
+
+    .canvas-wrapper {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 100%; min-height: 0; min-width: 0;
     }
 
     canvas {
@@ -69,14 +77,24 @@
     }
     .back-btn:active { transform: scale(0.9); }
 
-    /* Stone Sidebar overlaid on the right */
+    /* Stone Sidebar */
     .stone-panel {
-      position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
       background: rgba(255,255,255,0.85); backdrop-filter: blur(5px);
       border: 4px solid #ce93d8; border-radius: 24px;
-      padding: 15px 12px; display: flex; flex-direction: column; align-items: center;
+      display: flex; align-items: center; justify-content: center;
       box-shadow: 0 10px 30px rgba(0,0,0,0.25); z-index: 10;
+      margin: 15px;
+      flex-shrink: 0;
     }
+    @media (orientation: landscape) {
+      .stone-panel { flex-direction: column; padding: 15px 12px; }
+      .sidebar-text { margin-top: 10px; margin-left: 0; text-align: center; }
+    }
+    @media (orientation: portrait) {
+      .stone-panel { flex-direction: row; padding: 10px 20px; }
+      .sidebar-text { margin-top: 0; margin-left: 15px; text-align: left; }
+    }
+
     .stone-source {
       width: 68px; height: 68px;
       background: #a1887f; border-radius: 18px;
@@ -90,8 +108,8 @@
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
     .stone-source:active { cursor: grabbing; animation: none; transform: scale(0.95); }
     .sidebar-text {
-      margin-top: 10px; font-size: 1.1rem; color: #6a1b9a; font-weight: 800; text-align: center;
-      line-height: 1.2;
+      font-size: 1.1rem; color: #6a1b9a; font-weight: 800;
+      line-height: 1.2; white-space: nowrap;
     }
 
     #ghost-stone {
@@ -142,7 +160,9 @@
     </div>
 
     <div class="main-area">
-      <canvas id="gameCanvas"></canvas>
+      <div class="canvas-wrapper">
+        <canvas id="gameCanvas"></canvas>
+      </div>
       
       <div class="stone-panel">
         <div class="stone-source" id="stoneSource">🪨</div>
@@ -221,31 +241,21 @@ let animFrame = 0;
 
 // --- Init & Resize ---
 function resize() {
-  const container = document.querySelector('.main-area');
-  // Use almost full width, just subtract padding
-  const cw = container.clientWidth - 20; 
-  const ch = container.clientHeight - 40;
+  const wrapper = document.querySelector('.canvas-wrapper');
+  if (!wrapper) return;
+  const cw = wrapper.clientWidth;
+  const ch = wrapper.clientHeight;
   
-  // To ensure the grid fits, we calculate its physical dimensions
   const gridW = Math.sqrt(3) * (2*RADIUS + 1);
   const gridH = (3*RADIUS + 2);
   
-  // Maximize hexSize to fill the available area (subtracting space for the right panel on landscape)
-  const isLandscape = window.innerWidth > window.innerHeight;
-  const availableW = isLandscape ? cw - 110 : cw; // Make room for panel on right if landscape
+  hexSize = Math.min(cw / gridW, ch / gridH) * 0.95;
   
-  hexSize = Math.min(availableW / gridW, ch / gridH) * 0.95;
-  
-  // Canvas size exactly matches the grid bounding box to center it perfectly
   canvas.width = hexSize * gridW * 1.05;
   canvas.height = hexSize * gridH * 1.05;
   
-  // Center grid in canvas, but shift left slightly on landscape to avoid panel
   offsetX = canvas.width / 2;
   offsetY = canvas.height / 2;
-  if(isLandscape) offsetX -= 20;
-
-
 }
 window.addEventListener('resize', resize);
 
