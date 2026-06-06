@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>📖 課文複習</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(160deg, #fff8f0 0%, #ffecd2 50%, #fff3e0 100%);
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        /* ===== HEADER ===== */
+        .page-header {
+            background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 50%, #ab47bc 100%);
+            padding: 14px 16px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.22);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.45);
+            padding: 7px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .page-header h1 {
+            color: white;
+            font-size: 1.25rem;
+            flex: 1;
+            text-shadow: 1px 2px 5px rgba(0,0,0,0.35);
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            text-align: center;
+            padding: 32px 20px 22px;
+        }
+        .hero-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4a148c;
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.08);
+            margin-bottom: 10px;
+        }
+        .hero-sub {
+            font-size: 1.05rem;
+            color: #888;
+        }
+
+        /* ===== CARDS CONTAINER ===== */
+        .cards-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ===== STORY CARD ===== */
+        .story-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.10);
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .story-card:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+        }
+
+        /* colored stripe at top of card */
+        .card-stripe {
+            height: 7px;
+        }
+        .stripe-orange { background: linear-gradient(90deg, #ff8f00, #e65100); }
+        .stripe-red    { background: linear-gradient(90deg, #c62828, #880e4f); }
+        .stripe-green  { background: linear-gradient(90deg, #43a047, #2e7d32); }
+
+        .card-body {
+            padding: 18px 20px 0;
+        }
+        .card-row-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+        .card-emoji {
+            font-size: 3rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .card-meta { flex: 1; }
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #222;
+            line-height: 1.3;
+            margin-bottom: 3px;
+        }
+        .card-author {
+            font-size: 0.82rem;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        .genre-badge {
+            display: inline-block;
+            padding: 3px 11px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+        .card-desc {
+            font-size: 0.88rem;
+            color: #666;
+            line-height: 1.55;
+            margin-bottom: 16px;
+        }
+
+        /* big action button inside card */
+        .card-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+            letter-spacing: 0.03em;
+            transition: filter 0.1s;
+        }
+        .card-btn:active { filter: brightness(0.88); }
+
+        .btn-orange { background: linear-gradient(135deg, #ff8f00 0%, #e65100 100%); box-shadow: 0 -4px 0 rgba(0,0,0,0.12) inset; }
+        .btn-red    { background: linear-gradient(135deg, #c62828 0%, #880e4f 100%); box-shadow: 0 -4px 0 rgba(0,0,0,0.12) inset; }
+        .btn-green  { background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%); box-shadow: 0 -4px 0 rgba(0,0,0,0.12) inset; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="page-header">
+    <a href="daisy_hamster.html" class="back-btn">← 返回</a>
+    <h1>📖 課文複習</h1>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+    <div class="hero-title">📖 課文複習</div>
+    <div class="hero-sub">選擇你要複習的課文</div>
+</div>
+
+<!-- Cards -->
+<div class="cards-container">
+
+    <!-- Card 1: My Autumn Book -->
+    <a class="story-card" href="autumn_book.html">
+        <div class="card-stripe stripe-orange"></div>
+        <div class="card-body">
+            <div class="card-row-top">
+                <div class="card-emoji">🍂</div>
+                <div class="card-meta">
+                    <div class="card-title">My Autumn Book</div>
+                    <div class="card-author">by Wong Herbert Yee</div>
+                    <span class="genre-badge" style="background:#ff8f00;">Fiction</span>
+                </div>
+            </div>
+            <div class="card-desc">A child notices signs of autumn. Poem with seasons, animals, and trees.</div>
+        </div>
+        <div class="card-btn btn-orange">開始 ▶</div>
+    </a>
+
+    <!-- Card 2: Through Georgia's Eyes -->
+    <a class="story-card" href="georgia_eyes.html">
+        <div class="card-stripe stripe-red"></div>
+        <div class="card-body">
+            <div class="card-row-top">
+                <div class="card-emoji">🎨</div>
+                <div class="card-meta">
+                    <div class="card-title">Through Georgia's Eyes</div>
+                    <div class="card-author">by Rachel Rodriguez</div>
+                    <span class="genre-badge" style="background:#c62828;">Biography</span>
+                </div>
+            </div>
+            <div class="card-desc">The life of artist Georgia O'Keeffe, from farm girl to famous painter.</div>
+        </div>
+        <div class="card-btn btn-red">開始 ▶</div>
+    </a>
+
+    <!-- Card 3: Every Season -->
+    <a class="story-card" href="every_season.html">
+        <div class="card-stripe stripe-green"></div>
+        <div class="card-body">
+            <div class="card-row-top">
+                <div class="card-emoji">🌸</div>
+                <div class="card-meta">
+                    <div class="card-title">Every Season</div>
+                    <div class="card-author">by Shelley Rotner</div>
+                    <span class="genre-badge" style="background:#2e7d32;">Informational Text</span>
+                </div>
+            </div>
+            <div class="card-desc">What happens in spring, summer, autumn, and winter.</div>
+        </div>
+        <div class="card-btn btn-green">開始 ▶</div>
+    </a>
+
+</div>
+
+</body>
+</html>
