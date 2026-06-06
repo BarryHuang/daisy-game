@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>圍貓貓 - Trap the Cat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: 'Bubblegum Sans', 'Nunito', cursive;
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      touch-action: none; /* Prevent scroll on drag */
+    }
+    
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%; height: 100%;
+      position: relative;
+    }
+
+    /* Top HUD */
+    .hud {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 90%; max-width: 600px; padding: 10px 20px;
+      background: rgba(255,255,255,0.7); border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-top: 20px; z-index: 10;
+    }
+    .hud-title {
+      font-size: 1.8rem; color: #ff6b9e;
+      -webkit-text-stroke: 1.5px white; paint-order: stroke fill;
+    }
+    .hud-keys {
+      font-size: 1.5rem;
+    }
+
+    /* Main Area: Canvas + Sidebar */
+    .main-area {
+      display: flex; align-items: center; justify-content: center;
+      flex: 1; width: 100%; max-width: 800px;
+      position: relative;
+    }
+
+    .canvas-container {
+      position: relative;
+    }
+    canvas {
+      display: block;
+      filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.15));
+    }
+
+    /* Sidebar for draggable stone */
+    .sidebar {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: rgba(156, 39, 176, 0.2);
+      border: 3px solid #9c27b0; border-radius: 15px;
+      padding: 10px; display: flex; flex-direction: column; align-items: center;
+      box-shadow: 0 4px 15px rgba(156,39,176,0.3);
+    }
+    .stone-source {
+      width: 60px; height: 60px;
+      background: #8d6e63; border-radius: 10px;
+      border: 3px solid #5d4037;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; cursor: grab;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2), 0 4px 0 rgba(0,0,0,0.3);
+      user-select: none; touch-action: none;
+    }
+    .stone-source:active { cursor: grabbing; }
+    .sidebar-text {
+      margin-top: 8px; font-size: 0.9rem; color: #7b1fa2; font-weight: bold; text-align: center;
+    }
+
+    /* Dragging Ghost */
+    #ghost-stone {
+      position: fixed; width: 60px; height: 60px;
+      background: #8d6e63; border-radius: 10px; border: 3px solid #5d4037;
+      display: flex; align-items: center; justify-content: center; font-size: 2rem;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+      pointer-events: none; display: none; z-index: 1000;
+      opacity: 0.8; transform: translate(-50%, -50%);
+    }
+
+    /* Modals */
+    .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal.active { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: white; padding: 30px; border-radius: 30px;
+      text-align: center; max-width: 90%; width: 320px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .modal.active .modal-content { transform: scale(1); }
+    .modal-title { font-size: 2.2rem; margin-bottom: 10px; color: #ff6b9e; }
+    .modal-msg { font-size: 1.2rem; color: #555; margin-bottom: 20px; }
+    .btn {
+      padding: 12px 30px; border: none; border-radius: 20px;
+      background: linear-gradient(135deg, #ab47bc, #7b1fa2);
+      color: white; font-size: 1.2rem; font-family: inherit; font-weight: bold;
+      cursor: pointer; box-shadow: 0 5px 0 #4a148c; transition: transform 0.1s;
+    }
+    .btn:active { transform: translateY(5px); box-shadow: 0 0 0 #4a148c; }
+    
+    .back-btn {
+      position: absolute; top: 15px; left: 15px;
+      background: white; border: 2px solid #ccc; border-radius: 50%;
+      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; cursor: pointer; z-index: 50; text-decoration: none; color: #333;
+    }
+
+    /* Confetti Canvas */
+    #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 1500; }
+  </style>
+</head>
+<body>
+
+  <a href="daisy_hamster.html" class="back-btn">⬅</a>
+
+  <div class="game-container">
+    <div class="hud">
+      <div class="hud-title">🐾 圍貓貓</div>
+      <div class="hud-keys">🔑 <span id="keysCount">0</span>/3</div>
+    </div>
+
+    <div class="main-area">
+      <div class="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+      </div>
+
+      <div class="sidebar">
+        <div class="stone-source" id="stoneSource">🪨</div>
+        <div class="sidebar-text">拖曳或<br>點擊格子</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ghost-stone">🪨</div>
+  <canvas id="confetti"></canvas>
+
+  <!-- Modals -->
+  <div class="modal" id="modalWin">
+    <div class="modal-content">
+      <div style="font-size:4rem">🎉</div>
+      <div class="modal-title">太棒了！</div>
+      <div class="modal-msg">你成功困住貓咪了！獲得一把鑰匙！</div>
+      <button class="btn" onclick="nextLevel()">下一關</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modalLose">
+    <div class="modal-content">
+      <div style="font-size:4rem">💨</div>
+      <div class="modal-title">哎呀！</div>
+      <div class="modal-msg">貓咪逃跑了！再試一次吧！</div>
+      <button class="btn" onclick="initGame()">重新挑戰</button>
+    </div>
+  </div>
+
+<script>
+// --- Hex Grid Mathematics ---
+// We use axial coordinates (q, r).
+// Pointy topped hexes.
+const hexDirections = [
+  {q: 1, r: 0}, {q: 1, r: -1}, {q: 0, r: -1},
+  {q: -1, r: 0}, {q: -1, r: 1}, {q: 0, r: 1}
+];
+
+function hexAdd(a, b) { return {q: a.q + b.q, r: a.r + b.r}; }
+function hexDistance(a, b) {
+  return (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
+}
+
+const RADIUS = 5; // The radius of the hexagonal map (number of rings)
+function isOutOfBounds(hex) {
+  return hexDistance({q:0, r:0}, hex) > RADIUS;
+}
+function isEdge(hex) {
+  return hexDistance({q:0, r:0}, hex) === RADIUS;
+}
+
+function hexToPixel(hex, size) {
+  const x = size * Math.sqrt(3) * (hex.q + hex.r/2);
+  const y = size * 3/2 * hex.r;
+  return {x, y};
+}
+
+function pixelToHex(p, size) {
+  const q = (Math.sqrt(3)/3 * p.x - 1/3 * p.y) / size;
+  const r = (2/3 * p.y) / size;
+  return hexRound({q, r});
+}
+
+function hexRound(h) {
+  let q = Math.round(h.q);
+  let r = Math.round(h.r);
+  let s = Math.round(-h.q - h.r);
+  const qDiff = Math.abs(q - h.q);
+  const rDiff = Math.abs(r - h.r);
+  const sDiff = Math.abs(s - (-h.q - h.r));
+  if (qDiff > rDiff && qDiff > sDiff) q = -r - s;
+  else if (rDiff > sDiff) r = -q - s;
+  return {q, r};
+}
+
+// --- Game State ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let hexSize = 24; // Will be calculated based on screen size
+let offsetX = 0, offsetY = 0;
+
+let catPos = {q: 0, r: 0};
+let blocks = new Set(); // Stores "q,r" strings
+let gameState = 'playing'; // 'playing', 'win', 'lose'
+let keys = 0;
+let winSequenceFrame = 0;
+let winPath = []; // Highlight path when winning
+
+// --- Initialization ---
+function resize() {
+  const container = document.querySelector('.main-area');
+  // Account for sidebar space (approx 90px) on mobile, use full width on desktop if large enough
+  const isMobile = window.innerWidth < 600;
+  const cw = container.clientWidth - (isMobile ? 80 : 100);
+  const ch = container.clientHeight;
+  const size = Math.min(cw, ch);
+  canvas.width = size;
+  canvas.height = size;
+  
+  // Calculate hexSize so that RADIUS rings fit in the canvas
+  // Width of pointy-top hex grid = sqrt(3) * size * (2*RADIUS + 1)
+  // Height = size * 2 + size * 3/2 * 2*RADIUS = size * (3*RADIUS + 2)
+  const gridW = Math.sqrt(3) * (2*RADIUS + 1);
+  const gridH = (3*RADIUS + 2);
+  hexSize = Math.min(size / gridW, size / gridH) * 0.95;
+  
+  offsetX = size / 2;
+  offsetY = size / 2;
+  draw();
+}
+window.addEventListener('resize', resize);
+
+function initGame() {
+  gameState = 'playing';
+  catPos = {q: 0, r: 0};
+  blocks.clear();
+  winPath = [];
+  winSequenceFrame = 0;
+  
+  // Randomly place some initial blocks to make it winnable
+  // Usually 7-12 blocks depending on difficulty
+  const numInitialBlocks = 8 + Math.floor(Math.random() * 6);
+  let placed = 0;
+  while(placed < numInitialBlocks) {
+    const q = -RADIUS + Math.floor(Math.random() * (2*RADIUS + 1));
+    const r = -RADIUS + Math.floor(Math.random() * (2*RADIUS + 1));
+    const hex = {q, r};
+    if (!isOutOfBounds(hex) && hexDistance(hex, {q:0, r:0}) > 1) { // Don't block adjacent to center
+      const key = `${q},${r}`;
+      if (!blocks.has(key)) {
+        blocks.add(key);
+        placed++;
+      }
+    }
+  }
+  
+  document.getElementById('modalWin').classList.remove('active');
+  document.getElementById('modalLose').classList.remove('active');
+  resize();
+}
+
+function nextLevel() {
+  keys++;
+  document.getElementById('keysCount').textContent = keys;
+  if(keys >= 3) {
+    alert("恭喜！你收集滿3把鑰匙了！");
+    // Update Pet Data in real integration
+  }
+  initGame();
+}
+
+// --- AI: Breadth-First Search ---
+function getNeighbors(hex) {
+  return hexDirections.map(d => hexAdd(hex, d))
+    .filter(n => !isOutOfBounds(n) && !blocks.has(`${n.q},${n.r}`));
+}
+
+function getEscapePath(start) {
+  const queue = [start];
+  const cameFrom = new Map();
+  cameFrom.set(`${start.q},${start.r}`, null);
+  
+  let escapeHex = null;
+  
+  while (queue.length > 0) {
+    const current = queue.shift();
+    
+    if (isEdge(current)) {
+      escapeHex = current;
+      break;
+    }
+    
+    for (const next of getNeighbors(current)) {
+      const key = `${next.q},${next.r}`;
+      if (!cameFrom.has(key)) {
+        queue.push(next);
+        cameFrom.set(key, current);
+      }
+    }
+  }
+  
+  if (!escapeHex) return null; // Trapped!
+  
+  // Reconstruct path
+  let current = escapeHex;
+  const path = [];
+  while (current) {
+    path.push(current);
+    const parent = cameFrom.get(`${current.q},${current.r}`);
+    if (!parent || (parent.q === start.q && parent.r === start.r)) {
+      break;
+    }
+    current = parent;
+  }
+  return path.reverse(); // The first element is the next step
+}
+
+function getFallbackMove(start) {
+  // Find the neighbor that gives the longest path before getting stuck, or just random
+  const neighbors = getNeighbors(start);
+  if (neighbors.length === 0) return null;
+  // Just pick random available neighbor to simulate struggling
+  return neighbors[Math.floor(Math.random() * neighbors.length)];
+}
+
+function moveCat() {
+  const path = getEscapePath(catPos);
+  if (path && path.length > 0) {
+    catPos = path[0];
+  } else {
+    const fallback = getFallbackMove(catPos);
+    if (fallback) catPos = fallback;
+  }
+  
+  checkGameState();
+}
+
+function checkGameState() {
+  if (isEdge(catPos)) {
+    gameState = 'lose';
+    setTimeout(() => document.getElementById('modalLose').classList.add('active'), 500);
+  } else if (!getEscapePath(catPos) && getNeighbors(catPos).length === 0) {
+    gameState = 'win';
+    // Celebrate!
+    setTimeout(() => document.getElementById('modalWin').classList.add('active'), 1500);
+    requestAnimationFrame(winAnimation);
+  }
+  draw();
+}
+
+// --- Interaction (Click & Drag) ---
+function handleHexInteraction(p) {
+  if (gameState !== 'playing') return;
+  
+  const centerP = {x: p.x - offsetX, y: p.y - offsetY};
+  const hex = pixelToHex(centerP, hexSize);
+  
+  if (isOutOfBounds(hex)) return;
+  if (hex.q === catPos.q && hex.r === catPos.r) return; // Can't click on cat
+  
+  const key = `${hex.q},${hex.r}`;
+  if (!blocks.has(key)) {
+    blocks.add(key);
+    draw();
+    setTimeout(moveCat, 300); // Small delay before cat moves
+  }
+}
+
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  handleHexInteraction({x: e.clientX - rect.left, y: e.clientY - rect.top});
+});
+
+// Drag & Drop logic for the sidebar stone
+const source = document.getElementById('stoneSource');
+const ghost = document.getElementById('ghost-stone');
+let isDragging = false;
+
+function onDragStart(e) {
+  if(gameState !== 'playing') return;
+  isDragging = true;
+  ghost.style.display = 'flex';
+  updateGhostPos(e);
+}
+function onDragMove(e) {
+  if (!isDragging) return;
+  updateGhostPos(e);
+}
+function onDragEnd(e) {
+  if (!isDragging) return;
+  isDragging = false;
+  ghost.style.display = 'none';
+  
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
+  const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
+  
+  if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+    handleHexInteraction({x: clientX - rect.left, y: clientY - rect.top});
+  }
+}
+
+function updateGhostPos(e) {
+  const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+  const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+  ghost.style.left = clientX + 'px';
+  ghost.style.top = clientY + 'px';
+}
+
+source.addEventListener('mousedown', onDragStart);
+document.addEventListener('mousemove', onDragMove);
+document.addEventListener('mouseup', onDragEnd);
+
+source.addEventListener('touchstart', onDragStart, {passive: false});
+document.addEventListener('touchmove', onDragMove, {passive: false});
+document.addEventListener('touchend', onDragEnd);
+
+// --- Drawing ---
+function drawHex(ctx, x, y, size, fillStyle, strokeStyle, lineWidth = 2) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = Math.PI / 3 * i - Math.PI / 6;
+    const px = x + size * Math.cos(angle);
+    const py = y + size * Math.sin(angle);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  if (fillStyle) { ctx.fillStyle = fillStyle; ctx.fill(); }
+  if (strokeStyle) { ctx.strokeStyle = strokeStyle; ctx.lineWidth = lineWidth; ctx.stroke(); }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw base grid
+  for (let q = -RADIUS; q <= RADIUS; q++) {
+    for (let r = -RADIUS; r <= RADIUS; r++) {
+      const hex = {q, r};
+      if (!isOutOfBounds(hex)) {
+        const p = hexToPixel(hex, hexSize);
+        const px = p.x + offsetX;
+        const py = p.y + offsetY;
+        
+        // Base tile
+        let fill = '#fff3e0';
+        let stroke = '#ffcc80';
+        
+        // Highlight logic for win
+        if (gameState === 'win' && winSequenceFrame > 0) {
+          fill = '#e8f5e9'; // Light green glow
+          stroke = '#81c784';
+        }
+
+        drawHex(ctx, px, py, hexSize - 1, fill, stroke, 2);
+        
+        // Draw block
+        if (blocks.has(`${q},${r}`)) {
+          // Draw stone monument
+          ctx.fillStyle = '#8d6e63';
+          ctx.beginPath();
+          // Draw a rounded rock shape inside the hex
+          ctx.arc(px, py + hexSize*0.2, hexSize*0.6, Math.PI, 0);
+          ctx.rect(px - hexSize*0.6, py + hexSize*0.2, hexSize*1.2, hexSize*0.3);
+          ctx.fill();
+          
+          // Footprint detail
+          ctx.fillStyle = '#4dd0e1'; // Blue footprint
+          ctx.font = `${hexSize*0.6}px sans-serif`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('🐾', px, py + hexSize*0.1);
+        }
+      }
+    }
+  }
+  
+  // Draw Cat
+  const p = hexToPixel(catPos, hexSize);
+  const px = p.x + offsetX;
+  const py = p.y + offsetY;
+  
+  ctx.font = `${hexSize*1.2}px sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  // If trapped, draw sad cat, else normal cat
+  let catEmoji = gameState === 'lose' ? '🙀' : (gameState === 'win' ? '😿' : '😺');
+  
+  // Add a white background to make cat pop
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.beginPath(); ctx.arc(px, py, hexSize*0.5, 0, Math.PI*2); ctx.fill();
+  
+  ctx.fillText(catEmoji, px, py);
+}
+
+function winAnimation() {
+  if (gameState !== 'win') return;
+  winSequenceFrame++;
+  draw();
+  // Draw expanding yellow ring
+  if(winSequenceFrame < 60) {
+    const p = hexToPixel(catPos, hexSize);
+    ctx.beginPath();
+    ctx.arc(p.x + offsetX, p.y + offsetY, hexSize * 0.5 + winSequenceFrame * 5, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(255, 235, 59, ${1 - winSequenceFrame/60})`;
+    ctx.lineWidth = 10;
+    ctx.stroke();
+    requestAnimationFrame(winAnimation);
+  }
+}
+
+// Start
+initGame();
+
+</script>
+</body>
+</html>
