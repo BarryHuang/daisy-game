@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My Autumn Book 🍂</title>
+    <title>Through Georgia's Eyes 🎨</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
-            background: linear-gradient(160deg, #fff8f0 0%, #ffecd2 50%, #fff3e0 100%);
+            background: linear-gradient(160deg, #fff8f0 0%, #fce4ec 50%, #fff3e0 100%);
             min-height: 100vh;
             padding-bottom: 32px;
         }
 
         /* ===== HEADER ===== */
         .page-header {
-            background: linear-gradient(135deg, #bf360c 0%, #e65100 50%, #ff8f00 100%);
+            background: linear-gradient(135deg, #880e4f 0%, #c62828 50%, #e64a19 100%);
             padding: 14px 16px 12px;
             display: flex;
             align-items: center;
@@ -72,7 +72,7 @@
             font-family: inherit;
         }
         .tab-btn .tab-icon { font-size: 1.35rem; }
-        .tab-btn.active { color: var(--tc, #e65100); border-bottom-color: var(--tc, #e65100); }
+        .tab-btn.active { color: var(--tc, #c62828); border-bottom-color: var(--tc, #c62828); }
 
         /* ===== LAYOUT ===== */
         .game-container { max-width: 480px; margin: 0 auto; padding: 16px 14px; }
@@ -91,7 +91,7 @@
             text-align: center;
             font-size: 1.2rem;
             font-weight: bold;
-            color: #e65100;
+            color: #c62828;
             margin-bottom: 14px;
         }
 
@@ -99,8 +99,8 @@
         .big-btn {
             width: 100%; padding: 13px; border-radius: 16px; border: none;
             font-size: 1rem; font-weight: bold; cursor: pointer; color: white;
-            background: linear-gradient(135deg, #ff8f00 0%, #e65100 100%);
-            box-shadow: 0 4px 0 #bf360c;
+            background: linear-gradient(135deg, #c62828 0%, #880e4f 100%);
+            box-shadow: 0 4px 0 #560027;
             transition: transform 0.1s, box-shadow 0.1s;
             font-family: inherit;
         }
@@ -134,28 +134,28 @@
             backface-visibility: hidden; -webkit-backface-visibility: hidden;
         }
         .card-front {
-            background: linear-gradient(135deg, #ff8f00 0%, #bf360c 100%);
+            background: linear-gradient(135deg, #c62828 0%, #880e4f 100%);
             color: white;
         }
         .card-front .cf-word { font-size: 2.6rem; font-weight: bold; text-shadow: 2px 2px 6px rgba(0,0,0,0.25); }
         .card-front .cf-hint { font-size: 0.82rem; opacity: 0.8; margin-top: 10px; }
         .card-back {
-            background: linear-gradient(135deg, #fff9c4, #fff3e0);
+            background: linear-gradient(135deg, #fce4ec, #fff3e0);
             color: #333;
             transform: rotateY(180deg);
             padding: 16px; text-align: center;
         }
         .card-back .cb-emoji { font-size: 2.8rem; margin-bottom: 6px; }
-        .card-back .cb-zh { font-size: 1.5rem; font-weight: bold; color: #e65100; }
+        .card-back .cb-zh { font-size: 1.5rem; font-weight: bold; color: #c62828; }
         .card-back .cb-example { font-size: 0.82rem; color: #777; font-style: italic; margin-top: 8px; line-height: 1.5; }
 
         .vocab-nav {
             display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
         }
         .nav-btn {
-            background: #ff8f00; color: white; border: none; border-radius: 50%;
+            background: #c62828; color: white; border: none; border-radius: 50%;
             width: 42px; height: 42px; font-size: 1.3rem; cursor: pointer;
-            box-shadow: 0 4px 0 #e65100; transition: 0.1s;
+            box-shadow: 0 4px 0 #880e4f; transition: 0.1s;
             display: flex; align-items: center; justify-content: center;
         }
         .nav-btn:active { transform: translateY(4px); box-shadow: none; }
@@ -168,7 +168,7 @@
             font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.15s; font-family: inherit;
         }
         .status-btn.know    { background: #e8f5e9; border-color: #43a047; color: #2e7d32; }
-        .status-btn.review  { background: #fff3e0; border-color: #ff8f00; color: #e65100; }
+        .status-btn.review  { background: #fce4ec; border-color: #c62828; color: #880e4f; }
         .status-btn:active  { transform: scale(0.95); }
 
         .vocab-dots {
@@ -179,8 +179,8 @@
             transition: all 0.3s; cursor: pointer;
         }
         .vdot.know    { background: #43a047; }
-        .vdot.review  { background: #ff8f00; }
-        .vdot.current { background: #bf360c; transform: scale(1.6); }
+        .vdot.review  { background: #c62828; }
+        .vdot.current { background: #880e4f; transform: scale(1.6); }
         .vocab-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 0.78rem; color: #888; }
 
         /* ======================================================
@@ -193,14 +193,14 @@
         }
         .seq-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
         .seq-card {
-            background: #fff8f0; border: 3px solid #ffe0b2; border-radius: 16px;
+            background: #fff8f0; border: 3px solid #ffcdd2; border-radius: 16px;
             padding: 12px 14px; cursor: pointer;
             display: flex; align-items: center; gap: 10px;
             transition: all 0.18s; user-select: none; -webkit-user-select: none;
         }
         .seq-card.selected {
-            border-color: #ff8f00; background: #fff3e0;
-            box-shadow: 0 0 0 3px rgba(255,143,0,0.3); transform: scale(1.02);
+            border-color: #c62828; background: #fce4ec;
+            box-shadow: 0 0 0 3px rgba(198,40,40,0.3); transform: scale(1.02);
         }
         .seq-card.correct { border-color: #43a047 !important; background: #e8f5e9 !important; }
         .seq-card.wrong   { border-color: #e53935 !important; background: #ffebee !important; animation: shake 0.4s ease; }
@@ -209,7 +209,7 @@
             40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
         }
         .seq-num {
-            width: 30px; height: 30px; border-radius: 50%; background: #ff8f00;
+            width: 30px; height: 30px; border-radius: 50%; background: #c62828;
             color: white; font-weight: bold; font-size: 0.9rem;
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
@@ -226,7 +226,7 @@
         }
         .fill-blank {
             display: inline-block; min-width: 80px;
-            border-bottom: 3px solid #ff8f00; color: #ff8f00;
+            border-bottom: 3px solid #c62828; color: #c62828;
             font-weight: bold; font-style: normal; text-align: center; padding: 0 4px;
         }
         .fill-blank.correct-ans { color: #2e7d32; border-color: #2e7d32; }
@@ -236,7 +236,7 @@
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
         }
         .fill-opt {
-            background: #fff8f0; border: 3px solid #ffe0b2; border-radius: 14px;
+            background: #fff8f0; border: 3px solid #ffcdd2; border-radius: 14px;
             padding: 12px 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
             text-align: center; color: #555; transition: 0.15s; font-family: inherit;
         }
@@ -252,7 +252,7 @@
             text-align: center; padding: 24px 16px;
         }
         .fill-done .big-emoji { font-size: 3.5rem; margin-bottom: 10px; }
-        .fill-done .done-title { font-size: 1.4rem; font-weight: bold; color: #e65100; margin-bottom: 6px; }
+        .fill-done .done-title { font-size: 1.4rem; font-weight: bold; color: #c62828; margin-bottom: 6px; }
         .fill-done .done-msg   { color: #888; margin-bottom: 20px; }
 
         /* ======================================================
@@ -274,8 +274,8 @@
             user-select: none; -webkit-user-select: none;
         }
         .match-item.sel {
-            border-color: #ff8f00; background: #fff3e0;
-            box-shadow: 0 0 0 3px rgba(255,143,0,0.3);
+            border-color: #c62828; background: #fce4ec;
+            box-shadow: 0 0 0 3px rgba(198,40,40,0.3);
         }
         .match-item.matched { cursor: default; }
         .match-item.flash-wrong { animation: mwrong 0.4s ease; }
@@ -304,21 +304,21 @@
             display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
         }
         .story-progress-bar {
-            flex: 1; height: 6px; background: #ffe0b2; border-radius: 3px; margin: 0 12px; overflow: hidden;
+            flex: 1; height: 6px; background: #ffcdd2; border-radius: 3px; margin: 0 12px; overflow: hidden;
         }
         .story-progress-fill {
-            height: 100%; background: linear-gradient(90deg,#ff8f00,#e65100);
+            height: 100%; background: linear-gradient(90deg, #c62828, #880e4f);
             border-radius: 3px; transition: width 0.35s;
         }
         .story-section-badge {
-            font-size: 0.75rem; font-weight: bold; color: #ff8f00; white-space: nowrap;
+            font-size: 0.75rem; font-weight: bold; color: #c62828; white-space: nowrap;
         }
         .story-header {
             display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
-            padding-bottom: 12px; border-bottom: 2px dashed #ffe0b2;
+            padding-bottom: 12px; border-bottom: 2px dashed #ffcdd2;
         }
         .story-header-icon { font-size: 2.4rem; }
-        .story-header-title { font-size: 1.15rem; font-weight: bold; color: #e65100; }
+        .story-header-title { font-size: 1.15rem; font-weight: bold; color: #c62828; }
         .story-header-zh    { font-size: 0.82rem; color: #aaa; margin-top: 2px; }
 
         .story-lines {
@@ -330,10 +330,10 @@
 
         /* tappable vocab word */
         .kw {
-            color: #e65100; font-weight: bold; border-bottom: 2px dotted #ff8f00;
+            color: #c62828; font-weight: bold; border-bottom: 2px dotted #c62828;
             cursor: pointer; position: relative; display: inline-block;
         }
-        .kw:active { background: rgba(255,143,0,0.15); border-radius: 4px; }
+        .kw:active { background: rgba(198,40,40,0.12); border-radius: 4px; }
 
         /* popup tooltip */
         .kw-popup {
@@ -347,7 +347,7 @@
         }
         .kw-popup.show { display: flex; }
         @keyframes popUp { from{transform:translateX(-50%) scale(0.7);opacity:0} to{transform:translateX(-50%) scale(1);opacity:1} }
-        .kw-popup .kp-word { color: #ffcc80; }
+        .kw-popup .kp-word { color: #ef9a9a; }
         .kw-popup .kp-arrow { color: #aaa; }
         .kw-popup .kp-zh   { color: white; }
 
@@ -390,12 +390,12 @@
 <!-- Header -->
 <div class="page-header">
     <a href="story_hub.html" class="back-btn">← 返回</a>
-    <h1>🍂 My Autumn Book</h1>
+    <h1>🎨 Through Georgia's Eyes</h1>
 </div>
 
 <!-- Tabs -->
 <div class="tabs">
-    <button class="tab-btn active" style="--tc:#ff8f00" onclick="switchTab('vocab',0)">
+    <button class="tab-btn active" style="--tc:#c62828" onclick="switchTab('vocab',0)">
         <span class="tab-icon">📚</span><span>單字卡</span>
     </button>
     <button class="tab-btn" style="--tc:#8ba4f9" onclick="switchTab('seq',1)">
@@ -420,19 +420,19 @@
         <div class="game-card">
             <div class="vocab-nav">
                 <button class="nav-btn" id="v-prev" onclick="vPrev()">◀</button>
-                <span class="vocab-counter" id="v-count">1 / 30</span>
+                <span class="vocab-counter" id="v-count">1 / 20</span>
                 <button class="nav-btn" id="v-next" onclick="vNext()">▶</button>
             </div>
             <div class="flashcard-wrap" onclick="vFlip()">
                 <div class="flashcard" id="flashcard">
                     <div class="card-face card-front">
-                        <div class="cf-word" id="cf-word">crisp</div>
+                        <div class="cf-word" id="cf-word">memory</div>
                         <div class="cf-hint">點一下看中文 👆</div>
                     </div>
                     <div class="card-face card-back">
-                        <div class="cb-emoji" id="cb-emoji">🌬️</div>
-                        <div class="cb-zh"   id="cb-zh">清爽的</div>
-                        <div class="cb-example" id="cb-ex">"The air is crisp."</div>
+                        <div class="cb-emoji" id="cb-emoji">💭</div>
+                        <div class="cb-zh"   id="cb-zh">記憶</div>
+                        <div class="cb-example" id="cb-ex">"Georgia's first memory."</div>
                     </div>
                 </div>
             </div>
@@ -446,8 +446,8 @@
             <div class="vocab-dots" id="v-dots"></div>
             <div class="vocab-legend">
                 <span>🟢 會了 <b id="vc-know">0</b></span>
-                <span>🟠 練習 <b id="vc-rev">0</b></span>
-                <span style="color:#ccc">⚪ 未學 <b id="vc-new">30</b></span>
+                <span>🔴 練習 <b id="vc-rev">0</b></span>
+                <span style="color:#ccc">⚪ 未學 <b id="vc-new">20</b></span>
             </div>
         </div>
     </div>
@@ -456,7 +456,7 @@
     <div id="g-seq" class="game-section">
         <div class="section-title">🧩 故事排序</div>
         <div class="seq-instruction">
-            點選一張卡片（它會變橘色），<br>再點另一張來交換位置。<br>把 8 個場景排成正確順序！
+            點選一張卡片（它會變紅色），<br>再點另一張來交換位置。<br>把 8 個場景排成正確順序！
         </div>
         <div class="game-card">
             <div class="seq-list" id="seq-list"></div>
@@ -476,7 +476,7 @@
     <div id="g-match" class="game-section">
         <div class="section-title">🔗 配對遊戲</div>
         <div class="match-instruction">
-            先點左邊的動物，再點右邊牠在秋天的行為來配對！
+            先點左邊的人物或地點，再點右邊符合的描述！
         </div>
         <div class="game-card" id="match-card">
             <!-- rendered by JS -->
@@ -514,69 +514,59 @@
    ============================================================ */
 
 const VOCAB = [
-    { w:'crisp',        e:'🌬️', zh:'清爽的',         ex:'"The air is crisp."' },
-    { w:'investigate',  e:'🔍', zh:'調查、探索',       ex:'"To go outside and investigate."' },
-    { w:'silken',       e:'🕸️', zh:'像絲綢般的、柔滑的', ex:'"Spider spins a silken thread."' },
-    { w:'thread',       e:'🧵', zh:'絲線',             ex:'"Spider spins a silken thread."' },
-    { w:'weaving',      e:'🕷️', zh:'編織',             ex:'"What are you weaving?"' },
-    { w:'chirruping',   e:'🦗', zh:'（蟲）鳴叫聲',     ex:'"Crickets chirruping in the clover."' },
-    { w:'clover',       e:'🍀', zh:'三葉草',           ex:'"Crickets chirruping in the clover."' },
-    { w:'chilly',       e:'🥶', zh:'寒冷的',           ex:'"A chilly wind blows."' },
-    { w:'racket',       e:'📢', zh:'嘈雜聲',           ex:'"From the treetops I hear a racket."' },
-    { w:'cicada',       e:'🎵', zh:'蟬',               ex:'"Cicada is warning us: Better beware!"' },
-    { w:'beware',       e:'⚠️', zh:'小心、注意',       ex:'"Cicada is warning us: Better beware!"' },
-    { w:'woodpecker',   e:'🐦', zh:'啄木鳥',           ex:'"Woodpecker agrees, rap-a-tap drumming."' },
-    { w:'chipmunk',     e:'🐿️', zh:'花栗鼠',           ex:'"Chipmunk scampers past."' },
-    { w:'scampers',     e:'🏃', zh:'快速跑跳',         ex:'"Chipmunk scampers past."' },
-    { w:'treasure',     e:'💎', zh:'寶藏',             ex:'"Squirrel digs a hole to bury its treasure."' },
-    { w:'caterpillar',  e:'🐛', zh:'毛毛蟲',           ex:'"Caterpillar knows it\'s time to cocoon."' },
-    { w:'cocoon',       e:'🫘', zh:'繭、結繭',         ex:'"Caterpillar knows it\'s time to cocoon."' },
-    { w:'formation',    e:'✈️', zh:'隊形',             ex:'"Fly south in formation."' },
-    { w:'celebration',  e:'🎉', zh:'慶典、慶祝',       ex:'"Trees dressing up for the fall celebration."' },
-    { w:'crimson',      e:'🔴', zh:'深紅色',           ex:'"Dogwood shows off a new crimson gown."' },
-    { w:'gown',         e:'👗', zh:'長袍、禮服',       ex:'"Dogwood shows off a new crimson gown."' },
-    { w:'cloaked',      e:'🧥', zh:'披覆著',           ex:'"Ash cloaked in yellow."' },
-    { w:'breeze',       e:'💨', zh:'微風',             ex:'"Together they sway in the breeze."' },
-    { w:'acorns',       e:'🌰', zh:'橡實',             ex:'"Shaking loose acorns and batches of leaves."' },
-    { w:'whirlwind',    e:'🌪️', zh:'旋風',             ex:'"A whirlwind of color that blankets the ground."' },
-    { w:'ginkgo',       e:'🌿', zh:'銀杏',             ex:'"A ginkgo, a willow, an elm, birch, and beech."' },
-    { w:'birch',        e:'🌲', zh:'樺樹',             ex:'"An elm, birch, and beech."' },
-    { w:'beech',        e:'🌳', zh:'山毛櫸',           ex:'"An elm, birch, and beech."' },
-    { w:'delay',        e:'⏰', zh:'耽擱、延遲',       ex:'"No time to delay."' },
-    { w:'fetch',        e:'🤲', zh:'去拿、取來',       ex:'"Fetch scissors and glue."' },
+    { w:'memory',        e:'💭', zh:'記憶',          ex:'"Georgia\'s first memory."' },
+    { w:'brightness',    e:'✨', zh:'光亮、明亮',     ex:'"the brightness of light"' },
+    { w:'company',       e:'🤝', zh:'陪伴、同伴',     ex:'"The trees and land keep her company."' },
+    { w:'comfort',       e:'🤗', zh:'安慰、讓人舒適', ex:'"Pencil and sketch pad comfort her."' },
+    { w:'prairie',       e:'🌾', zh:'大草原',         ex:'"Georgia roams the prairie."' },
+    { w:'struggle',      e:'💪', zh:'掙扎、努力',     ex:'"Georgia struggles to show what she sees."' },
+    { w:'scandalous',    e:'😱', zh:'令人震驚的',     ex:'"A girl wishing to be one is scandalous."' },
+    { w:'achieve',       e:'🏆', zh:'達到、實現',     ex:'"wonders if she can achieve her dream"' },
+    { w:'canvas',        e:'🖼️', zh:'畫布',           ex:'"brushes and canvas become her language"' },
+    { w:'language',      e:'💬', zh:'語言',           ex:'"Paint speaks for her. Watercolor and oil are her words."' },
+    { w:'concrete',      e:'🏙️', zh:'混凝土',         ex:'"She walks through canyons of concrete."' },
+    { w:'skyscraper',    e:'🏢', zh:'摩天大樓',       ex:'"The sun steals a bite from a skyscraper."' },
+    { w:'delight',       e:'😊', zh:'令人喜悅',       ex:'"Flowers delight her."' },
+    { w:'universe',      e:'🌌', zh:'宇宙',           ex:'"flitting through the universe of her garden"' },
+    { w:'extraordinary', e:'⭐', zh:'非凡的',         ex:'"she discovers extraordinary things"' },
+    { w:'frighten',      e:'😨', zh:'使恐懼',         ex:'"The bones don\'t frighten Georgia."' },
+    { w:'astound',       e:'🤯', zh:'使驚訝',         ex:'"Their beauty astounds her."' },
+    { w:'expresses',     e:'🎨', zh:'表達',           ex:'"Georgia expresses feelings in her own way."' },
+    { w:'enchant',       e:'✨', zh:'使著迷',         ex:'"The land enchants her."' },
+    { w:'dusk',          e:'🌅', zh:'黃昏',           ex:'"From the bottom at dusk she sees a long line of cows."' },
 ];
 
 const SEQ_SCENES = [
-    { icon:'🌤️', text:'The air is crisp. The sky turns gray.',           order:0 },
-    { icon:'🕷️', text:'Spider spins a silken thread in the garden shed.', order:1 },
-    { icon:'💨', text:'Chilly wind blows. Cicada warns! Woodpecker drums.', order:2 },
-    { icon:'🐿️', text:'Chipmunk scampers. Squirrel buries its treasure.',  order:3 },
-    { icon:'🐛', text:'Caterpillar cocoons. Blue Jay cries "Ker-YAK!"',     order:4 },
-    { icon:'🪿', text:'Geese fly south in formation. Trees dress up.',      order:5 },
-    { icon:'🍂', text:'Trees change colors. Leaves swirl and twirl.',       order:6 },
-    { icon:'📚', text:'Collects leaves. Goes home. Makes the Autumn Book!', order:7 },
+    { icon:'🌟', text:'Georgia\'s first memory: brightness of light in Wisconsin, 1887.', order:0 },
+    { icon:'👨‍👩‍👧‍👦', text:'Runs and plays with brothers and sisters. Everyone works on the farm.', order:1 },
+    { icon:'✏️', text:'Roams the prairie alone with her pencil and sketch pad.', order:2 },
+    { icon:'🎨', text:'At twelve, takes painting lessons. "I am going to be an artist!"', order:3 },
+    { icon:'🖼️', text:'At art school, brushes and canvas become her language.', order:4 },
+    { icon:'🌆', text:'Lives in the city, but misses the outdoor world. The Faraway calls her.', order:5 },
+    { icon:'🌺', text:'Paints giant flowers. Moves to Ghost Ranch in New Mexico.', order:6 },
+    { icon:'🌄', text:'Discovers skulls in the desert. Hikes at dawn. The land enchants her.', order:7 },
 ];
 
 const FILL_QS = [
-    { b:'The air is',                       blank:'crisp',     a:'.',              opts:['crisp','cold','blue','gray'] },
-    { b:'Downstairs I',                     blank:'rush',      a:'.',              opts:['rush','walk','fly','sleep'] },
-    { b:'Spider spins a silken',            blank:'thread',    a:'.',              opts:['thread','web','rope','silk'] },
-    { b:'Crickets chirruping in the',       blank:'clover',    a:'…',              opts:['clover','grass','garden','field'] },
-    { b:'A chilly wind blows. I zip my',    blank:'jacket',    a:'.',              opts:['jacket','coat','hat','shoes'] },
-    { b:'Caterpillar knows it\'s time to',  blank:'cocoon',    a:'.',              opts:['cocoon','fly','hide','sleep'] },
-    { b:'Geese fly south in',               blank:'formation', a:'.',              opts:['formation','groups','lines','rows'] },
-    { b:'Maple wears',                      blank:'red',       a:'.',              opts:['red','orange','yellow','gold'] },
-    { b:'Shaking loose',                    blank:'acorns',    a:'and batches of leaves.', opts:['acorns','seeds','nuts','leaves'] },
-    { b:'Until autumn returns once more in', blank:'September', a:'.', opts:['September','October','November','December'] },
+    { b:'Pencil and sketch pad',                    blank:'comfort',       a:'her.',                           opts:['comfort','frighten','delight','guide'] },
+    { b:'She discovers she likes to be',            blank:'alone',         a:'.',                              opts:['alone','happy','outside','busy'] },
+    { b:'A girl wishing to be an artist is',        blank:'scandalous',    a:'.',                              opts:['scandalous','wonderful','normal','brave'] },
+    { b:'Georgia wonders if she can',               blank:'achieve',       a:'her dream.',                     opts:['achieve','forget','paint','find'] },
+    { b:'At art school, brushes and canvas become her', blank:'language',  a:'.',                              opts:['language','friend','dream','teacher'] },
+    { b:'She walks through canyons of',             blank:'concrete',      a:'.',                              opts:['concrete','stone','wood','color'] },
+    { b:'Flowers',                                  blank:'delight',       a:'her. She paints them as giants.',opts:['delight','frighten','comfort','confuse'] },
+    { b:'In the desert, she discovers',             blank:'extraordinary', a:'things.',                        opts:['extraordinary','ordinary','frightening','beautiful'] },
+    { b:'Their beauty',                             blank:'astounds',      a:'her.',                           opts:['astounds','frightens','comforts','delights'] },
+    { b:'The land',                                 blank:'enchants',      a:'her.',                           opts:['enchants','frightens','comforts','amazes'] },
 ];
 
 const MATCH_PAIRS = [
-    { animal:'🕷️ Spider',      action:'spins a silken thread',        id:0 },
-    { animal:'🐿️ Chipmunk',    action:'scampers with seeds in cheeks', id:1 },
-    { animal:'🐿️ Squirrel',    action:'digs a hole to bury treasure',  id:2 },
-    { animal:'🐛 Caterpillar', action:'knows it\'s time to cocoon',    id:3 },
-    { animal:'🐦 Blue Jay',    action:'cries "Ker-YAK!"',              id:4 },
-    { animal:'🪿 Geese',       action:'fly south in formation',        id:5 },
+    { animal:'🎵 Georgia\'s father', action:'gives sweets and plays Irish tunes',     id:0 },
+    { animal:'📖 Georgia\'s mother', action:'reads stories to the children',          id:1 },
+    { animal:'✏️ Young Georgia',     action:'roams the prairie with her sketch pad',  id:2 },
+    { animal:'🖼️ Art school',        action:'brushes and canvas become her language', id:3 },
+    { animal:'🏜️ Ghost Ranch',       action:'red hills, cliffs, and silence',         id:4 },
+    { animal:'💀 Skulls',            action:'their beauty astounds Georgia',          id:5 },
 ];
 
 /* ============================================================
@@ -762,11 +752,11 @@ function initMatch() {
     document.getElementById('match-card').innerHTML = `
         <div class="match-cols">
             <div>
-                <div class="match-col-h">🐾 動物</div>
+                <div class="match-col-h">👥 人物/地點</div>
                 ${MATCH_PAIRS.map(p=>`<div class="match-item" id="ma${p.id}" onclick="mClickAnimal(${p.id})">${p.animal}</div>`).join('')}
             </div>
             <div>
-                <div class="match-col-h">🍂 秋天的行為</div>
+                <div class="match-col-h">🎨 故事中的行動</div>
                 ${actions.map(p=>`<div class="match-item" id="mb${p.id}" onclick="mClickAction(${p.id})">${p.action}</div>`).join('')}
             </div>
         </div>
@@ -778,14 +768,14 @@ function mClickAnimal(id) {
     mSel = (mSel === id) ? null : id;
     if (mSel !== null) {
         document.getElementById(`ma${mSel}`).classList.add('sel');
-        setMatchFb('現在點選右邊對應的行為！', '#ff8f00');
+        setMatchFb('先點左邊的人物或地點，再點右邊符合的描述！', '#c62828');
     } else {
         setMatchFb('', '');
     }
 }
 function mClickAction(id) {
     if (mPairs[id] !== undefined) return;
-    if (mSel === null) { setMatchFb('請先點選左邊的動物！', '#c62828'); return; }
+    if (mSel === null) { setMatchFb('請先點選左邊的人物或地點！', '#c62828'); return; }
     const aEl = document.getElementById(`ma${mSel}`);
     const bEl = document.getElementById(`mb${id}`);
     if (mSel === id) {
@@ -798,7 +788,7 @@ function mClickAction(id) {
         mSel = null;
         setMatchFb(`✅ 配對正確！${mCount}/${MATCH_PAIRS.length}`, '#2e7d32');
         if (mCount === MATCH_PAIRS.length) {
-            setTimeout(() => showOverlay('🎊','全部配對完成！','Daisy 完全掌握了秋天動物的習性！','match'), 400);
+            setTimeout(() => showOverlay('🎊','全部配對完成！','Daisy 完全掌握了故事人物！','match'), 400);
         }
     } else {
         aEl.classList.add('flash-wrong'); bEl.classList.add('flash-wrong');
@@ -839,141 +829,122 @@ function closeOverlay() {
 
 const STORY = [
   {
-    emoji:'🌤️', title:'Noticing Autumn', zh:'察覺秋天',
+    emoji:'🌟', title:"Georgia's First Memory", zh:'喬治亞的第一個記憶',
     lines:[
-      'The air is {{crisp:清爽的}}.',
-      'The sky turns gray.',
-      'Is autumn really on the way?',
-      'Downstairs I rush.',
-      'I can hardly wait,',
-      'To go outside and {{investigate:探索、調查}}.',
-    ],
-    speak:"The air is crisp. The sky turns gray. Is autumn really on the way? Downstairs I rush. I can hardly wait, to go outside and investigate.",
-  },
-  {
-    emoji:'🕷️', title:'Spider & Crickets', zh:'蜘蛛與蟋蟀',
-    lines:[
-      'In a corner of the garden shed,',
-      'Spider spins a {{silken:像絲綢般}} {{thread:絲線}}.',
-      'Hello, Spider!',
-      'What are you {{weaving:編織}}?',
-      'Is it true that summer',
-      'Is leaving?',
-      'Crickets {{chirruping:鳴叫}} in the {{clover:三葉草}} …',
-      'Another sign that warm days are over.',
-    ],
-    speak:"In a corner of the garden shed, Spider spins a silken thread. Hello, Spider! What are you weaving? Is it true that summer is leaving? Crickets chirruping in the clover. Another sign that warm days are over.",
-  },
-  {
-    emoji:'💨', title:'Cicada & Woodpecker', zh:'蟬與啄木鳥',
-    lines:[
-      'A {{chilly:寒冷的}} wind blows. I zip my jacket.',
-      'From the treetops I hear a {{racket:嘈雜聲}}.',
-      'The buzzing gets louder. It fills the air.',
-      '{{Cicada:蟬}} is warning us: Better {{beware:小心注意}}!',
-      'Summer is leaving! Autumn coming!',
-      '{{Woodpecker:啄木鳥}} agrees, rap-a-tap drumming.',
-    ],
-    speak:"A chilly wind blows. I zip my jacket. From the treetops I hear a racket. The buzzing gets louder. It fills the air. Cicada is warning us: Better beware! Summer is leaving! Autumn coming! Woodpecker agrees, rap-a-tap drumming.",
-  },
-  {
-    emoji:'🐿️', title:'Chipmunk & Squirrel', zh:'花栗鼠與松鼠',
-    lines:[
-      '{{Chipmunk:花栗鼠}} {{scampers:快速跑跳}} past,',
-      'Seeds packed in its cheeks,',
-      'Finding food for the upcoming weeks.',
-      'Squirrel digs a hole to bury its {{treasure:寶藏}}.',
-      'Squirrel is expecting a change in the weather.',
-    ],
-    speak:"Chipmunk scampers past, seeds packed in its cheeks, finding food for the upcoming weeks. Squirrel digs a hole to bury its treasure. Squirrel is expecting a change in the weather.",
-  },
-  {
-    emoji:'🐛', title:'Caterpillar & Blue Jay', zh:'毛毛蟲與藍鳥',
-    lines:[
-      '{{Caterpillar:毛毛蟲}} knows it\'s time to {{cocoon:結繭}}.',
-      'Ker-YAK! Blue Jay cries.',
-      'Autumn so soon?',
-    ],
-    speak:"Caterpillar knows it's time to cocoon. Ker-YAK! Blue Jay cries. Autumn so soon?",
-  },
-  {
-    emoji:'🪿', title:'Geese & Trees', zh:'大雁與樹木',
-    lines:[
-      'Geese honk above,',
-      'Fly south in {{formation:隊形}}.',
-      'Trees dressing up for the fall {{celebration:慶典}}.',
-    ],
-    speak:"Geese honk above, fly south in formation. Trees dressing up for the fall celebration.",
-  },
-  {
-    emoji:'🍂', title:'Tree Colors', zh:'樹葉變色',
-    lines:[
-      'Dogwood shows off',
-      'A new {{crimson:深紅色}} {{gown:長袍}}.',
-      'Oak changes into',
-      'A suit of rust brown.',
-      'Ash {{cloaked:披覆著}} in yellow.',
-      'Maple wears red.',
-      'Aspen, a crown of gold',
-      'on its head.',
-    ],
-    speak:"Dogwood shows off a new crimson gown. Oak changes into a suit of rust brown. Ash cloaked in yellow. Maple wears red. Aspen, a crown of gold on its head.",
-  },
-  {
-    emoji:'🌪️', title:'Leaves Swirling', zh:'樹葉旋舞',
-    lines:[
-      'Together they whisper and sway in the {{breeze:微風}},',
-      'Shaking loose {{acorns:橡實}} and batches of leaves.',
-      'Swirling and twirling, leaves spinning round,',
-      'A {{whirlwind:旋風}} of color that blankets the ground.',
-    ],
-    speak:"Together they whisper and sway in the breeze, shaking loose acorns and batches of leaves. Swirling and twirling, leaves spinning round, a whirlwind of color that blankets the ground.",
-  },
-  {
-    emoji:'🍃', title:'Collecting Leaves', zh:'收集樹葉',
-    lines:[
-      'I search high and low,',
-      'Find one of each—',
-      'A {{ginkgo:銀杏}}, a willow,',
-      'An elm, {{birch:樺樹}}, and {{beech:山毛櫸}}.',
-      'Summer is leaving, fall\'s on its way.',
-      'The seasons are changing,',
-      'No time to {{delay:耽擱}}.',
-    ],
-    speak:"I search high and low, find one of each: a ginkgo, a willow, an elm, birch, and beech. Summer is leaving, fall's on its way. The seasons are changing, no time to delay.",
-  },
-  {
-    emoji:'📦', title:'Back at Home', zh:'回到家',
-    lines:[
-      'I dash up to my room',
-      'And open the door.',
-      'Empty my pack,',
-      'Spread things on the floor.',
+      'SUN PRAIRIE, WISCONSIN, 1887',
       '',
-      'I find a jar for the {{acorns:橡實}} …',
-      '{{Fetch:去拿取}} scissors and glue—',
-      'A pad of paper,',
-      'And crayons, too.',
+      "Georgia's first {{memory:記憶}}:",
+      '',
+      'She will always remember',
+      'these colors and the {{brightness:光亮}}',
+      'of light—light all around.',
     ],
-    speak:"I dash up to my room and open the door. Empty my pack, spread things on the floor. I find a jar for the acorns. Fetch scissors and glue, a pad of paper, and crayons too.",
+    speak:"Georgia's first memory. She will always remember these colors and the brightness of light, light all around.",
   },
   {
-    emoji:'📚', title:'The Autumn Book', zh:'秋天之書',
+    emoji:'👨‍👩‍👧‍👦', title:'Life on the Farm', zh:'農場生活',
     lines:[
-      'I decorate pages,',
-      'Arrange to make space ...',
-      'There, it\'s all done!',
-      'Everything is in place.',
-      '',
-      'When crickets no longer sing late at night',
-      'And the world outside',
-      'Has turned cold, black and white …',
-      '… I\'ll lie by the fire',
-      'With my book and remember,',
-      'Until autumn returns',
-      'Once more in September.',
+      'Soon Georgia runs and plays',
+      'games with her brothers and sisters.',
+      'Her father gives her sweets',
+      'and plays Irish tunes.',
+      'Her mother reads stories and',
+      'cares for the younger children.',
+      'Everyone works hard on the farm.',
     ],
-    speak:"I decorate pages, arrange to make space. There, it's all done! Everything is in place. When crickets no longer sing late at night, and the world outside has turned cold, black and white. I'll lie by the fire with my book and remember, until autumn returns once more in September.",
+    speak:"Soon Georgia runs and plays games with her brothers and sisters. Her father gives her sweets and plays Irish tunes. Her mother reads stories and cares for the younger children. Everyone works hard on the farm.",
+  },
+  {
+    emoji:'✏️', title:'A Love for Drawing', zh:'愛上畫畫',
+    lines:[
+      'Georgia roams the {{prairie:大草原}}.',
+      'The trees and land keep her {{company:陪伴}}.',
+      'Pencil and sketch pad {{comfort:安慰}} her.',
+      'She discovers she likes to be alone.',
+      '',
+      "Seasons melt into seasons",
+      "on her family's farm. Georgia",
+      '{{struggles:掙扎}} to show on paper',
+      'what she sees.',
+    ],
+    speak:"Georgia roams the prairie. The trees and land keep her company. Pencil and sketch pad comfort her. She discovers she likes to be alone. Seasons melt into seasons on her family's farm. Georgia struggles to show on paper what she sees.",
+  },
+  {
+    emoji:'🎨', title:'Wanting to be an Artist', zh:'想成為藝術家',
+    lines:[
+      'At twelve, she takes painting lessons.',
+      'She tells her friend,',
+      '"I am going to be an artist."',
+      'But in 1899 only boys become artists.',
+      'A girl wishing to be one is {{scandalous:令人震驚的}}.',
+      '',
+      'Georgia sees life differently.',
+      'She paints and paints. Hours pass without notice.',
+      'She wonders if she can {{achieve:達到}} her dream.',
+    ],
+    speak:"At twelve, she takes painting lessons. She tells her friend, I am going to be an artist. But in 1899 only boys become artists. A girl wishing to be one is scandalous. Georgia sees life differently. She paints and paints. Hours pass without notice. She wonders if she can achieve her dream.",
+  },
+  {
+    emoji:'🖼️', title:'Art School', zh:'藝術學校',
+    lines:[
+      'She walks around a lake',
+      'and hikes into the woods.',
+      'Everywhere she looks, shapes',
+      'hum and sing to her.',
+      '',
+      'At art school, brushes',
+      'and {{canvas:畫布}} become her {{language:語言}}.',
+      'Paint speaks for her.',
+      'Watercolor and oil are her words.',
+    ],
+    speak:"She walks around a lake and hikes into the woods. Everywhere she looks, shapes hum and sing to her. At art school, brushes and canvas become her language. Paint speaks for her. Watercolor and oil are her words.",
+  },
+  {
+    emoji:'🌆', title:'Life in the City', zh:'城市生活',
+    lines:[
+      'For a time, Georgia lives in the city.',
+      'She walks through canyons of {{concrete:混凝土}}.',
+      'She misses the outdoor world.',
+      'The sun steals a bite from a {{skyscraper:摩天大樓}}.',
+      'The Faraway place—open sky and land—',
+      'calls her.',
+    ],
+    speak:"For a time, Georgia lives in the city. She walks through canyons of concrete. She misses the outdoor world. The sun steals a bite from a skyscraper. The Faraway place, open sky and land, calls her.",
+  },
+  {
+    emoji:'🌺', title:"Giant Flowers & Ghost Ranch", zh:'巨大的花朵與幽靈農場',
+    lines:[
+      'The wideness and wonder of the world',
+      'amaze Georgia. She wants to share this magic with others.',
+      '',
+      'Flowers {{delight:令人喜悅}} her. She paints them as giants.',
+      'People stop to stare.',
+      "Georgia's flowers make them feel like tiny butterflies,",
+      'flitting through the {{universe:宇宙}} of her garden.',
+      '',
+      'She moves to Ghost Ranch in New Mexico.',
+      'Red hills, cliffs, silence, and the Faraway surround her.',
+    ],
+    speak:"The wideness and wonder of the world amaze Georgia. She wants to share this magic with others. Flowers delight her. She paints them as giants. People stop to stare. Georgia's flowers make them feel like tiny butterflies, flitting through the universe of her garden. She moves to Ghost Ranch in New Mexico. Red hills, cliffs, silence, and the Faraway surround her.",
+  },
+  {
+    emoji:'🌄', title:'The Enchanted Land', zh:'著迷的土地',
+    lines:[
+      'In the desert, she discovers',
+      '{{extraordinary:非凡的}} things—skulls.',
+      "The bones don't {{frighten:使恐懼}} Georgia.",
+      'To her, they are alive and strong.',
+      'Their beauty {{astounds:使驚訝}} her.',
+      '',
+      'Georgia {{expresses:表達}} feelings in her own way.',
+      'Words work. But for her, the color blue says it better.',
+      'Or red. Or a seashell. A pale bone. Sunset.',
+      '',
+      'The trees and hills whisper their secrets.',
+      'She hikes at dawn. She climbs a ridge.',
+      'The land {{enchants:使著迷}} her.',
+    ],
+    speak:"In the desert, she discovers extraordinary things, skulls. The bones don't frighten Georgia. To her, they are alive and strong. Their beauty astounds her. Georgia expresses feelings in her own way. Words work. But for her, the color blue says it better. Or red. Or a seashell. A pale bone. Sunset. The trees and hills whisper their secrets. She hikes at dawn. She climbs a ridge. The land enchants her.",
   },
 ];
 
@@ -1020,7 +991,7 @@ function renderStory() {
 function storyPrev() { if (sIdx > 0) { sIdx--; renderStory(); } }
 function storyNext() {
     if (sIdx < STORY.length - 1) { sIdx++; renderStory(); }
-    else { showOverlay('🎉','課文讀完了！','Daisy 讀完了整首 My Autumn Book！加油！','story'); }
+    else { showOverlay('🎉','課文讀完了！',"Daisy 讀完了整本 Through Georgia's Eyes！加油！",'story'); }
 }
 
 function storySpeak(idx) {
