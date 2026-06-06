@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>期末文法模擬測驗 📝</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(160deg, #e8eaf6 0%, #ede7f6 50%, #e8f5e9 100%);
+            min-height: 100vh;
+            padding-bottom: 32px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #4527a0, #6a1b9a, #ad1457);
+            padding: 14px 16px 12px;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2); color: white;
+            border: 2px solid rgba(255,255,255,0.4); padding: 6px 14px;
+            border-radius: 20px; font-size: 0.88rem; font-weight: bold;
+            cursor: pointer; text-decoration: none; white-space: nowrap;
+        }
+        .header h1 { color: white; font-size: 1.15rem; flex: 1; text-shadow: 1px 2px 6px rgba(0,0,0,0.4); }
+
+        /* ===== CONTAINER ===== */
+        .wrap { max-width: 500px; margin: 0 auto; padding: 16px 14px; }
+
+        /* ===== COVER PAGE ===== */
+        #cover {
+            background: white; border-radius: 24px; padding: 30px 24px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.12); text-align: center;
+            margin-top: 8px;
+        }
+        #cover .cover-icon { font-size: 4rem; margin-bottom: 12px; }
+        #cover h2 { font-size: 1.5rem; color: #4527a0; margin-bottom: 6px; }
+        #cover .sub { color: #888; font-size: 0.9rem; margin-bottom: 20px; }
+        .info-row {
+            display: flex; gap: 10px; margin-bottom: 22px; justify-content: center; flex-wrap: wrap;
+        }
+        .info-chip {
+            background: #ede7f6; color: #6a1b9a; border-radius: 20px;
+            padding: 6px 14px; font-size: 0.85rem; font-weight: bold;
+        }
+        #cover .start-btn {
+            width: 100%; padding: 15px; border-radius: 18px; border: none;
+            background: linear-gradient(135deg, #6a1b9a, #4527a0);
+            color: white; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 5px 0 #1a0072;
+            transition: 0.1s; font-family: inherit;
+        }
+        #cover .start-btn:active { transform: translateY(5px); box-shadow: none; }
+
+        /* ===== PROGRESS ===== */
+        .progress-bar {
+            background: #ddd; border-radius: 8px; height: 8px;
+            margin-bottom: 14px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; border-radius: 8px;
+            background: linear-gradient(90deg, #6a1b9a, #ad1457);
+            transition: width 0.4s;
+        }
+        .q-meta {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; font-size: 0.8rem;
+        }
+        .section-badge {
+            background: var(--sc, #ede7f6); color: var(--st, #6a1b9a);
+            padding: 3px 12px; border-radius: 12px; font-weight: bold;
+        }
+        .q-num { color: #aaa; font-weight: bold; }
+        .score-live { color: #4caf50; font-weight: bold; }
+
+        /* ===== QUESTION CARD ===== */
+        .q-card {
+            background: white; border-radius: 22px; padding: 22px 18px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 14px;
+            display: none;
+        }
+        .q-card.show { display: block; }
+        .q-instruction {
+            font-size: 0.8rem; color: #aaa; margin-bottom: 8px; font-style: italic;
+        }
+        .q-text {
+            font-size: 1.1rem; color: #333; line-height: 1.7; margin-bottom: 18px;
+        }
+        .q-blank {
+            display: inline-block; min-width: 70px; border-bottom: 2px solid #6a1b9a;
+            color: #6a1b9a; font-weight: bold; text-align: center; padding: 0 4px;
+        }
+
+        /* ===== OPTIONS ===== */
+        .opts { display: flex; flex-direction: column; gap: 9px; }
+        .opt {
+            padding: 13px 16px; border-radius: 14px; border: 3px solid #e0e0e0;
+            background: #fafafa; font-size: 1rem; font-weight: bold;
+            cursor: pointer; text-align: left; color: #444;
+            transition: 0.15s; display: flex; align-items: center; gap: 10px;
+            font-family: inherit;
+        }
+        .opt:active { transform: scale(0.98); }
+        .opt .opt-key {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #ede7f6; color: #6a1b9a;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: bold; flex-shrink: 0;
+        }
+        .opt.correct { border-color: #43a047; background: #e8f5e9; color: #2e7d32; }
+        .opt.correct .opt-key { background: #43a047; color: white; }
+        .opt.wrong   { border-color: #e53935; background: #ffebee; color: #c62828; }
+        .opt.wrong   .opt-key { background: #e53935; color: white; }
+        .opt.off     { pointer-events: none; opacity: 0.5; }
+        .opt.show-correct { border-color: #43a047; background: #e8f5e9; color: #2e7d32; }
+        .opt.show-correct .opt-key { background: #43a047; color: white; }
+
+        /* ===== FEEDBACK ===== */
+        .feedback {
+            text-align: center; font-weight: bold; font-size: 1rem;
+            min-height: 28px; margin-top: 12px; padding: 6px;
+            border-radius: 10px;
+        }
+        .feedback.ok  { background: #e8f5e9; color: #2e7d32; }
+        .feedback.bad { background: #ffebee; color: #c62828; }
+
+        /* ===== SECTION BREAK ===== */
+        .section-break {
+            background: white; border-radius: 22px; padding: 24px 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center;
+            display: none;
+        }
+        .section-break.show { display: block; }
+        .sb-icon { font-size: 3rem; margin-bottom: 10px; }
+        .sb-title { font-size: 1.3rem; font-weight: bold; color: #4527a0; margin-bottom: 6px; }
+        .sb-desc  { color: #888; font-size: 0.9rem; margin-bottom: 18px; line-height: 1.6; }
+        .sb-sub   { color: #6a1b9a; font-size: 0.85rem; font-weight: bold; margin-bottom: 16px; }
+
+        /* ===== RESULT PAGE ===== */
+        #result { display: none; }
+        .result-card {
+            background: white; border-radius: 24px; padding: 28px 20px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.12); margin-bottom: 14px;
+            text-align: center;
+        }
+        .result-emoji { font-size: 4rem; margin-bottom: 12px; }
+        .result-title { font-size: 1.6rem; font-weight: bold; color: #4527a0; margin-bottom: 6px; }
+        .result-score { font-size: 3rem; font-weight: bold; color: #6a1b9a; margin: 10px 0 4px; }
+        .result-sub   { color: #888; font-size: 0.9rem; margin-bottom: 20px; }
+
+        .section-scores { margin-bottom: 20px; }
+        .ss-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem;
+        }
+        .ss-row:last-child { border-bottom: none; }
+        .ss-label { color: #555; font-weight: bold; }
+        .ss-bar { flex: 1; height: 8px; background: #eee; border-radius: 4px; margin: 0 12px; overflow: hidden; }
+        .ss-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #6a1b9a, #ad1457); }
+        .ss-score { color: #6a1b9a; font-weight: bold; min-width: 40px; text-align: right; }
+
+        .wrong-review { text-align: left; }
+        .wr-item {
+            background: #fff8f8; border: 2px solid #ffcdd2; border-radius: 14px;
+            padding: 12px 14px; margin-bottom: 10px;
+        }
+        .wr-q    { font-size: 0.9rem; color: #555; margin-bottom: 6px; }
+        .wr-ans  { display: flex; gap: 10px; font-size: 0.85rem; }
+        .wr-your { color: #c62828; }
+        .wr-ok   { color: #2e7d32; }
+        .wr-section { font-size: 0.72rem; color: #aaa; margin-bottom: 4px; font-weight: bold; text-transform: uppercase; }
+
+        .big-btn {
+            width: 100%; padding: 14px; border-radius: 18px; border: none;
+            background: linear-gradient(135deg, #6a1b9a, #4527a0);
+            color: white; font-size: 1.05rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 5px 0 #1a0072;
+            transition: 0.1s; font-family: inherit; margin-top: 8px;
+        }
+        .big-btn:active { transform: translateY(5px); box-shadow: none; }
+        .big-btn.green { background: linear-gradient(135deg, #2e7d32, #1b5e20); box-shadow: 0 5px 0 #003300; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="daisy_hamster.html" class="back-btn">← 返回</a>
+    <h1>📝 期末文法模擬測驗</h1>
+</div>
+
+<div class="wrap">
+
+<!-- COVER -->
+<div id="cover">
+    <div class="cover-icon">📝</div>
+    <h2>期末文法模擬測驗</h2>
+    <div class="sub">Grade 1 · Units 4 & 5 · KCIS Hsinchu</div>
+    <div class="info-row">
+        <span class="info-chip">📋 34 題</span>
+        <span class="info-chip">📚 6 大主題</span>
+        <span class="info-chip">⭐ 加油！</span>
+    </div>
+    <div style="text-align:left; background:#f8f0ff; border-radius:16px; padding:14px 16px; margin-bottom:22px; font-size:0.88rem; color:#555; line-height:1.8;">
+        <b style="color:#6a1b9a;">考試範圍：</b><br>
+        A　Be Verbs (am / is / are / was / were)<br>
+        B　Verb Tenses (Past / Present / Future)<br>
+        C　Compound Sentences (and / but / or)<br>
+        D　Adverbs (when / how)<br>
+        E　Transitions (First / Next / Then / Last)<br>
+        F　Prepositions (in, on, at, above, beside…)
+    </div>
+    <button class="start-btn" onclick="startTest()">開始測驗！🚀</button>
+</div>
+
+<!-- QUIZ AREA -->
+<div id="quiz" style="display:none;">
+    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+    <div class="q-meta">
+        <span class="section-badge" id="s-badge">A. Be Verbs</span>
+        <span class="q-num" id="q-num">1 / 34</span>
+        <span class="score-live">✅ <span id="score-live">0</span></span>
+    </div>
+
+    <div class="q-card show" id="q-card">
+        <div class="q-instruction" id="q-inst"></div>
+        <div class="q-text" id="q-text"></div>
+        <div class="opts" id="q-opts"></div>
+        <div class="feedback" id="q-fb"></div>
+    </div>
+
+    <div class="section-break" id="sec-break">
+        <div class="sb-icon" id="sb-icon"></div>
+        <div class="sb-title" id="sb-title"></div>
+        <div class="sb-desc"  id="sb-desc"></div>
+        <div class="sb-sub"   id="sb-sub"></div>
+        <button class="big-btn" onclick="nextAfterBreak()">繼續作答 ▶</button>
+    </div>
+</div>
+
+<!-- RESULT -->
+<div id="result">
+    <div class="result-card">
+        <div class="result-emoji" id="r-emoji">🎉</div>
+        <div class="result-title" id="r-title">測驗完成！</div>
+        <div class="result-score" id="r-score">30 / 34</div>
+        <div class="result-sub"   id="r-sub">答對率 88%</div>
+        <button class="big-btn green" onclick="location.reload()">再測一次 🔄</button>
+    </div>
+
+    <div class="result-card">
+        <div style="font-size:1rem; font-weight:bold; color:#4527a0; margin-bottom:14px; text-align:left;">📊 各主題得分</div>
+        <div class="section-scores" id="sec-scores"></div>
+    </div>
+
+    <div class="result-card" id="wrong-card" style="display:none;">
+        <div style="font-size:1rem; font-weight:bold; color:#c62828; margin-bottom:14px; text-align:left;">❌ 錯誤題目複習</div>
+        <div class="wrong-review" id="wrong-list"></div>
+    </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ============================================================
+   QUESTION DATA
+   ============================================================ */
+const SECTIONS = [
+    {
+        id: 'A',
+        title: 'Be Verbs',
+        icon: '🔵',
+        color: '#ede7f6', tcolor: '#4527a0',
+        desc: 'am / is / are 是現在式 Be 動詞\nwas / were 是過去式 Be 動詞',
+        inst: '選出正確的 Be 動詞填入空格',
+        questions: [
+            { q:'My name ___ Katie.',          opts:['am','is','are','was'],  ans:'is' },
+            { q:'I ___ seven years old.',       opts:['am','is','are','were'], ans:'am' },
+            { q:'It ___ raining yesterday.',    opts:['am','is','was','were'], ans:'was' },
+            { q:'We ___ at the park last night.',opts:['am','is','are','were'],ans:'were' },
+            { q:'They ___ good friends.',       opts:['am','is','are','was'],  ans:'are' },
+            { q:'Birds ___ in the nest.',       opts:['am','is','are','was'],  ans:'are' },
+        ]
+    },
+    {
+        id: 'B',
+        title: 'Verb Tenses',
+        icon: '⏰',
+        color: '#e3f2fd', tcolor: '#0d47a1',
+        desc: 'Present 現在式 → 正在發生\nPast 過去式 → 已經發生\nFuture 未來式 → 將要發生',
+        inst: '判斷句子是什麼時態',
+        questions: [
+            { q:'He reads a book today.',            opts:['Present','Past','Future'], ans:'Present' },
+            { q:'She talked to me yesterday.',       opts:['Present','Past','Future'], ans:'Past' },
+            { q:'Soon we will have a test.',         opts:['Present','Past','Future'], ans:'Future' },
+            { q:'We watched a movie last week.',     opts:['Present','Past','Future'], ans:'Past' },
+            { q:'They will clean the room later.',   opts:['Present','Past','Future'], ans:'Future' },
+            { q:'Dad and I walk to the park every Tuesday.', opts:['Present','Past','Future'], ans:'Present' },
+        ]
+    },
+    {
+        id: 'C',
+        title: 'Compound Sentences',
+        icon: '🔗',
+        color: '#e8f5e9', tcolor: '#1b5e20',
+        desc: 'and → 兩件事都對\nbut → 轉折、對比\nor → 二選一',
+        inst: '選出正確的連接詞',
+        questions: [
+            { q:'He sweeps the floor, ___ he washes the dishes.',       opts:['and','but','or'], ans:'and' },
+            { q:'Ted wanted to buy a new toy, ___ dad said no.',         opts:['and','but','or'], ans:'but' },
+            { q:'You may play in the park, ___ you may stay at home.',   opts:['and','but','or'], ans:'or' },
+            { q:'Tracy likes milk, ___ she does not like milk tea.',     opts:['and','but','or'], ans:'but' },
+            { q:'Do you like apples, ___ do you like oranges?',          opts:['and','but','or'], ans:'or' },
+            { q:'I love fall, ___ I don\'t like winter.',                opts:['and','but','or'], ans:'but' },
+        ]
+    },
+    {
+        id: 'D',
+        title: 'Adverbs',
+        icon: '📢',
+        color: '#fff3e0', tcolor: '#bf360c',
+        desc: 'when adverbs → soon, now, today, tomorrow, yesterday, later, early\nhow adverbs → slowly, quickly, carefully, neatly, quietly, loudly, beautifully',
+        inst: '判斷副詞是 when（什麼時候）或 how（怎麼樣）',
+        questions: [
+            { q:'She sings beautifully.',                      opts:['when','how'], ans:'how' },
+            { q:'We will meet soon.',                          opts:['when','how'], ans:'when' },
+            { q:'My family will go on a trip tomorrow.',       opts:['when','how'], ans:'when' },
+            { q:'He quickly finished his test.',               opts:['when','how'], ans:'how' },
+            { q:'Lily walks slowly in the hallway.',           opts:['when','how'], ans:'how' },
+            { q:'The dog barks loudly.',                       opts:['when','how'], ans:'how' },
+            { q:'We will go to the park later.',               opts:['when','how'], ans:'when' },
+            { q:'She writes neatly on the paper.',             opts:['when','how'], ans:'how' },
+        ]
+    },
+    {
+        id: 'E',
+        title: 'Transitions',
+        icon: '🔢',
+        color: '#fce4ec', tcolor: '#880e4f',
+        desc: 'First → 第一\nNext → 接下來\nThen → 然後\nLast → 最後',
+        inst: '選出正確的順序轉折詞',
+        questions: [
+            { q:'___, leaves appear on the trees in spring.',            opts:['First','Next','Then','Last'], ans:'First' },
+            { q:'___, the sunlight helps plants grow in summer.',         opts:['First','Next','Then','Last'], ans:'Next' },
+            { q:'___, leaves change colors in fall.',                     opts:['First','Next','Then','Last'], ans:'Then' },
+            { q:'___, trees and plants stop growing in winter.',          opts:['First','Next','Then','Last'], ans:'Last' },
+            { q:'Tom is sad, ___ he cried loudly.',                      opts:['and','but','or','then'],      ans:'and' },
+            { q:'Kate has two dogs, ___ Kevin has one cat.',             opts:['and','but','or'],              ans:'and' },
+        ]
+    },
+    {
+        id: 'F',
+        title: 'Prepositions',
+        icon: '📍',
+        color: '#e0f2f1', tcolor: '#004d40',
+        desc: 'Place: at, on, in\nDirection: above, beside, near, around, over, under',
+        inst: '選出正確的介系詞',
+        questions: [
+            { q:'The toy is ___ the box.',                    opts:['in','on','under','beside'], ans:'in' },
+            { q:'I put my shoes ___ the chair.',              opts:['in','on','under','near'],   ans:'under' },
+            { q:'The fish swims ___ the turtle.',             opts:['in','beside','near','over'],ans:'near' },
+            { q:'We make friends ___ school.',                opts:['at','on','in','under'],     ans:'at' },
+            { q:'Brian sits ___ the chair.',                  opts:['at','on','in','beside'],    ans:'on' },
+            { q:'They draw ___ the room.',                    opts:['at','on','in','near'],      ans:'in' },
+            { q:'The kite is ___ your head.',                 opts:['above','under','beside','near'], ans:'above' },
+            { q:'Three birds fly ___ the tree.',              opts:['under','over','beside','in'],    ans:'over' },
+        ]
+    },
+];
+
+/* flatten into linear question list */
+const QS = [];
+SECTIONS.forEach((sec, si) => {
+    sec.questions.forEach((q, qi) => {
+        QS.push({ ...q, secIdx: si, secId: sec.id, secTitle: sec.title, inst: sec.inst });
+    });
+});
+const TOTAL = QS.length;
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let qIdx = 0;
+let score = 0;
+let wrongList = [];
+let sectionScores = SECTIONS.map(s => ({ correct: 0, total: s.questions.length }));
+let answered = false;
+let awaitingBreak = false;
+
+const BREAK_AFTER = (() => {
+    // index of LAST question of each section
+    let acc = 0; const r = {};
+    SECTIONS.forEach((s,i) => { acc += s.questions.length; r[acc-1] = i; });
+    return r;
+})();
+
+/* ============================================================
+   START
+   ============================================================ */
+function startTest() {
+    document.getElementById('cover').style.display = 'none';
+    document.getElementById('quiz').style.display = 'block';
+    renderQ();
+}
+
+/* ============================================================
+   RENDER QUESTION
+   ============================================================ */
+function renderQ() {
+    answered = false;
+    const q   = QS[qIdx];
+    const sec = SECTIONS[q.secIdx];
+
+    // progress
+    document.getElementById('prog').style.width = `${Math.round(qIdx / TOTAL * 100)}%`;
+    document.getElementById('q-num').textContent = `${qIdx + 1} / ${TOTAL}`;
+    document.getElementById('score-live').textContent = score;
+
+    // section badge
+    const badge = document.getElementById('s-badge');
+    badge.textContent = `${sec.id}. ${sec.title}`;
+    badge.style.setProperty('--sc', sec.color);
+    badge.style.setProperty('--st', sec.tcolor);
+    badge.style.background  = sec.color;
+    badge.style.color       = sec.tcolor;
+
+    // instruction
+    document.getElementById('q-inst').textContent = sec.inst;
+
+    // question text with blank
+    document.getElementById('q-text').innerHTML =
+        q.q.replace('___', '<span class="q-blank">___</span>');
+
+    // options
+    const optKeys = ['A','B','C','D'];
+    const shuffled = shuffle([...q.opts]);
+    document.getElementById('q-opts').innerHTML = shuffled.map((o, i) => `
+        <button class="opt" onclick="answer('${o}','${q.ans}',this)">
+            <span class="opt-key">${optKeys[i]}</span>${o}
+        </button>`).join('');
+
+    document.getElementById('q-fb').textContent = '';
+    document.getElementById('q-fb').className = 'feedback';
+
+    document.getElementById('q-card').classList.add('show');
+    document.getElementById('sec-break').classList.remove('show');
+}
+
+/* ============================================================
+   ANSWER
+   ============================================================ */
+function answer(chosen, correct, btn) {
+    if (answered) return;
+    answered = true;
+
+    const allBtns = document.querySelectorAll('.opt');
+    allBtns.forEach(b => b.classList.add('off'));
+
+    const fb = document.getElementById('q-fb');
+    if (chosen === correct) {
+        btn.classList.add('correct');
+        fb.textContent = '🎉 Correct! Well done!';
+        fb.classList.add('ok');
+        score++;
+        sectionScores[QS[qIdx].secIdx].correct++;
+        document.getElementById('score-live').textContent = score;
+    } else {
+        btn.classList.add('wrong');
+        fb.textContent = `❌ Correct answer: ${correct}`;
+        fb.classList.add('bad');
+        // show correct
+        allBtns.forEach(b => { if (b.textContent.trim().slice(1) === correct) b.classList.add('show-correct'); });
+        wrongList.push({ q: QS[qIdx].q, your: chosen, ans: correct, sec: QS[qIdx].secTitle });
+    }
+    sectionScores[QS[qIdx].secIdx]; // already counted above
+
+    setTimeout(() => {
+        qIdx++;
+        if (qIdx >= TOTAL) { showResult(); return; }
+        if (BREAK_AFTER[qIdx - 1] !== undefined) {
+            showBreak(BREAK_AFTER[qIdx - 1]);
+        } else {
+            renderQ();
+        }
+    }, 1400);
+}
+
+/* ============================================================
+   SECTION BREAK
+   ============================================================ */
+function showBreak(secDoneIdx) {
+    const done = SECTIONS[secDoneIdx];
+    const sc   = sectionScores[secDoneIdx];
+    const next = SECTIONS[secDoneIdx + 1];
+
+    document.getElementById('q-card').classList.remove('show');
+    const br = document.getElementById('sec-break');
+    br.classList.add('show');
+
+    document.getElementById('sb-icon').textContent  = done.icon;
+    document.getElementById('sb-title').textContent = `Section ${done.id} 完成！`;
+    document.getElementById('sb-desc').innerHTML    =
+        `本段得分：<b style="color:${done.tcolor}">${sc.correct} / ${done.total}</b>`;
+    document.getElementById('sb-sub').textContent   = next
+        ? `下一段：Section ${next.id} — ${next.title} ${next.icon}`
+        : '最後一段完成！';
+}
+
+function nextAfterBreak() {
+    document.getElementById('sec-break').classList.remove('show');
+    document.getElementById('q-card').classList.add('show');
+    renderQ();
+}
+
+/* ============================================================
+   RESULT
+   ============================================================ */
+function showResult() {
+    document.getElementById('quiz').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+
+    const pct = Math.round(score / TOTAL * 100);
+    const emoji = pct >= 90 ? '🏆' : pct >= 75 ? '⭐' : pct >= 60 ? '👍' : '💪';
+    const msg   = pct >= 90 ? 'Daisy 太厲害了！滿分等級！'
+                : pct >= 75 ? '做得很好！再加把勁！'
+                : pct >= 60 ? '不錯！繼續練習！'
+                : '沒關係，多練習就會進步！';
+
+    document.getElementById('r-emoji').textContent = emoji;
+    document.getElementById('r-title').textContent = msg;
+    document.getElementById('r-score').textContent = `${score} / ${TOTAL}`;
+    document.getElementById('r-sub').textContent   = `答對率 ${pct}%`;
+
+    // section breakdown
+    document.getElementById('sec-scores').innerHTML = SECTIONS.map((s, i) => {
+        const sc = sectionScores[i];
+        const pct2 = sc.total > 0 ? Math.round(sc.correct / sc.total * 100) : 0;
+        return `<div class="ss-row">
+            <span class="ss-label">${s.icon} ${s.id}. ${s.title}</span>
+            <div class="ss-bar"><div class="ss-fill" style="width:${pct2}%"></div></div>
+            <span class="ss-score">${sc.correct}/${sc.total}</span>
+        </div>`;
+    }).join('');
+
+    // wrong review
+    if (wrongList.length > 0) {
+        document.getElementById('wrong-card').style.display = 'block';
+        document.getElementById('wrong-list').innerHTML = wrongList.map(w => `
+            <div class="wr-item">
+                <div class="wr-section">${w.sec}</div>
+                <div class="wr-q">${w.q.replace('___','______')}</div>
+                <div class="wr-ans">
+                    <span class="wr-your">✗ ${w.your}</span>
+                    <span>→</span>
+                    <span class="wr-ok">✓ ${w.ans}</span>
+                </div>
+            </div>`).join('');
+    }
+}
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+</script>
+</body>
+</html>
