@@ -496,82 +496,31 @@
 // =====================================================================
 // SPEECH
 // =====================================================================
-// Cache API results so repeated taps don't re-fetch
-const _audioCache = {};
-let _currentAudio = null;
-
-async function speakWord(word) {
-  // Stop anything already playing
-  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
-
-  // Cached hit (false = no audio found → use fallback)
-  if (_audioCache[word] === false) { _speakFallback(word); return; }
-  if (_audioCache[word])           { _playUrl(_audioCache[word], word); return; }
-
-  // Fetch from Free Dictionary API
-  // Priority: _us_ URLs (Oxford American English) > any other URL > Web Speech fallback
-  try {
-    const res = await fetch(
-      'https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word),
-      { signal: AbortSignal.timeout(5000) }
-    );
-    if (!res.ok) throw new Error('not found');
-    const data = await res.json();
-
-    let usUrl = '', anyUrl = '';
-    for (const entry of data) {
-      for (const p of (entry.phonetics || [])) {
-        if (!p.audio) continue;
-        if (!usUrl && p.audio.includes('_us_')) usUrl = p.audio;
-        if (!anyUrl) anyUrl = p.audio;
-      }
-      if (usUrl) break;
-    }
-
-    const url = usUrl || anyUrl;
-    if (url) {
-      const resolved = url.startsWith('//') ? 'https:' + url : url;
-      _audioCache[word] = resolved;
-      _playUrl(resolved, word);
-    } else {
-      throw new Error('no audio');
-    }
-  } catch (_) {
-    _audioCache[word] = false;
-    _speakFallback(word);
-  }
+// Preload best available en-US voice once
+let _usVoice = null;
+function _loadVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  _usVoice =
+    voices.find(v => v.lang === 'en-US' && v.name.includes('Ava Enhanced')) ||
+    voices.find(v => v.lang === 'en-US' && v.name.includes('Samantha'))     ||
+    voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('google')) ||
+    voices.find(v => v.lang === 'en-US' && !v.name.toLowerCase().includes('compact')) ||
+    voices.find(v => v.lang === 'en-US') || null;
+}
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = _loadVoice;
+  _loadVoice();
 }
 
-function _playUrl(url, word) {
-  const a = new Audio(url);
-  _currentAudio = a;
-  a.play().catch(() => _speakFallback(word));
-}
-
-// Web Speech API fallback — selects best available American English voice
-function _speakFallback(word) {
+function speakWord(word) {
   if (!window.speechSynthesis) return;
-  const go = () => {
-    const voices = window.speechSynthesis.getVoices();
-    const utt = new SpeechSynthesisUtterance(word);
-    utt.lang  = 'en-US';
-    utt.rate  = 0.85;
-    utt.pitch = 1;
-    // Prefer high-quality US voices: Samantha (iOS), Ava Enhanced (iOS 17+),
-    // Google US English (Chrome), or any non-compact en-US voice
-    const pick =
-      voices.find(v => v.lang === 'en-US' && v.name.includes('Ava Enhanced')) ||
-      voices.find(v => v.lang === 'en-US' && v.name.includes('Samantha')) ||
-      voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('google')) ||
-      voices.find(v => v.lang === 'en-US' && !v.name.toLowerCase().includes('compact')) ||
-      voices.find(v => v.lang === 'en-US');
-    if (pick) utt.voice = pick;
-    window.speechSynthesis.speak(utt);
-  };
-  // Voices list may not be ready yet on first call
-  if (window.speechSynthesis.getVoices().length > 0) go();
-  else window.speechSynthesis.onvoiceschanged = go;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(word);
+  utt.lang  = 'en-US';
+  utt.rate  = 0.85;
+  utt.pitch = 1;
+  if (_usVoice) utt.voice = _usVoice;
+  window.speechSynthesis.speak(utt);
 }
 
 // =====================================================================
