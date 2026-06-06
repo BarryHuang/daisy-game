@@ -536,6 +536,12 @@ const VOCAB = [
     { w:'dusk',          e:'🌅', zh:'黃昏',           ex:'"From the bottom at dusk she sees a long line of cows."' },
 ];
 
+// Auto-highlight vocab in story reader
+const VOCAB_MAP = {};
+VOCAB.forEach(v => { VOCAB_MAP[v.w.toLowerCase()] = v; });
+const _vw = VOCAB.map(v => v.w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).sort((a,b) => b.length - a.length);
+const VOCAB_PATTERN = new RegExp(`\\b(${_vw.join('|')})\\b`, 'gi');
+
 const SEQ_SCENES = [
     { icon:'🌟', text:'Georgia\'s first memory: brightness of light in Wisconsin, 1887.', order:0 },
     { icon:'👨‍👩‍👧‍👦', text:'Runs and plays with brothers and sisters. Everyone works on the farm.', order:1 },
@@ -954,12 +960,31 @@ const STORY = [
   },
 ];
 
-// Parse {{word:zh}} → <span class="kw" ...>
+// Parse {{word:zh}} and auto-highlight all VOCAB words → tappable <span class="kw">
 function parseStoryLine(line) {
     if (line === '') return '<span class="story-line blank"></span>';
-    const html = line.replace(/\{\{([^:]+):([^}]+)\}\}/g, (_, w, zh) =>
-        `<span class="kw" onclick="showKw(this,'${w.replace(/'/g,"\\'")}','${zh.replace(/'/g,"\\'")}',event)">${w}</span>`
-    );
+    const parts = [];
+    let last = 0;
+    const re = /\{\{([^:]+):([^}]+)\}\}/g;
+    let m;
+    while ((m = re.exec(line)) !== null) {
+        if (m.index > last) parts.push({ t:'text', s: line.slice(last, m.index) });
+        parts.push({ t:'kw', w: m[1], zh: m[2] });
+        last = m.index + m[0].length;
+    }
+    if (last < line.length) parts.push({ t:'text', s: line.slice(last) });
+
+    const html = parts.map(p => {
+        if (p.t === 'kw') {
+            return `<span class="kw" onclick="showKw(this,'${p.w.replace(/'/g,"\\'")}','${p.zh.replace(/'/g,"\\'")}',event)">${p.w}</span>`;
+        }
+        VOCAB_PATTERN.lastIndex = 0;
+        return p.s.replace(VOCAB_PATTERN, match => {
+            const v = VOCAB_MAP[match.toLowerCase()];
+            if (!v) return match;
+            return `<span class="kw" onclick="showKw(this,'${v.w.replace(/'/g,"\\'")}','${v.zh.replace(/'/g,"\\'")}',event)">${match}</span>`;
+        });
+    }).join('');
     return `<span class="story-line">${html}</span>`;
 }
 
@@ -1016,6 +1041,12 @@ function showKw(el, word, zh, e) {
     popup.classList.add('show');
     clearTimeout(kwTimer);
     kwTimer = setTimeout(() => popup.classList.remove('show'), 2400);
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(word);
+        u.lang = 'en-US'; u.rate = 0.85; u.pitch = 1.0;
+        window.speechSynthesis.speak(u);
+    }
 }
 document.addEventListener('click', () => {
     clearTimeout(kwTimer);
