@@ -2,898 +2,775 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Daisy 期末發音互動測驗</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daisy 期末考發音模擬測驗卷</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: -apple-system, 'Arial', sans-serif;
-    background: #ede7ff;
-    color: #222;
-    padding-bottom: 100px;
-    min-height: 100vh;
-  }
-
-  /* ── Back link ── */
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 14px 20px;
-    font-size: 15px;
-    color: #7c4dff;
-    font-weight: bold;
-    text-decoration: none;
-  }
-  .back-link:active { opacity: 0.6; }
-
-  /* ── Exam wrapper ── */
-  #exam-wrap {
-    max-width: 768px;
-    margin: 0 auto;
-    padding: 0 16px 20px;
-  }
-
-  /* ── Header card ── */
-  .header-card {
-    background: white;
-    border-radius: 16px;
+    font-family: 'Arial', sans-serif;
+    background: #f5f0ff;
     padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 12px rgba(124,77,255,0.15);
-    border-top: 5px solid #7c4dff;
+    color: #222;
   }
-  .header-card h1 {
-    font-size: 20px;
+
+  .page {
+    background: white;
+    max-width: 780px;
+    margin: 0 auto 40px auto;
+    padding: 40px 48px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    page-break-after: always;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    border: 3px solid #7c4dff;
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 28px;
+    background: linear-gradient(135deg, #ede7ff 0%, #e3f2fd 100%);
+  }
+  .header h1 {
+    font-size: 22px;
     color: #4527a0;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
   }
-  .header-card .subtitle {
+  .header .subtitle {
     font-size: 13px;
     color: #666;
     margin-bottom: 14px;
   }
   .info-row {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .info-field {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-  }
-  .info-field label { font-weight: bold; color: #7c4dff; white-space: nowrap; }
-  .info-field input {
-    border: none;
-    border-bottom: 2px solid #ce93d8;
-    outline: none;
-    font-size: 14px;
-    padding: 2px 4px;
-    width: 120px;
-    color: #222;
-    background: transparent;
-  }
-
-  /* ── Progress bar ── */
-  .progress-wrap { margin-top: 4px; }
-  .progress-label {
-    display: flex;
     justify-content: space-between;
-    font-size: 13px;
-    color: #555;
-    margin-bottom: 6px;
+    font-size: 14px;
+    gap: 20px;
   }
-  .progress-bar-bg {
-    height: 10px;
-    background: #ede7ff;
-    border-radius: 10px;
-    overflow: hidden;
+  .info-row span {
+    border-bottom: 1.5px solid #555;
+    flex: 1;
+    padding-bottom: 2px;
   }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #7c4dff, #b388ff);
-    border-radius: 10px;
-    transition: width 0.3s ease;
-    width: 0%;
+  .info-row label {
+    font-weight: bold;
+    margin-right: 6px;
+    color: #4527a0;
   }
 
-  /* ── Section header ── */
-  .section-header {
+  /* ── Part Header ── */
+  .part-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 20px 0 12px;
+    margin: 28px 0 12px 0;
   }
-  .section-badge {
+  .part-badge {
     background: #7c4dff;
     color: white;
     font-size: 13px;
     font-weight: bold;
-    padding: 5px 14px;
+    padding: 4px 14px;
     border-radius: 20px;
     white-space: nowrap;
   }
-  .section-title {
+  .part-title {
     font-size: 15px;
     font-weight: bold;
     color: #333;
-    flex: 1;
   }
-  .section-score {
+  .part-score {
+    margin-left: auto;
     background: #fff3e0;
     border: 1.5px solid #ff9800;
     border-radius: 8px;
-    padding: 3px 10px;
+    padding: 3px 12px;
     font-size: 13px;
     color: #e65100;
     font-weight: bold;
     white-space: nowrap;
   }
+  .instruction {
+    font-size: 13px;
+    color: #555;
+    margin: 0 0 14px 0;
+    font-style: italic;
+  }
 
-  /* ── Passage box ── */
-  .passage-box {
-    background: #fffde7;
-    border: 1.5px solid #ffe082;
-    border-radius: 12px;
-    padding: 16px 18px;
+  /* ── Question Items ── */
+  .q-list { list-style: none; }
+  .q-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .q-num {
+    font-weight: bold;
+    color: #7c4dff;
+    min-width: 24px;
+  }
+
+  /* blank lines */
+  .blank {
+    display: inline-block;
+    border-bottom: 1.5px solid #333;
+    min-width: 80px;
+    margin: 0 4px;
+    vertical-align: bottom;
+    height: 20px;
+  }
+  .blank-sm { min-width: 50px; }
+  .blank-lg { min-width: 120px; }
+
+  /* choice boxes */
+  .choices {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+    margin-left: 32px;
+  }
+  .choice {
+    border: 1.5px solid #aaa;
+    border-radius: 6px;
+    padding: 3px 14px;
+    font-size: 14px;
+    cursor: default;
+    background: #fafafa;
+  }
+
+  /* word bank box */
+  .word-bank {
+    border: 1.5px dashed #7c4dff;
+    border-radius: 8px;
+    padding: 10px 16px;
     margin-bottom: 16px;
+    background: #f3efff;
+    font-size: 14px;
+    line-height: 2;
+  }
+  .word-bank strong {
+    color: #4527a0;
+    margin-right: 6px;
+  }
+  .word-bank .wlist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .word-bank .wlist span {
+    background: white;
+    border: 1px solid #c5b8ff;
+    border-radius: 6px;
+    padding: 2px 12px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  /* sort table */
+  .sort-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .sort-table th {
+    background: #7c4dff;
+    color: white;
+    padding: 8px 14px;
+    text-align: center;
+    border: 1px solid #5c35cc;
+    font-size: 15px;
+  }
+  .sort-table td {
+    border: 1px solid #ccc;
+    padding: 10px 14px;
+    height: 38px;
+    vertical-align: middle;
+    text-align: center;
+  }
+  .sort-table td:first-child { background: #f3efff; font-weight: bold; }
+
+  /* circle-the-word sentences */
+  .sent {
+    margin-bottom: 10px;
+    font-size: 15px;
+    line-height: 1.9;
+    padding-left: 28px;
+    position: relative;
+  }
+  .sent .num {
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+    color: #7c4dff;
+  }
+
+  /* prefix grid */
+  .prefix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .prefix-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 14px;
+    background: #fafafa;
+  }
+  .prefix-item .pnum { color: #7c4dff; font-weight: bold; min-width: 20px; }
+  .prefix-item .pblank {
+    border-bottom: 1.5px solid #333;
+    min-width: 36px;
+    display: inline-block;
+    height: 20px;
+    vertical-align: bottom;
+  }
+  .prefix-item .pword { font-weight: bold; font-size: 16px; }
+
+  /* syllable divide */
+  .syl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .syl-item {
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 15px;
+    background: #fafafa;
+  }
+  .syl-item .si-num { color: #7c4dff; font-weight: bold; }
+  .syl-item .si-word { font-size: 17px; font-weight: bold; margin: 4px 0; }
+  .syl-item .si-line {
+    border-bottom: 1.5px solid #333;
+    min-width: 100px;
+    display: inline-block;
+    height: 20px;
+    margin-top: 4px;
+  }
+
+  /* reading passage */
+  .passage-box {
+    border: 1.5px solid #ccc;
+    border-radius: 10px;
+    padding: 16px 20px;
+    background: #fffde7;
+    margin-bottom: 18px;
     font-size: 15px;
     line-height: 2;
   }
   .passage-box h3 {
     text-align: center;
     font-size: 17px;
+    margin-bottom: 10px;
     color: #4527a0;
     text-decoration: underline;
-    margin-bottom: 10px;
   }
 
-  /* ── Question card ── */
-  .q-card {
-    background: white;
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
-  }
-  .q-num-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .q-num-badge {
-    background: #ede7ff;
-    color: #7c4dff;
-    font-weight: bold;
-    font-size: 13px;
-    padding: 3px 9px;
-    border-radius: 12px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .q-text {
-    font-size: 17px;
-    line-height: 1.6;
-    color: #222;
-    font-weight: 500;
-  }
-  .q-sub {
-    font-size: 13px;
-    color: #888;
-    margin-top: 2px;
-  }
-
-  /* ── MCQ options ── */
-  .options-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .opt-btn {
-    width: 100%;
-    min-height: 54px;
-    padding: 12px 18px;
-    border: 2px solid #b0bec5;
-    border-radius: 28px;
-    background: #fafafa;
-    font-size: 16px;
-    color: #333;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.15s ease;
-    -webkit-appearance: none;
-    line-height: 1.4;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    touch-action: manipulation;
-  }
-  .opt-btn:active { transform: scale(0.98); }
-  .opt-btn.selected {
-    background: #7c4dff;
-    border-color: #7c4dff;
-    color: white;
-    font-weight: bold;
-  }
-  .opt-letter {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.06);
-    font-size: 13px;
-    font-weight: bold;
-    flex-shrink: 0;
-  }
-  .opt-btn.selected .opt-letter {
-    background: rgba(255,255,255,0.25);
-    color: white;
-  }
-
-  /* review states */
-  .opt-btn.correct {
-    background: #2e7d32;
-    border-color: #2e7d32;
-    color: white;
-  }
-  .opt-btn.correct .opt-letter { background: rgba(255,255,255,0.25); color: white; }
-  .opt-btn.wrong {
-    background: #c62828;
-    border-color: #c62828;
-    color: white;
-  }
-  .opt-btn.wrong .opt-letter { background: rgba(255,255,255,0.25); color: white; }
-  .opt-btn.show-correct {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-    color: #1b5e20;
-    font-weight: bold;
-  }
-
-  /* ── Feedback tag ── */
-  .feedback-tag {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    padding: 6px 14px;
-    border-radius: 20px;
-    display: inline-block;
-  }
-  .feedback-tag.correct-tag { background: #e8f5e9; color: #2e7d32; }
-  .feedback-tag.wrong-tag { background: #ffebee; color: #c62828; }
-
-  /* ── Sticky submit ── */
-  #submit-area {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 14px 20px;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 -2px 16px rgba(0,0,0,0.12);
-    z-index: 100;
-  }
-  #submit-btn {
-    display: block;
-    width: 100%;
-    max-width: 768px;
-    margin: 0 auto;
-    height: 56px;
-    border: none;
-    border-radius: 28px;
-    background: linear-gradient(135deg, #7c4dff, #651fff);
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 2px;
-    touch-action: manipulation;
-    -webkit-appearance: none;
-  }
-  #submit-btn:disabled {
-    background: #b0bec5;
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-  #submit-btn:not(:disabled):active { transform: scale(0.97); }
-
-  /* ── Result screen ── */
-  #result-screen {
-    display: none;
-    max-width: 768px;
-    margin: 0 auto;
-    padding: 20px 16px 100px;
-  }
-  .result-card {
-    background: white;
-    border-radius: 20px;
-    padding: 32px 24px;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(124,77,255,0.15);
-    margin-bottom: 16px;
-    border-top: 6px solid #7c4dff;
-  }
-  .result-score-big {
-    font-size: 72px;
-    font-weight: 900;
-    color: #7c4dff;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-  .result-out-of {
-    font-size: 18px;
-    color: #888;
-    margin-bottom: 16px;
-  }
-  .result-stars {
-    font-size: 40px;
-    letter-spacing: 4px;
-    margin-bottom: 16px;
-  }
-  .result-msg {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-  }
-  .result-sub {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 24px;
-  }
-  .score-table-wrap {
-    background: #fafafa;
+  /* score summary */
+  .score-summary {
+    margin-top: 36px;
+    border: 2px solid #7c4dff;
     border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 24px;
-    border: 1px solid #e0e0e0;
   }
-  .score-table {
+  .score-summary table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
   }
-  .score-table th {
+  .score-summary th {
     background: #7c4dff;
     color: white;
-    padding: 8px 4px;
+    padding: 8px;
     text-align: center;
   }
-  .score-table td {
-    border: 1px solid #e0e0e0;
-    padding: 8px 4px;
+  .score-summary td {
+    border: 1px solid #ddd;
+    padding: 8px;
     text-align: center;
+    height: 36px;
   }
-  .score-table tr:last-child td { font-weight: bold; background: #ede7ff; }
-  .result-btn {
-    display: block;
-    width: 100%;
-    height: 54px;
+  .score-summary td:first-child { font-weight: bold; background: #f3efff; text-align: left; padding-left: 12px; }
+  .total-row td { background: #ede7ff; font-weight: bold; font-size: 15px; }
+
+  /* answer key page */
+  .answer-key {
+    background: #e8f5e9;
+    border: 2px dashed #388e3c;
+    border-radius: 12px;
+    padding: 28px 36px;
+  }
+  .answer-key h2 {
+    color: #1b5e20;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+  .ak-section { margin-bottom: 18px; }
+  .ak-section h3 { color: #2e7d32; font-size: 14px; margin-bottom: 8px; border-bottom: 1px solid #a5d6a7; padding-bottom: 4px; }
+  .ak-section p { font-size: 14px; line-height: 2; color: #333; }
+  .ak-ans { font-weight: bold; color: #1b5e20; }
+
+  .divider {
     border: none;
-    border-radius: 27px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 12px;
-    touch-action: manipulation;
-    -webkit-appearance: none;
-  }
-  .btn-review {
-    background: linear-gradient(135deg, #7c4dff, #651fff);
-    color: white;
-  }
-  .btn-reset {
-    background: white;
-    color: #7c4dff;
-    border: 2px solid #7c4dff;
+    border-top: 1.5px dashed #ccc;
+    margin: 20px 0;
   }
 
-  @media (max-width: 420px) {
-    .result-score-big { font-size: 60px; }
-    .q-text { font-size: 15px; }
-    .opt-btn { font-size: 15px; }
-    .score-table { font-size: 11px; }
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; margin: 0; border-radius: 0; padding: 32px 48px; }
+    .no-print { display: none; }
   }
 </style>
 </head>
 <body>
 
-<a href="daisy_hamster.html" class="back-link">← 返回主頁</a>
-
-<!-- Exam view -->
-<div id="exam-wrap">
+<!-- ══════════════════════════════════════════════
+     PAGE 1 — 測驗卷正面 (Parts A–E)
+     ══════════════════════════════════════════════ -->
+<div class="page">
 
   <!-- Header -->
-  <div class="header-card">
-    <h1>期末發音互動測驗</h1>
-    <div class="subtitle">Final Exam Pronunciation Interactive Test &nbsp;|&nbsp; Week 10–16</div>
+  <div class="header">
+    <h1>期末考發音模擬測驗卷</h1>
+    <div class="subtitle">Final Exam Pronunciation Practice Test &nbsp;|&nbsp; Week 10 – 16</div>
     <div class="info-row">
-      <div class="info-field">
-        <label>Name:</label>
-        <input type="text" id="student-name" value="Daisy" placeholder="Daisy">
-      </div>
-      <div class="info-field">
-        <label>Date:</label>
-        <input type="text" id="student-date" placeholder="2026-__-__">
-      </div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-label">
-        <span id="progress-text">0 / 51 已作答</span>
-        <span id="progress-pct">0%</span>
-      </div>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-fill"></div>
-      </div>
+      <div><label>Name:</label><span>Daisy</span></div>
+      <div><label>Date:</label><span>&nbsp;</span></div>
+      <div><label>Score:</label><span>&nbsp;&nbsp;&nbsp;&nbsp;/ 100</span></div>
     </div>
   </div>
 
-  <!-- Questions rendered here -->
-  <div id="questions-container"></div>
-
-</div>
-
-<!-- Result screen -->
-<div id="result-screen">
-  <div class="result-card">
-    <div class="result-score-big" id="score-display">--</div>
-    <div class="result-out-of">/ 100 分</div>
-    <div class="result-stars" id="stars-display">☆☆☆</div>
-    <div class="result-msg" id="result-msg">--</div>
-    <div class="result-sub" id="result-sub">--</div>
-    <div class="score-table-wrap">
-      <table class="score-table">
-        <thead>
-          <tr id="score-table-header"></tr>
-        </thead>
-        <tbody>
-          <tr id="score-table-earned"></tr>
-          <tr id="score-table-max"></tr>
-        </tbody>
-      </table>
-    </div>
-    <button class="result-btn btn-review" onclick="showReview()">查看詳解</button>
-    <button class="result-btn btn-reset" onclick="resetExam()">重新作答</button>
+  <!-- ── Part A ── -->
+  <div class="part-header">
+    <span class="part-badge">Part A</span>
+    <span class="part-title">r-Controlled Vowel: <em>ar</em> &nbsp;–&nbsp; Circle the correct word. 圈出正確單字</span>
+    <span class="part-score">___/ 10</span>
   </div>
+  <p class="instruction">Read each clue. Circle the word that matches.</p>
+  <ul class="q-list">
+    <li><span class="q-num">1.</span> You park the car here at night. &nbsp;&rarr;&nbsp;
+      <span class="choice">garage</span><span class="choice">garden</span><span class="choice">grass</span>
+    </li>
+    <li><span class="q-num">2.</span> The dog makes this sound. &nbsp;&rarr;&nbsp;
+      <span class="choice">bark</span><span class="choice">burn</span><span class="choice">born</span>
+    </li>
+    <li><span class="q-num">3.</span> You can see it in the sky at night. &nbsp;&rarr;&nbsp;
+      <span class="choice">star</span><span class="choice">store</span><span class="choice">stir</span>
+    </li>
+    <li><span class="q-num">4.</span> It is the opposite of easy. &nbsp;&rarr;&nbsp;
+      <span class="choice">hard</span><span class="choice">herd</span><span class="choice">heard</span>
+    </li>
+    <li><span class="q-num">5.</span> Animals live here on a farm. &nbsp;&rarr;&nbsp;
+      <span class="choice">bar</span><span class="choice">barn</span><span class="choice">burn</span>
+    </li>
+  </ul>
+
+  <hr class="divider">
+
+  <!-- ── Part B ── -->
+  <div class="part-header">
+    <span class="part-badge">Part B</span>
+    <span class="part-title">r-Controlled Vowels: <em>er / ir / ur</em> &nbsp;–&nbsp; Fill in the blank. 填入正確字母</span>
+    <span class="part-score">___/ 10</span>
+  </div>
+  <p class="instruction">Write <strong>er</strong>, <strong>ir</strong>, or <strong>ur</strong> to complete each word.</p>
+
+  <div class="prefix-grid">
+    <div class="prefix-item"><span class="pnum">1.</span> f<span class="pblank"></span>n (a bird)</div>
+    <div class="prefix-item"><span class="pnum">2.</span> b<span class="pblank"></span>n (fire!)</div>
+    <div class="prefix-item"><span class="pnum">3.</span> f<span class="pblank"></span>st (number one)</div>
+    <div class="prefix-item"><span class="pnum">4.</span> st<span class="pblank"></span> (mix it up)</div>
+    <div class="prefix-item"><span class="pnum">5.</span> ch<span class="pblank"></span>ch (go on Sunday)</div>
+    <div class="prefix-item"><span class="pnum">6.</span> v<span class="pblank"></span>b (action word)</div>
+    <div class="prefix-item"><span class="pnum">7.</span> h<span class="pblank"></span> (she / not him)</div>
+    <div class="prefix-item"><span class="pnum">8.</span> sh<span class="pblank"></span>t (wear it)</div>
+    <div class="prefix-item"><span class="pnum">9.</span> tw<span class="pblank"></span>l (spin around)</div>
+    <div class="prefix-item"><span class="pnum">10.</span> sl<span class="pblank"></span>p (drink fast)</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Part C ── -->
+  <div class="part-header">
+    <span class="part-badge">Part C</span>
+    <span class="part-title">Long <em>o</em> Vowel Teams: <em>oa / ow / oe</em> &nbsp;–&nbsp; Sort the words. 分類單字</span>
+    <span class="part-score">___/ 10</span>
+  </div>
+  <p class="instruction">Write each word in the correct column.</p>
+  <div class="word-bank">
+    <strong>Word Bank:</strong>
+    <div class="wlist">
+      <span>road</span><span>blow</span><span>toe</span><span>float</span>
+      <span>show</span><span>coat</span><span>doe</span><span>glow</span>
+      <span>toad</span><span>snow</span>
+    </div>
+  </div>
+  <table class="sort-table">
+    <tr>
+      <th>oa</th>
+      <th>ow</th>
+      <th>oe</th>
+    </tr>
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- ── Part D ── -->
+  <div class="part-header">
+    <span class="part-badge">Part D</span>
+    <span class="part-title">Consonant Blends: <em>str- / spr- / spl- / scr- / squ-</em> &nbsp;–&nbsp; Circle the word you hear. 圈出聽到的單字</span>
+    <span class="part-score">___/ 10</span>
+  </div>
+  <p class="instruction">Circle <strong>one</strong> word in each row.</p>
+  <ul class="q-list">
+    <li><span class="q-num">1.</span><span class="choice">strip</span><span class="choice">trip</span><span class="choice">drip</span></li>
+    <li><span class="q-num">2.</span><span class="choice">splash</span><span class="choice">slash</span><span class="choice">flash</span></li>
+    <li><span class="q-num">3.</span><span class="choice">spray</span><span class="choice">stray</span><span class="choice">tray</span></li>
+    <li><span class="q-num">4.</span><span class="choice">spring</span><span class="choice">string</span><span class="choice">bring</span></li>
+    <li><span class="q-num">5.</span><span class="choice">squish</span><span class="choice">swish</span><span class="choice">wish</span></li>
+  </ul>
+
+  <hr class="divider">
+
+  <!-- ── Part E ── -->
+  <div class="part-header">
+    <span class="part-badge">Part E</span>
+    <span class="part-title">Vowel Teams: <em>ue / ew / ui</em> &nbsp;–&nbsp; Complete the word. 完成單字</span>
+    <span class="part-score">___/ 10</span>
+  </div>
+  <p class="instruction">Write <strong>ue</strong>, <strong>ew</strong>, or <strong>ui</strong> to complete each word. Then write the meaning in Chinese.</p>
+  <ul class="q-list">
+    <li><span class="q-num">1.</span> s<span class="blank blank-sm"></span>t &nbsp;&nbsp; 意思：<span class="blank"></span></li>
+    <li><span class="q-num">2.</span> tr<span class="blank blank-sm"></span> &nbsp;&nbsp; 意思：<span class="blank"></span></li>
+    <li><span class="q-num">3.</span> fr<span class="blank blank-sm"></span>t &nbsp;&nbsp; 意思：<span class="blank"></span></li>
+    <li><span class="q-num">4.</span> bl<span class="blank blank-sm"></span> &nbsp;&nbsp; 意思：<span class="blank"></span></li>
+    <li><span class="q-num">5.</span> d<span class="blank blank-sm"></span> &nbsp;&nbsp; 意思：<span class="blank"></span></li>
+  </ul>
+
+  <!-- Score Summary (bottom of page 1) -->
+  <div class="score-summary" style="margin-top:30px;">
+    <table>
+      <tr>
+        <th>Part</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th>
+      </tr>
+      <tr>
+        <td>Score</td>
+        <td></td><td></td><td></td><td></td><td></td>
+        <td></td><td></td><td></td><td></td><td></td>
+      </tr>
+    </table>
+  </div>
+
+</div><!-- end page 1 -->
+
+
+<!-- ══════════════════════════════════════════════
+     PAGE 2 — 測驗卷背面 (Parts F–J)
+     ══════════════════════════════════════════════ -->
+<div class="page">
+
+  <!-- ── Part F ── -->
+  <div class="part-header">
+    <span class="part-badge">Part F</span>
+    <span class="part-title">Prefixes: <em>re-</em> &nbsp;&amp;&nbsp; <em>un-</em> &nbsp;–&nbsp; Add the correct prefix. 加上正確字首</span>
+    <span class="part-score">___/ 10</span>
+  </div>
+  <p class="instruction">Write <strong>re-</strong> (again) or <strong>un-</strong> (not / opposite) before each word.</p>
+  <div class="prefix-grid">
+    <div class="prefix-item"><span class="pnum">1.</span><span class="pblank"></span><span class="pword">make</span> &nbsp;(make again)</div>
+    <div class="prefix-item"><span class="pnum">2.</span><span class="pblank"></span><span class="pword">lock</span> &nbsp;(opposite of lock)</div>
+    <div class="prefix-item"><span class="pnum">3.</span><span class="pblank"></span><span class="pword">pack</span> &nbsp;(opposite of pack)</div>
+    <div class="prefix-item"><span class="pnum">4.</span><span class="pblank"></span><span class="pword">learn</span> &nbsp;(learn again)</div>
+    <div class="prefix-item"><span class="pnum">5.</span><span class="pblank"></span><span class="pword">tie</span> &nbsp;(tie again)</div>
+    <div class="prefix-item"><span class="pnum">6.</span><span class="pblank"></span><span class="pword">zip</span> &nbsp;(opposite of zip)</div>
+    <div class="prefix-item"><span class="pnum">7.</span><span class="pblank"></span><span class="pword">set</span> &nbsp;(set again)</div>
+    <div class="prefix-item"><span class="pnum">8.</span><span class="pblank"></span><span class="pword">box</span> &nbsp;(opposite of box)</div>
+    <div class="prefix-item"><span class="pnum">9.</span><span class="pblank"></span><span class="pword">do</span> &nbsp;(opposite of do)</div>
+    <div class="prefix-item"><span class="pnum">10.</span><span class="pblank"></span><span class="pword">build</span> &nbsp;(build again)</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Part G ── -->
+  <div class="part-header">
+    <span class="part-badge">Part G</span>
+    <span class="part-title">Open &amp; Closed Syllables &nbsp;–&nbsp; Divide the words. 切割音節</span>
+    <span class="part-score">___/ 10</span>
+  </div>
+  <p class="instruction">Draw a line ( / ) to divide each word into syllables. Then write the two parts.</p>
+  <div class="syl-grid">
+    <div class="syl-item">
+      <div class="si-num">1.</div>
+      <div class="si-word">spider</div>
+      <div>→ <span class="si-line"></span></div>
+    </div>
+    <div class="syl-item">
+      <div class="si-num">2.</div>
+      <div class="si-word">begin</div>
+      <div>→ <span class="si-line"></span></div>
+    </div>
+    <div class="syl-item">
+      <div class="si-num">3.</div>
+      <div class="si-word">topic</div>
+      <div>→ <span class="si-line"></span></div>
+    </div>
+    <div class="syl-item">
+      <div class="si-num">4.</div>
+      <div class="si-word">today</div>
+      <div>→ <span class="si-line"></span></div>
+    </div>
+    <div class="syl-item">
+      <div class="si-num">5.</div>
+      <div class="si-word">seven</div>
+      <div>→ <span class="si-line"></span></div>
+    </div>
+    <div class="syl-item">
+      <div class="si-num">6.</div>
+      <div class="si-word">music</div>
+      <div>→ <span class="si-line"></span></div>
+    </div>
+    <div class="syl-item">
+      <div class="si-num">7.</div>
+      <div class="si-word">robot</div>
+      <div>→ <span class="si-line"></span></div>
+    </div>
+    <div class="syl-item">
+      <div class="si-num">8.</div>
+      <div class="si-word">upon</div>
+      <div>→ <span class="si-line"></span></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Part H ── -->
+  <div class="part-header">
+    <span class="part-badge">Part H</span>
+    <span class="part-title">Vowel Sound: <em>oo</em> &nbsp;–&nbsp; Circle the words with the /oo/ sound. 圈出 /oo/ 的單字</span>
+    <span class="part-score">___/ 6</span>
+  </div>
+  <p class="instruction">Circle <strong>only</strong> the words that have the same vowel sound as <strong>moon</strong>.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;padding-left:8px;">
+    <span class="choice" style="font-size:16px;padding:6px 18px;">pool</span>
+    <span class="choice" style="font-size:16px;padding:6px 18px;">book</span>
+    <span class="choice" style="font-size:16px;padding:6px 18px;">soon</span>
+    <span class="choice" style="font-size:16px;padding:6px 18px;">wood</span>
+    <span class="choice" style="font-size:16px;padding:6px 18px;">food</span>
+    <span class="choice" style="font-size:16px;padding:6px 18px;">look</span>
+    <span class="choice" style="font-size:16px;padding:6px 18px;">cool</span>
+    <span class="choice" style="font-size:16px;padding:6px 18px;">foot</span>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Part I ── -->
+  <div class="part-header">
+    <span class="part-badge">Part I</span>
+    <span class="part-title">Plural <em>-es</em> &nbsp;–&nbsp; Add -s or -es. 加上正確複數</span>
+    <span class="part-score">___/ 4</span>
+  </div>
+  <p class="instruction">Write the plural form of each noun. Add <strong>-s</strong> or <strong>-es</strong>.</p>
+  <ul class="q-list">
+    <li><span class="q-num">1.</span> fox → <span class="blank"></span></li>
+    <li><span class="q-num">2.</span> dish → <span class="blank"></span></li>
+    <li><span class="q-num">3.</span> lunch → <span class="blank"></span></li>
+    <li><span class="q-num">4.</span> hatch → <span class="blank"></span></li>
+  </ul>
+
+  <hr class="divider">
+
+  <!-- ── Part J ── -->
+  <div class="part-header">
+    <span class="part-badge">Part J</span>
+    <span class="part-title">Reading &amp; Comprehension &nbsp;–&nbsp; Read and answer. 閱讀理解</span>
+    <span class="part-score">___/ 10</span>
+  </div>
+  <div class="passage-box">
+    <h3>Fern the Bird</h3>
+    <p>
+      Fern is a bird. She sits on her <strong>perch</strong>. She sees the sun start to come up.
+      Fern <strong>chirps</strong> and <strong>twirls</strong>! Spring makes her perk up.
+      She flaps her wings and goes far. She goes to the park.
+      She sees grass and dirt. She sees bugs and twigs.
+      Then she feels a thirst. She sips from the pond. Slurp, slurp!
+    </p>
+  </div>
+  <p class="instruction">Circle the best answer.</p>
+  <ul class="q-list">
+    <li><span class="q-num">1.</span> What is Fern?
+      <div class="choices"><span class="choice">a. a fish</span><span class="choice">b. a bird</span><span class="choice">c. a frog</span></div>
+    </li>
+    <li><span class="q-num">2.</span> Where does Fern sit?
+      <div class="choices"><span class="choice">a. on a branch</span><span class="choice">b. in the pond</span><span class="choice">c. on her perch</span></div>
+    </li>
+    <li><span class="q-num">3.</span> What makes Fern perk up?
+      <div class="choices"><span class="choice">a. summer</span><span class="choice">b. spring</span><span class="choice">c. winter</span></div>
+    </li>
+    <li><span class="q-num">4.</span> What does Fern see at the park? (Circle ALL correct answers)
+      <div class="choices"><span class="choice">a. grass and dirt</span><span class="choice">b. fish and frogs</span><span class="choice">c. bugs and twigs</span></div>
+    </li>
+    <li><span class="q-num">5.</span> The word <em>chirp</em> has which vowel pattern?
+      <div class="choices"><span class="choice">a. ir</span><span class="choice">b. ar</span><span class="choice">c. oa</span></div>
+    </li>
+  </ul>
+
+</div><!-- end page 2 -->
+
+
+<!-- ══════════════════════════════════════════════
+     PAGE 3 — Answer Key (Teacher Copy)
+     ══════════════════════════════════════════════ -->
+<div class="page answer-key">
+  <h2>✅ Answer Key &nbsp;—&nbsp; Teacher Copy &nbsp;(不給學生)</h2>
+
+  <div class="ak-section">
+    <h3>Part A — ar words (2 pts each)</h3>
+    <p>
+      1. <span class="ak-ans">garage</span> &nbsp;
+      2. <span class="ak-ans">bark</span> &nbsp;
+      3. <span class="ak-ans">star</span> &nbsp;
+      4. <span class="ak-ans">hard</span> &nbsp;
+      5. <span class="ak-ans">barn</span>
+    </p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part B — er / ir / ur (1 pt each)</h3>
+    <p>
+      1. f<span class="ak-ans">er</span>n &nbsp;
+      2. b<span class="ak-ans">ur</span>n &nbsp;
+      3. f<span class="ak-ans">ir</span>st &nbsp;
+      4. st<span class="ak-ans">ir</span> &nbsp;
+      5. ch<span class="ak-ans">ur</span>ch &nbsp;
+      6. v<span class="ak-ans">er</span>b &nbsp;
+      7. h<span class="ak-ans">er</span> &nbsp;
+      8. sh<span class="ak-ans">ir</span>t &nbsp;
+      9. tw<span class="ak-ans">ir</span>l &nbsp;
+      10. sl<span class="ak-ans">ur</span>p
+    </p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part C — oa / ow / oe (1 pt each)</h3>
+    <p>
+      <strong>oa:</strong> <span class="ak-ans">road, float, coat, toad</span><br>
+      <strong>ow:</strong> <span class="ak-ans">blow, show, glow, snow</span><br>
+      <strong>oe:</strong> <span class="ak-ans">toe, doe</span>
+    </p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part D — Consonant Blends (2 pts each)</h3>
+    <p>
+      1. <span class="ak-ans">strip</span> &nbsp;
+      2. <span class="ak-ans">splash</span> &nbsp;
+      3. <span class="ak-ans">spray</span> &nbsp;
+      4. <span class="ak-ans">spring</span> &nbsp;
+      5. <span class="ak-ans">squish</span>
+    </p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part E — ue / ew / ui (2 pts each)</h3>
+    <p>
+      1. s<span class="ak-ans">ui</span>t (西裝) &nbsp;
+      2. tr<span class="ak-ans">ue</span> (真的) &nbsp;
+      3. fr<span class="ak-ans">ui</span>t (水果) &nbsp;
+      4. bl<span class="ak-ans">ue</span> (藍色) &nbsp;
+      5. d<span class="ak-ans">ue</span> (到期)
+    </p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part F — Prefixes re- / un- (1 pt each)</h3>
+    <p>
+      1. <span class="ak-ans">re</span>make &nbsp;
+      2. <span class="ak-ans">un</span>lock &nbsp;
+      3. <span class="ak-ans">un</span>pack &nbsp;
+      4. <span class="ak-ans">re</span>learn &nbsp;
+      5. <span class="ak-ans">re</span>tie &nbsp;
+      6. <span class="ak-ans">un</span>zip &nbsp;
+      7. <span class="ak-ans">re</span>set &nbsp;
+      8. <span class="ak-ans">un</span>box &nbsp;
+      9. <span class="ak-ans">un</span>do &nbsp;
+      10. <span class="ak-ans">re</span>build
+    </p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part G — Syllables (1.25 pts each)</h3>
+    <p>
+      1. spi/der &nbsp;
+      2. be/gin &nbsp;
+      3. top/ic &nbsp;
+      4. to/day &nbsp;
+      5. sev/en &nbsp;
+      6. mu/sic &nbsp;
+      7. ro/bot &nbsp;
+      8. u/pon
+    </p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part H — /oo/ sound (1 pt each)</h3>
+    <p>Circle: <span class="ak-ans">pool, soon, food, cool</span><br>
+    (book, wood, look, foot = short /oo/ sound — do NOT circle)</p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part I — Plural -es (1 pt each)</h3>
+    <p>
+      1. <span class="ak-ans">foxes</span> &nbsp;
+      2. <span class="ak-ans">dishes</span> &nbsp;
+      3. <span class="ak-ans">lunches</span> &nbsp;
+      4. <span class="ak-ans">hatches</span>
+    </p>
+  </div>
+
+  <div class="ak-section">
+    <h3>Part J — Reading Comprehension (2 pts each)</h3>
+    <p>
+      1. <span class="ak-ans">b. a bird</span> &nbsp;
+      2. <span class="ak-ans">c. on her perch</span> &nbsp;
+      3. <span class="ak-ans">b. spring</span> &nbsp;
+      4. <span class="ak-ans">a &amp; c (grass and dirt / bugs and twigs)</span> &nbsp;
+      5. <span class="ak-ans">a. ir</span>
+    </p>
+  </div>
+
+  <div style="margin-top:28px;border-top:2px solid #a5d6a7;padding-top:18px;">
+    <strong style="color:#1b5e20;">Total: 100 points</strong><br>
+    <span style="font-size:13px;color:#555;">
+      A(10) + B(10) + C(10) + D(10) + E(10) + F(10) + G(10) + H(6) + I(4) + J(10) = 100
+    </span>
+  </div>
+</div><!-- end answer key page -->
+
+<div class="no-print" style="text-align:center;margin:20px;color:#888;font-size:13px;">
+  🖨️ 建議用瀏覽器列印 (Ctrl+P)，選擇「A4」，關閉頁首頁尾，縮放 100%
 </div>
 
-<!-- Sticky submit -->
-<div id="submit-area">
-  <button id="submit-btn" onclick="submitExam()" disabled>交卷</button>
-</div>
-
-<script>
-// =====================================================================
-// DATA — all 10 parts
-// =====================================================================
-const PARTS = [
-  {
-    id: 'A',
-    title: 'r-Controlled Vowel: ar — 選出正確單字',
-    instruction: '根據提示選出正確的英文單字。',
-    pointEach: 2,
-    maxScore: 10,
-    questions: [
-      { text: 'You park your car here at night.', options: ['garage', 'garden', 'grass'], answer: 'garage' },
-      { text: 'The dog makes this sound.', options: ['bark', 'burn', 'born'], answer: 'bark' },
-      { text: 'You can see it in the sky at night.', options: ['star', 'store', 'stir'], answer: 'star' },
-      { text: "It's the opposite of easy.", options: ['hard', 'herd', 'heard'], answer: 'hard' },
-      { text: 'Animals live here on a farm.', options: ['bar', 'barn', 'burn'], answer: 'barn' }
-    ]
-  },
-  {
-    id: 'B',
-    title: 'r-Controlled Vowels: er / ir / ur — 選出正確母音',
-    instruction: '選出正確的母音字母組合（er、ir 或 ur）來完成單字。',
-    pointEach: 1,
-    maxScore: 10,
-    questions: [
-      { text: 'f___n', sub: '(a bird)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'fern' },
-      { text: 'b___n', sub: '(fire!)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'burn' },
-      { text: 'f___st', sub: '(number one)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'first' },
-      { text: 'st___', sub: '(mix it up)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'stir' },
-      { text: 'ch___ch', sub: '(go on Sunday)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'church' },
-      { text: 'v___b', sub: '(action word)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'verb' },
-      { text: 'h___', sub: '(she / not him)', options: ['er', 'ir', 'ur'], answer: 'er', word: 'her' },
-      { text: 'sh___t', sub: '(wear it)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'shirt' },
-      { text: 'tw___l', sub: '(spin around)', options: ['er', 'ir', 'ur'], answer: 'ir', word: 'twirl' },
-      { text: 'sl___p', sub: '(drink fast)', options: ['er', 'ir', 'ur'], answer: 'ur', word: 'slurp' }
-    ]
-  },
-  {
-    id: 'C',
-    title: 'Long o Vowel Teams: oa / ow / oe — 選出正確母音組合',
-    instruction: '選出正確的母音字母組合來完成單字。',
-    pointEach: 1,
-    maxScore: 10,
-    questions: [
-      { text: 'r___d', sub: '(you drive on it)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'road' },
-      { text: 'bl___', sub: '(wind does this)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'blow' },
-      { text: 't___', sub: '(on your foot)', options: ['oa', 'ow', 'oe'], answer: 'oe', word: 'toe' },
-      { text: 'fl___t', sub: '(in water)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'float' },
-      { text: 'sh___', sub: '(a performance)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'show' },
-      { text: 'c___t', sub: '(you wear it in winter)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'coat' },
-      { text: 'd___', sub: '(female deer)', options: ['oa', 'ow', 'oe'], answer: 'oe', word: 'doe' },
-      { text: 'gl___', sub: '(shine softly)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'glow' },
-      { text: 't___d', sub: '(an amphibian)', options: ['oa', 'ow', 'oe'], answer: 'oa', word: 'toad' },
-      { text: 'sn___', sub: '(falls in winter)', options: ['oa', 'ow', 'oe'], answer: 'ow', word: 'snow' }
-    ]
-  },
-  {
-    id: 'D',
-    title: 'Consonant Blends: str / spr / spl / scr / squ — 選出正確字首',
-    instruction: '選出正確的子音組合來完成單字。',
-    pointEach: 2,
-    maxScore: 10,
-    questions: [
-      { text: '___ip', sub: '(a narrow piece)', options: ['str', 'spr', 'spl'], answer: 'str', word: 'strip' },
-      { text: '___ash', sub: '(water flying up)', options: ['spl', 'str', 'scr'], answer: 'spl', word: 'splash' },
-      { text: '___ay', sub: '(mist from water)', options: ['spr', 'str', 'squ'], answer: 'spr', word: 'spray' },
-      { text: '___ing', sub: '(season after winter)', options: ['spr', 'str', 'squ'], answer: 'spr', word: 'spring' },
-      { text: '___ish', sub: '(press something soft)', options: ['squ', 'spl', 'scr'], answer: 'squ', word: 'squish' }
-    ]
-  },
-  {
-    id: 'E',
-    title: 'Vowel Teams: ue / ew / ui — 選出正確母音組合',
-    instruction: '選出正確的母音字母組合來完成單字。',
-    pointEach: 2,
-    maxScore: 10,
-    questions: [
-      { text: 's___t', sub: '(formal clothes)', options: ['ue', 'ew', 'ui'], answer: 'ui', word: 'suit' },
-      { text: 'tr___', sub: '(not false)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'true' },
-      { text: 'fr___t', sub: '(apples, bananas...)', options: ['ue', 'ew', 'ui'], answer: 'ui', word: 'fruit' },
-      { text: 'bl___', sub: '(color of sky)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'blue' },
-      { text: 'd___', sub: '(something owed)', options: ['ue', 'ew', 'ui'], answer: 'ue', word: 'due' }
-    ]
-  },
-  {
-    id: 'F',
-    title: 'Prefixes: re- / un- — 選出正確字首',
-    instruction: '選出正確的字首（re- 或 un-）來完成單字。',
-    pointEach: 1,
-    maxScore: 10,
-    questions: [
-      { text: '___make', sub: '(make again)', options: ['re', 'un'], answer: 're', word: 'remake' },
-      { text: '___lock', sub: '(opposite of lock)', options: ['re', 'un'], answer: 'un', word: 'unlock' },
-      { text: '___pack', sub: '(opposite of pack)', options: ['re', 'un'], answer: 'un', word: 'unpack' },
-      { text: '___learn', sub: '(learn again)', options: ['re', 'un'], answer: 're', word: 'relearn' },
-      { text: '___tie', sub: '(tie again)', options: ['re', 'un'], answer: 're', word: 'retie' },
-      { text: '___zip', sub: '(opposite of zip)', options: ['re', 'un'], answer: 'un', word: 'unzip' },
-      { text: '___set', sub: '(set again)', options: ['re', 'un'], answer: 're', word: 'reset' },
-      { text: '___box', sub: '(opposite of box)', options: ['re', 'un'], answer: 'un', word: 'unbox' },
-      { text: '___do', sub: '(opposite of do)', options: ['re', 'un'], answer: 'un', word: 'undo' },
-      { text: '___build', sub: '(build again)', options: ['re', 'un'], answer: 're', word: 'rebuild' }
-    ]
-  },
-  {
-    id: 'G',
-    title: 'Open & Closed Syllables — 選出正確音節切割',
-    instruction: '選出正確的音節切割方式。',
-    pointEach: 1,
-    maxScore: 8,
-    questions: [
-      { text: 'spider', sub: 'How do you divide this word?', options: ['spi/der', 'sp/ider', 'spid/er'], answer: 'spi/der' },
-      { text: 'begin', sub: 'How do you divide this word?', options: ['beg/in', 'be/gin', 'b/egin'], answer: 'be/gin' },
-      { text: 'topic', sub: 'How do you divide this word?', options: ['to/pic', 'top/ic', 't/opic'], answer: 'top/ic' },
-      { text: 'today', sub: 'How do you divide this word?', options: ['tod/ay', 'to/day', 't/oday'], answer: 'to/day' },
-      { text: 'seven', sub: 'How do you divide this word?', options: ['sev/en', 'se/ven', 's/even'], answer: 'sev/en' },
-      { text: 'music', sub: 'How do you divide this word?', options: ['mu/sic', 'mus/ic', 'm/usic'], answer: 'mu/sic' },
-      { text: 'robot', sub: 'How do you divide this word?', options: ['rob/ot', 'ro/bot', 'r/obot'], answer: 'ro/bot' },
-      { text: 'upon', sub: 'How do you divide this word?', options: ['u/pon', 'up/on', 'upo/n'], answer: 'u/pon' }
-    ]
-  },
-  {
-    id: 'H',
-    title: 'Vowel Sound: oo — 選出含 /oo/ 長音的單字',
-    instruction: '哪個單字有 moon 一樣的長 /oo/ 音？(Long /oo/ sound)',
-    pointEach: 2,
-    maxScore: 8,
-    questions: [
-      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(1)', options: ['pool', 'book'], answer: 'pool' },
-      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(2)', options: ['soon', 'wood'], answer: 'soon' },
-      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(3)', options: ['food', 'look'], answer: 'food' },
-      { text: 'Which word has the LONG /oo/ sound like in "moon"?', sub: '(4)', options: ['cool', 'foot'], answer: 'cool' }
-    ]
-  },
-  {
-    id: 'I',
-    title: 'Plural -es — 選出正確複數',
-    instruction: '選出每個單字正確的複數形式。',
-    pointEach: 1,
-    maxScore: 4,
-    questions: [
-      { text: 'fox →', options: ['foxes', 'foxs', 'fox'], answer: 'foxes' },
-      { text: 'dish →', options: ['dishs', 'dishes', 'dishies'], answer: 'dishes' },
-      { text: 'lunch →', options: ['lunchs', 'lunches', 'lunchies'], answer: 'lunches' },
-      { text: 'hatch →', options: ['hatchs', 'hatches', 'hatchies'], answer: 'hatches' }
-    ]
-  },
-  {
-    id: 'J',
-    title: 'Reading Comprehension: "Fern the Bird" — 閱讀理解',
-    instruction: '閱讀故事後選出最正確的答案。',
-    pointEach: 2,
-    maxScore: 10,
-    passage: true,
-    questions: [
-      { text: 'What is Fern?', options: ['a fish', 'a bird', 'a frog'], answer: 'a bird' },
-      { text: 'Where does Fern sit?', options: ['on a branch', 'in the pond', 'on her perch'], answer: 'on her perch' },
-      { text: 'What makes Fern perk up?', options: ['summer', 'spring', 'winter'], answer: 'spring' },
-      { text: 'What does Fern see at the park?', options: ['flowers and trees', 'grass and bugs and twigs', 'fish and frogs'], answer: 'grass and bugs and twigs' },
-      { text: 'The word "chirp" has which vowel pattern?', options: ['ir', 'ar', 'oa'], answer: 'ir' }
-    ]
-  }
-];
-
-const TOTAL_MCQ = PARTS.reduce((s, p) => s + p.questions.length, 0); // 51
-const POINTS_MAP = {}; // partId -> pointEach
-PARTS.forEach(p => POINTS_MAP[p.id] = p.pointEach);
-
-// =====================================================================
-// STATE
-// =====================================================================
-let userAnswers = {}; // key: "partIdx_qIdx", value: chosen string
-let submitted = false;
-
-// =====================================================================
-// RENDER
-// =====================================================================
-function buildKey(partIdx, qIdx) {
-  return `${partIdx}_${qIdx}`;
-}
-
-function escStr(s) {
-  return s.replace(/'/g, "\\'").replace(/\\/g, '\\\\');
-}
-
-function renderExam() {
-  const container = document.getElementById('questions-container');
-  container.innerHTML = '';
-  let globalQ = 1;
-
-  PARTS.forEach((part, partIdx) => {
-    // Section header
-    const secEl = document.createElement('div');
-    secEl.className = 'section-header';
-    secEl.innerHTML = `
-      <span class="section-badge">Part ${part.id}</span>
-      <span class="section-title">${part.title}</span>
-      <span class="section-score">${part.maxScore}分</span>
-    `;
-    container.appendChild(secEl);
-
-    // Instruction
-    const instr = document.createElement('p');
-    instr.style.cssText = 'font-size:14px;color:#666;margin-bottom:10px;font-style:italic;padding-left:4px;';
-    instr.textContent = part.instruction;
-    container.appendChild(instr);
-
-    // Passage (Part J)
-    if (part.passage) {
-      const pb = document.createElement('div');
-      pb.className = 'passage-box';
-      pb.innerHTML = `
-        <h3>Fern the Bird</h3>
-        <p>Fern is a bird. She sits on her <strong>perch</strong>. She sees the sun start to come up.
-        Fern <strong>chirps</strong> and <strong>twirls</strong>! Spring makes her perk up.
-        She flaps her wings and goes far. She goes to the park.
-        She sees grass and dirt. She sees bugs and twigs.
-        Then she feels a thirst. She sips from the pond. Slurp, slurp!</p>
-      `;
-      container.appendChild(pb);
-    }
-
-    part.questions.forEach((q, qIdx) => {
-      const key = buildKey(partIdx, qIdx);
-      const card = document.createElement('div');
-      card.className = 'q-card';
-      card.id = `qcard_${key}`;
-
-      const letters = ['A', 'B', 'C'];
-      const optsHtml = q.options.map((opt, i) => {
-        const escaped = opt.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
-        return `
-          <button class="opt-btn" id="opt_${key}_${i}"
-            onclick="selectAnswer('${key}', this.dataset.value, ${partIdx}, ${qIdx})"
-            data-value="${escaped}">
-            <span class="opt-letter">${letters[i] || i+1}</span>
-            <span>${opt}</span>
-          </button>
-        `;
-      }).join('');
-
-      const subHtml = q.sub ? `<div class="q-sub">${q.sub}</div>` : '';
-      card.innerHTML = `
-        <div class="q-num-row">
-          <span class="q-num-badge">${globalQ}</span>
-          <div>
-            <div class="q-text">${q.text}</div>
-            ${subHtml}
-          </div>
-        </div>
-        <div class="options-wrap" id="opts_${key}">${optsHtml}</div>
-        <div id="feedback_${key}" style="display:none;"></div>
-      `;
-      container.appendChild(card);
-      globalQ++;
-    });
-  });
-}
-
-// =====================================================================
-// INTERACTION
-// =====================================================================
-function selectAnswer(key, value, partIdx, qIdx) {
-  if (submitted) return;
-  userAnswers[key] = value;
-
-  const optsWrap = document.getElementById(`opts_${key}`);
-  optsWrap.querySelectorAll('.opt-btn').forEach(btn => {
-    if (btn.dataset.value === value) {
-      btn.classList.add('selected');
-    } else {
-      btn.classList.remove('selected');
-    }
-  });
-
-  updateProgress();
-}
-
-function updateProgress() {
-  const answered = Object.keys(userAnswers).length;
-  const pct = Math.round((answered / TOTAL_MCQ) * 100);
-  document.getElementById('progress-text').textContent = `${answered} / ${TOTAL_MCQ} 已作答`;
-  document.getElementById('progress-pct').textContent = `${pct}%`;
-  document.getElementById('progress-fill').style.width = `${pct}%`;
-  document.getElementById('submit-btn').disabled = (answered < TOTAL_MCQ);
-}
-
-// =====================================================================
-// SUBMIT
-// =====================================================================
-function submitExam() {
-  if (submitted) return;
-  submitted = true;
-
-  let partScores = {};
-  let totalRaw = 0;
-  let totalMax = 0;
-
-  PARTS.forEach((part, partIdx) => {
-    let earned = 0;
-    part.questions.forEach((q, qIdx) => {
-      const key = buildKey(partIdx, qIdx);
-      if (userAnswers[key] === q.answer) earned += part.pointEach;
-    });
-    partScores[part.id] = earned;
-    totalRaw += earned;
-    totalMax += part.maxScore;
-  });
-
-  // Scale to 100
-  const scaledScore = Math.round((totalRaw / totalMax) * 100);
-
-  // Hide exam, show result
-  document.getElementById('exam-wrap').style.display = 'none';
-  document.getElementById('result-screen').style.display = 'block';
-  document.getElementById('submit-area').style.display = 'none';
-
-  document.getElementById('score-display').textContent = scaledScore;
-
-  let stars, msg, sub;
-  if (scaledScore >= 90) {
-    stars = '⭐⭐⭐';
-    msg = '完美！Daisy 是發音高手！';
-    sub = '所有發音規則都掌握得很好！';
-  } else if (scaledScore >= 70) {
-    stars = '⭐⭐';
-    msg = '很棒！繼續加油！';
-    sub = '大部分的發音規則都答對了，再多練習幾個！';
-  } else if (scaledScore >= 50) {
-    stars = '⭐';
-    msg = '不錯！再努力一點！';
-    sub = '繼續練習發音規則，你可以做到的！';
-  } else {
-    stars = '💪';
-    msg = '繼續加油，你可以的！';
-    sub = '多複習一下發音規則，下次一定更好！';
-  }
-
-  document.getElementById('stars-display').textContent = stars;
-  document.getElementById('result-msg').textContent = msg;
-  document.getElementById('result-sub').textContent = sub;
-
-  // Build score table
-  const hdr = document.getElementById('score-table-header');
-  const earnedRow = document.getElementById('score-table-earned');
-  const maxRow = document.getElementById('score-table-max');
-
-  hdr.innerHTML = '<th>Part</th>' + PARTS.map(p => `<th>${p.id}</th>`).join('');
-  earnedRow.innerHTML = '<td>得分</td>' + PARTS.map(p => `<td>${partScores[p.id]}</td>`).join('');
-  maxRow.innerHTML = '<td>滿分</td>' + PARTS.map(p => `<td>${p.maxScore}</td>`).join('');
-}
-
-// =====================================================================
-// REVIEW
-// =====================================================================
-function showReview() {
-  document.getElementById('result-screen').style.display = 'none';
-  document.getElementById('exam-wrap').style.display = 'block';
-  document.getElementById('submit-area').style.display = 'none';
-  window.scrollTo(0, 0);
-
-  PARTS.forEach((part, partIdx) => {
-    part.questions.forEach((q, qIdx) => {
-      const key = buildKey(partIdx, qIdx);
-      const chosen = userAnswers[key];
-      const correct = q.answer;
-      const optsWrap = document.getElementById(`opts_${key}`);
-
-      optsWrap.querySelectorAll('.opt-btn').forEach(btn => {
-        btn.classList.remove('selected');
-        const val = btn.dataset.value;
-        if (val === correct && val === chosen) {
-          btn.classList.add('correct');
-        } else if (val === correct && val !== chosen) {
-          btn.classList.add('show-correct');
-        } else if (val === chosen && val !== correct) {
-          btn.classList.add('wrong');
-        }
-      });
-
-      const fbEl = document.getElementById(`feedback_${key}`);
-      fbEl.style.display = 'block';
-      if (chosen === correct) {
-        fbEl.innerHTML = `<span class="feedback-tag correct-tag">✓ 答對了！${q.word ? ' → ' + q.word : ''}</span>`;
-      } else {
-        fbEl.innerHTML = `<span class="feedback-tag wrong-tag">✗ 正確答案是：${correct}${q.word ? ' → ' + q.word : ''}</span>`;
-      }
-    });
-  });
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// =====================================================================
-// RESET
-// =====================================================================
-function resetExam() {
-  userAnswers = {};
-  submitted = false;
-
-  document.getElementById('result-screen').style.display = 'none';
-  document.getElementById('exam-wrap').style.display = 'block';
-  document.getElementById('submit-area').style.display = 'block';
-  document.getElementById('submit-btn').disabled = true;
-
-  renderExam();
-  updateProgress();
-  window.scrollTo(0, 0);
-}
-
-// =====================================================================
-// INIT
-// =====================================================================
-renderExam();
-updateProgress();
-
-const today = new Date();
-document.getElementById('student-date').value =
-  today.getFullYear() + '-' +
-  String(today.getMonth()+1).padStart(2,'0') + '-' +
-  String(today.getDate()).padStart(2,'0');
-</script>
 </body>
 </html>

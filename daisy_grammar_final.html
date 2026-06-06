@@ -1,1092 +1,722 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Daisy 期末文法詞彙互動測驗</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Daisy 文法期末模擬測驗</title>
+  <style>
+    :root {
+      --primary: #1565c0;
+      --primary-dark: #0d47a1;
+      --bg: #e3f2fd;
+      --correct: #2e7d32;
+      --wrong: #c62828;
+      --text: #0d1b2a;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; background: var(--bg); min-height: 100vh; }
 
-  body {
-    font-family: -apple-system, 'Arial', sans-serif;
-    background: #e3f2fd;
-    color: #222;
-    padding-bottom: 100px;
-    min-height: 100vh;
-  }
+    .header {
+      background: var(--primary-dark); color: white;
+      padding: 14px 18px 10px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .header h1 { font-size: 1.25em; font-weight: bold; }
+    .header p { font-size: 0.85em; opacity: 0.88; margin-top: 2px; }
+    .progress-bar { height: 5px; background: rgba(255,255,255,0.25); border-radius: 3px; margin-top: 10px; }
+    .progress-fill { height: 100%; background: #90caf9; border-radius: 3px; transition: width 0.3s; }
 
-  /* ── Back link ── */
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 14px 20px;
-    font-size: 15px;
-    color: #1565c0;
-    font-weight: bold;
-    text-decoration: none;
-  }
-  .back-link:active { opacity: 0.6; }
+    .content { padding: 14px; padding-bottom: 90px; max-width: 780px; margin: 0 auto; }
 
-  /* ── Exam wrapper ── */
-  #exam-wrap {
-    max-width: 768px;
-    margin: 0 auto;
-    padding: 0 16px 20px;
-  }
+    .section {
+      background: var(--primary); color: white;
+      border-radius: 14px; padding: 14px 16px; margin: 20px 0 12px;
+    }
+    .section-title { font-size: 1.05em; font-weight: bold; }
+    .section-desc { font-size: 0.85em; opacity: 0.9; margin-top: 4px; line-height: 1.4; }
 
-  /* ── Header card ── */
-  .header-card {
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 12px rgba(21,101,192,0.12);
-    border-top: 5px solid #1565c0;
-  }
-  .header-card h1 {
-    font-size: 20px;
-    color: #1565c0;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-  .header-card .subtitle {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 14px;
-  }
-  .info-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .info-field {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-  }
-  .info-field label { font-weight: bold; color: #1565c0; white-space: nowrap; }
-  .info-field input {
-    border: none;
-    border-bottom: 2px solid #90caf9;
-    outline: none;
-    font-size: 14px;
-    padding: 2px 4px;
-    width: 120px;
-    color: #222;
-    background: transparent;
-  }
+    .card {
+      background: white; border-radius: 16px;
+      padding: 16px; margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(21,101,192,0.1);
+      border: 2px solid transparent; transition: border-color 0.2s;
+    }
+    .card.done { border-color: #90caf9; }
+    .q-num { font-size: 0.78em; color: var(--primary); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .q-text { font-size: 1.08em; line-height: 1.6; color: var(--text); margin-bottom: 12px; }
+    .blank {
+      display: inline-block; min-width: 72px;
+      border-bottom: 2.5px solid var(--primary);
+      color: var(--primary); font-weight: bold;
+      text-align: center; padding: 0 6px;
+    }
 
-  /* ── Progress bar ── */
-  .progress-wrap { margin-top: 4px; }
-  .progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    color: #555;
-    margin-bottom: 6px;
-  }
-  .progress-bar-bg {
-    height: 10px;
-    background: #e3f2fd;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #1565c0, #42a5f5);
-    border-radius: 10px;
-    transition: width 0.3s ease;
-    width: 0%;
-  }
+    .opts { display: flex; flex-wrap: wrap; gap: 10px; }
+    .opt {
+      flex: 1; min-width: 100px; padding: 13px 10px; min-height: 54px;
+      border: 2px solid #bbdefb; border-radius: 12px;
+      background: #f5f9ff; color: var(--text);
+      font-size: 0.98em; font-weight: 500; cursor: pointer;
+      text-align: center; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .opt:active { transform: scale(0.96); }
+    .opt.sel { background: var(--primary); color: white; border-color: var(--primary); }
+    .opt.ok { background: var(--correct); color: white; border-color: var(--correct); }
+    .opt.err { background: var(--wrong); color: white; border-color: var(--wrong); }
 
-  /* ── Section header ── */
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 20px 0 12px;
-  }
-  .section-badge {
-    background: #1565c0;
-    color: white;
-    font-size: 13px;
-    font-weight: bold;
-    padding: 5px 14px;
-    border-radius: 20px;
-    white-space: nowrap;
-  }
-  .section-title {
-    font-size: 15px;
-    font-weight: bold;
-    color: #333;
-    flex: 1;
-  }
-  .section-score {
-    background: #fff3e0;
-    border: 1.5px solid #ff9800;
-    border-radius: 8px;
-    padding: 3px 10px;
-    font-size: 13px;
-    color: #e65100;
-    font-weight: bold;
-    white-space: nowrap;
-  }
+    .expl {
+      display: none; margin-top: 10px; padding: 8px 12px;
+      background: #fff8e1; border-radius: 8px;
+      border-left: 4px solid #ffa000;
+      font-size: 0.88em; color: #4e342e; line-height: 1.5;
+    }
+    .review-mode .expl { display: block; }
 
-  /* ── Question card ── */
-  .q-card {
-    background: white;
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
-  }
-  .q-num-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .q-num-badge {
-    background: #e3f2fd;
-    color: #1565c0;
-    font-weight: bold;
-    font-size: 13px;
-    padding: 3px 9px;
-    border-radius: 12px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .q-text {
-    font-size: 17px;
-    line-height: 1.6;
-    color: #222;
-    font-weight: 500;
-  }
+    .footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; padding: 10px 16px;
+      box-shadow: 0 -3px 14px rgba(0,0,0,0.15);
+      display: flex; align-items: center; gap: 12px; z-index: 200;
+    }
+    .footer-info { flex: 1; font-size: 0.88em; color: #555; }
+    .submit-btn {
+      background: var(--primary); color: white;
+      border: none; border-radius: 24px;
+      padding: 14px 26px; font-size: 1em; font-weight: bold;
+      cursor: pointer; min-height: 52px;
+    }
 
-  /* ── MCQ options ── */
-  .options-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .opt-btn {
-    width: 100%;
-    min-height: 54px;
-    padding: 12px 18px;
-    border: 2px solid #b0bec5;
-    border-radius: 28px;
-    background: #fafafa;
-    font-size: 16px;
-    color: #333;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.15s ease;
-    -webkit-appearance: none;
-    line-height: 1.4;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    touch-action: manipulation;
-  }
-  .opt-btn:active { transform: scale(0.98); }
-  .opt-btn.selected {
-    background: #1565c0;
-    border-color: #1565c0;
-    color: white;
-    font-weight: bold;
-  }
-  .opt-letter {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.06);
-    font-size: 13px;
-    font-weight: bold;
-    flex-shrink: 0;
-  }
-  .opt-btn.selected .opt-letter {
-    background: rgba(255,255,255,0.25);
-    color: white;
-  }
-
-  /* review states */
-  .opt-btn.correct {
-    background: #2e7d32;
-    border-color: #2e7d32;
-    color: white;
-  }
-  .opt-btn.correct .opt-letter { background: rgba(255,255,255,0.25); color: white; }
-  .opt-btn.wrong {
-    background: #c62828;
-    border-color: #c62828;
-    color: white;
-  }
-  .opt-btn.wrong .opt-letter { background: rgba(255,255,255,0.25); color: white; }
-  .opt-btn.show-correct {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-    color: #1b5e20;
-    font-weight: bold;
-  }
-
-  /* ── Feedback tag ── */
-  .feedback-tag {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    padding: 6px 14px;
-    border-radius: 20px;
-    display: inline-block;
-  }
-  .feedback-tag.correct-tag { background: #e8f5e9; color: #2e7d32; }
-  .feedback-tag.wrong-tag { background: #ffebee; color: #c62828; }
-
-  /* ── Writing part ── */
-  .writing-card {
-    background: white;
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
-    border-left: 4px solid #ff9800;
-  }
-  .writing-word {
-    font-size: 18px;
-    font-weight: bold;
-    color: #1565c0;
-    margin-bottom: 4px;
-  }
-  .writing-hint {
-    font-size: 13px;
-    color: #888;
-    margin-bottom: 10px;
-  }
-  .writing-textarea {
-    width: 100%;
-    min-height: 80px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 10px;
-    font-size: 16px;
-    font-family: inherit;
-    resize: vertical;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .writing-textarea:focus { border-color: #1565c0; }
-  .teacher-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #fff3e0;
-    border: 1px solid #ffb74d;
-    color: #e65100;
-    font-size: 12px;
-    font-weight: bold;
-    padding: 4px 10px;
-    border-radius: 12px;
-    margin-top: 8px;
-  }
-
-  /* ── Sticky submit ── */
-  #submit-area {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 14px 20px;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 -2px 16px rgba(0,0,0,0.12);
-    z-index: 100;
-  }
-  #submit-btn {
-    display: block;
-    width: 100%;
-    max-width: 768px;
-    margin: 0 auto;
-    height: 56px;
-    border: none;
-    border-radius: 28px;
-    background: linear-gradient(135deg, #1565c0, #0d47a1);
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 2px;
-    touch-action: manipulation;
-    -webkit-appearance: none;
-  }
-  #submit-btn:disabled {
-    background: #b0bec5;
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-  #submit-btn:not(:disabled):active { transform: scale(0.97); }
-
-  /* ── Result screen ── */
-  #result-screen {
-    display: none;
-    max-width: 768px;
-    margin: 0 auto;
-    padding: 20px 16px 100px;
-  }
-  .result-card {
-    background: white;
-    border-radius: 20px;
-    padding: 32px 24px;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(21,101,192,0.15);
-    margin-bottom: 16px;
-    border-top: 6px solid #1565c0;
-  }
-  .result-score-big {
-    font-size: 72px;
-    font-weight: 900;
-    color: #1565c0;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-  .result-out-of {
-    font-size: 18px;
-    color: #888;
-    margin-bottom: 16px;
-  }
-  .result-stars {
-    font-size: 40px;
-    letter-spacing: 4px;
-    margin-bottom: 16px;
-  }
-  .result-msg {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-  }
-  .result-sub {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 24px;
-  }
-  .result-note {
-    background: #fff3e0;
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 14px;
-    color: #e65100;
-    margin-bottom: 24px;
-    text-align: left;
-  }
-  .result-btn {
-    display: block;
-    width: 100%;
-    height: 54px;
-    border: none;
-    border-radius: 27px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 12px;
-    touch-action: manipulation;
-    -webkit-appearance: none;
-  }
-  .btn-review {
-    background: linear-gradient(135deg, #1565c0, #0d47a1);
-    color: white;
-  }
-  .btn-reset {
-    background: white;
-    color: #1565c0;
-    border: 2px solid #1565c0;
-  }
-
-  /* ── Part score summary ── */
-  .score-table-wrap {
-    background: white;
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
-    margin-bottom: 16px;
-  }
-  .score-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  .score-table th {
-    background: #1565c0;
-    color: white;
-    padding: 10px 8px;
-    text-align: center;
-  }
-  .score-table td {
-    border: 1px solid #e0e0e0;
-    padding: 10px 8px;
-    text-align: center;
-  }
-  .score-table tr:last-child td { font-weight: bold; background: #e3f2fd; }
-
-  @media (max-width: 420px) {
-    .result-score-big { font-size: 60px; }
-    .q-text { font-size: 15px; }
-    .opt-btn { font-size: 15px; }
-  }
-</style>
+    #result {
+      display: none; text-align: center;
+      padding: 30px 20px 100px; max-width: 600px; margin: 0 auto;
+    }
+    .result-emoji { font-size: 3.5em; margin: 20px 0; }
+    .result-score { font-size: 3.5em; font-weight: bold; color: var(--primary); }
+    .result-sub { font-size: 1em; color: #555; margin: 8px 0 24px; }
+    .result-detail {
+      background: white; border-radius: 16px; padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left; margin-bottom: 16px;
+    }
+    .detail-row {
+      display: flex; justify-content: space-between;
+      padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.88em;
+    }
+    .detail-row:last-child { border: none; }
+    .detail-label { color: #555; }
+    .detail-val { font-weight: bold; }
+    .action-btn {
+      background: var(--primary); color: white; border: none;
+      border-radius: 24px; padding: 16px 32px; font-size: 1.05em;
+      font-weight: bold; cursor: pointer; display: block;
+      width: 100%; margin-top: 10px; min-height: 54px;
+    }
+    .action-btn.secondary {
+      background: white; color: var(--primary); border: 2px solid var(--primary);
+    }
+    .back-link {
+      display: block; text-align: center; color: var(--primary);
+      text-decoration: none; font-size: 0.9em; margin-top: 16px; padding: 10px;
+    }
+    .review-bar {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; padding: 10px 16px;
+      box-shadow: 0 -3px 14px rgba(0,0,0,0.15); z-index: 200;
+    }
+  </style>
 </head>
 <body>
 
-<a href="daisy_hamster.html" class="back-link">← 返回主頁</a>
+<div class="header">
+  <h1>📝 文法期末模擬測驗</h1>
+  <p>Daisy · KCIS Hsinchu · Grade 1 · Units 4–5 · 40題 · 100分</p>
+  <div class="progress-bar"><div class="progress-fill" id="pbar" style="width:0%"></div></div>
+</div>
 
-<!-- Exam view -->
-<div id="exam-wrap">
+<div class="content" id="examContent">
 
-  <!-- Header -->
-  <div class="header-card">
-    <h1>期末文法詞彙互動測驗</h1>
-    <div class="subtitle">Final Grammar &amp; Vocabulary Exam &nbsp;|&nbsp; Week 10–16</div>
-    <div class="info-row">
-      <div class="info-field">
-        <label>Name:</label>
-        <input type="text" id="student-name" value="Daisy" placeholder="Daisy">
-      </div>
-      <div class="info-field">
-        <label>Date:</label>
-        <input type="text" id="student-date" placeholder="2026-__-__">
-      </div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-label">
-        <span id="progress-text">0 / 38 已作答</span>
-        <span id="progress-pct">0%</span>
-      </div>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-fill"></div>
-      </div>
-    </div>
+  <div class="section">
+    <div class="section-title">Part A：Be Verbs ── Present or Past?</div>
+    <div class="section-desc">Look at the underlined be verb. Is the sentence Present tense or Past tense?</div>
   </div>
 
-  <!-- Questions rendered here -->
-  <div id="questions-container"></div>
+  <div class="card" id="q1">
+    <div class="q-num">Question 1 · 2.5 pts</div>
+    <div class="q-text">I <u>am</u> tall.</div>
+    <div class="opts">
+      <div class="opt" data-val="Present" onclick="pick(1,this)">Present</div>
+      <div class="opt" data-val="Past" onclick="pick(1,this)">Past</div>
+    </div>
+    <div class="expl">✔ <strong>am</strong> is a present tense be verb. Use <em>am</em> with "I" to talk about right now.</div>
+  </div>
+
+  <div class="card" id="q2">
+    <div class="q-num">Question 2 · 2.5 pts</div>
+    <div class="q-text">I <u>was</u> short before.</div>
+    <div class="opts">
+      <div class="opt" data-val="Present" onclick="pick(2,this)">Present</div>
+      <div class="opt" data-val="Past" onclick="pick(2,this)">Past</div>
+    </div>
+    <div class="expl">✔ <strong>was</strong> is a past tense be verb. "Before" tells us it happened in the past.</div>
+  </div>
+
+  <div class="card" id="q3">
+    <div class="q-num">Question 3 · 2.5 pts</div>
+    <div class="q-text">Birds <u>are</u> in the nest.</div>
+    <div class="opts">
+      <div class="opt" data-val="Present" onclick="pick(3,this)">Present</div>
+      <div class="opt" data-val="Past" onclick="pick(3,this)">Past</div>
+    </div>
+    <div class="expl">✔ <strong>are</strong> is a present tense be verb. Use <em>are</em> with plural subjects.</div>
+  </div>
+
+  <div class="card" id="q4">
+    <div class="q-num">Question 4 · 2.5 pts</div>
+    <div class="q-text">We <u>were</u> at school.</div>
+    <div class="opts">
+      <div class="opt" data-val="Present" onclick="pick(4,this)">Present</div>
+      <div class="opt" data-val="Past" onclick="pick(4,this)">Past</div>
+    </div>
+    <div class="expl">✔ <strong>were</strong> is a past tense be verb. Use <em>were</em> with plural subjects in the past.</div>
+  </div>
+
+  <div class="card" id="q5">
+    <div class="q-num">Question 5 · 2.5 pts</div>
+    <div class="q-text">The boy <u>is</u> happy.</div>
+    <div class="opts">
+      <div class="opt" data-val="Present" onclick="pick(5,this)">Present</div>
+      <div class="opt" data-val="Past" onclick="pick(5,this)">Past</div>
+    </div>
+    <div class="expl">✔ <strong>is</strong> is a present tense be verb. Use <em>is</em> with singular subjects (he/she/it).</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Part B：Fill in the Correct Be Verb</div>
+    <div class="section-desc">Choose the correct be verb to complete each sentence: am · is · are · was · were</div>
+  </div>
+
+  <div class="card" id="q6">
+    <div class="q-num">Question 6 · 2.5 pts</div>
+    <div class="q-text">My name <span class="blank" id="b6">____</span> Katie.</div>
+    <div class="opts">
+      <div class="opt" data-val="am" onclick="pick(6,this)">am</div>
+      <div class="opt" data-val="is" onclick="pick(6,this)">is</div>
+      <div class="opt" data-val="are" onclick="pick(6,this)">are</div>
+    </div>
+    <div class="expl">✔ "My name" is singular. Use <strong>is</strong>: My name <strong>is</strong> Katie.</div>
+  </div>
+
+  <div class="card" id="q7">
+    <div class="q-num">Question 7 · 2.5 pts</div>
+    <div class="q-text">I <span class="blank" id="b7">____</span> seven years old.</div>
+    <div class="opts">
+      <div class="opt" data-val="am" onclick="pick(7,this)">am</div>
+      <div class="opt" data-val="is" onclick="pick(7,this)">is</div>
+      <div class="opt" data-val="are" onclick="pick(7,this)">are</div>
+    </div>
+    <div class="expl">✔ With "I," always use <strong>am</strong>: I <strong>am</strong> seven years old.</div>
+  </div>
+
+  <div class="card" id="q8">
+    <div class="q-num">Question 8 · 2.5 pts</div>
+    <div class="q-text">It <span class="blank" id="b8">____</span> raining yesterday.</div>
+    <div class="opts">
+      <div class="opt" data-val="is" onclick="pick(8,this)">is</div>
+      <div class="opt" data-val="was" onclick="pick(8,this)">was</div>
+      <div class="opt" data-val="were" onclick="pick(8,this)">were</div>
+    </div>
+    <div class="expl">✔ "Yesterday" = past tense. "It" is singular → use <strong>was</strong>: It <strong>was</strong> raining yesterday.</div>
+  </div>
+
+  <div class="card" id="q9">
+    <div class="q-num">Question 9 · 2.5 pts</div>
+    <div class="q-text">How old <span class="blank" id="b9">____</span> you?</div>
+    <div class="opts">
+      <div class="opt" data-val="am" onclick="pick(9,this)">am</div>
+      <div class="opt" data-val="is" onclick="pick(9,this)">is</div>
+      <div class="opt" data-val="are" onclick="pick(9,this)">are</div>
+    </div>
+    <div class="expl">✔ "You" always uses <strong>are</strong>: How old <strong>are</strong> you?</div>
+  </div>
+
+  <div class="card" id="q10">
+    <div class="q-num">Question 10 · 2.5 pts</div>
+    <div class="q-text">We <span class="blank" id="b10">____</span> at the park last night.</div>
+    <div class="opts">
+      <div class="opt" data-val="are" onclick="pick(10,this)">are</div>
+      <div class="opt" data-val="was" onclick="pick(10,this)">was</div>
+      <div class="opt" data-val="were" onclick="pick(10,this)">were</div>
+    </div>
+    <div class="expl">✔ "Last night" = past. "We" is plural → use <strong>were</strong>: We <strong>were</strong> at the park last night.</div>
+  </div>
+
+  <div class="card" id="q11">
+    <div class="q-num">Question 11 · 2.5 pts</div>
+    <div class="q-text">They <span class="blank" id="b11">____</span> good friends.</div>
+    <div class="opts">
+      <div class="opt" data-val="am" onclick="pick(11,this)">am</div>
+      <div class="opt" data-val="is" onclick="pick(11,this)">is</div>
+      <div class="opt" data-val="are" onclick="pick(11,this)">are</div>
+    </div>
+    <div class="expl">✔ "They" is plural, present tense → use <strong>are</strong>: They <strong>are</strong> good friends.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Part C：Action Verbs ── Past, Present, or Future?</div>
+    <div class="section-desc">Look at the underlined action verb. Is it Past, Present, or Future tense?</div>
+  </div>
+
+  <div class="card" id="q12">
+    <div class="q-num">Question 12 · 2.5 pts</div>
+    <div class="q-text">He <u>reads</u> a book today.</div>
+    <div class="opts">
+      <div class="opt" data-val="Past" onclick="pick(12,this)">Past</div>
+      <div class="opt" data-val="Present" onclick="pick(12,this)">Present</div>
+      <div class="opt" data-val="Future" onclick="pick(12,this)">Future</div>
+    </div>
+    <div class="expl">✔ "Today" = right now. <strong>reads</strong> is a present tense verb.</div>
+  </div>
+
+  <div class="card" id="q13">
+    <div class="q-num">Question 13 · 2.5 pts</div>
+    <div class="q-text">She <u>talked</u> to me yesterday.</div>
+    <div class="opts">
+      <div class="opt" data-val="Past" onclick="pick(13,this)">Past</div>
+      <div class="opt" data-val="Present" onclick="pick(13,this)">Present</div>
+      <div class="opt" data-val="Future" onclick="pick(13,this)">Future</div>
+    </div>
+    <div class="expl">✔ "Yesterday" = past. <strong>talked</strong> (verb + -ed) is a past tense verb.</div>
+  </div>
+
+  <div class="card" id="q14">
+    <div class="q-num">Question 14 · 2.5 pts</div>
+    <div class="q-text">Soon we <u>will have</u> a test.</div>
+    <div class="opts">
+      <div class="opt" data-val="Past" onclick="pick(14,this)">Past</div>
+      <div class="opt" data-val="Present" onclick="pick(14,this)">Present</div>
+      <div class="opt" data-val="Future" onclick="pick(14,this)">Future</div>
+    </div>
+    <div class="expl">✔ "Will + verb" = future tense. <strong>will have</strong> means it hasn't happened yet.</div>
+  </div>
+
+  <div class="card" id="q15">
+    <div class="q-num">Question 15 · 2.5 pts</div>
+    <div class="q-text">Dad and I <u>walk</u> to the park every Tuesday.</div>
+    <div class="opts">
+      <div class="opt" data-val="Past" onclick="pick(15,this)">Past</div>
+      <div class="opt" data-val="Present" onclick="pick(15,this)">Present</div>
+      <div class="opt" data-val="Future" onclick="pick(15,this)">Future</div>
+    </div>
+    <div class="expl">✔ "Every Tuesday" = a regular habit. <strong>walk</strong> is present tense.</div>
+  </div>
+
+  <div class="card" id="q16">
+    <div class="q-num">Question 16 · 2.5 pts</div>
+    <div class="q-text">We <u>watched</u> a movie last week.</div>
+    <div class="opts">
+      <div class="opt" data-val="Past" onclick="pick(16,this)">Past</div>
+      <div class="opt" data-val="Present" onclick="pick(16,this)">Present</div>
+      <div class="opt" data-val="Future" onclick="pick(16,this)">Future</div>
+    </div>
+    <div class="expl">✔ "Last week" = past. <strong>watched</strong> (verb + -ed) is a past tense verb.</div>
+  </div>
+
+  <div class="card" id="q17">
+    <div class="q-num">Question 17 · 2.5 pts</div>
+    <div class="q-text">They <u>will clean</u> the room later.</div>
+    <div class="opts">
+      <div class="opt" data-val="Past" onclick="pick(17,this)">Past</div>
+      <div class="opt" data-val="Present" onclick="pick(17,this)">Present</div>
+      <div class="opt" data-val="Future" onclick="pick(17,this)">Future</div>
+    </div>
+    <div class="expl">✔ "Will + verb" and "later" both signal future. <strong>will clean</strong> is future tense.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Part D：Simple or Compound Sentence?</div>
+    <div class="section-desc">S = Simple sentence (one idea). C = Compound sentence (two ideas joined by <strong>and</strong>, <strong>but</strong>, or <strong>or</strong> with a comma).</div>
+  </div>
+
+  <div class="card" id="q18">
+    <div class="q-num">Question 18 · 2.5 pts</div>
+    <div class="q-text">My uncle has a farm.</div>
+    <div class="opts">
+      <div class="opt" data-val="S" onclick="pick(18,this)">S — Simple</div>
+      <div class="opt" data-val="C" onclick="pick(18,this)">C — Compound</div>
+    </div>
+    <div class="expl">✔ One idea, no conjunction. This is a <strong>Simple</strong> sentence.</div>
+  </div>
+
+  <div class="card" id="q19">
+    <div class="q-num">Question 19 · 2.5 pts</div>
+    <div class="q-text">Mom watered the plants, and Dad cut the grass.</div>
+    <div class="opts">
+      <div class="opt" data-val="S" onclick="pick(19,this)">S — Simple</div>
+      <div class="opt" data-val="C" onclick="pick(19,this)">C — Compound</div>
+    </div>
+    <div class="expl">✔ Two ideas joined by <strong>and</strong> with a comma. This is a <strong>Compound</strong> sentence.</div>
+  </div>
+
+  <div class="card" id="q20">
+    <div class="q-num">Question 20 · 2.5 pts</div>
+    <div class="q-text">Grandpa feeds the sheep.</div>
+    <div class="opts">
+      <div class="opt" data-val="S" onclick="pick(20,this)">S — Simple</div>
+      <div class="opt" data-val="C" onclick="pick(20,this)">C — Compound</div>
+    </div>
+    <div class="expl">✔ One idea, no conjunction. This is a <strong>Simple</strong> sentence.</div>
+  </div>
+
+  <div class="card" id="q21">
+    <div class="q-num">Question 21 · 2.5 pts</div>
+    <div class="q-text">We can pick berries, or we can milk the cow.</div>
+    <div class="opts">
+      <div class="opt" data-val="S" onclick="pick(21,this)">S — Simple</div>
+      <div class="opt" data-val="C" onclick="pick(21,this)">C — Compound</div>
+    </div>
+    <div class="expl">✔ Two choices joined by <strong>or</strong> with a comma. This is a <strong>Compound</strong> sentence.</div>
+  </div>
+
+  <div class="card" id="q22">
+    <div class="q-num">Question 22 · 2.5 pts</div>
+    <div class="q-text">My sister is full, but she still wants more milk.</div>
+    <div class="opts">
+      <div class="opt" data-val="S" onclick="pick(22,this)">S — Simple</div>
+      <div class="opt" data-val="C" onclick="pick(22,this)">C — Compound</div>
+    </div>
+    <div class="expl">✔ Two contrasting ideas joined by <strong>but</strong> with a comma. This is a <strong>Compound</strong> sentence.</div>
+  </div>
+
+  <div class="card" id="q23">
+    <div class="q-num">Question 23 · 2.5 pts</div>
+    <div class="q-text">Danny plays the piano every day.</div>
+    <div class="opts">
+      <div class="opt" data-val="S" onclick="pick(23,this)">S — Simple</div>
+      <div class="opt" data-val="C" onclick="pick(23,this)">C — Compound</div>
+    </div>
+    <div class="expl">✔ One idea, no conjunction. This is a <strong>Simple</strong> sentence.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Part E：Choose the Conjunction</div>
+    <div class="section-desc">Choose <strong>and</strong> (add ideas) · <strong>but</strong> (contrast/opposite) · <strong>or</strong> (give a choice)</div>
+  </div>
+
+  <div class="card" id="q24">
+    <div class="q-num">Question 24 · 2.5 pts</div>
+    <div class="q-text">He sweeps the floor, <span class="blank" id="b24">____</span> he washes the dishes.</div>
+    <div class="opts">
+      <div class="opt" data-val="and" onclick="pick(24,this)">and</div>
+      <div class="opt" data-val="but" onclick="pick(24,this)">but</div>
+      <div class="opt" data-val="or" onclick="pick(24,this)">or</div>
+    </div>
+    <div class="expl">✔ Both things happen together. Use <strong>and</strong> to add two ideas.</div>
+  </div>
+
+  <div class="card" id="q25">
+    <div class="q-num">Question 25 · 2.5 pts</div>
+    <div class="q-text">Ted wanted to buy a new toy, <span class="blank" id="b25">____</span> his dad said no.</div>
+    <div class="opts">
+      <div class="opt" data-val="and" onclick="pick(25,this)">and</div>
+      <div class="opt" data-val="but" onclick="pick(25,this)">but</div>
+      <div class="opt" data-val="or" onclick="pick(25,this)">or</div>
+    </div>
+    <div class="expl">✔ The second idea is opposite/unexpected. Use <strong>but</strong> to show contrast.</div>
+  </div>
+
+  <div class="card" id="q26">
+    <div class="q-num">Question 26 · 2.5 pts</div>
+    <div class="q-text">You may play in the park, <span class="blank" id="b26">____</span> you may stay at home with me.</div>
+    <div class="opts">
+      <div class="opt" data-val="and" onclick="pick(26,this)">and</div>
+      <div class="opt" data-val="but" onclick="pick(26,this)">but</div>
+      <div class="opt" data-val="or" onclick="pick(26,this)">or</div>
+    </div>
+    <div class="expl">✔ Two choices are given. Use <strong>or</strong> when there is a choice between options.</div>
+  </div>
+
+  <div class="card" id="q27">
+    <div class="q-num">Question 27 · 2.5 pts</div>
+    <div class="q-text">She shops at the mall, <span class="blank" id="b27">____</span> she meets her friends.</div>
+    <div class="opts">
+      <div class="opt" data-val="and" onclick="pick(27,this)">and</div>
+      <div class="opt" data-val="but" onclick="pick(27,this)">but</div>
+      <div class="opt" data-val="or" onclick="pick(27,this)">or</div>
+    </div>
+    <div class="expl">✔ Both things happen together. Use <strong>and</strong>.</div>
+  </div>
+
+  <div class="card" id="q28">
+    <div class="q-num">Question 28 · 2.5 pts</div>
+    <div class="q-text">Tracy likes milk, <span class="blank" id="b28">____</span> she does not like milk tea.</div>
+    <div class="opts">
+      <div class="opt" data-val="and" onclick="pick(28,this)">and</div>
+      <div class="opt" data-val="but" onclick="pick(28,this)">but</div>
+      <div class="opt" data-val="or" onclick="pick(28,this)">or</div>
+    </div>
+    <div class="expl">✔ The ideas contrast each other. Use <strong>but</strong>.</div>
+  </div>
+
+  <div class="card" id="q29">
+    <div class="q-num">Question 29 · 2.5 pts</div>
+    <div class="q-text">Do you like apples, <span class="blank" id="b29">____</span> do you like oranges?</div>
+    <div class="opts">
+      <div class="opt" data-val="and" onclick="pick(29,this)">and</div>
+      <div class="opt" data-val="but" onclick="pick(29,this)">but</div>
+      <div class="opt" data-val="or" onclick="pick(29,this)">or</div>
+    </div>
+    <div class="expl">✔ Two options in a question. Use <strong>or</strong> to give choices.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Part F：Adverbs ── When or How?</div>
+    <div class="section-desc">Find the underlined adverb. Does it tell WHEN (time: now, soon, tomorrow…) or HOW (manner: quickly, neatly… usually ending in -ly)?</div>
+  </div>
+
+  <div class="card" id="q30">
+    <div class="q-num">Question 30 · 2.5 pts</div>
+    <div class="q-text">She sings <u>beautifully</u>.</div>
+    <div class="opts">
+      <div class="opt" data-val="When" onclick="pick(30,this)">When ⏰</div>
+      <div class="opt" data-val="How" onclick="pick(30,this)">How ⚡</div>
+    </div>
+    <div class="expl">✔ <strong>beautifully</strong> tells us HOW she sings. Words ending in -ly usually tell HOW.</div>
+  </div>
+
+  <div class="card" id="q31">
+    <div class="q-num">Question 31 · 2.5 pts</div>
+    <div class="q-text">We will meet <u>soon</u>.</div>
+    <div class="opts">
+      <div class="opt" data-val="When" onclick="pick(31,this)">When ⏰</div>
+      <div class="opt" data-val="How" onclick="pick(31,this)">How ⚡</div>
+    </div>
+    <div class="expl">✔ <strong>soon</strong> tells us WHEN we will meet. Time words (soon, now, today, tomorrow) tell WHEN.</div>
+  </div>
+
+  <div class="card" id="q32">
+    <div class="q-num">Question 32 · 2.5 pts</div>
+    <div class="q-text">She writes <u>neatly</u> on the paper.</div>
+    <div class="opts">
+      <div class="opt" data-val="When" onclick="pick(32,this)">When ⏰</div>
+      <div class="opt" data-val="How" onclick="pick(32,this)">How ⚡</div>
+    </div>
+    <div class="expl">✔ <strong>neatly</strong> tells us HOW she writes. (-ly ending = HOW)</div>
+  </div>
+
+  <div class="card" id="q33">
+    <div class="q-num">Question 33 · 2.5 pts</div>
+    <div class="q-text">My family will go on a trip <u>tomorrow</u>.</div>
+    <div class="opts">
+      <div class="opt" data-val="When" onclick="pick(33,this)">When ⏰</div>
+      <div class="opt" data-val="How" onclick="pick(33,this)">How ⚡</div>
+    </div>
+    <div class="expl">✔ <strong>tomorrow</strong> tells us WHEN the trip will happen.</div>
+  </div>
+
+  <div class="card" id="q34">
+    <div class="q-num">Question 34 · 2.5 pts</div>
+    <div class="q-text">He <u>quickly</u> finished his test.</div>
+    <div class="opts">
+      <div class="opt" data-val="When" onclick="pick(34,this)">When ⏰</div>
+      <div class="opt" data-val="How" onclick="pick(34,this)">How ⚡</div>
+    </div>
+    <div class="expl">✔ <strong>quickly</strong> tells us HOW he finished. (-ly ending = HOW)</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Part G：Transition Words</div>
+    <div class="section-desc">Choose: <strong>First</strong> (1st) · <strong>Next</strong> (2nd) · <strong>Then</strong> (after that) · <strong>Last</strong> (final)</div>
+  </div>
+
+  <div class="card" id="q35">
+    <div class="q-num">Question 35 · 2.5 pts</div>
+    <div class="q-text"><span class="blank" id="b35">____</span>, leaves appear on the trees in spring.</div>
+    <div class="opts">
+      <div class="opt" data-val="First" onclick="pick(35,this)">First</div>
+      <div class="opt" data-val="Next" onclick="pick(35,this)">Next</div>
+      <div class="opt" data-val="Last" onclick="pick(35,this)">Last</div>
+    </div>
+    <div class="expl">✔ Spring is the beginning of the seasons. Use <strong>First</strong> to introduce the first step.</div>
+  </div>
+
+  <div class="card" id="q36">
+    <div class="q-num">Question 36 · 2.5 pts</div>
+    <div class="q-text"><span class="blank" id="b36">____</span>, the sunlight helps plants grow in summer.</div>
+    <div class="opts">
+      <div class="opt" data-val="First" onclick="pick(36,this)">First</div>
+      <div class="opt" data-val="Next" onclick="pick(36,this)">Next</div>
+      <div class="opt" data-val="Then" onclick="pick(36,this)">Then</div>
+    </div>
+    <div class="expl">✔ Summer comes after spring. Use <strong>Next</strong> for the second event in order.</div>
+  </div>
+
+  <div class="card" id="q37">
+    <div class="q-num">Question 37 · 2.5 pts</div>
+    <div class="q-text"><span class="blank" id="b37">____</span>, trees and plants stop growing in winter.</div>
+    <div class="opts">
+      <div class="opt" data-val="Then" onclick="pick(37,this)">Then</div>
+      <div class="opt" data-val="Next" onclick="pick(37,this)">Next</div>
+      <div class="opt" data-val="Last" onclick="pick(37,this)">Last</div>
+    </div>
+    <div class="expl">✔ Winter is the final season. Use <strong>Last</strong> for the final event.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Part H：Prepositions</div>
+    <div class="section-desc">Place: <strong>at</strong> (school, home, park) · <strong>on</strong> (surfaces) · <strong>in</strong> (inside). Direction: <strong>above, beside, near, around, over, under</strong></div>
+  </div>
+
+  <div class="card" id="q38">
+    <div class="q-num">Question 38 · 2.5 pts</div>
+    <div class="q-text">We make friends <span class="blank" id="b38">____</span> school.</div>
+    <div class="opts">
+      <div class="opt" data-val="at" onclick="pick(38,this)">at</div>
+      <div class="opt" data-val="on" onclick="pick(38,this)">on</div>
+      <div class="opt" data-val="in" onclick="pick(38,this)">in</div>
+    </div>
+    <div class="expl">✔ Use <strong>at</strong> with places: at school, at home, at the park.</div>
+  </div>
+
+  <div class="card" id="q39">
+    <div class="q-num">Question 39 · 2.5 pts</div>
+    <div class="q-text">Brian sits <span class="blank" id="b39">____</span> the chair.</div>
+    <div class="opts">
+      <div class="opt" data-val="at" onclick="pick(39,this)">at</div>
+      <div class="opt" data-val="on" onclick="pick(39,this)">on</div>
+      <div class="opt" data-val="in" onclick="pick(39,this)">in</div>
+    </div>
+    <div class="expl">✔ Use <strong>on</strong> for surfaces. Brian sits on top of the chair.</div>
+  </div>
+
+  <div class="card" id="q40">
+    <div class="q-num">Question 40 · 2.5 pts</div>
+    <div class="q-text">The sun is shining <span class="blank" id="b40">____</span> the boy's head.</div>
+    <div class="opts">
+      <div class="opt" data-val="above" onclick="pick(40,this)">above</div>
+      <div class="opt" data-val="under" onclick="pick(40,this)">under</div>
+      <div class="opt" data-val="beside" onclick="pick(40,this)">beside</div>
+    </div>
+    <div class="expl">✔ The sun is higher than the boy's head. Use <strong>above</strong> to mean higher than something.</div>
+  </div>
 
 </div>
 
-<!-- Result screen -->
-<div id="result-screen">
-  <div class="result-card">
-    <div class="result-score-big" id="score-display">--</div>
-    <div class="result-out-of">/ 100 分</div>
-    <div class="result-stars" id="stars-display">☆☆☆</div>
-    <div class="result-msg" id="result-msg">--</div>
-    <div class="result-sub" id="result-sub">--</div>
-    <div class="result-note">✏️ Part F（造句）共 6 分，需老師批改後加分。</div>
-    <div class="score-table-wrap">
-      <table class="score-table">
-        <thead>
-          <tr>
-            <th>Part</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>分數</td>
-            <td id="pt-a">-</td><td id="pt-b">-</td><td id="pt-c">-</td>
-            <td id="pt-d">-</td><td id="pt-e">-</td><td id="pt-f">老師批改</td>
-          </tr>
-          <tr>
-            <td>滿分</td>
-            <td>24</td><td>24</td><td>18</td><td>18</td><td>10</td><td>6</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <button class="result-btn btn-review" onclick="showReview()">查看詳解</button>
-    <button class="result-btn btn-reset" onclick="resetExam()">重新作答</button>
-  </div>
+<div class="footer" id="footer">
+  <div class="footer-info">已作答 <strong id="doneCount">0</strong> / 40 題</div>
+  <button class="submit-btn" onclick="submitExam()">交卷 ✓</button>
 </div>
 
-<!-- Sticky submit -->
-<div id="submit-area">
-  <button id="submit-btn" onclick="submitExam()" disabled>交卷</button>
+<div id="result">
+  <div class="result-emoji" id="resultEmoji">🌟</div>
+  <div class="result-score" id="resultScore">100</div>
+  <div class="result-sub" id="resultSub">分</div>
+  <div class="result-detail" id="resultDetail"></div>
+  <button class="action-btn" onclick="reviewMode()">查看詳解 📖</button>
+  <button class="action-btn secondary" onclick="location.reload()">重新作答 🔄</button>
+  <a href="daisy_hamster.html" class="back-link">← 回首頁</a>
+</div>
+
+<div class="review-bar" id="reviewBar">
+  <button class="action-btn" onclick="location.reload()" style="max-width:320px;margin:0 auto;">重新作答 🔄</button>
 </div>
 
 <script>
-// =====================================================================
-// DATA
-// =====================================================================
-const TOTAL_MCQ = 38; // Parts A-E
-const PARTS = [
-  {
-    id: 'A',
-    title: 'FET Wk 10–12 — 填入正確單字',
-    score: 24,
-    points: 3,
-    instruction: '根據句意選出正確的單字。',
-    questions: [
-      {
-        text: 'She has a very good ___ and remembers everyone\'s names.',
-        options: ['memory', 'world', 'wonder'],
-        answer: 'memory',
-        hint: '記憶'
-      },
-      {
-        text: 'If you work hard, you can ___ your goals.',
-        options: ['achieve', 'alone', 'struggle'],
-        answer: 'achieve',
-        hint: '達成'
-      },
-      {
-        text: 'The internet connects people all over the ___.',
-        options: ['world', 'dream', 'tunes'],
-        answer: 'world',
-        hint: '世界'
-      },
-      {
-        text: 'Please ___ quietly so the baby won\'t wake up.',
-        options: ['whisper', 'delight', 'surround'],
-        answer: 'whisper',
-        hint: '耳語'
-      },
-      {
-        text: 'The beautiful rainbow was a ___ to see.',
-        options: ['delight', 'mountain', 'desert'],
-        answer: 'delight',
-        hint: '愉快'
-      },
-      {
-        text: 'The ___ painted a beautiful picture of the ocean.',
-        options: ['artist', 'wonder', 'bones'],
-        answer: 'artist',
-        hint: '藝術家'
-      },
-      {
-        text: 'They climbed to the top of the tall ___.',
-        options: ['mountain', 'desert', 'season'],
-        answer: 'mountain',
-        hint: '山'
-      },
-      {
-        text: 'A camel can live in the hot, dry ___ for days.',
-        options: ['desert', 'mountain', 'children'],
-        answer: 'desert',
-        hint: '沙漠'
-      }
-    ]
-  },
-  {
-    id: 'B',
-    title: 'FET Wk 13–16 — 填入正確單字',
-    score: 24,
-    points: 3,
-    instruction: '根據句意選出正確的單字。',
-    questions: [
-      {
-        text: 'In ___, the leaves change color and fall from the trees.',
-        options: ['autumn', 'spring', 'summer'],
-        answer: 'autumn',
-        hint: '秋天'
-      },
-      {
-        text: 'With a little water, the seeds will begin to ___.',
-        options: ['sprout', 'bloom', 'spread'],
-        answer: 'sprout',
-        hint: '發芽'
-      },
-      {
-        text: 'The butterflies ___ their wings as they fly from flower to flower.',
-        options: ['flutter', 'slither', 'scatter'],
-        answer: 'flutter',
-        hint: '拍翅'
-      },
-      {
-        text: 'The mice ___ quickly across the floor to hide.',
-        options: ['scurry', 'honk', 'taste'],
-        answer: 'scurry',
-        hint: '碎步快跑'
-      },
-      {
-        text: 'It is quite ___ today, so wear a sweater.',
-        options: ['chilly', 'crisp', 'gray'],
-        answer: 'chilly',
-        hint: '寒冷的'
-      },
-      {
-        text: 'The little ___ quickly hid its food in the tree.',
-        options: ['chipmunk', 'spider', 'rush'],
-        answer: 'chipmunk',
-        hint: '花栗鼠'
-      },
-      {
-        text: 'The top will ___ around and around on the table.',
-        options: ['spin', 'shake', 'fly'],
-        answer: 'spin',
-        hint: '旋轉'
-      },
-      {
-        text: 'My dog loves to run and ___ the ball when I throw it.',
-        options: ['fetch', 'dash', 'shake'],
-        answer: 'fetch',
-        hint: '拿來'
-      }
-    ]
-  },
-  {
-    id: 'C',
-    title: 'CET Wk 10–12 — 填入正確單字',
-    score: 18,
-    points: 3,
-    instruction: '根據句意選出正確的單字。',
-    questions: [
-      {
-        text: 'We saw many old paintings at the art ___.',
-        options: ['museum', 'field', 'fossil'],
-        answer: 'museum',
-        hint: '博物館'
-      },
-      {
-        text: 'Scientists found a fish ___ in the solid rock.',
-        options: ['fossil', 'museum', 'drawing'],
-        answer: 'fossil',
-        hint: '化石'
-      },
-      {
-        text: 'Our family went on a ___ to the beach last summer.',
-        options: ['trip', 'model', 'break'],
-        answer: 'trip',
-        hint: '旅行'
-      },
-      {
-        text: 'Can you help me solve this 100-piece ___?',
-        options: ['puzzle', 'chicken', 'bird'],
-        answer: 'puzzle',
-        hint: '拼圖'
-      },
-      {
-        text: 'The cat used its sharp ___ to scratch the post.',
-        options: ['claw', 'horn', 'teeth'],
-        answer: 'claw',
-        hint: '爪子'
-      },
-      {
-        text: 'Don\'t forget to brush your ___ before going to bed.',
-        options: ['teeth', 'claw', 'flat'],
-        answer: 'teeth',
-        hint: '牙齒'
-      }
-    ]
-  },
-  {
-    id: 'D',
-    title: 'CET Wk 13–16 — 填入正確單字',
-    score: 18,
-    points: 3,
-    instruction: '根據句意選出正確的單字。',
-    questions: [
-      {
-        text: 'Watch the red balloon ___ away into the air.',
-        options: ['float', 'stretch', 'over'],
-        answer: 'float',
-        hint: '漂浮'
-      },
-      {
-        text: 'The ___ flew the airplane safely to the airport.',
-        options: ['pilot', 'doctor', 'silly'],
-        answer: 'pilot',
-        hint: '飛行員'
-      },
-      {
-        text: 'The ___ firefighter ran into the burning house to save the dog.',
-        options: ['brave', 'tough', 'talented'],
-        answer: 'brave',
-        hint: '勇敢的'
-      },
-      {
-        text: 'She is a very ___ singer who wins many contests.',
-        options: ['talented', 'brave', 'tough'],
-        answer: 'talented',
-        hint: '有天賦的'
-      },
-      {
-        text: 'The magician pulled a rabbit out of his hat as a cool ___.',
-        options: ['trick', 'learn', 'start'],
-        answer: 'trick',
-        hint: '把戲'
-      },
-      {
-        text: 'She is a ___ movie star and everyone knows her name.',
-        options: ['famous', 'flew', 'stop'],
-        answer: 'famous',
-        hint: '有名的'
-      }
-    ]
-  },
-  {
-    id: 'E',
-    title: '詞義配對 — What does this word mean?',
-    score: 10,
-    points: 1,
-    instruction: '選出每個單字的中文意思。',
-    questions: [
-      {
-        text: 'What does "slither" mean? 🐍',
-        options: ['開花', '滑行', '清爽的'],
-        answer: '滑行',
-        hint: 'slither'
-      },
-      {
-        text: 'What does "bloom" mean? 🌺',
-        options: ['衝刺', '開花', '沙漠'],
-        answer: '開花',
-        hint: 'bloom'
-      },
-      {
-        text: 'What does "crisp" mean? 🍏',
-        options: ['清爽的', '化石', '提醒'],
-        answer: '清爽的',
-        hint: 'crisp'
-      },
-      {
-        text: 'What does "fossil" mean? 🦴',
-        options: ['提醒', '編織', '化石'],
-        answer: '化石',
-        hint: 'fossil'
-      },
-      {
-        text: 'What does "remind" mean? 🔔',
-        options: ['滑行', '提醒', '達成'],
-        answer: '提醒',
-        hint: 'remind'
-      },
-      {
-        text: 'What does "desert" mean? 🏜️',
-        options: ['衝刺', '沙漠', '愉快'],
-        answer: '沙漠',
-        hint: 'desert'
-      },
-      {
-        text: 'What does "dash" mean? 💨',
-        options: ['衝刺', '編織', '達成'],
-        answer: '衝刺',
-        hint: 'dash'
-      },
-      {
-        text: 'What does "weave" mean? 🕸️',
-        options: ['化石', '編織', '清爽的'],
-        answer: '編織',
-        hint: 'weave'
-      },
-      {
-        text: 'What does "achieve" mean? 🏆',
-        options: ['達成', '開花', '沙漠'],
-        answer: '達成',
-        hint: 'achieve'
-      },
-      {
-        text: 'What does "delight" mean? 😄',
-        options: ['愉快', '滑行', '衝刺'],
-        answer: '愉快',
-        hint: 'delight'
-      }
-    ]
-  }
-];
+  const TOTAL = 40;
+  const ANSWERS = {
+    1:'Present', 2:'Past', 3:'Present', 4:'Past', 5:'Present',
+    6:'is', 7:'am', 8:'was', 9:'are', 10:'were', 11:'are',
+    12:'Present', 13:'Past', 14:'Future', 15:'Present', 16:'Past', 17:'Future',
+    18:'S', 19:'C', 20:'S', 21:'C', 22:'C', 23:'S',
+    24:'and', 25:'but', 26:'or', 27:'and', 28:'but', 29:'or',
+    30:'How', 31:'When', 32:'How', 33:'When', 34:'How',
+    35:'First', 36:'Next', 37:'Last',
+    38:'at', 39:'on', 40:'above'
+  };
 
-const WRITING_QUESTIONS = [
-  { word: 'autumn', hint: '秋天 🍁', prompt: '用 autumn 造一個英文句子：' },
-  { word: 'brave', hint: '勇敢的 🦁', prompt: '用 brave 造一個英文句子：' },
-  { word: 'spider', hint: '蜘蛛 🕷️', prompt: '用 spider 造一個英文句子：' }
-];
+  const PARTS = {A:[1,5], B:[6,11], C:[12,17], D:[18,23], E:[24,29], F:[30,34], G:[35,37], H:[38,40]};
+  const PART_TOTALS = {A:5, B:6, C:6, D:6, E:6, F:5, G:3, H:3};
+  const PART_NAMES = {
+    A:'Part A：Be Verbs 現在/過去', B:'Part B：填入 Be Verb',
+    C:'Part C：動詞時態', D:'Part D：簡單/複合句',
+    E:'Part E：選擇連接詞', F:'Part F：副詞 When/How',
+    G:'Part G：轉折詞', H:'Part H：介系詞'
+  };
 
-// =====================================================================
-// STATE
-// =====================================================================
-let userAnswers = {}; // key: "partIdx_qIdx", value: chosen option string
-let writingAnswers = {}; // key: 0,1,2
-let submitted = false;
+  const chosen = {};
+  let submitted = false;
 
-// =====================================================================
-// RENDER
-// =====================================================================
-function buildQuestionKey(partIdx, qIdx) {
-  return `${partIdx}_${qIdx}`;
-}
-
-function renderExam() {
-  const container = document.getElementById('questions-container');
-  container.innerHTML = '';
-
-  let globalQ = 1;
-
-  PARTS.forEach((part, partIdx) => {
-    // Section header
-    const secEl = document.createElement('div');
-    secEl.className = 'section-header';
-    secEl.innerHTML = `
-      <span class="section-badge">Part ${part.id}</span>
-      <span class="section-title">${part.title}</span>
-      <span class="section-score">${part.score}分</span>
-    `;
-    container.appendChild(secEl);
-
-    if (part.questions[0] && !part.questions[0].text.includes('What does')) {
-      const instr = document.createElement('p');
-      instr.style.cssText = 'font-size:14px;color:#666;margin-bottom:10px;font-style:italic;padding-left:4px;';
-      instr.textContent = part.instruction;
-      container.appendChild(instr);
-    }
-
-    part.questions.forEach((q, qIdx) => {
-      const key = buildQuestionKey(partIdx, qIdx);
-      const card = document.createElement('div');
-      card.className = 'q-card';
-      card.id = `qcard_${key}`;
-
-      const optLetters = ['A', 'B', 'C'];
-      const optsHtml = q.options.map((opt, i) => `
-        <button class="opt-btn" id="opt_${key}_${i}"
-          onclick="selectAnswer('${key}', '${escapeStr(opt)}', ${partIdx}, ${qIdx})"
-          data-value="${escapeStr(opt)}">
-          <span class="opt-letter">${optLetters[i]}</span>
-          <span>${opt}</span>
-        </button>
-      `).join('');
-
-      card.innerHTML = `
-        <div class="q-num-row">
-          <span class="q-num-badge">${globalQ}</span>
-          <span class="q-text">${q.text}</span>
-        </div>
-        <div class="options-wrap" id="opts_${key}">
-          ${optsHtml}
-        </div>
-        <div id="feedback_${key}" style="display:none;"></div>
-      `;
-
-      container.appendChild(card);
-      globalQ++;
-    });
-  });
-
-  // Writing section
-  const writeSec = document.createElement('div');
-  writeSec.className = 'section-header';
-  writeSec.innerHTML = `
-    <span class="section-badge">Part F</span>
-    <span class="section-title">造句 Writing — 老師批改</span>
-    <span class="section-score">6分</span>
-  `;
-  container.appendChild(writeSec);
-
-  const writeInstr = document.createElement('p');
-  writeInstr.style.cssText = 'font-size:14px;color:#666;margin-bottom:12px;font-style:italic;padding-left:4px;';
-  writeInstr.textContent = '用以下單字各造一個英文句子。（老師批改，每題 2 分）';
-  container.appendChild(writeInstr);
-
-  WRITING_QUESTIONS.forEach((wq, i) => {
-    const wCard = document.createElement('div');
-    wCard.className = 'writing-card';
-    wCard.innerHTML = `
-      <div class="q-num-row">
-        <span class="q-num-badge">${globalQ}</span>
-        <div>
-          <div class="writing-word">${wq.word}</div>
-          <div class="writing-hint">${wq.hint}</div>
-        </div>
-      </div>
-      <textarea class="writing-textarea" id="writing_${i}"
-        placeholder="${wq.prompt}"
-        oninput="saveWriting(${i}, this.value)"></textarea>
-      <div><span class="teacher-badge">✏️ 老師批改</span></div>
-    `;
-    container.appendChild(wCard);
-    globalQ++;
-  });
-}
-
-function escapeStr(s) {
-  return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
-// =====================================================================
-// INTERACTION
-// =====================================================================
-function selectAnswer(key, value, partIdx, qIdx) {
-  if (submitted) return;
-
-  userAnswers[key] = value;
-
-  // Update button states
-  const optsWrap = document.getElementById(`opts_${key}`);
-  optsWrap.querySelectorAll('.opt-btn').forEach(btn => {
-    if (btn.dataset.value === value) {
-      btn.classList.add('selected');
-    } else {
-      btn.classList.remove('selected');
-    }
-  });
-
-  updateProgress();
-}
-
-function saveWriting(idx, val) {
-  writingAnswers[idx] = val;
-}
-
-function updateProgress() {
-  const answered = Object.keys(userAnswers).length;
-  const pct = Math.round((answered / TOTAL_MCQ) * 100);
-  document.getElementById('progress-text').textContent = `${answered} / ${TOTAL_MCQ} 已作答`;
-  document.getElementById('progress-pct').textContent = `${pct}%`;
-  document.getElementById('progress-fill').style.width = `${pct}%`;
-
-  document.getElementById('submit-btn').disabled = (answered < TOTAL_MCQ);
-}
-
-// =====================================================================
-// SUBMIT
-// =====================================================================
-function submitExam() {
-  if (submitted) return;
-  submitted = true;
-
-  // Calculate scores
-  let partScores = {};
-  let totalAutoScore = 0;
-
-  PARTS.forEach((part, partIdx) => {
-    let earned = 0;
-    part.questions.forEach((q, qIdx) => {
-      const key = buildQuestionKey(partIdx, qIdx);
-      if (userAnswers[key] === q.answer) {
-        earned += part.points;
-      }
-    });
-    partScores[part.id] = earned;
-    totalAutoScore += earned;
-  });
-
-  const displayScore = totalAutoScore; // out of 94
-
-  // Show result screen
-  document.getElementById('exam-wrap').style.display = 'none';
-  document.getElementById('result-screen').style.display = 'block';
-  document.getElementById('submit-area').style.display = 'none';
-
-  document.getElementById('score-display').textContent = displayScore;
-
-  // Stars
-  let stars, msg, sub;
-  if (displayScore >= 85) {
-    stars = '⭐⭐⭐';
-    msg = '太厲害了！Daisy 超棒！';
-    sub = '你已經掌握了所有的詞彙！繼續加油！';
-  } else if (displayScore >= 65) {
-    stars = '⭐⭐';
-    msg = '很好！繼續努力！';
-    sub = '大部分都答對了，再複習一下錯誤的單字吧！';
-  } else if (displayScore >= 45) {
-    stars = '⭐';
-    msg = '不錯喔！再加油！';
-    sub = '還有一些單字需要練習，不要放棄！';
-  } else {
-    stars = '💪';
-    msg = '繼續努力，你可以的！';
-    sub = '多複習一下單字，下次一定會更好！';
+  function pick(qNum, btn) {
+    if (submitted) return;
+    document.getElementById('q' + qNum).querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+    btn.classList.add('sel');
+    chosen[qNum] = btn.getAttribute('data-val');
+    document.getElementById('q' + qNum).classList.add('done');
+    const blank = document.getElementById('b' + qNum);
+    if (blank) blank.textContent = chosen[qNum];
+    updateProgress();
   }
 
-  document.getElementById('stars-display').textContent = stars;
-  document.getElementById('result-msg').textContent = msg;
-  document.getElementById('result-sub').textContent = sub;
+  function updateProgress() {
+    const done = Object.keys(chosen).length;
+    document.getElementById('doneCount').textContent = done;
+    document.getElementById('pbar').style.width = (done / TOTAL * 100) + '%';
+  }
 
-  // Part scores
-  ['A','B','C','D','E'].forEach(id => {
-    const el = document.getElementById(`pt-${id.toLowerCase()}`);
-    if (el) el.textContent = partScores[id] || 0;
-  });
-}
+  function submitExam() {
+    const done = Object.keys(chosen).length;
+    if (done < TOTAL && !confirm('還有 ' + (TOTAL - done) + ' 題未作答，確定要交卷嗎？')) return;
+    submitted = true;
 
-// =====================================================================
-// REVIEW
-// =====================================================================
-function showReview() {
-  document.getElementById('result-screen').style.display = 'none';
-  document.getElementById('exam-wrap').style.display = 'block';
-  document.getElementById('submit-area').style.display = 'none';
+    let correct = 0;
+    const partCorrect = {A:0, B:0, C:0, D:0, E:0, F:0, G:0, H:0};
 
-  // Scroll to top
-  window.scrollTo(0, 0);
-
-  PARTS.forEach((part, partIdx) => {
-    part.questions.forEach((q, qIdx) => {
-      const key = buildQuestionKey(partIdx, qIdx);
-      const chosen = userAnswers[key];
-      const correct = q.answer;
-      const optsWrap = document.getElementById(`opts_${key}`);
-
-      optsWrap.querySelectorAll('.opt-btn').forEach(btn => {
-        btn.classList.remove('selected');
-        const val = btn.dataset.value;
-        if (val === correct && val === chosen) {
-          btn.classList.add('correct');
-        } else if (val === correct && val !== chosen) {
-          btn.classList.add('show-correct');
-        } else if (val === chosen && val !== correct) {
-          btn.classList.add('wrong');
+    for (let q = 1; q <= TOTAL; q++) {
+      const card = document.getElementById('q' + q);
+      const userAns = chosen[q];
+      const correctAns = ANSWERS[q];
+      const isOk = (userAns === correctAns);
+      if (isOk) {
+        correct++;
+        for (const [k, range] of Object.entries(PARTS)) {
+          if (q >= range[0] && q <= range[1]) { partCorrect[k]++; break; }
         }
-      });
-
-      // Feedback
-      const fbEl = document.getElementById(`feedback_${key}`);
-      fbEl.style.display = 'block';
-      if (chosen === correct) {
-        fbEl.innerHTML = `<span class="feedback-tag correct-tag">✓ 答對了！</span>`;
-      } else {
-        fbEl.innerHTML = `<span class="feedback-tag wrong-tag">✗ 正確答案是：${correct}</span>`;
       }
-    });
-  });
+      card.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('sel');
+        const v = o.getAttribute('data-val');
+        if (v === correctAns) o.classList.add('ok');
+        else if (v === userAns && !isOk) o.classList.add('err');
+      });
+    }
 
-  // Scroll back to top
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+    const score = Math.round(correct * 2.5);
+    document.getElementById('examContent').style.display = 'none';
+    document.getElementById('footer').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
 
-// =====================================================================
-// RESET
-// =====================================================================
-function resetExam() {
-  userAnswers = {};
-  writingAnswers = {};
-  submitted = false;
+    document.getElementById('resultEmoji').textContent = score >= 90 ? '🌟🌟🌟' : score >= 75 ? '⭐⭐' : '⭐';
+    document.getElementById('resultScore').textContent = score;
+    document.getElementById('resultSub').textContent = '分 · ' + correct + ' / ' + TOTAL + ' 題正確' +
+      (score >= 90 ? ' · 太棒了！' : score >= 75 ? ' · 做得好！' : ' · 繼續加油！');
 
-  document.getElementById('result-screen').style.display = 'none';
-  document.getElementById('exam-wrap').style.display = 'block';
-  document.getElementById('submit-area').style.display = 'block';
-  document.getElementById('submit-btn').disabled = true;
+    let html = '';
+    for (const k of ['A','B','C','D','E','F','G','H']) {
+      const pct = Math.round(partCorrect[k] / PART_TOTALS[k] * 100);
+      const color = pct >= 80 ? '#2e7d32' : pct >= 60 ? '#e65100' : '#c62828';
+      html += '<div class="detail-row"><span class="detail-label">' + PART_NAMES[k] + '</span>' +
+              '<span class="detail-val" style="color:' + color + '">' +
+              partCorrect[k] + '/' + PART_TOTALS[k] + ' (' + pct + '%)</span></div>';
+    }
+    document.getElementById('resultDetail').innerHTML = html;
+  }
 
-  renderExam();
-  updateProgress();
-  window.scrollTo(0, 0);
-}
-
-// =====================================================================
-// INIT
-// =====================================================================
-renderExam();
-updateProgress();
-
-// Pre-fill date
-const today = new Date();
-document.getElementById('student-date').value =
-  today.getFullYear() + '-' +
-  String(today.getMonth()+1).padStart(2,'0') + '-' +
-  String(today.getDate()).padStart(2,'0');
+  function reviewMode() {
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('examContent').style.display = 'block';
+    document.getElementById('examContent').classList.add('review-mode');
+    document.getElementById('reviewBar').style.display = 'block';
+    window.scrollTo(0, 0);
+  }
 </script>
 </body>
 </html>
