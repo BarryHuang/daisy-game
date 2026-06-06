@@ -63,7 +63,7 @@
             <button onclick="window.location.href='autumn_book.html'" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#558b2f,#33691e); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #1b5e20; display:flex; align-items:center; justify-content:center; gap:8px;">
                 🍂 My Autumn Book <span style="font-size:0.8rem; font-weight:normal; opacity:0.85;">（Week 15-16 課文練習）</span>
             </button>
-            
+
             <!-- 期末測驗按鈕 — purple/indigo 專屬配色，呼吸脈衝吸引點擊 -->
             <button id="btn-final" onclick="openFinal()" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#ab47bc,#7b1fa2); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #4a148c; animation:finalBtnPulse 2.4s ease-in-out infinite; animation-delay: 1.2s;">
                 📝 期末測驗 <span style="font-size:0.8rem; font-weight:normal;">（FET &amp; CET Wk 10-16）</span>
@@ -72,6 +72,17 @@
               @keyframes finalBtnPulse {
                 0%,100%{ transform:scale(1);    box-shadow:0 4px 0 #4a148c,0 6px 18px rgba(123,31,162,.35); }
                 50%    { transform:scale(1.04); box-shadow:0 4px 0 #4a148c,0 8px 26px rgba(123,31,162,.55); }
+              }
+            </style>
+
+            <!-- 期末考發音模擬測驗 -->
+            <button onclick="window.location.href='final_exam_pronunciation.html'" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#6a1b9a,#4a148c); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #311b92; animation:finalExamPulse 2.6s ease-in-out infinite; display:flex; align-items:center; justify-content:center; gap:8px;">
+                📋 期末考發音模擬測驗 <span style="font-size:0.8rem; font-weight:normal; opacity:0.85;">（Week 10-16 發音）</span>
+            </button>
+            <style>
+              @keyframes finalExamPulse {
+                0%,100%{ transform:scale(1);    box-shadow:0 4px 0 #311b92,0 6px 18px rgba(106,27,154,.35); }
+                50%    { transform:scale(1.04); box-shadow:0 4px 0 #311b92,0 8px 26px rgba(106,27,154,.55); }
               }
             </style>
             <div style="display: flex; gap: 10px; margin-bottom: 20px; width: 100%;">
