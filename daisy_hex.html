@@ -245,7 +245,7 @@ function resize() {
   offsetY = canvas.height / 2;
   if(isLandscape) offsetX -= 20;
 
-  draw();
+
 }
 window.addEventListener('resize', resize);
 
@@ -347,7 +347,7 @@ function checkGameState() {
     gameState = 'win';
     setTimeout(() => document.getElementById('modalWin').classList.add('active'), 1200);
   }
-  draw();
+
 }
 
 // --- Interaction ---
@@ -360,7 +360,7 @@ function handleHexInteraction(p) {
   const key = `${hex.q},${hex.r}`;
   if (!blocks.has(key)) {
     blocks.set(key, 'stone');
-    draw();
+
     setTimeout(moveCat, 250); 
   }
 }
