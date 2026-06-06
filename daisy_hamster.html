@@ -49,7 +49,7 @@
             </button>
 
             <!-- 期中測驗按鈕 — gold/orange 專屬配色，呼吸脈衝吸引點擊 -->
-            <button id="btn-midterm" onclick="openMidterm()" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #bf360c; animation:midtermBtnPulse 2.4s ease-in-out infinite;">
+            <button id="btn-midterm" onclick="openMidterm()" style="width:100%; margin-bottom:8px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #bf360c; animation:midtermBtnPulse 2.4s ease-in-out infinite;">
                 📝 期中測驗 <span style="font-size:0.8rem; font-weight:normal;">（FET &amp; CET Wk 1-8）</span>
             </button>
             <style>
@@ -63,7 +63,17 @@
             <button onclick="window.location.href='autumn_book.html'" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#558b2f,#33691e); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #1b5e20; display:flex; align-items:center; justify-content:center; gap:8px;">
                 🍂 My Autumn Book <span style="font-size:0.8rem; font-weight:normal; opacity:0.85;">（Week 15-16 課文練習）</span>
             </button>
-
+            
+            <!-- 期末測驗按鈕 — purple/indigo 專屬配色，呼吸脈衝吸引點擊 -->
+            <button id="btn-final" onclick="openFinal()" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#ab47bc,#7b1fa2); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #4a148c; animation:finalBtnPulse 2.4s ease-in-out infinite; animation-delay: 1.2s;">
+                📝 期末測驗 <span style="font-size:0.8rem; font-weight:normal;">（FET &amp; CET Wk 10-16）</span>
+            </button>
+            <style>
+              @keyframes finalBtnPulse {
+                0%,100%{ transform:scale(1);    box-shadow:0 4px 0 #4a148c,0 6px 18px rgba(123,31,162,.35); }
+                50%    { transform:scale(1.04); box-shadow:0 4px 0 #4a148c,0 8px 26px rgba(123,31,162,.55); }
+              }
+            </style>
             <div style="display: flex; gap: 10px; margin-bottom: 20px; width: 100%;">
                 <button class="btn-speak" style="flex: 1; margin-bottom: 0;" onclick="speakWord(currentWord)">🔊 聽發音</button>
                 <button class="btn-speak" style="flex: 1; margin-bottom: 0; background: #00bcd4; box-shadow: 0 4px 0 #0097a7;" id="btn-hint" onclick="useHint()">💡 提示 (2💰)</button>
@@ -273,6 +283,7 @@
 
     <script src="words.js"></script>
     <script src="midterm_questions.js"></script>
+    <script src="final_questions.js"></script>
     <script>
 
         // --- Firebase 初始化 ---
@@ -351,55 +362,81 @@
             
             // 監聽 Firebase 資料同步
             const petRef = db.ref('users/' + secretCode + '/petData');
-            petRef.once('value', (snapshot) => {
-                const data = snapshot.val();
-                if(data) {
-                    petData = migratePetData(data);
-                    
-                    // 測試帳號 BARRY 預設擁有 999 金幣
-                    if(secretCode === 'BARRY' && petData.coins < 999) {
-                        petData.coins = 999;
-                        petRef.set(petData);
-                    }
-                    
-                    // 開始持續監聽
-                    petRef.on('value', (snap) => {
-                        if(snap.val()) { petData = migratePetData(snap.val()); updatePetUI(); }
-                    });
-                } else {
-                    // 新玩家：檢查有沒有舊版的 LocalStorage 端資料可以繼承
-                    const oldSaved = localStorage.getItem("daisy_hamster_save");
-                    if(oldSaved) {
-                        try { 
-                            let parsed = JSON.parse(oldSaved); 
-                            if(parsed && parsed.level) {
-                                petData = migratePetData(parsed);
-                                alert("🐰 發現你以前照顧過小倉鼠！已經幫你把舊進度升級上雲端囉！");
-                            }
-                        } catch(e) {}
-                        localStorage.removeItem("daisy_hamster_save");
-                    } else {
-                        // 真的全新的玩家
-                        petData = migratePetData(null);
-                    }
-                    
-                    // 測試帳號 BARRY 預設擁有 999 金幣
-                    if(secretCode === 'BARRY') {
-                        petData.coins = 999;
-                    }
-                    
+            
+            function initWithData(data) {
+                petData = migratePetData(data);
+                
+                // 測試帳號 BARRY 預設擁有 999 金幣
+                if(secretCode === 'BARRY' && petData.coins < 999) {
+                    petData.coins = 999;
                     petRef.set(petData);
-                    
-                    // 開始持續監聽
-                    petRef.on('value', (snap) => {
-                        if(snap.val()) { petData = snap.val(); updatePetUI(); }
-                    });
                 }
+                
+                // 開始持續監聽
+                petRef.on('value', (snap) => {
+                    if(snap.val()) { petData = migratePetData(snap.val()); updatePetUI(); }
+                });
                 
                 checkDailyLogin();
                 checkDailyQuests();
-                
                 updatePetUI();
+            }
+            
+            function initAsNewPlayer() {
+                // 新玩家：檢查有沒有舊版的 LocalStorage 端資料可以繼承
+                const oldSaved = localStorage.getItem("daisy_hamster_save");
+                if(oldSaved) {
+                    try { 
+                        let parsed = JSON.parse(oldSaved); 
+                        if(parsed && parsed.level) {
+                            petData = migratePetData(parsed);
+                            alert("🐰 發現你以前照顧過小倉鼠！已經幫你把舊進度升級上雲端囉！");
+                        }
+                    } catch(e) {}
+                    localStorage.removeItem("daisy_hamster_save");
+                } else {
+                    // 真的全新的玩家
+                    petData = migratePetData(null);
+                }
+                
+                // 測試帳號 BARRY 預設擁有 999 金幣
+                if(secretCode === 'BARRY') {
+                    petData.coins = 999;
+                }
+                
+                petRef.set(petData);
+                
+                // 開始持續監聯
+                petRef.on('value', (snap) => {
+                    if(snap.val()) { petData = snap.val(); updatePetUI(); }
+                });
+                
+                checkDailyLogin();
+                checkDailyQuests();
+                updatePetUI();
+            }
+            
+            petRef.once('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    // 正常：有資料就載入
+                    initWithData(data);
+                } else {
+                    // 安全機制：再讀取一次確認，避免因網路問題誤判為新玩家而覆蓋資料
+                    console.warn('[Safety] 第一次讀取回傳 null，2 秒後重試確認...');
+                    setTimeout(() => {
+                        petRef.once('value', (retrySnap) => {
+                            const retryData = retrySnap.val();
+                            if(retryData) {
+                                console.log('[Safety] 重試成功，載入現有資料');
+                                initWithData(retryData);
+                            } else {
+                                console.log('[Safety] 確認為新玩家，初始化資料');
+                                initAsNewPlayer();
+                            }
+                        });
+                    }, 2000);
+                }
             });
             
             // 如果還沒開始遊戲 (第一次登入)，初始化遊戲關卡
@@ -1996,6 +2033,198 @@
         }
 
         // ══════════════════════════════════════════════════════════════
+        // 期末測驗系統
+        // ══════════════════════════════════════════════════════════════
+
+        let finalQueue    = [];   // 本次抽出的 20 題
+        let finalIndex    = 0;    // 目前在第幾題 (0-based)
+        let finalScore    = 0;    // 答對題數
+        let finalCoins    = 0;    // 本次賺取金幣
+        let finalAnswered = false;// 防止重複點擊
+
+        /** 隨機抽取題目，可依 source 篩選 */
+        function drawFinalQuestions(filter) {
+            let pool = finalQuestions;
+            if (filter === 'FET') pool = finalQuestions.filter(q => q.source.startsWith('FET'));
+            if (filter === 'CET') pool = finalQuestions.filter(q => q.source.startsWith('CET'));
+            const shuffled = [...pool].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, Math.min(20, shuffled.length));
+        }
+
+        function openFinal() {
+            unlockAudio();
+            document.getElementById('final-modal').style.display = 'flex';
+            document.getElementById('final-category-screen').style.display = 'flex';
+            document.getElementById('final-card').style.display = 'none';
+        }
+
+        function startFinalWithFilter(filter) {
+            document.getElementById('final-category-screen').style.display = 'none';
+            document.getElementById('final-card').style.display = 'block';
+            finalQueue    = drawFinalQuestions(filter);
+            finalIndex    = 0;
+            finalScore    = 0;
+            finalCoins    = 0;
+            finalAnswered = false;
+            renderFinalQuestion();
+        }
+
+        function closeFinal() {
+            document.getElementById('final-modal').style.display = 'none';
+        }
+
+        function closeFinalResult() {
+            document.getElementById('final-result-modal').style.display = 'none';
+        }
+
+        function renderFinalQuestion() {
+            finalAnswered = false;
+            const q       = finalQueue[finalIndex];
+            const total   = finalQueue.length;
+            const qNum    = finalIndex + 1;
+
+            document.getElementById('final-progress-bar').style.width = `${((finalIndex) / total) * 100}%`;
+            document.getElementById('final-qnum').textContent = `第 ${qNum} 題 / ${total} 題`;
+            document.getElementById('final-source-tag').textContent = q.source;
+
+            const blankHtml = `<span style="display:inline-block; min-width:60px; border-bottom:3px solid #9c27b0; color:#4a148c; font-weight:900; padding:0 6px; font-style:italic;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
+            document.getElementById('final-sentence').innerHTML = q.sentence.replace('___', blankHtml);
+
+            const hintEl  = document.getElementById('final-hint');
+            const hintBtn = document.getElementById('final-hint-btn');
+            hintEl.textContent  = '💡 ' + q.hint;
+            hintEl.style.display  = 'none';
+            hintBtn.style.display = 'inline-block';
+
+            const fb = document.getElementById('final-feedback');
+            fb.style.display = 'none';
+            fb.textContent   = '';
+
+            const opts = [...q.options].sort(() => Math.random() - 0.5);
+            const optContainer = document.getElementById('final-options');
+            optContainer.innerHTML = '';
+
+            opts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.textContent = opt;
+                btn.style.cssText = `
+                    width:100%; padding:13px 16px;
+                    border-radius:14px; border:2.5px solid #e0e0e0;
+                    background:white; font-size:1.05rem; font-weight:700;
+                    color:#333; cursor:pointer;
+                    transition:background .15s, border-color .15s, transform .1s;
+                    -webkit-tap-highlight-color:transparent;
+                `;
+                btn.onmouseenter = () => { btn.style.background = '#f3e5f5'; btn.style.borderColor = '#9c27b0'; };
+                btn.onmouseleave = () => {
+                    if (!finalAnswered) {
+                        btn.style.background = 'white';
+                        btn.style.borderColor = '#e0e0e0';
+                    }
+                };
+                btn.onclick = () => handleFinalAnswer(opt, q.answer, btn);
+                optContainer.appendChild(btn);
+            });
+        }
+
+        function handleFinalAnswer(chosen, correct, clickedBtn) {
+            if (finalAnswered) return;
+            finalAnswered = true;
+
+            const isRight = (chosen === correct);
+            const allBtns = document.querySelectorAll('#final-options button');
+
+            allBtns.forEach(b => {
+                b.style.cursor = 'default';
+                if (b.textContent === correct) {
+                    b.style.background    = '#e8f5e9';
+                    b.style.borderColor   = '#43a047';
+                    b.style.color         = '#2e7d32';
+                }
+            });
+
+            if (isRight) {
+                clickedBtn.style.background  = '#c8e6c9';
+                clickedBtn.style.borderColor = '#2e7d32';
+                clickedBtn.style.transform   = 'scale(1.04)';
+                finalScore++;
+                finalCoins += 3;
+                for (let i = 0; i < 3; i++) setTimeout(() => triggerSeedDrop('💰'), i * 160);
+                const h = document.getElementById('hamster');
+                h.classList.add('happy');
+                setTimeout(() => h.classList.remove('happy'), 900);
+                playTone(660, 'sine', 0.1);
+                setTimeout(() => playTone(880, 'sine', 0.12), 120);
+
+                showFinalFeedback('✅ 答對了！+3 💰', '#e8f5e9', '#2e7d32');
+            } else {
+                clickedBtn.style.background  = '#ffebee';
+                clickedBtn.style.borderColor = '#e53935';
+                clickedBtn.style.color       = '#c62828';
+                playTone(200, 'sawtooth', 0.12);
+
+                showFinalFeedback(`❌ 正確答案是「${correct}」`, '#ffebee', '#c62828');
+            }
+
+            setTimeout(advanceFinal, 2200);
+        }
+
+        function showFinalFeedback(text, bg, color) {
+            const fb = document.getElementById('final-feedback');
+            fb.textContent         = text;
+            fb.style.display       = 'block';
+            fb.style.background    = bg;
+            fb.style.color         = color;
+            fb.style.border        = `2px solid ${color}`;
+        }
+
+        function advanceFinal() {
+            finalIndex++;
+            if (finalIndex >= finalQueue.length) {
+                finishFinal();
+            } else {
+                renderFinalQuestion();
+            }
+        }
+
+        function finishFinal() {
+            document.getElementById('final-modal').style.display = 'none';
+
+            petData.coins += finalCoins;
+            savePetData();
+            updatePetUI();
+
+            const total  = finalQueue.length;
+            const pct    = finalScore / total;
+            const stars  = pct >= 0.9 ? '⭐⭐⭐' : (pct >= 0.7 ? '⭐⭐' : (pct >= 0.5 ? '⭐' : ''));
+            const emoji  = pct >= 0.9 ? '🏆' : (pct >= 0.7 ? '🎉' : (pct >= 0.5 ? '😊' : '💪'));
+
+            document.getElementById('final-result-emoji').textContent  = emoji;
+            document.getElementById('final-result-stars').textContent  = stars || '加油！繼續練習 💪';
+            document.getElementById('final-result-score').textContent  = `答對 ${finalScore} / ${total} 題`;
+            document.getElementById('final-result-coins').textContent  = `獲得 ${finalCoins} 💰 金幣！`;
+
+            document.getElementById('final-result-modal').style.display = 'flex';
+
+            if (pct >= 0.7) {
+                confetti({ particleCount: 160, spread: 100, origin: { y: 0.55 } });
+                playTone(523, 'sine', 0.1);
+                setTimeout(() => playTone(659, 'sine', 0.1), 100);
+                setTimeout(() => playTone(784, 'sine', 0.2), 200);
+            }
+        }
+
+        function showFinalHint() {
+            document.getElementById('final-hint').style.display = 'inline-block';
+            document.getElementById('final-hint-btn').style.display = 'none';
+        }
+
+        function restartFinal() {
+            document.getElementById('final-result-modal').style.display = 'none';
+            openFinal(); 
+        }
+
+        // ══════════════════════════════════════════════════════════════
 
         // PWA Service Worker 註冊
         if ('serviceWorker' in navigator) {
@@ -2117,6 +2346,72 @@
         <div id="midterm-result-coins" style="font-size:1.2rem; font-weight:800; color:#f9a825; margin-bottom:20px;"></div>
         <button onclick="restartMidterm()" style="width:100%; padding:14px; border-radius:16px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #bf360c; margin-bottom:10px;">🔄 再挑戰一次！</button>
         <button onclick="closeMidtermResult()" style="width:100%; padding:11px; border-radius:16px; background:#f5f5f5; color:#555; border:none; font-size:1rem; font-weight:700; cursor:pointer;">✕ 回到遊戲</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         期末測驗 Modal
+    ══════════════════════════════════════════════════════ -->
+    <div id="final-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:3500; justify-content:center; align-items:center; flex-direction:column; padding:16px; box-sizing:border-box;">
+
+      <!-- 分類選擇畫面 -->
+      <div id="final-category-screen" style="display:none; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:360px;">
+        <div style="font-size:1.6rem; font-weight:900; color:white; text-align:center; margin-bottom:4px;">📝 選擇測驗範圍</div>
+        <div style="font-size:0.9rem; color:rgba(255,255,255,0.7); margin-bottom:8px;">選一個分類開始挑戰！</div>
+        <button onclick="startFinalWithFilter('all')" style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#ab47bc,#7b1fa2); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #4a148c;">🎲 綜合（全部）</button>
+        <button onclick="startFinalWithFilter('FET')" style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#42a5f5,#1565c0); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #0d47a1;">📘 FET 課程</button>
+        <button onclick="startFinalWithFilter('CET')" style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#66bb6a,#2e7d32); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #1b5e20;">📗 CET 課程</button>
+        <button onclick="closeFinal()" style="margin-top:6px; padding:9px 26px; border-radius:20px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.3); font-weight:bold; cursor:pointer; font-size:1rem;">✕ 取消</button>
+      </div>
+
+      <div id="final-card" style="position:relative; background:white; border-radius:28px; width:100%; max-width:460px; padding:26px 22px 22px; box-shadow:0 20px 60px rgba(0,0,0,0.5); text-align:center;">
+
+        <!-- Header -->
+        <div style="font-size:1.05rem; font-weight:800; color:#7b1fa2; margin-bottom:4px; letter-spacing:.04em;">
+          📝 期末測驗 <span style="font-size:0.78rem; font-weight:600; color:#999;">(FET &amp; CET Wk 10-16)</span>
+        </div>
+
+        <!-- Progress bar -->
+        <div style="background:#f0f0f0; border-radius:6px; height:7px; margin:8px 0 14px; overflow:hidden;">
+          <div id="final-progress-bar" style="height:100%; background:linear-gradient(90deg,#ab47bc,#7b1fa2); border-radius:6px; transition:width .4s ease; width:0%;"></div>
+        </div>
+
+        <!-- Q counter + source tag -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <span id="final-qnum" style="font-size:0.85rem; color:#aaa; font-weight:600;">第 1 題 / 20 題</span>
+          <span id="final-source-tag" style="font-size:0.72rem; background:#f3e5f5; color:#7b1fa2; border-radius:20px; padding:3px 10px; font-weight:700;">FET Wk 10</span>
+        </div>
+
+        <!-- Sentence with blank -->
+        <div id="final-sentence" style="font-size:1.18rem; font-weight:700; color:#2d2d2d; line-height:1.7; margin-bottom:8px; min-height:60px;"></div>
+
+        <!-- Hint toggle button -->
+        <button id="final-hint-btn" onclick="showFinalHint()" style="margin-bottom:6px; padding:5px 16px; border-radius:20px; background:#fff0f6; color:#d63384; border:1.5px solid #f8bbd0; font-size:0.85rem; font-weight:700; cursor:pointer;">💡 顯示提示</button>
+
+        <!-- Hint chip — hidden until button clicked -->
+        <div id="final-hint" style="font-size:0.9rem; color:#d63384; background:#fce4ec; border-radius:20px; display:none; padding:4px 14px; margin-bottom:12px; font-weight:600;"></div>
+
+        <!-- Answer options (3 buttons, shuffled) -->
+        <div id="final-options" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+        <!-- Feedback (shown after answering) -->
+        <div id="final-feedback" style="display:none; margin-top:14px; font-size:1rem; font-weight:700; border-radius:14px; padding:10px 14px;"></div>
+      </div>
+
+      <!-- Close button -->
+      <button onclick="closeFinal()" style="margin-top:16px; padding:9px 26px; border-radius:20px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.3); font-weight:bold; cursor:pointer; font-size:1rem;">✕ 離開測驗</button>
+    </div>
+
+    <!-- 期末測驗結果畫面 -->
+    <div id="final-result-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:3500; justify-content:center; align-items:center; flex-direction:column; padding:16px; box-sizing:border-box;">
+      <div style="background:white; border-radius:28px; width:100%; max-width:400px; padding:30px 24px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <div id="final-result-emoji" style="font-size:4.5rem; margin-bottom:8px;">🎉</div>
+        <div style="font-size:1.5rem; font-weight:900; color:#7b1fa2; margin-bottom:6px;">測驗完成！</div>
+        <div id="final-result-stars" style="font-size:1.8rem; margin-bottom:10px;"></div>
+        <div id="final-result-score" style="font-size:1.1rem; color:#555; margin-bottom:6px;"></div>
+        <div id="final-result-coins" style="font-size:1.2rem; font-weight:800; color:#f9a825; margin-bottom:20px;"></div>
+        <button onclick="restartFinal()" style="width:100%; padding:14px; border-radius:16px; background:linear-gradient(135deg,#ab47bc,#7b1fa2); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #4a148c; margin-bottom:10px;">🔄 再挑戰一次！</button>
+        <button onclick="closeFinalResult()" style="width:100%; padding:11px; border-radius:16px; background:#f5f5f5; color:#555; border:none; font-size:1rem; font-weight:700; cursor:pointer;">✕ 回到遊戲</button>
       </div>
     </div>
 
