@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Daisy 單字測驗 — Word Meaning</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, 'Arial', sans-serif;
+    background: #fff3e0;
+    color: #222;
+    padding-bottom: 100px;
+    min-height: 100vh;
+  }
+
+  /* ── Back link ── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 20px;
+    font-size: 15px;
+    color: #e65100;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  .back-link:active { opacity: 0.6; }
+
+  /* ── Exam wrapper ── */
+  #exam-wrap {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 0 16px 20px;
+  }
+
+  /* ── Header card ── */
+  .header-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(230,81,0,0.12);
+    border-top: 5px solid #e65100;
+  }
+  .header-card h1 {
+    font-size: 20px;
+    color: #e65100;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .header-card .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 14px;
+  }
+  .info-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .info-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+  }
+  .info-field label { font-weight: bold; color: #e65100; white-space: nowrap; }
+  .info-field input {
+    border: none;
+    border-bottom: 2px solid #ffb74d;
+    outline: none;
+    font-size: 14px;
+    padding: 2px 4px;
+    width: 120px;
+    color: #222;
+    background: transparent;
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap { margin-top: 4px; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+  }
+  .progress-bar-bg {
+    height: 10px;
+    background: #fff3e0;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e65100, #ff6d00);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 12px;
+  }
+  .section-badge {
+    background: #e65100;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 5px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+  }
+  .section-score {
+    background: #fff3e0;
+    border: 1.5px solid #ff9800;
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 13px;
+    color: #e65100;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  /* ── Question card ── */
+  .q-card {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+  }
+  .q-num-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .q-num-badge {
+    background: #fff3e0;
+    color: #e65100;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .q-text {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #222;
+    font-weight: 500;
+    flex: 1;
+  }
+  .q-source-tag {
+    display: inline-block;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    color: #f57f17;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  /* ── MCQ options ── */
+  .options-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .opt-btn {
+    width: 100%;
+    min-height: 54px;
+    padding: 12px 18px;
+    border: 2px solid #b0bec5;
+    border-radius: 28px;
+    background: #fafafa;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    -webkit-appearance: none;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    touch-action: manipulation;
+  }
+  .opt-btn:active { transform: scale(0.98); }
+  .opt-btn.selected {
+    background: #e65100;
+    border-color: #e65100;
+    color: white;
+    font-weight: bold;
+  }
+  .opt-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.06);
+    font-size: 13px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .opt-btn.selected .opt-letter {
+    background: rgba(255,255,255,0.25);
+    color: white;
+  }
+
+  /* review states */
+  .opt-btn.correct {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: white;
+  }
+  .opt-btn.correct .opt-letter { background: rgba(255,255,255,0.25); color: white; }
+  .opt-btn.wrong {
+    background: #c62828;
+    border-color: #c62828;
+    color: white;
+  }
+  .opt-btn.wrong .opt-letter { background: rgba(255,255,255,0.25); color: white; }
+  .opt-btn.show-correct {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+    font-weight: bold;
+  }
+
+  /* ── Feedback tag ── */
+  .feedback-tag {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  .feedback-tag.correct-tag { background: #e8f5e9; color: #2e7d32; }
+  .feedback-tag.wrong-tag { background: #ffebee; color: #c62828; }
+
+  /* ── Sticky submit ── */
+  #submit-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 20px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.12);
+    z-index: 100;
+  }
+  #submit-btn {
+    display: block;
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+    height: 56px;
+    border: none;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #e65100, #ff6d00);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 2px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+  }
+  #submit-btn:disabled {
+    background: #b0bec5;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  #submit-btn:not(:disabled):active { transform: scale(0.97); }
+
+  /* ── Result screen ── */
+  #result-screen {
+    display: none;
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 20px 16px 100px;
+  }
+  .result-card {
+    background: white;
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(230,81,0,0.15);
+    margin-bottom: 16px;
+    border-top: 6px solid #e65100;
+  }
+  .result-score-big {
+    font-size: 72px;
+    font-weight: 900;
+    color: #e65100;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .result-out-of {
+    font-size: 18px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .result-stars {
+    font-size: 40px;
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+  }
+  .result-msg {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  .result-sub {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 24px;
+  }
+  .result-btn {
+    display: block;
+    width: 100%;
+    height: 54px;
+    border: none;
+    border-radius: 27px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 12px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+  }
+  .btn-review {
+    background: linear-gradient(135deg, #e65100, #ff6d00);
+    color: white;
+  }
+  .btn-reset {
+    background: white;
+    color: #e65100;
+    border: 2px solid #e65100;
+  }
+
+  @media (max-width: 420px) {
+    .result-score-big { font-size: 60px; }
+    .q-text { font-size: 15px; }
+    .opt-btn { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="daisy_hamster.html" class="back-link">← 返回主頁</a>
+
+<!-- Exam view -->
+<div id="exam-wrap">
+
+  <!-- Header -->
+  <div class="header-card">
+    <h1>單字測驗 — Word Meaning</h1>
+    <div class="subtitle">Vocabulary Exam &nbsp;|&nbsp; Week 10–16 &nbsp;|&nbsp; 28 題</div>
+    <div class="info-row">
+      <div class="info-field">
+        <label>Name:</label>
+        <input type="text" id="student-name" value="Daisy" placeholder="Daisy">
+      </div>
+      <div class="info-field">
+        <label>Date:</label>
+        <input type="text" id="student-date" placeholder="2026-__-__">
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="progress-text">0 / 28 已作答</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions rendered here -->
+  <div id="questions-container"></div>
+
+</div>
+
+<!-- Result screen -->
+<div id="result-screen">
+  <div class="result-card">
+    <div class="result-score-big" id="score-display">--</div>
+    <div class="result-out-of">/ 100 分</div>
+    <div class="result-stars" id="stars-display">☆☆☆</div>
+    <div class="result-msg" id="result-msg">--</div>
+    <div class="result-sub" id="result-sub">--</div>
+    <button class="result-btn btn-review" onclick="showReview()">查看詳解</button>
+    <button class="result-btn btn-reset" onclick="resetExam()">重新作答</button>
+  </div>
+</div>
+
+<!-- Sticky submit -->
+<div id="submit-area">
+  <button id="submit-btn" onclick="submitExam()" disabled>交卷</button>
+</div>
+
+<script>
+// =====================================================================
+// DATA — 28 questions, each 3.5pts → total 98 → display as /100
+// =====================================================================
+// Each question: { word, correct, wrong1, wrong2, source }
+// Options are shuffled before display
+const RAW_QUESTIONS = [
+  // FET Wk 10
+  { word: 'memory',   correct: '記憶🧠',   wrong1: '世界🌍',     wrong2: '秘密🤫',     source: 'FET 10' },
+  { word: 'achieve',  correct: '達成🏆',   wrong1: '發現🔍',     wrong2: '驚訝✨',     source: 'FET 10' },
+  { word: 'world',    correct: '世界🌍',   wrong1: '記憶🧠',     wrong2: '夢想💭',     source: 'FET 10' },
+  { word: 'alone',    correct: '單獨的🧍', wrong1: '達成🏆',     wrong2: '世界🌍',     source: 'FET 10' },
+  // FET Wk 11/12
+  { word: 'whisper',  correct: '耳語🤫',   wrong1: '愉快😄',     wrong2: '沙漠🏜️',    source: 'FET 11/12' },
+  { word: 'delight',  correct: '愉快😄',   wrong1: '山⛰️',      wrong2: '耳語🤫',     source: 'FET 11/12' },
+  { word: 'artist',   correct: '藝術家🎨', wrong1: '骨頭🦴',     wrong2: '沙漠🏜️',    source: 'FET 11/12' },
+  { word: 'mountain', correct: '山⛰️',    wrong1: '沙漠🏜️',    wrong2: '季節🍂',     source: 'FET 11/12' },
+  { word: 'desert',   correct: '沙漠🏜️',  wrong1: '山⛰️',      wrong2: '藝術家🎨',   source: 'FET 11/12' },
+  // FET Wk 13
+  { word: 'autumn',   correct: '秋天🍁',   wrong1: '春天🌸',     wrong2: '夏天☀️',    source: 'FET 13' },
+  { word: 'sprout',   correct: '發芽🌱',   wrong1: '開花🌺',     wrong2: '傳播🌊',     source: 'FET 13' },
+  { word: 'bloom',    correct: '開花🌺',   wrong1: '發芽🌱',     wrong2: '編織🧺',     source: 'FET 13' },
+  // FET Wk 14
+  { word: 'slither',  correct: '滑行🐍',   wrong1: '拍翅🦋',     wrong2: '碎步快跑🐭', source: 'FET 14' },
+  { word: 'flutter',  correct: '拍翅🦋',   wrong1: '滑行🐍',     wrong2: '碎步快跑🐭', source: 'FET 14' },
+  { word: 'scurry',   correct: '碎步快跑🐭', wrong1: '拍翅🦋',  wrong2: '秘密🤫',     source: 'FET 14' },
+  { word: 'secret',   correct: '秘密🤫',   wrong1: '商店🏪',     wrong2: '夾克🧥',     source: 'FET 14' },
+  // FET Wk 15
+  { word: 'crisp',    correct: '清爽的🍏', wrong1: '寒冷的🥶',   wrong2: '急動🏃',     source: 'FET 15' },
+  { word: 'chilly',   correct: '寒冷的🥶', wrong1: '清爽的🍏',   wrong2: '灰色的',     source: 'FET 15' },
+  { word: 'chipmunk', correct: '花栗鼠🐿️', wrong1: '蜘蛛🕷️',   wrong2: '急動🏃',     source: 'FET 15' },
+  // FET Wk 16
+  { word: 'spin',     correct: '旋轉🌀',   wrong1: '搖動🫨',     wrong2: '衝刺💨',     source: 'FET 16' },
+  { word: 'dash',     correct: '衝刺💨',   wrong1: '旋轉🌀',     wrong2: '拿來🐕',     source: 'FET 16' },
+  { word: 'fetch',    correct: '拿來🐕',   wrong1: '衝刺💨',     wrong2: '旋轉🌀',     source: 'FET 16' },
+  // CET Wk 10
+  { word: 'fossil',   correct: '化石🦴',   wrong1: '博物館🏛️',  wrong2: '旅行🚌',     source: 'CET 10' },
+  { word: 'alive',    correct: '活著的🌱', wrong1: '化石🦴',     wrong2: '休息☕',     source: 'CET 10' },
+  // CET Wk 11/12
+  { word: 'puzzle',   correct: '拼圖🧩',   wrong1: '雞🐔',       wrong2: '鳥🐦',       source: 'CET 11/12' },
+  { word: 'claw',     correct: '爪子🦁',   wrong1: '角🦏',       wrong2: '牙齒🦷',     source: 'CET 11/12' },
+  // CET Wk 13
+  { word: 'pilot',    correct: '飛行員✈️', wrong1: '醫生👨‍⚕️',  wrong2: '傻的🤪',     source: 'CET 13' },
+  // CET Wk 14
+  { word: 'brave',    correct: '勇敢的🦁', wrong1: '有天賦的🎤', wrong2: '強壯的💪',   source: 'CET 14' },
+];
+
+const TOTAL_MCQ = 28;
+const PTS_EACH = 3.5;
+
+// Shuffle helper (Fisher-Yates)
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Build questions with shuffled options
+function buildQuestions() {
+  return RAW_QUESTIONS.map(q => {
+    const opts = shuffle([q.correct, q.wrong1, q.wrong2]);
+    return {
+      word: q.word,
+      text: `What does "${q.word}" mean?`,
+      options: opts,
+      answer: q.correct,
+      source: q.source
+    };
+  });
+}
+
+let QUESTIONS = buildQuestions();
+
+// =====================================================================
+// STATE
+// =====================================================================
+let userAnswers = {};
+let submitted = false;
+
+// =====================================================================
+// RENDER
+// =====================================================================
+function escapeStr(s) {
+  return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function renderExam() {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+
+  // Single section header
+  const secEl = document.createElement('div');
+  secEl.className = 'section-header';
+  secEl.innerHTML = `
+    <span class="section-badge">單字測驗</span>
+    <span class="section-title">What does this word mean? — 選出正確中文意思</span>
+    <span class="section-score">98分</span>
+  `;
+  container.appendChild(secEl);
+
+  const instr = document.createElement('p');
+  instr.style.cssText = 'font-size:14px;color:#666;margin-bottom:12px;font-style:italic;padding-left:4px;';
+  instr.textContent = '每題選出正確的中文意思。共 28 題，每題 3.5 分。';
+  container.appendChild(instr);
+
+  QUESTIONS.forEach((q, idx) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard_${idx}`;
+
+    const optLetters = ['A', 'B', 'C'];
+    const optsHtml = q.options.map((opt, i) => `
+      <button class="opt-btn" id="opt_${idx}_${i}"
+        onclick="selectAnswer(${idx}, '${escapeStr(opt)}')"
+        data-value="${escapeStr(opt)}">
+        <span class="opt-letter">${optLetters[i]}</span>
+        <span>${opt}</span>
+      </button>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="q-num-row">
+        <span class="q-num-badge">${idx + 1}</span>
+        <span class="q-text">${q.text} <span class="q-source-tag">${q.source}</span></span>
+      </div>
+      <div class="options-wrap" id="opts_${idx}">
+        ${optsHtml}
+      </div>
+      <div id="feedback_${idx}" style="display:none;"></div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+// =====================================================================
+// INTERACTION
+// =====================================================================
+function selectAnswer(idx, value) {
+  if (submitted) return;
+
+  userAnswers[idx] = value;
+
+  const optsWrap = document.getElementById(`opts_${idx}`);
+  optsWrap.querySelectorAll('.opt-btn').forEach(btn => {
+    if (btn.dataset.value === value) {
+      btn.classList.add('selected');
+    } else {
+      btn.classList.remove('selected');
+    }
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const answered = Object.keys(userAnswers).length;
+  const pct = Math.round((answered / TOTAL_MCQ) * 100);
+  document.getElementById('progress-text').textContent = `${answered} / ${TOTAL_MCQ} 已作答`;
+  document.getElementById('progress-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+  document.getElementById('submit-btn').disabled = (answered < TOTAL_MCQ);
+}
+
+// =====================================================================
+// SUBMIT
+// =====================================================================
+function submitExam() {
+  if (submitted) return;
+  submitted = true;
+
+  let correctCount = 0;
+  QUESTIONS.forEach((q, idx) => {
+    if (userAnswers[idx] === q.answer) correctCount++;
+  });
+
+  const rawScore = correctCount * PTS_EACH;
+  const displayScore = Math.round(rawScore);
+
+  document.getElementById('exam-wrap').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+  document.getElementById('submit-area').style.display = 'none';
+
+  document.getElementById('score-display').textContent = displayScore;
+
+  let stars, msg, sub;
+  if (displayScore >= 90) {
+    stars = '⭐⭐⭐';
+    msg = '太厲害了！Daisy 單字超強！';
+    sub = '所有單字都掌握得很好！繼續加油！';
+  } else if (displayScore >= 70) {
+    stars = '⭐⭐';
+    msg = '很好！繼續努力！';
+    sub = '大部分單字都答對了，再複習一下錯的吧！';
+  } else if (displayScore >= 50) {
+    stars = '⭐';
+    msg = '不錯喔！再加油！';
+    sub = '還有一些單字需要練習，不要放棄！';
+  } else {
+    stars = '💪';
+    msg = '繼續努力，你可以的！';
+    sub = '多複習一下單字，下次一定會更好！';
+  }
+
+  document.getElementById('stars-display').textContent = stars;
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-sub').textContent = sub;
+}
+
+// =====================================================================
+// REVIEW
+// =====================================================================
+function showReview() {
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('exam-wrap').style.display = 'block';
+  document.getElementById('submit-area').style.display = 'none';
+  window.scrollTo(0, 0);
+
+  QUESTIONS.forEach((q, idx) => {
+    const chosen = userAnswers[idx];
+    const correct = q.answer;
+    const optsWrap = document.getElementById(`opts_${idx}`);
+
+    optsWrap.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.classList.remove('selected');
+      const val = btn.dataset.value;
+      if (val === correct && val === chosen) {
+        btn.classList.add('correct');
+      } else if (val === correct && val !== chosen) {
+        btn.classList.add('show-correct');
+      } else if (val === chosen && val !== correct) {
+        btn.classList.add('wrong');
+      }
+    });
+
+    const fbEl = document.getElementById(`feedback_${idx}`);
+    fbEl.style.display = 'block';
+    if (chosen === correct) {
+      fbEl.innerHTML = `<span class="feedback-tag correct-tag">✓ 答對了！</span>`;
+    } else {
+      fbEl.innerHTML = `<span class="feedback-tag wrong-tag">✗ 正確答案是：${correct}</span>`;
+    }
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// =====================================================================
+// RESET
+// =====================================================================
+function resetExam() {
+  userAnswers = {};
+  submitted = false;
+  QUESTIONS = buildQuestions(); // re-shuffle options
+
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('exam-wrap').style.display = 'block';
+  document.getElementById('submit-area').style.display = 'block';
+  document.getElementById('submit-btn').disabled = true;
+
+  renderExam();
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+renderExam();
+updateProgress();
+
+const today = new Date();
+document.getElementById('student-date').value =
+  today.getFullYear() + '-' +
+  String(today.getMonth()+1).padStart(2,'0') + '-' +
+  String(today.getDate()).padStart(2,'0');
+</script>
+</body>
+</html>

@@ -464,7 +464,7 @@
     </div>
     <div class="progress-wrap">
       <div class="progress-label">
-        <span id="progress-text">0 / 38 已作答</span>
+        <span id="progress-text">0 / 28 已作答</span>
         <span id="progress-pct">0%</span>
       </div>
       <div class="progress-bar-bg">
@@ -486,23 +486,23 @@
     <div class="result-stars" id="stars-display">☆☆☆</div>
     <div class="result-msg" id="result-msg">--</div>
     <div class="result-sub" id="result-sub">--</div>
-    <div class="result-note">✏️ Part F（造句）共 6 分，需老師批改後加分。</div>
+    <div class="result-note">✏️ Part F（造句）共 16 分，需老師批改後加分。自動計分部分：A+B+C+D 共 84 分。</div>
     <div class="score-table-wrap">
       <table class="score-table">
         <thead>
           <tr>
-            <th>Part</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th>
+            <th>Part</th><th>A</th><th>B</th><th>C</th><th>D</th><th>F</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>分數</td>
             <td id="pt-a">-</td><td id="pt-b">-</td><td id="pt-c">-</td>
-            <td id="pt-d">-</td><td id="pt-e">-</td><td id="pt-f">老師批改</td>
+            <td id="pt-d">-</td><td id="pt-f">老師批改 +16</td>
           </tr>
           <tr>
             <td>滿分</td>
-            <td>24</td><td>24</td><td>18</td><td>18</td><td>10</td><td>6</td>
+            <td>24</td><td>24</td><td>18</td><td>18</td><td>16</td>
           </tr>
         </tbody>
       </table>
@@ -521,7 +521,7 @@
 // =====================================================================
 // DATA
 // =====================================================================
-const TOTAL_MCQ = 38; // Parts A-E
+const TOTAL_MCQ = 28; // Parts A-D
 const PARTS = [
   {
     id: 'A',
@@ -727,75 +727,6 @@ const PARTS = [
       }
     ]
   },
-  {
-    id: 'E',
-    title: '詞義配對 — What does this word mean?',
-    score: 10,
-    points: 1,
-    instruction: '選出每個單字的中文意思。',
-    questions: [
-      {
-        text: 'What does "slither" mean? 🐍',
-        options: ['開花', '滑行', '清爽的'],
-        answer: '滑行',
-        hint: 'slither'
-      },
-      {
-        text: 'What does "bloom" mean? 🌺',
-        options: ['衝刺', '開花', '沙漠'],
-        answer: '開花',
-        hint: 'bloom'
-      },
-      {
-        text: 'What does "crisp" mean? 🍏',
-        options: ['清爽的', '化石', '提醒'],
-        answer: '清爽的',
-        hint: 'crisp'
-      },
-      {
-        text: 'What does "fossil" mean? 🦴',
-        options: ['提醒', '編織', '化石'],
-        answer: '化石',
-        hint: 'fossil'
-      },
-      {
-        text: 'What does "remind" mean? 🔔',
-        options: ['滑行', '提醒', '達成'],
-        answer: '提醒',
-        hint: 'remind'
-      },
-      {
-        text: 'What does "desert" mean? 🏜️',
-        options: ['衝刺', '沙漠', '愉快'],
-        answer: '沙漠',
-        hint: 'desert'
-      },
-      {
-        text: 'What does "dash" mean? 💨',
-        options: ['衝刺', '編織', '達成'],
-        answer: '衝刺',
-        hint: 'dash'
-      },
-      {
-        text: 'What does "weave" mean? 🕸️',
-        options: ['化石', '編織', '清爽的'],
-        answer: '編織',
-        hint: 'weave'
-      },
-      {
-        text: 'What does "achieve" mean? 🏆',
-        options: ['達成', '開花', '沙漠'],
-        answer: '達成',
-        hint: 'achieve'
-      },
-      {
-        text: 'What does "delight" mean? 😄',
-        options: ['愉快', '滑行', '衝刺'],
-        answer: '愉快',
-        hint: 'delight'
-      }
-    ]
-  }
 ];
 
 const WRITING_QUESTIONS = [
@@ -880,13 +811,13 @@ function renderExam() {
   writeSec.innerHTML = `
     <span class="section-badge">Part F</span>
     <span class="section-title">造句 Writing — 老師批改</span>
-    <span class="section-score">6分</span>
+    <span class="section-score">16分</span>
   `;
   container.appendChild(writeSec);
 
   const writeInstr = document.createElement('p');
   writeInstr.style.cssText = 'font-size:14px;color:#666;margin-bottom:12px;font-style:italic;padding-left:4px;';
-  writeInstr.textContent = '用以下單字各造一個英文句子。（老師批改，每題 2 分）';
+  writeInstr.textContent = '用以下單字各造一個英文句子。（老師批改，共 16 分）';
   container.appendChild(writeInstr);
 
   WRITING_QUESTIONS.forEach((wq, i) => {
@@ -972,7 +903,12 @@ function submitExam() {
     totalAutoScore += earned;
   });
 
-  const displayScore = totalAutoScore; // out of 94
+  // Auto score: correct_count × 3pts = out of 84; Writing = +16 (assumed full)
+  const correctCount = PARTS.reduce((sum, part, partIdx) => {
+    return sum + part.questions.filter((q, qIdx) => userAnswers[buildQuestionKey(partIdx, qIdx)] === q.answer).length;
+  }, 0);
+  const autoScore = Math.round(correctCount / 28 * 84);
+  const displayScore = Math.min(100, autoScore + 16);
 
   // Show result screen
   document.getElementById('exam-wrap').style.display = 'none';
@@ -1006,7 +942,7 @@ function submitExam() {
   document.getElementById('result-sub').textContent = sub;
 
   // Part scores
-  ['A','B','C','D','E'].forEach(id => {
+  ['A','B','C','D'].forEach(id => {
     const el = document.getElementById(`pt-${id.toLowerCase()}`);
     if (el) el.textContent = partScores[id] || 0;
   });
