@@ -625,6 +625,12 @@ function vRender() {
 function vFlip() {
     vFlipped = !vFlipped;
     document.getElementById('flashcard').classList.toggle('flipped', vFlipped);
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(VOCAB[vIdx].w);
+        u.lang = 'en-US'; u.rate = 0.85; u.pitch = 1.0;
+        window.speechSynthesis.speak(u);
+    }
 }
 function vPrev() { if (vIdx > 0)                  { vIdx--; vRender(); } }
 function vNext() { if (vIdx < VOCAB.length - 1)   { vIdx++; vRender(); } }
