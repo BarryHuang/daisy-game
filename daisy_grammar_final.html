@@ -2,468 +2,1091 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daisy 期末考文法詞彙模擬測驗卷</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Daisy 期末文法詞彙互動測驗</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
-    font-family: 'Arial', sans-serif;
-    background: #f0f4ff;
-    padding: 20px;
+    font-family: -apple-system, 'Arial', sans-serif;
+    background: #e3f2fd;
     color: #222;
+    padding-bottom: 100px;
+    min-height: 100vh;
   }
 
-  .page {
+  /* ── Back link ── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 20px;
+    font-size: 15px;
+    color: #1565c0;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  .back-link:active { opacity: 0.6; }
+
+  /* ── Exam wrapper ── */
+  #exam-wrap {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 0 16px 20px;
+  }
+
+  /* ── Header card ── */
+  .header-card {
     background: white;
-    max-width: 780px;
-    margin: 0 auto 40px auto;
-    padding: 40px 48px;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    page-break-after: always;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(21,101,192,0.12);
+    border-top: 5px solid #1565c0;
+  }
+  .header-card h1 {
+    font-size: 20px;
+    color: #1565c0;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .header-card .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 14px;
+  }
+  .info-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .info-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+  }
+  .info-field label { font-weight: bold; color: #1565c0; white-space: nowrap; }
+  .info-field input {
+    border: none;
+    border-bottom: 2px solid #90caf9;
+    outline: none;
+    font-size: 14px;
+    padding: 2px 4px;
+    width: 120px;
+    color: #222;
+    background: transparent;
   }
 
-  /* ── Header ── */
-  .header {
-    text-align: center;
-    border: 3px solid #1565c0;
+  /* ── Progress bar ── */
+  .progress-wrap { margin-top: 4px; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+  }
+  .progress-bar-bg {
+    height: 10px;
+    background: #e3f2fd;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1565c0, #42a5f5);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 12px;
+  }
+  .section-badge {
+    background: #1565c0;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 5px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+  }
+  .section-score {
+    background: #fff3e0;
+    border: 1.5px solid #ff9800;
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 13px;
+    color: #e65100;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  /* ── Question card ── */
+  .q-card {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+  }
+  .q-num-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .q-num-badge {
+    background: #e3f2fd;
+    color: #1565c0;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 3px 9px;
     border-radius: 12px;
-    padding: 18px 24px;
-    margin-bottom: 28px;
-    background: linear-gradient(135deg, #e3f2fd 0%, #ede7ff 100%);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-  .header h1 { font-size: 21px; color: #0d47a1; letter-spacing: 2px; margin-bottom: 6px; }
-  .header .subtitle { font-size: 13px; color: #666; margin-bottom: 14px; }
-  .info-row { display: flex; justify-content: space-between; font-size: 14px; gap: 20px; }
-  .info-row span { border-bottom: 1.5px solid #555; flex: 1; padding-bottom: 2px; }
-  .info-row label { font-weight: bold; margin-right: 6px; color: #0d47a1; }
+  .q-text {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #222;
+    font-weight: 500;
+  }
 
-  /* ── Part Header ── */
-  .part-header { display: flex; align-items: center; gap: 10px; margin: 28px 0 10px 0; }
-  .part-badge { background: #1565c0; color: white; font-size: 13px; font-weight: bold; padding: 4px 14px; border-radius: 20px; white-space: nowrap; }
-  .part-title { font-size: 15px; font-weight: bold; color: #333; }
-  .part-score { margin-left: auto; background: #fff3e0; border: 1.5px solid #ff9800; border-radius: 8px; padding: 3px 12px; font-size: 13px; color: #e65100; font-weight: bold; white-space: nowrap; }
-  .instruction { font-size: 13px; color: #555; margin: 0 0 14px 0; font-style: italic; }
+  /* ── MCQ options ── */
+  .options-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .opt-btn {
+    width: 100%;
+    min-height: 54px;
+    padding: 12px 18px;
+    border: 2px solid #b0bec5;
+    border-radius: 28px;
+    background: #fafafa;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    -webkit-appearance: none;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    touch-action: manipulation;
+  }
+  .opt-btn:active { transform: scale(0.98); }
+  .opt-btn.selected {
+    background: #1565c0;
+    border-color: #1565c0;
+    color: white;
+    font-weight: bold;
+  }
+  .opt-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.06);
+    font-size: 13px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .opt-btn.selected .opt-letter {
+    background: rgba(255,255,255,0.25);
+    color: white;
+  }
 
-  /* ── Questions ── */
-  .q-list { list-style: none; }
-  .q-list li { margin-bottom: 16px; font-size: 15px; line-height: 1.9; }
-  .q-num { font-weight: bold; color: #1565c0; margin-right: 6px; }
+  /* review states */
+  .opt-btn.correct {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: white;
+  }
+  .opt-btn.correct .opt-letter { background: rgba(255,255,255,0.25); color: white; }
+  .opt-btn.wrong {
+    background: #c62828;
+    border-color: #c62828;
+    color: white;
+  }
+  .opt-btn.wrong .opt-letter { background: rgba(255,255,255,0.25); color: white; }
+  .opt-btn.show-correct {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+    font-weight: bold;
+  }
 
-  /* choices inline */
-  .choices { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; margin-left: 24px; }
-  .choice { border: 1.5px solid #aaa; border-radius: 6px; padding: 3px 14px; font-size: 14px; background: #fafafa; }
+  /* ── Feedback tag ── */
+  .feedback-tag {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  .feedback-tag.correct-tag { background: #e8f5e9; color: #2e7d32; }
+  .feedback-tag.wrong-tag { background: #ffebee; color: #c62828; }
 
-  /* blank */
-  .blank { display: inline-block; border-bottom: 1.5px solid #333; min-width: 100px; margin: 0 4px; vertical-align: bottom; height: 20px; }
-  .blank-sm { min-width: 60px; }
+  /* ── Writing part ── */
+  .writing-card {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+    border-left: 4px solid #ff9800;
+  }
+  .writing-word {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1565c0;
+    margin-bottom: 4px;
+  }
+  .writing-hint {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 10px;
+  }
+  .writing-textarea {
+    width: 100%;
+    min-height: 80px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .writing-textarea:focus { border-color: #1565c0; }
+  .teacher-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fff3e0;
+    border: 1px solid #ffb74d;
+    color: #e65100;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-top: 8px;
+  }
 
-  /* source tag */
-  .src-tag { font-size: 11px; background: #e3f2fd; color: #1565c0; border-radius: 10px; padding: 1px 8px; margin-left: 6px; font-weight: 600; }
+  /* ── Sticky submit ── */
+  #submit-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 20px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.12);
+    z-index: 100;
+  }
+  #submit-btn {
+    display: block;
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+    height: 56px;
+    border: none;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #1565c0, #0d47a1);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 2px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+  }
+  #submit-btn:disabled {
+    background: #b0bec5;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  #submit-btn:not(:disabled):active { transform: scale(0.97); }
 
-  /* word bank */
-  .word-bank { border: 1.5px dashed #1565c0; border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; background: #e8f0fe; font-size: 14px; }
-  .word-bank strong { color: #0d47a1; margin-right: 6px; }
-  .word-bank .wlist { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .word-bank .wlist span { background: white; border: 1px solid #90caf9; border-radius: 6px; padding: 2px 12px; font-size: 15px; font-weight: bold; color: #333; }
+  /* ── Result screen ── */
+  #result-screen {
+    display: none;
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 20px 16px 100px;
+  }
+  .result-card {
+    background: white;
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(21,101,192,0.15);
+    margin-bottom: 16px;
+    border-top: 6px solid #1565c0;
+  }
+  .result-score-big {
+    font-size: 72px;
+    font-weight: 900;
+    color: #1565c0;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .result-out-of {
+    font-size: 18px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .result-stars {
+    font-size: 40px;
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+  }
+  .result-msg {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  .result-sub {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 24px;
+  }
+  .result-note {
+    background: #fff3e0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #e65100;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .result-btn {
+    display: block;
+    width: 100%;
+    height: 54px;
+    border: none;
+    border-radius: 27px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 12px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+  }
+  .btn-review {
+    background: linear-gradient(135deg, #1565c0, #0d47a1);
+    color: white;
+  }
+  .btn-reset {
+    background: white;
+    color: #1565c0;
+    border: 2px solid #1565c0;
+  }
 
-  /* match table */
-  .match-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-  .match-table th { background: #1565c0; color: white; padding: 8px 14px; text-align: center; border: 1px solid #0d47a1; }
-  .match-table td { border: 1px solid #ccc; padding: 10px 14px; font-size: 14px; }
-  .match-table td:first-child { font-weight: bold; font-size: 15px; color: #1565c0; text-align: center; width: 40%; }
-  .match-table .ans-col { width: 20%; text-align: center; }
+  /* ── Part score summary ── */
+  .score-table-wrap {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+    margin-bottom: 16px;
+  }
+  .score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .score-table th {
+    background: #1565c0;
+    color: white;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .score-table td {
+    border: 1px solid #e0e0e0;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .score-table tr:last-child td { font-weight: bold; background: #e3f2fd; }
 
-  /* sentence writing */
-  .write-item { border: 1px solid #ddd; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; background: #fafafa; }
-  .write-item .wi-num { color: #1565c0; font-weight: bold; }
-  .write-item .wi-word { font-size: 17px; font-weight: bold; margin: 4px 0 8px 0; color: #0d47a1; }
-  .write-item .wi-hint { font-size: 12px; color: #888; margin-bottom: 6px; }
-  .write-line { border-bottom: 1.5px solid #333; width: 100%; height: 22px; display: block; margin-top: 4px; }
-
-  /* divider */
-  .divider { border: none; border-top: 1.5px dashed #ccc; margin: 20px 0; }
-
-  /* score table */
-  .score-summary { margin-top: 30px; border: 2px solid #1565c0; border-radius: 12px; overflow: hidden; }
-  .score-summary table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .score-summary th { background: #1565c0; color: white; padding: 8px; text-align: center; }
-  .score-summary td { border: 1px solid #ddd; padding: 8px; text-align: center; height: 36px; }
-  .score-summary td:first-child { font-weight: bold; background: #e3f2fd; text-align: left; padding-left: 12px; }
-
-  /* answer key */
-  .answer-key { background: #e8f5e9; border: 2px dashed #388e3c; border-radius: 12px; padding: 28px 36px; }
-  .answer-key h2 { color: #1b5e20; text-align: center; margin-bottom: 20px; font-size: 18px; }
-  .ak-section { margin-bottom: 18px; }
-  .ak-section h3 { color: #2e7d32; font-size: 14px; margin-bottom: 8px; border-bottom: 1px solid #a5d6a7; padding-bottom: 4px; }
-  .ak-section p { font-size: 14px; line-height: 2.2; color: #333; }
-  .ak-ans { font-weight: bold; color: #1b5e20; }
-
-  @media print {
-    body { background: white; padding: 0; }
-    .page { box-shadow: none; margin: 0; border-radius: 0; padding: 32px 48px; }
-    .no-print { display: none; }
+  @media (max-width: 420px) {
+    .result-score-big { font-size: 60px; }
+    .q-text { font-size: 15px; }
+    .opt-btn { font-size: 15px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════
-     PAGE 1 — Parts A & B (FET Wk 10-16)
-     ══════════════════════════════════════ -->
-<div class="page">
-  <div class="header">
-    <h1>期末考文法詞彙模擬測驗卷</h1>
-    <div class="subtitle">Final Exam Vocabulary &amp; Grammar Practice Test &nbsp;|&nbsp; FET &amp; CET Week 10 – 16</div>
+<a href="daisy_hamster.html" class="back-link">← 返回主頁</a>
+
+<!-- Exam view -->
+<div id="exam-wrap">
+
+  <!-- Header -->
+  <div class="header-card">
+    <h1>期末文法詞彙互動測驗</h1>
+    <div class="subtitle">Final Grammar &amp; Vocabulary Exam &nbsp;|&nbsp; Week 10–16</div>
     <div class="info-row">
-      <div><label>Name:</label><span>Daisy</span></div>
-      <div><label>Date:</label><span>&nbsp;</span></div>
-      <div><label>Score:</label><span>&nbsp;&nbsp;&nbsp;&nbsp;/ 100</span></div>
+      <div class="info-field">
+        <label>Name:</label>
+        <input type="text" id="student-name" value="Daisy" placeholder="Daisy">
+      </div>
+      <div class="info-field">
+        <label>Date:</label>
+        <input type="text" id="student-date" placeholder="2026-__-__">
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="progress-text">0 / 38 已作答</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
     </div>
   </div>
 
-  <!-- ── Part A ── FET Wk 10-12 -->
-  <div class="part-header">
-    <span class="part-badge">Part A</span>
-    <span class="part-title">FET Week 10 – 12 &nbsp;–&nbsp; Fill in the blank. 選出正確答案填入空格</span>
-    <span class="part-score">___/ 24</span>
-  </div>
-  <p class="instruction">Choose the best word to complete each sentence. Circle your answer, then write it on the line.</p>
+  <!-- Questions rendered here -->
+  <div id="questions-container"></div>
 
-  <ul class="q-list">
-    <li>
-      <span class="q-num">1.</span> She has a very good <span class="blank"></span> and remembers everyone's names. <span class="src-tag">FET 10</span>
-      <div class="choices"><span class="choice">memory</span><span class="choice">world</span><span class="choice">wonder</span></div>
-    </li>
-    <li>
-      <span class="q-num">2.</span> If you work hard, you can <span class="blank"></span> your goals. <span class="src-tag">FET 10</span>
-      <div class="choices"><span class="choice">achieve</span><span class="choice">alone</span><span class="choice">struggle</span></div>
-    </li>
-    <li>
-      <span class="q-num">3.</span> The internet connects people all over the <span class="blank"></span>. <span class="src-tag">FET 10</span>
-      <div class="choices"><span class="choice">world</span><span class="choice">dream</span><span class="choice">tunes</span></div>
-    </li>
-    <li>
-      <span class="q-num">4.</span> Please <span class="blank"></span> quietly so the baby won't wake up. <span class="src-tag">FET 11/12</span>
-      <div class="choices"><span class="choice">whisper</span><span class="choice">delight</span><span class="choice">surround</span></div>
-    </li>
-    <li>
-      <span class="q-num">5.</span> The beautiful rainbow was a <span class="blank"></span> to see. <span class="src-tag">FET 11/12</span>
-      <div class="choices"><span class="choice">delight</span><span class="choice">mountain</span><span class="choice">desert</span></div>
-    </li>
-    <li>
-      <span class="q-num">6.</span> The <span class="blank"></span> painted a beautiful picture of the ocean. <span class="src-tag">FET 11/12</span>
-      <div class="choices"><span class="choice">artist</span><span class="choice">wonder</span><span class="choice">bones</span></div>
-    </li>
-    <li>
-      <span class="q-num">7.</span> They climbed to the top of the tall <span class="blank"></span>. <span class="src-tag">FET 11/12</span>
-      <div class="choices"><span class="choice">mountain</span><span class="choice">desert</span><span class="choice">season</span></div>
-    </li>
-    <li>
-      <span class="q-num">8.</span> A camel can live in the hot, dry <span class="blank"></span> for days. <span class="src-tag">FET 11/12</span>
-      <div class="choices"><span class="choice">desert</span><span class="choice">mountain</span><span class="choice">children</span></div>
-    </li>
-  </ul>
-
-  <hr class="divider">
-
-  <!-- ── Part B ── FET Wk 13-16 -->
-  <div class="part-header">
-    <span class="part-badge">Part B</span>
-    <span class="part-title">FET Week 13 – 16 &nbsp;–&nbsp; Fill in the blank. 選出正確答案填入空格</span>
-    <span class="part-score">___/ 24</span>
-  </div>
-  <p class="instruction">Choose the best word to complete each sentence.</p>
-
-  <ul class="q-list">
-    <li>
-      <span class="q-num">1.</span> In <span class="blank"></span>, the leaves change color and fall from the trees. <span class="src-tag">FET 13</span>
-      <div class="choices"><span class="choice">autumn</span><span class="choice">spring</span><span class="choice">summer</span></div>
-    </li>
-    <li>
-      <span class="q-num">2.</span> With a little water, the seeds will begin to <span class="blank"></span>. <span class="src-tag">FET 13</span>
-      <div class="choices"><span class="choice">sprout</span><span class="choice">bloom</span><span class="choice">spread</span></div>
-    </li>
-    <li>
-      <span class="q-num">3.</span> The butterflies <span class="blank"></span> their wings as they fly from flower to flower. <span class="src-tag">FET 14</span>
-      <div class="choices"><span class="choice">flutter</span><span class="choice">slither</span><span class="choice">scatter</span></div>
-    </li>
-    <li>
-      <span class="q-num">4.</span> The mice <span class="blank"></span> quickly across the floor to hide. <span class="src-tag">FET 14</span>
-      <div class="choices"><span class="choice">scurry</span><span class="choice">honk</span><span class="choice">taste</span></div>
-    </li>
-    <li>
-      <span class="q-num">5.</span> It is quite <span class="blank"></span> today, so wear a sweater. <span class="src-tag">FET 15</span>
-      <div class="choices"><span class="choice">chilly</span><span class="choice">crisp</span><span class="choice">gray</span></div>
-    </li>
-    <li>
-      <span class="q-num">6.</span> The little <span class="blank"></span> quickly hid its food in the tree. <span class="src-tag">FET 15</span>
-      <div class="choices"><span class="choice">chipmunk</span><span class="choice">spider</span><span class="choice">rush</span></div>
-    </li>
-    <li>
-      <span class="q-num">7.</span> The top will <span class="blank"></span> around and around on the table. <span class="src-tag">FET 16</span>
-      <div class="choices"><span class="choice">spin</span><span class="choice">shake</span><span class="choice">fly</span></div>
-    </li>
-    <li>
-      <span class="q-num">8.</span> My dog loves to run and <span class="blank"></span> the ball when I throw it. <span class="src-tag">FET 16</span>
-      <div class="choices"><span class="choice">fetch</span><span class="choice">dash</span><span class="choice">shake</span></div>
-    </li>
-  </ul>
-
-  <!-- Score box -->
-  <div class="score-summary">
-    <table>
-      <tr><th>Part</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
-      <tr><td>Score</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-    </table>
-  </div>
-</div><!-- end page 1 -->
-
-
-<!-- ══════════════════════════════════════
-     PAGE 2 — Parts C & D (CET Wk 10-16)
-     ══════════════════════════════════════ -->
-<div class="page">
-
-  <!-- ── Part C ── CET Wk 10-12 -->
-  <div class="part-header">
-    <span class="part-badge">Part C</span>
-    <span class="part-title">CET Week 10 – 12 &nbsp;–&nbsp; Fill in the blank. 選出正確答案填入空格</span>
-    <span class="part-score">___/ 18</span>
-  </div>
-  <p class="instruction">Choose the best word to complete each sentence.</p>
-
-  <ul class="q-list">
-    <li>
-      <span class="q-num">1.</span> We saw many old paintings at the art <span class="blank"></span>. <span class="src-tag">CET 10</span>
-      <div class="choices"><span class="choice">museum</span><span class="choice">field</span><span class="choice">fossil</span></div>
-    </li>
-    <li>
-      <span class="q-num">2.</span> Scientists found a fish <span class="blank"></span> in the solid rock. <span class="src-tag">CET 10</span>
-      <div class="choices"><span class="choice">fossil</span><span class="choice">museum</span><span class="choice">drawing</span></div>
-    </li>
-    <li>
-      <span class="q-num">3.</span> Our family went on a <span class="blank"></span> to the beach last summer. <span class="src-tag">CET 10</span>
-      <div class="choices"><span class="choice">trip</span><span class="choice">model</span><span class="choice">break</span></div>
-    </li>
-    <li>
-      <span class="q-num">4.</span> Can you help me solve this 100-piece <span class="blank"></span>? <span class="src-tag">CET 11</span>
-      <div class="choices"><span class="choice">puzzle</span><span class="choice">chicken</span><span class="choice">bird</span></div>
-    </li>
-    <li>
-      <span class="q-num">5.</span> The cat used its sharp <span class="blank"></span> to scratch the post. <span class="src-tag">CET 12</span>
-      <div class="choices"><span class="choice">claw</span><span class="choice">horn</span><span class="choice">teeth</span></div>
-    </li>
-    <li>
-      <span class="q-num">6.</span> Don't forget to brush your <span class="blank"></span> before going to bed. <span class="src-tag">CET 12</span>
-      <div class="choices"><span class="choice">teeth</span><span class="choice">claw</span><span class="choice">flat</span></div>
-    </li>
-  </ul>
-
-  <hr class="divider">
-
-  <!-- ── Part D ── CET Wk 13-16 -->
-  <div class="part-header">
-    <span class="part-badge">Part D</span>
-    <span class="part-title">CET Week 13 – 16 &nbsp;–&nbsp; Fill in the blank. 選出正確答案填入空格</span>
-    <span class="part-score">___/ 18</span>
-  </div>
-  <p class="instruction">Choose the best word to complete each sentence.</p>
-
-  <ul class="q-list">
-    <li>
-      <span class="q-num">1.</span> Watch the red balloon <span class="blank"></span> away into the air. <span class="src-tag">CET 13</span>
-      <div class="choices"><span class="choice">float</span><span class="choice">stretch</span><span class="choice">over</span></div>
-    </li>
-    <li>
-      <span class="q-num">2.</span> The <span class="blank"></span> flew the airplane safely to the airport. <span class="src-tag">CET 13</span>
-      <div class="choices"><span class="choice">pilot</span><span class="choice">doctor</span><span class="choice">silly</span></div>
-    </li>
-    <li>
-      <span class="q-num">3.</span> The <span class="blank"></span> firefighter ran into the burning house to save the dog. <span class="src-tag">CET 14</span>
-      <div class="choices"><span class="choice">brave</span><span class="choice">tough</span><span class="choice">talented</span></div>
-    </li>
-    <li>
-      <span class="q-num">4.</span> She is a very <span class="blank"></span> singer who wins many contests. <span class="src-tag">CET 14</span>
-      <div class="choices"><span class="choice">talented</span><span class="choice">brave</span><span class="choice">tough</span></div>
-    </li>
-    <li>
-      <span class="q-num">5.</span> The magician pulled a rabbit out of his hat as a cool <span class="blank"></span>. <span class="src-tag">CET 15/16</span>
-      <div class="choices"><span class="choice">trick</span><span class="choice">learn</span><span class="choice">start</span></div>
-    </li>
-    <li>
-      <span class="q-num">6.</span> She is a <span class="blank"></span> movie star and everyone knows her name. <span class="src-tag">CET 15/16</span>
-      <div class="choices"><span class="choice">famous</span><span class="choice">flew</span><span class="choice">stop</span></div>
-    </li>
-  </ul>
-
-  <hr class="divider">
-
-  <!-- ── Part E ── Word-Hint Matching -->
-  <div class="part-header">
-    <span class="part-badge">Part E</span>
-    <span class="part-title">詞義配對 &nbsp;–&nbsp; Match the word to its meaning. 連連看</span>
-    <span class="part-score">___/ 10</span>
-  </div>
-  <p class="instruction">Draw a line to connect each word to its correct Chinese meaning.</p>
-
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:10px;">
-    <div>
-      <table class="match-table">
-        <tr><th>Word</th><th>　</th><th>Meaning</th></tr>
-        <tr><td>slither</td><td class="ans-col"></td><td>開花 🌺</td></tr>
-        <tr><td>bloom</td><td class="ans-col"></td><td>嘗到 👅</td></tr>
-        <tr><td>crisp</td><td class="ans-col"></td><td>清爽的 🍏</td></tr>
-        <tr><td>fossil</td><td class="ans-col"></td><td>化石 🦴</td></tr>
-        <tr><td>remind</td><td class="ans-col"></td><td>滑行 🐍</td></tr>
-      </table>
-    </div>
-    <div>
-      <table class="match-table">
-        <tr><th>Word</th><th>　</th><th>Meaning</th></tr>
-        <tr><td>desert</td><td class="ans-col"></td><td>衝刺 💨</td></tr>
-        <tr><td>dash</td><td class="ans-col"></td><td>沙漠 🏜️</td></tr>
-        <tr><td>weave</td><td class="ans-col"></td><td>提醒 🔔</td></tr>
-        <tr><td>achieve</td><td class="ans-col"></td><td>編織 🕸️</td></tr>
-        <tr><td>delight</td><td class="ans-col"></td><td>達成 🏆</td></tr>
-      </table>
-    </div>
-  </div>
-
-</div><!-- end page 2 -->
-
-
-<!-- ══════════════════════════════════════
-     PAGE 3 — Part F (造句) + Answer Key
-     ══════════════════════════════════════ -->
-<div class="page">
-
-  <!-- ── Part F ── Sentence Writing -->
-  <div class="part-header">
-    <span class="part-badge">Part F</span>
-    <span class="part-title">造句 &nbsp;–&nbsp; Write a sentence using each word. 用每個單字造一個句子</span>
-    <span class="part-score">___/ 6</span>
-  </div>
-  <p class="instruction">Write one complete sentence for each word. (每題 2 分：詞意正確 1 分 + 句子完整 1 分)</p>
-
-  <div class="write-item">
-    <div class="wi-num">1.</div>
-    <div class="wi-word">autumn <span style="font-size:13px; font-weight:normal; color:#888;">（秋天 🍁）</span></div>
-    <span class="write-line"></span>
-    <span class="write-line" style="margin-top:8px;"></span>
-  </div>
-
-  <div class="write-item">
-    <div class="wi-num">2.</div>
-    <div class="wi-word">brave <span style="font-size:13px; font-weight:normal; color:#888;">（勇敢的 🦁）</span></div>
-    <span class="write-line"></span>
-    <span class="write-line" style="margin-top:8px;"></span>
-  </div>
-
-  <div class="write-item">
-    <div class="wi-num">3.</div>
-    <div class="wi-word">spider <span style="font-size:13px; font-weight:normal; color:#888;">（蜘蛛 🕷️）</span></div>
-    <span class="write-line"></span>
-    <span class="write-line" style="margin-top:8px;"></span>
-  </div>
-
-  <hr class="divider">
-  <hr class="divider" style="margin-top:0;">
-
-  <!-- ── Answer Key ── -->
-  <div class="answer-key">
-    <h2>✅ Answer Key &nbsp;—&nbsp; Teacher Copy &nbsp;(不給學生)</h2>
-
-    <div class="ak-section">
-      <h3>Part A — FET Wk 10–12 (3 pts each)</h3>
-      <p>
-        1. <span class="ak-ans">memory</span> &nbsp;
-        2. <span class="ak-ans">achieve</span> &nbsp;
-        3. <span class="ak-ans">world</span> &nbsp;
-        4. <span class="ak-ans">whisper</span> &nbsp;
-        5. <span class="ak-ans">delight</span> &nbsp;
-        6. <span class="ak-ans">artist</span> &nbsp;
-        7. <span class="ak-ans">mountain</span> &nbsp;
-        8. <span class="ak-ans">desert</span>
-      </p>
-    </div>
-
-    <div class="ak-section">
-      <h3>Part B — FET Wk 13–16 (3 pts each)</h3>
-      <p>
-        1. <span class="ak-ans">autumn</span> &nbsp;
-        2. <span class="ak-ans">sprout</span> &nbsp;
-        3. <span class="ak-ans">flutter</span> &nbsp;
-        4. <span class="ak-ans">scurry</span> &nbsp;
-        5. <span class="ak-ans">chilly</span> &nbsp;
-        6. <span class="ak-ans">chipmunk</span> &nbsp;
-        7. <span class="ak-ans">spin</span> &nbsp;
-        8. <span class="ak-ans">fetch</span>
-      </p>
-    </div>
-
-    <div class="ak-section">
-      <h3>Part C — CET Wk 10–12 (3 pts each)</h3>
-      <p>
-        1. <span class="ak-ans">museum</span> &nbsp;
-        2. <span class="ak-ans">fossil</span> &nbsp;
-        3. <span class="ak-ans">trip</span> &nbsp;
-        4. <span class="ak-ans">puzzle</span> &nbsp;
-        5. <span class="ak-ans">claw</span> &nbsp;
-        6. <span class="ak-ans">teeth</span>
-      </p>
-    </div>
-
-    <div class="ak-section">
-      <h3>Part D — CET Wk 13–16 (3 pts each)</h3>
-      <p>
-        1. <span class="ak-ans">float</span> &nbsp;
-        2. <span class="ak-ans">pilot</span> &nbsp;
-        3. <span class="ak-ans">brave</span> &nbsp;
-        4. <span class="ak-ans">talented</span> &nbsp;
-        5. <span class="ak-ans">trick</span> &nbsp;
-        6. <span class="ak-ans">famous</span>
-      </p>
-    </div>
-
-    <div class="ak-section">
-      <h3>Part E — 詞義配對 (1 pt each)</h3>
-      <p>
-        slither → <span class="ak-ans">滑行</span> &nbsp;
-        bloom → <span class="ak-ans">開花</span> &nbsp;
-        crisp → <span class="ak-ans">清爽的</span> &nbsp;
-        fossil → <span class="ak-ans">化石</span> &nbsp;
-        remind → <span class="ak-ans">提醒</span><br>
-        desert → <span class="ak-ans">沙漠</span> &nbsp;
-        dash → <span class="ak-ans">衝刺</span> &nbsp;
-        weave → <span class="ak-ans">編織</span> &nbsp;
-        achieve → <span class="ak-ans">達成</span> &nbsp;
-        delight → <span class="ak-ans">愉快</span>
-      </p>
-    </div>
-
-    <div class="ak-section">
-      <h3>Part F — 造句 (2 pts each, 詞意正確 1 + 句子完整 1)</h3>
-      <p>
-        參考答案：<br>
-        1. <span class="ak-ans">In autumn, the leaves turn red and yellow.</span><br>
-        2. <span class="ak-ans">The brave firefighter saved the cat from the fire.</span><br>
-        3. <span class="ak-ans">A spider can weave a web to catch bugs.</span>
-      </p>
-    </div>
-
-    <div style="margin-top:20px; border-top:2px solid #a5d6a7; padding-top:14px;">
-      <strong style="color:#1b5e20;">Total: 100 points</strong><br>
-      <span style="font-size:13px; color:#555;">A(24) + B(24) + C(18) + D(18) + E(10) + F(6) = 100</span>
-    </div>
-  </div>
-
-</div><!-- end page 3 -->
-
-<div class="no-print" style="text-align:center; margin:20px; color:#888; font-size:13px;">
-  🖨️ 建議用瀏覽器列印 (Ctrl+P)，選擇「A4」，關閉頁首頁尾，縮放 100%
 </div>
 
+<!-- Result screen -->
+<div id="result-screen">
+  <div class="result-card">
+    <div class="result-score-big" id="score-display">--</div>
+    <div class="result-out-of">/ 100 分</div>
+    <div class="result-stars" id="stars-display">☆☆☆</div>
+    <div class="result-msg" id="result-msg">--</div>
+    <div class="result-sub" id="result-sub">--</div>
+    <div class="result-note">✏️ Part F（造句）共 6 分，需老師批改後加分。</div>
+    <div class="score-table-wrap">
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>Part</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>分數</td>
+            <td id="pt-a">-</td><td id="pt-b">-</td><td id="pt-c">-</td>
+            <td id="pt-d">-</td><td id="pt-e">-</td><td id="pt-f">老師批改</td>
+          </tr>
+          <tr>
+            <td>滿分</td>
+            <td>24</td><td>24</td><td>18</td><td>18</td><td>10</td><td>6</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button class="result-btn btn-review" onclick="showReview()">查看詳解</button>
+    <button class="result-btn btn-reset" onclick="resetExam()">重新作答</button>
+  </div>
+</div>
+
+<!-- Sticky submit -->
+<div id="submit-area">
+  <button id="submit-btn" onclick="submitExam()" disabled>交卷</button>
+</div>
+
+<script>
+// =====================================================================
+// DATA
+// =====================================================================
+const TOTAL_MCQ = 38; // Parts A-E
+const PARTS = [
+  {
+    id: 'A',
+    title: 'FET Wk 10–12 — 填入正確單字',
+    score: 24,
+    points: 3,
+    instruction: '根據句意選出正確的單字。',
+    questions: [
+      {
+        text: 'She has a very good ___ and remembers everyone\'s names.',
+        options: ['memory', 'world', 'wonder'],
+        answer: 'memory',
+        hint: '記憶'
+      },
+      {
+        text: 'If you work hard, you can ___ your goals.',
+        options: ['achieve', 'alone', 'struggle'],
+        answer: 'achieve',
+        hint: '達成'
+      },
+      {
+        text: 'The internet connects people all over the ___.',
+        options: ['world', 'dream', 'tunes'],
+        answer: 'world',
+        hint: '世界'
+      },
+      {
+        text: 'Please ___ quietly so the baby won\'t wake up.',
+        options: ['whisper', 'delight', 'surround'],
+        answer: 'whisper',
+        hint: '耳語'
+      },
+      {
+        text: 'The beautiful rainbow was a ___ to see.',
+        options: ['delight', 'mountain', 'desert'],
+        answer: 'delight',
+        hint: '愉快'
+      },
+      {
+        text: 'The ___ painted a beautiful picture of the ocean.',
+        options: ['artist', 'wonder', 'bones'],
+        answer: 'artist',
+        hint: '藝術家'
+      },
+      {
+        text: 'They climbed to the top of the tall ___.',
+        options: ['mountain', 'desert', 'season'],
+        answer: 'mountain',
+        hint: '山'
+      },
+      {
+        text: 'A camel can live in the hot, dry ___ for days.',
+        options: ['desert', 'mountain', 'children'],
+        answer: 'desert',
+        hint: '沙漠'
+      }
+    ]
+  },
+  {
+    id: 'B',
+    title: 'FET Wk 13–16 — 填入正確單字',
+    score: 24,
+    points: 3,
+    instruction: '根據句意選出正確的單字。',
+    questions: [
+      {
+        text: 'In ___, the leaves change color and fall from the trees.',
+        options: ['autumn', 'spring', 'summer'],
+        answer: 'autumn',
+        hint: '秋天'
+      },
+      {
+        text: 'With a little water, the seeds will begin to ___.',
+        options: ['sprout', 'bloom', 'spread'],
+        answer: 'sprout',
+        hint: '發芽'
+      },
+      {
+        text: 'The butterflies ___ their wings as they fly from flower to flower.',
+        options: ['flutter', 'slither', 'scatter'],
+        answer: 'flutter',
+        hint: '拍翅'
+      },
+      {
+        text: 'The mice ___ quickly across the floor to hide.',
+        options: ['scurry', 'honk', 'taste'],
+        answer: 'scurry',
+        hint: '碎步快跑'
+      },
+      {
+        text: 'It is quite ___ today, so wear a sweater.',
+        options: ['chilly', 'crisp', 'gray'],
+        answer: 'chilly',
+        hint: '寒冷的'
+      },
+      {
+        text: 'The little ___ quickly hid its food in the tree.',
+        options: ['chipmunk', 'spider', 'rush'],
+        answer: 'chipmunk',
+        hint: '花栗鼠'
+      },
+      {
+        text: 'The top will ___ around and around on the table.',
+        options: ['spin', 'shake', 'fly'],
+        answer: 'spin',
+        hint: '旋轉'
+      },
+      {
+        text: 'My dog loves to run and ___ the ball when I throw it.',
+        options: ['fetch', 'dash', 'shake'],
+        answer: 'fetch',
+        hint: '拿來'
+      }
+    ]
+  },
+  {
+    id: 'C',
+    title: 'CET Wk 10–12 — 填入正確單字',
+    score: 18,
+    points: 3,
+    instruction: '根據句意選出正確的單字。',
+    questions: [
+      {
+        text: 'We saw many old paintings at the art ___.',
+        options: ['museum', 'field', 'fossil'],
+        answer: 'museum',
+        hint: '博物館'
+      },
+      {
+        text: 'Scientists found a fish ___ in the solid rock.',
+        options: ['fossil', 'museum', 'drawing'],
+        answer: 'fossil',
+        hint: '化石'
+      },
+      {
+        text: 'Our family went on a ___ to the beach last summer.',
+        options: ['trip', 'model', 'break'],
+        answer: 'trip',
+        hint: '旅行'
+      },
+      {
+        text: 'Can you help me solve this 100-piece ___?',
+        options: ['puzzle', 'chicken', 'bird'],
+        answer: 'puzzle',
+        hint: '拼圖'
+      },
+      {
+        text: 'The cat used its sharp ___ to scratch the post.',
+        options: ['claw', 'horn', 'teeth'],
+        answer: 'claw',
+        hint: '爪子'
+      },
+      {
+        text: 'Don\'t forget to brush your ___ before going to bed.',
+        options: ['teeth', 'claw', 'flat'],
+        answer: 'teeth',
+        hint: '牙齒'
+      }
+    ]
+  },
+  {
+    id: 'D',
+    title: 'CET Wk 13–16 — 填入正確單字',
+    score: 18,
+    points: 3,
+    instruction: '根據句意選出正確的單字。',
+    questions: [
+      {
+        text: 'Watch the red balloon ___ away into the air.',
+        options: ['float', 'stretch', 'over'],
+        answer: 'float',
+        hint: '漂浮'
+      },
+      {
+        text: 'The ___ flew the airplane safely to the airport.',
+        options: ['pilot', 'doctor', 'silly'],
+        answer: 'pilot',
+        hint: '飛行員'
+      },
+      {
+        text: 'The ___ firefighter ran into the burning house to save the dog.',
+        options: ['brave', 'tough', 'talented'],
+        answer: 'brave',
+        hint: '勇敢的'
+      },
+      {
+        text: 'She is a very ___ singer who wins many contests.',
+        options: ['talented', 'brave', 'tough'],
+        answer: 'talented',
+        hint: '有天賦的'
+      },
+      {
+        text: 'The magician pulled a rabbit out of his hat as a cool ___.',
+        options: ['trick', 'learn', 'start'],
+        answer: 'trick',
+        hint: '把戲'
+      },
+      {
+        text: 'She is a ___ movie star and everyone knows her name.',
+        options: ['famous', 'flew', 'stop'],
+        answer: 'famous',
+        hint: '有名的'
+      }
+    ]
+  },
+  {
+    id: 'E',
+    title: '詞義配對 — What does this word mean?',
+    score: 10,
+    points: 1,
+    instruction: '選出每個單字的中文意思。',
+    questions: [
+      {
+        text: 'What does "slither" mean? 🐍',
+        options: ['開花', '滑行', '清爽的'],
+        answer: '滑行',
+        hint: 'slither'
+      },
+      {
+        text: 'What does "bloom" mean? 🌺',
+        options: ['衝刺', '開花', '沙漠'],
+        answer: '開花',
+        hint: 'bloom'
+      },
+      {
+        text: 'What does "crisp" mean? 🍏',
+        options: ['清爽的', '化石', '提醒'],
+        answer: '清爽的',
+        hint: 'crisp'
+      },
+      {
+        text: 'What does "fossil" mean? 🦴',
+        options: ['提醒', '編織', '化石'],
+        answer: '化石',
+        hint: 'fossil'
+      },
+      {
+        text: 'What does "remind" mean? 🔔',
+        options: ['滑行', '提醒', '達成'],
+        answer: '提醒',
+        hint: 'remind'
+      },
+      {
+        text: 'What does "desert" mean? 🏜️',
+        options: ['衝刺', '沙漠', '愉快'],
+        answer: '沙漠',
+        hint: 'desert'
+      },
+      {
+        text: 'What does "dash" mean? 💨',
+        options: ['衝刺', '編織', '達成'],
+        answer: '衝刺',
+        hint: 'dash'
+      },
+      {
+        text: 'What does "weave" mean? 🕸️',
+        options: ['化石', '編織', '清爽的'],
+        answer: '編織',
+        hint: 'weave'
+      },
+      {
+        text: 'What does "achieve" mean? 🏆',
+        options: ['達成', '開花', '沙漠'],
+        answer: '達成',
+        hint: 'achieve'
+      },
+      {
+        text: 'What does "delight" mean? 😄',
+        options: ['愉快', '滑行', '衝刺'],
+        answer: '愉快',
+        hint: 'delight'
+      }
+    ]
+  }
+];
+
+const WRITING_QUESTIONS = [
+  { word: 'autumn', hint: '秋天 🍁', prompt: '用 autumn 造一個英文句子：' },
+  { word: 'brave', hint: '勇敢的 🦁', prompt: '用 brave 造一個英文句子：' },
+  { word: 'spider', hint: '蜘蛛 🕷️', prompt: '用 spider 造一個英文句子：' }
+];
+
+// =====================================================================
+// STATE
+// =====================================================================
+let userAnswers = {}; // key: "partIdx_qIdx", value: chosen option string
+let writingAnswers = {}; // key: 0,1,2
+let submitted = false;
+
+// =====================================================================
+// RENDER
+// =====================================================================
+function buildQuestionKey(partIdx, qIdx) {
+  return `${partIdx}_${qIdx}`;
+}
+
+function renderExam() {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+
+  let globalQ = 1;
+
+  PARTS.forEach((part, partIdx) => {
+    // Section header
+    const secEl = document.createElement('div');
+    secEl.className = 'section-header';
+    secEl.innerHTML = `
+      <span class="section-badge">Part ${part.id}</span>
+      <span class="section-title">${part.title}</span>
+      <span class="section-score">${part.score}分</span>
+    `;
+    container.appendChild(secEl);
+
+    if (part.questions[0] && !part.questions[0].text.includes('What does')) {
+      const instr = document.createElement('p');
+      instr.style.cssText = 'font-size:14px;color:#666;margin-bottom:10px;font-style:italic;padding-left:4px;';
+      instr.textContent = part.instruction;
+      container.appendChild(instr);
+    }
+
+    part.questions.forEach((q, qIdx) => {
+      const key = buildQuestionKey(partIdx, qIdx);
+      const card = document.createElement('div');
+      card.className = 'q-card';
+      card.id = `qcard_${key}`;
+
+      const optLetters = ['A', 'B', 'C'];
+      const optsHtml = q.options.map((opt, i) => `
+        <button class="opt-btn" id="opt_${key}_${i}"
+          onclick="selectAnswer('${key}', '${escapeStr(opt)}', ${partIdx}, ${qIdx})"
+          data-value="${escapeStr(opt)}">
+          <span class="opt-letter">${optLetters[i]}</span>
+          <span>${opt}</span>
+        </button>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="q-num-row">
+          <span class="q-num-badge">${globalQ}</span>
+          <span class="q-text">${q.text}</span>
+        </div>
+        <div class="options-wrap" id="opts_${key}">
+          ${optsHtml}
+        </div>
+        <div id="feedback_${key}" style="display:none;"></div>
+      `;
+
+      container.appendChild(card);
+      globalQ++;
+    });
+  });
+
+  // Writing section
+  const writeSec = document.createElement('div');
+  writeSec.className = 'section-header';
+  writeSec.innerHTML = `
+    <span class="section-badge">Part F</span>
+    <span class="section-title">造句 Writing — 老師批改</span>
+    <span class="section-score">6分</span>
+  `;
+  container.appendChild(writeSec);
+
+  const writeInstr = document.createElement('p');
+  writeInstr.style.cssText = 'font-size:14px;color:#666;margin-bottom:12px;font-style:italic;padding-left:4px;';
+  writeInstr.textContent = '用以下單字各造一個英文句子。（老師批改，每題 2 分）';
+  container.appendChild(writeInstr);
+
+  WRITING_QUESTIONS.forEach((wq, i) => {
+    const wCard = document.createElement('div');
+    wCard.className = 'writing-card';
+    wCard.innerHTML = `
+      <div class="q-num-row">
+        <span class="q-num-badge">${globalQ}</span>
+        <div>
+          <div class="writing-word">${wq.word}</div>
+          <div class="writing-hint">${wq.hint}</div>
+        </div>
+      </div>
+      <textarea class="writing-textarea" id="writing_${i}"
+        placeholder="${wq.prompt}"
+        oninput="saveWriting(${i}, this.value)"></textarea>
+      <div><span class="teacher-badge">✏️ 老師批改</span></div>
+    `;
+    container.appendChild(wCard);
+    globalQ++;
+  });
+}
+
+function escapeStr(s) {
+  return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// =====================================================================
+// INTERACTION
+// =====================================================================
+function selectAnswer(key, value, partIdx, qIdx) {
+  if (submitted) return;
+
+  userAnswers[key] = value;
+
+  // Update button states
+  const optsWrap = document.getElementById(`opts_${key}`);
+  optsWrap.querySelectorAll('.opt-btn').forEach(btn => {
+    if (btn.dataset.value === value) {
+      btn.classList.add('selected');
+    } else {
+      btn.classList.remove('selected');
+    }
+  });
+
+  updateProgress();
+}
+
+function saveWriting(idx, val) {
+  writingAnswers[idx] = val;
+}
+
+function updateProgress() {
+  const answered = Object.keys(userAnswers).length;
+  const pct = Math.round((answered / TOTAL_MCQ) * 100);
+  document.getElementById('progress-text').textContent = `${answered} / ${TOTAL_MCQ} 已作答`;
+  document.getElementById('progress-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+  document.getElementById('submit-btn').disabled = (answered < TOTAL_MCQ);
+}
+
+// =====================================================================
+// SUBMIT
+// =====================================================================
+function submitExam() {
+  if (submitted) return;
+  submitted = true;
+
+  // Calculate scores
+  let partScores = {};
+  let totalAutoScore = 0;
+
+  PARTS.forEach((part, partIdx) => {
+    let earned = 0;
+    part.questions.forEach((q, qIdx) => {
+      const key = buildQuestionKey(partIdx, qIdx);
+      if (userAnswers[key] === q.answer) {
+        earned += part.points;
+      }
+    });
+    partScores[part.id] = earned;
+    totalAutoScore += earned;
+  });
+
+  const displayScore = totalAutoScore; // out of 94
+
+  // Show result screen
+  document.getElementById('exam-wrap').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+  document.getElementById('submit-area').style.display = 'none';
+
+  document.getElementById('score-display').textContent = displayScore;
+
+  // Stars
+  let stars, msg, sub;
+  if (displayScore >= 85) {
+    stars = '⭐⭐⭐';
+    msg = '太厲害了！Daisy 超棒！';
+    sub = '你已經掌握了所有的詞彙！繼續加油！';
+  } else if (displayScore >= 65) {
+    stars = '⭐⭐';
+    msg = '很好！繼續努力！';
+    sub = '大部分都答對了，再複習一下錯誤的單字吧！';
+  } else if (displayScore >= 45) {
+    stars = '⭐';
+    msg = '不錯喔！再加油！';
+    sub = '還有一些單字需要練習，不要放棄！';
+  } else {
+    stars = '💪';
+    msg = '繼續努力，你可以的！';
+    sub = '多複習一下單字，下次一定會更好！';
+  }
+
+  document.getElementById('stars-display').textContent = stars;
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-sub').textContent = sub;
+
+  // Part scores
+  ['A','B','C','D','E'].forEach(id => {
+    const el = document.getElementById(`pt-${id.toLowerCase()}`);
+    if (el) el.textContent = partScores[id] || 0;
+  });
+}
+
+// =====================================================================
+// REVIEW
+// =====================================================================
+function showReview() {
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('exam-wrap').style.display = 'block';
+  document.getElementById('submit-area').style.display = 'none';
+
+  // Scroll to top
+  window.scrollTo(0, 0);
+
+  PARTS.forEach((part, partIdx) => {
+    part.questions.forEach((q, qIdx) => {
+      const key = buildQuestionKey(partIdx, qIdx);
+      const chosen = userAnswers[key];
+      const correct = q.answer;
+      const optsWrap = document.getElementById(`opts_${key}`);
+
+      optsWrap.querySelectorAll('.opt-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        const val = btn.dataset.value;
+        if (val === correct && val === chosen) {
+          btn.classList.add('correct');
+        } else if (val === correct && val !== chosen) {
+          btn.classList.add('show-correct');
+        } else if (val === chosen && val !== correct) {
+          btn.classList.add('wrong');
+        }
+      });
+
+      // Feedback
+      const fbEl = document.getElementById(`feedback_${key}`);
+      fbEl.style.display = 'block';
+      if (chosen === correct) {
+        fbEl.innerHTML = `<span class="feedback-tag correct-tag">✓ 答對了！</span>`;
+      } else {
+        fbEl.innerHTML = `<span class="feedback-tag wrong-tag">✗ 正確答案是：${correct}</span>`;
+      }
+    });
+  });
+
+  // Scroll back to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// =====================================================================
+// RESET
+// =====================================================================
+function resetExam() {
+  userAnswers = {};
+  writingAnswers = {};
+  submitted = false;
+
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('exam-wrap').style.display = 'block';
+  document.getElementById('submit-area').style.display = 'block';
+  document.getElementById('submit-btn').disabled = true;
+
+  renderExam();
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+renderExam();
+updateProgress();
+
+// Pre-fill date
+const today = new Date();
+document.getElementById('student-date').value =
+  today.getFullYear() + '-' +
+  String(today.getMonth()+1).padStart(2,'0') + '-' +
+  String(today.getDate()).padStart(2,'0');
+</script>
 </body>
 </html>
