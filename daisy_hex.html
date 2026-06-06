@@ -10,119 +10,129 @@
     html, body {
       width: 100%; height: 100%; overflow: hidden;
       font-family: 'Bubblegum Sans', 'Nunito', cursive;
-      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      touch-action: none; /* Prevent scroll on drag */
+      /* Beautiful ocean background */
+      background: linear-gradient(135deg, #2ae0ff 0%, #0072ff 100%);
+      touch-action: none;
     }
     
+    .clouds {
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 15%),
+        radial-gradient(circle at 85% 70%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 20%),
+        radial-gradient(circle at 50% 90%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 10%);
+    }
+
     .game-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%; height: 100%;
-      position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      width: 100%; height: 100%; position: relative; z-index: 1;
     }
 
     /* Top HUD */
     .hud {
       display: flex; justify-content: space-between; align-items: center;
-      width: 90%; max-width: 600px; padding: 10px 20px;
-      background: rgba(255,255,255,0.7); border-radius: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      margin-top: 20px; z-index: 10;
+      width: 90%; max-width: 500px; padding: 10px 24px;
+      background: rgba(255,255,255,0.9); border-radius: 999px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2), inset 0 -3px 0 rgba(0,0,0,0.05);
+      margin-top: max(15px, env(safe-area-inset-top));
+      border: 4px solid #fff; z-index: 10;
     }
     .hud-title {
-      font-size: 1.8rem; color: #ff6b9e;
-      -webkit-text-stroke: 1.5px white; paint-order: stroke fill;
+      font-size: 2rem; color: #ff528a;
+      text-shadow: 0 2px 4px rgba(255,82,138,0.3);
+      letter-spacing: 1px;
     }
     .hud-keys {
-      font-size: 1.5rem;
+      font-size: 1.5rem; color: #f57c00;
+      background: #fff3e0; padding: 6px 18px; border-radius: 20px;
+      border: 2px solid #ffb74d; font-weight: 800;
     }
 
-    /* Main Area: Canvas + Sidebar */
+    /* Main Area: Canvas */
     .main-area {
       display: flex; align-items: center; justify-content: center;
-      flex: 1; width: 100%; max-width: 800px;
-      position: relative;
+      flex: 1; width: 100%; position: relative;
     }
 
-    .canvas-container {
-      position: relative;
-    }
     canvas {
       display: block;
-      filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.15));
+      filter: drop-shadow(0px 15px 30px rgba(0,40,80,0.5));
     }
 
-    /* Sidebar for draggable stone */
-    .sidebar {
-      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-      background: rgba(156, 39, 176, 0.2);
-      border: 3px solid #9c27b0; border-radius: 15px;
-      padding: 10px; display: flex; flex-direction: column; align-items: center;
-      box-shadow: 0 4px 15px rgba(156,39,176,0.3);
+    /* Back Button */
+    .back-btn {
+      position: absolute; top: max(15px, env(safe-area-inset-top)); left: 15px;
+      background: #fff; border: none; border-radius: 50%;
+      width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; cursor: pointer; z-index: 50; text-decoration: none; color: #ff528a;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 0.1s;
+    }
+    .back-btn:active { transform: scale(0.9); }
+
+    /* Stone Sidebar overlaid on the right */
+    .stone-panel {
+      position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(5px);
+      border: 4px solid #ce93d8; border-radius: 24px;
+      padding: 15px 12px; display: flex; flex-direction: column; align-items: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25); z-index: 10;
     }
     .stone-source {
-      width: 60px; height: 60px;
-      background: #8d6e63; border-radius: 10px;
-      border: 3px solid #5d4037;
+      width: 68px; height: 68px;
+      background: #a1887f; border-radius: 18px;
+      border: 4px solid #5d4037;
       display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; cursor: grab;
-      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2), 0 4px 0 rgba(0,0,0,0.3);
+      font-size: 2.8rem; cursor: grab;
+      box-shadow: inset 0 -6px 0 rgba(0,0,0,0.2), 0 6px 0 rgba(0,0,0,0.3);
       user-select: none; touch-action: none;
+      animation: float 3s ease-in-out infinite;
     }
-    .stone-source:active { cursor: grabbing; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .stone-source:active { cursor: grabbing; animation: none; transform: scale(0.95); }
     .sidebar-text {
-      margin-top: 8px; font-size: 0.9rem; color: #7b1fa2; font-weight: bold; text-align: center;
+      margin-top: 10px; font-size: 1.1rem; color: #6a1b9a; font-weight: 800; text-align: center;
+      line-height: 1.2;
     }
 
-    /* Dragging Ghost */
     #ghost-stone {
-      position: fixed; width: 60px; height: 60px;
-      background: #8d6e63; border-radius: 10px; border: 3px solid #5d4037;
-      display: flex; align-items: center; justify-content: center; font-size: 2rem;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+      position: fixed; width: 72px; height: 72px;
+      background: #a1887f; border-radius: 18px; border: 4px solid #5d4037;
+      display: flex; align-items: center; justify-content: center; font-size: 3rem;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
       pointer-events: none; display: none; z-index: 1000;
-      opacity: 0.8; transform: translate(-50%, -50%);
+      opacity: 0.9; transform: translate(-50%, -50%) scale(1.1);
     }
 
     /* Modals */
     .modal {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      position: fixed; inset: 0; background: rgba(0,30,60,0.8); backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
       z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
     .modal.active { opacity: 1; pointer-events: auto; }
     .modal-content {
-      background: white; padding: 30px; border-radius: 30px;
-      text-align: center; max-width: 90%; width: 320px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background: white; padding: 40px 30px; border-radius: 35px;
+      text-align: center; max-width: 90%; width: 340px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+      transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 5px solid #fff;
     }
     .modal.active .modal-content { transform: scale(1); }
-    .modal-title { font-size: 2.2rem; margin-bottom: 10px; color: #ff6b9e; }
-    .modal-msg { font-size: 1.2rem; color: #555; margin-bottom: 20px; }
+    .modal-title { font-size: 2.6rem; margin-bottom: 12px; color: #ff6b9e; text-shadow: 0 2px 0 #ffb6c1; }
+    .modal-msg { font-size: 1.2rem; color: #666; margin-bottom: 25px; line-height: 1.5; font-family: 'Nunito', sans-serif; font-weight: bold; }
     .btn {
-      padding: 12px 30px; border: none; border-radius: 20px;
+      padding: 16px 0; border: none; border-radius: 25px;
       background: linear-gradient(135deg, #ab47bc, #7b1fa2);
-      color: white; font-size: 1.2rem; font-family: inherit; font-weight: bold;
-      cursor: pointer; box-shadow: 0 5px 0 #4a148c; transition: transform 0.1s;
+      color: white; font-size: 1.4rem; font-family: inherit; font-weight: bold;
+      cursor: pointer; box-shadow: 0 6px 0 #4a148c; transition: transform 0.1s, box-shadow 0.1s;
+      width: 100%;
     }
-    .btn:active { transform: translateY(5px); box-shadow: 0 0 0 #4a148c; }
-    
-    .back-btn {
-      position: absolute; top: 15px; left: 15px;
-      background: white; border: 2px solid #ccc; border-radius: 50%;
-      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; cursor: pointer; z-index: 50; text-decoration: none; color: #333;
-    }
-
-    /* Confetti Canvas */
-    #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 1500; }
+    .btn:active { transform: translateY(6px); box-shadow: 0 0 0 #4a148c; }
   </style>
 </head>
 <body>
 
+  <div class="clouds"></div>
   <a href="daisy_hamster.html" class="back-btn">⬅</a>
 
   <div class="game-container">
@@ -132,11 +142,9 @@
     </div>
 
     <div class="main-area">
-      <div class="canvas-container">
-        <canvas id="gameCanvas"></canvas>
-      </div>
-
-      <div class="sidebar">
+      <canvas id="gameCanvas"></canvas>
+      
+      <div class="stone-panel">
         <div class="stone-source" id="stoneSource">🪨</div>
         <div class="sidebar-text">拖曳或<br>點擊格子</div>
       </div>
@@ -144,31 +152,27 @@
   </div>
 
   <div id="ghost-stone">🪨</div>
-  <canvas id="confetti"></canvas>
 
-  <!-- Modals -->
   <div class="modal" id="modalWin">
     <div class="modal-content">
-      <div style="font-size:4rem">🎉</div>
+      <div style="font-size:5rem; margin-top:-20px;">🎉</div>
       <div class="modal-title">太棒了！</div>
-      <div class="modal-msg">你成功困住貓咪了！獲得一把鑰匙！</div>
+      <div class="modal-msg">你成功困住了貓咪！<br>獲得了一把過關鑰匙🔑</div>
       <button class="btn" onclick="nextLevel()">下一關</button>
     </div>
   </div>
 
   <div class="modal" id="modalLose">
     <div class="modal-content">
-      <div style="font-size:4rem">💨</div>
+      <div style="font-size:5rem; margin-top:-20px;">💨</div>
       <div class="modal-title">哎呀！</div>
-      <div class="modal-msg">貓咪逃跑了！再試一次吧！</div>
-      <button class="btn" onclick="initGame()">重新挑戰</button>
+      <div class="modal-msg">貓咪溜走了！<br>不要灰心，再試一次吧！</div>
+      <button class="btn" onclick="initGame()" style="background: linear-gradient(135deg, #ff9800, #e65100); box-shadow: 0 6px 0 #bf360c;">重新挑戰</button>
     </div>
   </div>
 
 <script>
-// --- Hex Grid Mathematics ---
-// We use axial coordinates (q, r).
-// Pointy topped hexes.
+// --- Hex Grid Math ---
 const hexDirections = [
   {q: 1, r: 0}, {q: 1, r: -1}, {q: 0, r: -1},
   {q: -1, r: 0}, {q: -1, r: 1}, {q: 0, r: 1}
@@ -179,13 +183,9 @@ function hexDistance(a, b) {
   return (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
 }
 
-const RADIUS = 5; // The radius of the hexagonal map (number of rings)
-function isOutOfBounds(hex) {
-  return hexDistance({q:0, r:0}, hex) > RADIUS;
-}
-function isEdge(hex) {
-  return hexDistance({q:0, r:0}, hex) === RADIUS;
-}
+const RADIUS = 5; 
+function isOutOfBounds(hex) { return hexDistance({q:0, r:0}, hex) > RADIUS; }
+function isEdge(hex) { return hexDistance({q:0, r:0}, hex) === RADIUS; }
 
 function hexToPixel(hex, size) {
   const x = size * Math.sqrt(3) * (hex.q + hex.r/2);
@@ -200,12 +200,8 @@ function pixelToHex(p, size) {
 }
 
 function hexRound(h) {
-  let q = Math.round(h.q);
-  let r = Math.round(h.r);
-  let s = Math.round(-h.q - h.r);
-  const qDiff = Math.abs(q - h.q);
-  const rDiff = Math.abs(r - h.r);
-  const sDiff = Math.abs(s - (-h.q - h.r));
+  let q = Math.round(h.q); let r = Math.round(h.r); let s = Math.round(-h.q - h.r);
+  const qDiff = Math.abs(q - h.q); const rDiff = Math.abs(r - h.r); const sDiff = Math.abs(s - (-h.q - h.r));
   if (qDiff > rDiff && qDiff > sDiff) q = -r - s;
   else if (rDiff > sDiff) r = -q - s;
   return {q, r};
@@ -214,36 +210,41 @@ function hexRound(h) {
 // --- Game State ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-let hexSize = 24; // Will be calculated based on screen size
+let hexSize = 30; 
 let offsetX = 0, offsetY = 0;
 
 let catPos = {q: 0, r: 0};
-let blocks = new Set(); // Stores "q,r" strings
-let gameState = 'playing'; // 'playing', 'win', 'lose'
+let blocks = new Map(); // Store block type: "q,r" -> 'crystal' or 'stone'
+let gameState = 'playing'; 
 let keys = 0;
-let winSequenceFrame = 0;
-let winPath = []; // Highlight path when winning
+let animFrame = 0;
 
-// --- Initialization ---
+// --- Init & Resize ---
 function resize() {
   const container = document.querySelector('.main-area');
-  // Account for sidebar space (approx 90px) on mobile, use full width on desktop if large enough
-  const isMobile = window.innerWidth < 600;
-  const cw = container.clientWidth - (isMobile ? 80 : 100);
-  const ch = container.clientHeight;
-  const size = Math.min(cw, ch);
-  canvas.width = size;
-  canvas.height = size;
+  // Use almost full width, just subtract padding
+  const cw = container.clientWidth - 20; 
+  const ch = container.clientHeight - 40;
   
-  // Calculate hexSize so that RADIUS rings fit in the canvas
-  // Width of pointy-top hex grid = sqrt(3) * size * (2*RADIUS + 1)
-  // Height = size * 2 + size * 3/2 * 2*RADIUS = size * (3*RADIUS + 2)
+  // To ensure the grid fits, we calculate its physical dimensions
   const gridW = Math.sqrt(3) * (2*RADIUS + 1);
   const gridH = (3*RADIUS + 2);
-  hexSize = Math.min(size / gridW, size / gridH) * 0.95;
   
-  offsetX = size / 2;
-  offsetY = size / 2;
+  // Maximize hexSize to fill the available area (subtracting space for the right panel on landscape)
+  const isLandscape = window.innerWidth > window.innerHeight;
+  const availableW = isLandscape ? cw - 110 : cw; // Make room for panel on right if landscape
+  
+  hexSize = Math.min(availableW / gridW, ch / gridH) * 0.95;
+  
+  // Canvas size exactly matches the grid bounding box to center it perfectly
+  canvas.width = hexSize * gridW * 1.05;
+  canvas.height = hexSize * gridH * 1.05;
+  
+  // Center grid in canvas, but shift left slightly on landscape to avoid panel
+  offsetX = canvas.width / 2;
+  offsetY = canvas.height / 2;
+  if(isLandscape) offsetX -= 20;
+
   draw();
 }
 window.addEventListener('resize', resize);
@@ -252,21 +253,22 @@ function initGame() {
   gameState = 'playing';
   catPos = {q: 0, r: 0};
   blocks.clear();
-  winPath = [];
-  winSequenceFrame = 0;
+  animFrame = 0;
   
-  // Randomly place some initial blocks to make it winnable
-  // Usually 7-12 blocks depending on difficulty
+  // 8 to 13 blocks initially
   const numInitialBlocks = 8 + Math.floor(Math.random() * 6);
   let placed = 0;
   while(placed < numInitialBlocks) {
     const q = -RADIUS + Math.floor(Math.random() * (2*RADIUS + 1));
     const r = -RADIUS + Math.floor(Math.random() * (2*RADIUS + 1));
     const hex = {q, r};
-    if (!isOutOfBounds(hex) && hexDistance(hex, {q:0, r:0}) > 1) { // Don't block adjacent to center
+    // Don't block center (cat) and its immediate neighbors to ensure fair start
+    if (!isOutOfBounds(hex) && hexDistance(hex, {q:0, r:0}) > 1) { 
       const key = `${q},${r}`;
       if (!blocks.has(key)) {
-        blocks.add(key);
+        // 30% chance for a crystal, 70% for stone monument
+        const type = Math.random() < 0.3 ? 'crystal' : 'stone';
+        blocks.set(key, type);
         placed++;
       }
     }
@@ -281,13 +283,14 @@ function nextLevel() {
   keys++;
   document.getElementById('keysCount').textContent = keys;
   if(keys >= 3) {
-    alert("恭喜！你收集滿3把鑰匙了！");
-    // Update Pet Data in real integration
+    alert("恭喜！你收集滿3把鑰匙了！太厲害啦！");
+    keys = 0;
+    document.getElementById('keysCount').textContent = keys;
   }
   initGame();
 }
 
-// --- AI: Breadth-First Search ---
+// --- AI: BFS ---
 function getNeighbors(hex) {
   return hexDirections.map(d => hexAdd(hex, d))
     .filter(n => !isOutOfBounds(n) && !blocks.has(`${n.q},${n.r}`));
@@ -299,15 +302,11 @@ function getEscapePath(start) {
   cameFrom.set(`${start.q},${start.r}`, null);
   
   let escapeHex = null;
-  
   while (queue.length > 0) {
     const current = queue.shift();
-    
     if (isEdge(current)) {
-      escapeHex = current;
-      break;
+      escapeHex = current; break;
     }
-    
     for (const next of getNeighbors(current)) {
       const key = `${next.q},${next.r}`;
       if (!cameFrom.has(key)) {
@@ -316,29 +315,17 @@ function getEscapePath(start) {
       }
     }
   }
+  if (!escapeHex) return null; 
   
-  if (!escapeHex) return null; // Trapped!
-  
-  // Reconstruct path
   let current = escapeHex;
   const path = [];
   while (current) {
     path.push(current);
     const parent = cameFrom.get(`${current.q},${current.r}`);
-    if (!parent || (parent.q === start.q && parent.r === start.r)) {
-      break;
-    }
+    if (!parent || (parent.q === start.q && parent.r === start.r)) break;
     current = parent;
   }
-  return path.reverse(); // The first element is the next step
-}
-
-function getFallbackMove(start) {
-  // Find the neighbor that gives the longest path before getting stuck, or just random
-  const neighbors = getNeighbors(start);
-  if (neighbors.length === 0) return null;
-  // Just pick random available neighbor to simulate struggling
-  return neighbors[Math.floor(Math.random() * neighbors.length)];
+  return path.reverse(); 
 }
 
 function moveCat() {
@@ -346,41 +333,35 @@ function moveCat() {
   if (path && path.length > 0) {
     catPos = path[0];
   } else {
-    const fallback = getFallbackMove(catPos);
-    if (fallback) catPos = fallback;
+    const neighbors = getNeighbors(catPos);
+    if (neighbors.length > 0) catPos = neighbors[Math.floor(Math.random() * neighbors.length)];
   }
-  
   checkGameState();
 }
 
 function checkGameState() {
   if (isEdge(catPos)) {
     gameState = 'lose';
-    setTimeout(() => document.getElementById('modalLose').classList.add('active'), 500);
+    setTimeout(() => document.getElementById('modalLose').classList.add('active'), 600);
   } else if (!getEscapePath(catPos) && getNeighbors(catPos).length === 0) {
     gameState = 'win';
-    // Celebrate!
-    setTimeout(() => document.getElementById('modalWin').classList.add('active'), 1500);
-    requestAnimationFrame(winAnimation);
+    setTimeout(() => document.getElementById('modalWin').classList.add('active'), 1200);
   }
   draw();
 }
 
-// --- Interaction (Click & Drag) ---
+// --- Interaction ---
 function handleHexInteraction(p) {
   if (gameState !== 'playing') return;
-  
-  const centerP = {x: p.x - offsetX, y: p.y - offsetY};
-  const hex = pixelToHex(centerP, hexSize);
-  
+  const hex = pixelToHex({x: p.x - offsetX, y: p.y - offsetY}, hexSize);
   if (isOutOfBounds(hex)) return;
-  if (hex.q === catPos.q && hex.r === catPos.r) return; // Can't click on cat
+  if (hex.q === catPos.q && hex.r === catPos.r) return; 
   
   const key = `${hex.q},${hex.r}`;
   if (!blocks.has(key)) {
-    blocks.add(key);
+    blocks.set(key, 'stone');
     draw();
-    setTimeout(moveCat, 300); // Small delay before cat moves
+    setTimeout(moveCat, 250); 
   }
 }
 
@@ -389,7 +370,7 @@ canvas.addEventListener('click', e => {
   handleHexInteraction({x: e.clientX - rect.left, y: e.clientY - rect.top});
 });
 
-// Drag & Drop logic for the sidebar stone
+// Drag & Drop
 const source = document.getElementById('stoneSource');
 const ghost = document.getElementById('ghost-stone');
 let isDragging = false;
@@ -428,30 +409,43 @@ function updateGhostPos(e) {
 source.addEventListener('mousedown', onDragStart);
 document.addEventListener('mousemove', onDragMove);
 document.addEventListener('mouseup', onDragEnd);
-
 source.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('touchmove', onDragMove, {passive: false});
 document.addEventListener('touchend', onDragEnd);
 
-// --- Drawing ---
-function drawHex(ctx, x, y, size, fillStyle, strokeStyle, lineWidth = 2) {
+// --- Drawing Loop ---
+function drawHex(ctx, x, y, size, fillStyle, strokeStyle, bottomStyle) {
+  // Draw bottom 3D shadow
+  if (bottomStyle) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = Math.PI / 3 * i - Math.PI / 6;
+      const px = x + size * Math.cos(angle);
+      const py = y + size * Math.sin(angle) + (size * 0.2); // Offset downwards
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = bottomStyle; ctx.fill();
+  }
+
+  // Draw main top face
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const angle = Math.PI / 3 * i - Math.PI / 6;
     const px = x + size * Math.cos(angle);
     const py = y + size * Math.sin(angle);
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
   ctx.closePath();
   if (fillStyle) { ctx.fillStyle = fillStyle; ctx.fill(); }
-  if (strokeStyle) { ctx.strokeStyle = strokeStyle; ctx.lineWidth = lineWidth; ctx.stroke(); }
+  if (strokeStyle) { ctx.strokeStyle = strokeStyle; ctx.lineWidth = 3; ctx.stroke(); }
 }
 
-function draw() {
+function render() {
+  animFrame++;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  // Draw base grid
+  // Draw Grid
   for (let q = -RADIUS; q <= RADIUS; q++) {
     for (let r = -RADIUS; r <= RADIUS; r++) {
       const hex = {q, r};
@@ -460,33 +454,39 @@ function draw() {
         const px = p.x + offsetX;
         const py = p.y + offsetY;
         
-        // Base tile
-        let fill = '#fff3e0';
-        let stroke = '#ffcc80';
+        let fill = '#ffe0b2'; // Warm sand color
+        let stroke = '#ffb74d';
+        let bottom = '#e65100'; // Darker shadow
         
-        // Highlight logic for win
-        if (gameState === 'win' && winSequenceFrame > 0) {
-          fill = '#e8f5e9'; // Light green glow
-          stroke = '#81c784';
+        if (gameState === 'win') {
+          fill = '#e8f5e9'; stroke = '#81c784'; bottom = '#2e7d32'; // Green success
         }
 
-        drawHex(ctx, px, py, hexSize - 1, fill, stroke, 2);
+        drawHex(ctx, px, py, hexSize * 0.92, fill, stroke, bottom);
         
-        // Draw block
-        if (blocks.has(`${q},${r}`)) {
-          // Draw stone monument
-          ctx.fillStyle = '#8d6e63';
-          ctx.beginPath();
-          // Draw a rounded rock shape inside the hex
-          ctx.arc(px, py + hexSize*0.2, hexSize*0.6, Math.PI, 0);
-          ctx.rect(px - hexSize*0.6, py + hexSize*0.2, hexSize*1.2, hexSize*0.3);
-          ctx.fill();
-          
-          // Footprint detail
-          ctx.fillStyle = '#4dd0e1'; // Blue footprint
-          ctx.font = `${hexSize*0.6}px sans-serif`;
+        // Draw Blocks
+        const blockType = blocks.get(`${q},${r}`);
+        if (blockType) {
+          ctx.font = `${hexSize*1.3}px sans-serif`;
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillText('🐾', px, py + hexSize*0.1);
+          
+          if (blockType === 'crystal') {
+            // Glowing blue crystal
+            ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 15;
+            ctx.fillText('💎', px, py - hexSize*0.1);
+            ctx.shadowBlur = 0;
+          } else {
+            // Stone monument
+            ctx.fillStyle = '#8d6e63';
+            ctx.beginPath();
+            ctx.arc(px, py + hexSize*0.1, hexSize*0.65, Math.PI, 0);
+            ctx.rect(px - hexSize*0.65, py + hexSize*0.1, hexSize*1.3, hexSize*0.35);
+            ctx.fill();
+            
+            ctx.fillStyle = '#4dd0e1'; // Blue paw
+            ctx.font = `${hexSize*0.65}px sans-serif`;
+            ctx.fillText('🐾', px, py + hexSize*0.05);
+          }
         }
       }
     }
@@ -494,39 +494,41 @@ function draw() {
   
   // Draw Cat
   const p = hexToPixel(catPos, hexSize);
-  const px = p.x + offsetX;
-  const py = p.y + offsetY;
+  const catX = p.x + offsetX;
+  // Make the cat bounce slightly
+  const bounce = Math.sin(animFrame * 0.1) * (hexSize * 0.08);
+  const catY = p.y + offsetY - hexSize*0.2 + bounce;
   
-  ctx.font = `${hexSize*1.2}px sans-serif`;
+  ctx.font = `${hexSize*1.6}px sans-serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  // If trapped, draw sad cat, else normal cat
-  let catEmoji = gameState === 'lose' ? '🙀' : (gameState === 'win' ? '😿' : '😺');
   
-  // Add a white background to make cat pop
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.beginPath(); ctx.arc(px, py, hexSize*0.5, 0, Math.PI*2); ctx.fill();
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath(); ctx.ellipse(p.x + offsetX, p.y + offsetY + hexSize*0.2, hexSize*0.5, hexSize*0.2, 0, 0, Math.PI*2); ctx.fill();
   
-  ctx.fillText(catEmoji, px, py);
-}
-
-function winAnimation() {
-  if (gameState !== 'win') return;
-  winSequenceFrame++;
-  draw();
-  // Draw expanding yellow ring
-  if(winSequenceFrame < 60) {
-    const p = hexToPixel(catPos, hexSize);
-    ctx.beginPath();
-    ctx.arc(p.x + offsetX, p.y + offsetY, hexSize * 0.5 + winSequenceFrame * 5, 0, Math.PI*2);
-    ctx.strokeStyle = `rgba(255, 235, 59, ${1 - winSequenceFrame/60})`;
-    ctx.lineWidth = 10;
-    ctx.stroke();
-    requestAnimationFrame(winAnimation);
+  let catEmoji = gameState === 'lose' ? '😿' : (gameState === 'win' ? '😻' : '🦊');
+  if(gameState === 'win') {
+    ctx.shadowColor = '#ffeb3b'; ctx.shadowBlur = 30;
   }
+  ctx.fillText(catEmoji, catX, catY);
+  ctx.shadowBlur = 0;
+
+  // Win Ring Animation
+  if (gameState === 'win') {
+    const ringRadius = hexSize * 0.5 + (animFrame % 60) * 8;
+    ctx.beginPath();
+    ctx.arc(catX, catY, ringRadius, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(255, 235, 59, ${1 - (animFrame % 60)/60})`;
+    ctx.lineWidth = 15;
+    ctx.stroke();
+  }
+
+  requestAnimationFrame(render);
 }
 
 // Start
 initGame();
+render();
 
 </script>
 </body>
