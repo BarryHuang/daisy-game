@@ -238,6 +238,7 @@ let blocks = new Map(); // Store block type: "q,r" -> 'crystal' or 'stone'
 let gameState = 'playing'; 
 let keys = 0;
 let animFrame = 0;
+let isCatMoving = false;
 
 // --- Init & Resize ---
 function resize() {
@@ -264,9 +265,10 @@ function initGame() {
   catPos = {q: 0, r: 0};
   blocks.clear();
   animFrame = 0;
+  isCatMoving = false;
   
-  // 8 to 13 blocks initially
-  const numInitialBlocks = 8 + Math.floor(Math.random() * 6);
+  // 14 to 22 blocks initially to ensure the game is winnable
+  const numInitialBlocks = 14 + Math.floor(Math.random() * 9);
   let placed = 0;
   while(placed < numInitialBlocks) {
     const q = -RADIUS + Math.floor(Math.random() * (2*RADIUS + 1));
@@ -346,6 +348,7 @@ function moveCat() {
     const neighbors = getNeighbors(catPos);
     if (neighbors.length > 0) catPos = neighbors[Math.floor(Math.random() * neighbors.length)];
   }
+  isCatMoving = false;
   checkGameState();
 }
 
@@ -362,7 +365,7 @@ function checkGameState() {
 
 // --- Interaction ---
 function handleHexInteraction(p) {
-  if (gameState !== 'playing') return;
+  if (gameState !== 'playing' || isCatMoving) return;
   const hex = pixelToHex({x: p.x - offsetX, y: p.y - offsetY}, hexSize);
   if (isOutOfBounds(hex)) return;
   if (hex.q === catPos.q && hex.r === catPos.r) return; 
@@ -370,7 +373,7 @@ function handleHexInteraction(p) {
   const key = `${hex.q},${hex.r}`;
   if (!blocks.has(key)) {
     blocks.set(key, 'stone');
-
+    isCatMoving = true;
     setTimeout(moveCat, 250); 
   }
 }
