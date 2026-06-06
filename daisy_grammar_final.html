@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daisy 期末考文法詞彙模擬測驗卷</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    background: #f0f4ff;
+    padding: 20px;
+    color: #222;
+  }
+
+  .page {
+    background: white;
+    max-width: 780px;
+    margin: 0 auto 40px auto;
+    padding: 40px 48px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    page-break-after: always;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    border: 3px solid #1565c0;
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 28px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #ede7ff 100%);
+  }
+  .header h1 { font-size: 21px; color: #0d47a1; letter-spacing: 2px; margin-bottom: 6px; }
+  .header .subtitle { font-size: 13px; color: #666; margin-bottom: 14px; }
+  .info-row { display: flex; justify-content: space-between; font-size: 14px; gap: 20px; }
+  .info-row span { border-bottom: 1.5px solid #555; flex: 1; padding-bottom: 2px; }
+  .info-row label { font-weight: bold; margin-right: 6px; color: #0d47a1; }
+
+  /* ── Part Header ── */
+  .part-header { display: flex; align-items: center; gap: 10px; margin: 28px 0 10px 0; }
+  .part-badge { background: #1565c0; color: white; font-size: 13px; font-weight: bold; padding: 4px 14px; border-radius: 20px; white-space: nowrap; }
+  .part-title { font-size: 15px; font-weight: bold; color: #333; }
+  .part-score { margin-left: auto; background: #fff3e0; border: 1.5px solid #ff9800; border-radius: 8px; padding: 3px 12px; font-size: 13px; color: #e65100; font-weight: bold; white-space: nowrap; }
+  .instruction { font-size: 13px; color: #555; margin: 0 0 14px 0; font-style: italic; }
+
+  /* ── Questions ── */
+  .q-list { list-style: none; }
+  .q-list li { margin-bottom: 16px; font-size: 15px; line-height: 1.9; }
+  .q-num { font-weight: bold; color: #1565c0; margin-right: 6px; }
+
+  /* choices inline */
+  .choices { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; margin-left: 24px; }
+  .choice { border: 1.5px solid #aaa; border-radius: 6px; padding: 3px 14px; font-size: 14px; background: #fafafa; }
+
+  /* blank */
+  .blank { display: inline-block; border-bottom: 1.5px solid #333; min-width: 100px; margin: 0 4px; vertical-align: bottom; height: 20px; }
+  .blank-sm { min-width: 60px; }
+
+  /* source tag */
+  .src-tag { font-size: 11px; background: #e3f2fd; color: #1565c0; border-radius: 10px; padding: 1px 8px; margin-left: 6px; font-weight: 600; }
+
+  /* word bank */
+  .word-bank { border: 1.5px dashed #1565c0; border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; background: #e8f0fe; font-size: 14px; }
+  .word-bank strong { color: #0d47a1; margin-right: 6px; }
+  .word-bank .wlist { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .word-bank .wlist span { background: white; border: 1px solid #90caf9; border-radius: 6px; padding: 2px 12px; font-size: 15px; font-weight: bold; color: #333; }
+
+  /* match table */
+  .match-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  .match-table th { background: #1565c0; color: white; padding: 8px 14px; text-align: center; border: 1px solid #0d47a1; }
+  .match-table td { border: 1px solid #ccc; padding: 10px 14px; font-size: 14px; }
+  .match-table td:first-child { font-weight: bold; font-size: 15px; color: #1565c0; text-align: center; width: 40%; }
+  .match-table .ans-col { width: 20%; text-align: center; }
+
+  /* sentence writing */
+  .write-item { border: 1px solid #ddd; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; background: #fafafa; }
+  .write-item .wi-num { color: #1565c0; font-weight: bold; }
+  .write-item .wi-word { font-size: 17px; font-weight: bold; margin: 4px 0 8px 0; color: #0d47a1; }
+  .write-item .wi-hint { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .write-line { border-bottom: 1.5px solid #333; width: 100%; height: 22px; display: block; margin-top: 4px; }
+
+  /* divider */
+  .divider { border: none; border-top: 1.5px dashed #ccc; margin: 20px 0; }
+
+  /* score table */
+  .score-summary { margin-top: 30px; border: 2px solid #1565c0; border-radius: 12px; overflow: hidden; }
+  .score-summary table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .score-summary th { background: #1565c0; color: white; padding: 8px; text-align: center; }
+  .score-summary td { border: 1px solid #ddd; padding: 8px; text-align: center; height: 36px; }
+  .score-summary td:first-child { font-weight: bold; background: #e3f2fd; text-align: left; padding-left: 12px; }
+
+  /* answer key */
+  .answer-key { background: #e8f5e9; border: 2px dashed #388e3c; border-radius: 12px; padding: 28px 36px; }
+  .answer-key h2 { color: #1b5e20; text-align: center; margin-bottom: 20px; font-size: 18px; }
+  .ak-section { margin-bottom: 18px; }
+  .ak-section h3 { color: #2e7d32; font-size: 14px; margin-bottom: 8px; border-bottom: 1px solid #a5d6a7; padding-bottom: 4px; }
+  .ak-section p { font-size: 14px; line-height: 2.2; color: #333; }
+  .ak-ans { font-weight: bold; color: #1b5e20; }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; margin: 0; border-radius: 0; padding: 32px 48px; }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     PAGE 1 — Parts A & B (FET Wk 10-16)
+     ══════════════════════════════════════ -->
+<div class="page">
+  <div class="header">
+    <h1>期末考文法詞彙模擬測驗卷</h1>
+    <div class="subtitle">Final Exam Vocabulary &amp; Grammar Practice Test &nbsp;|&nbsp; FET &amp; CET Week 10 – 16</div>
+    <div class="info-row">
+      <div><label>Name:</label><span>Daisy</span></div>
+      <div><label>Date:</label><span>&nbsp;</span></div>
+      <div><label>Score:</label><span>&nbsp;&nbsp;&nbsp;&nbsp;/ 100</span></div>
+    </div>
+  </div>
+
+  <!-- ── Part A ── FET Wk 10-12 -->
+  <div class="part-header">
+    <span class="part-badge">Part A</span>
+    <span class="part-title">FET Week 10 – 12 &nbsp;–&nbsp; Fill in the blank. 選出正確答案填入空格</span>
+    <span class="part-score">___/ 24</span>
+  </div>
+  <p class="instruction">Choose the best word to complete each sentence. Circle your answer, then write it on the line.</p>
+
+  <ul class="q-list">
+    <li>
+      <span class="q-num">1.</span> She has a very good <span class="blank"></span> and remembers everyone's names. <span class="src-tag">FET 10</span>
+      <div class="choices"><span class="choice">memory</span><span class="choice">world</span><span class="choice">wonder</span></div>
+    </li>
+    <li>
+      <span class="q-num">2.</span> If you work hard, you can <span class="blank"></span> your goals. <span class="src-tag">FET 10</span>
+      <div class="choices"><span class="choice">achieve</span><span class="choice">alone</span><span class="choice">struggle</span></div>
+    </li>
+    <li>
+      <span class="q-num">3.</span> The internet connects people all over the <span class="blank"></span>. <span class="src-tag">FET 10</span>
+      <div class="choices"><span class="choice">world</span><span class="choice">dream</span><span class="choice">tunes</span></div>
+    </li>
+    <li>
+      <span class="q-num">4.</span> Please <span class="blank"></span> quietly so the baby won't wake up. <span class="src-tag">FET 11/12</span>
+      <div class="choices"><span class="choice">whisper</span><span class="choice">delight</span><span class="choice">surround</span></div>
+    </li>
+    <li>
+      <span class="q-num">5.</span> The beautiful rainbow was a <span class="blank"></span> to see. <span class="src-tag">FET 11/12</span>
+      <div class="choices"><span class="choice">delight</span><span class="choice">mountain</span><span class="choice">desert</span></div>
+    </li>
+    <li>
+      <span class="q-num">6.</span> The <span class="blank"></span> painted a beautiful picture of the ocean. <span class="src-tag">FET 11/12</span>
+      <div class="choices"><span class="choice">artist</span><span class="choice">wonder</span><span class="choice">bones</span></div>
+    </li>
+    <li>
+      <span class="q-num">7.</span> They climbed to the top of the tall <span class="blank"></span>. <span class="src-tag">FET 11/12</span>
+      <div class="choices"><span class="choice">mountain</span><span class="choice">desert</span><span class="choice">season</span></div>
+    </li>
+    <li>
+      <span class="q-num">8.</span> A camel can live in the hot, dry <span class="blank"></span> for days. <span class="src-tag">FET 11/12</span>
+      <div class="choices"><span class="choice">desert</span><span class="choice">mountain</span><span class="choice">children</span></div>
+    </li>
+  </ul>
+
+  <hr class="divider">
+
+  <!-- ── Part B ── FET Wk 13-16 -->
+  <div class="part-header">
+    <span class="part-badge">Part B</span>
+    <span class="part-title">FET Week 13 – 16 &nbsp;–&nbsp; Fill in the blank. 選出正確答案填入空格</span>
+    <span class="part-score">___/ 24</span>
+  </div>
+  <p class="instruction">Choose the best word to complete each sentence.</p>
+
+  <ul class="q-list">
+    <li>
+      <span class="q-num">1.</span> In <span class="blank"></span>, the leaves change color and fall from the trees. <span class="src-tag">FET 13</span>
+      <div class="choices"><span class="choice">autumn</span><span class="choice">spring</span><span class="choice">summer</span></div>
+    </li>
+    <li>
+      <span class="q-num">2.</span> With a little water, the seeds will begin to <span class="blank"></span>. <span class="src-tag">FET 13</span>
+      <div class="choices"><span class="choice">sprout</span><span class="choice">bloom</span><span class="choice">spread</span></div>
+    </li>
+    <li>
+      <span class="q-num">3.</span> The butterflies <span class="blank"></span> their wings as they fly from flower to flower. <span class="src-tag">FET 14</span>
+      <div class="choices"><span class="choice">flutter</span><span class="choice">slither</span><span class="choice">scatter</span></div>
+    </li>
+    <li>
+      <span class="q-num">4.</span> The mice <span class="blank"></span> quickly across the floor to hide. <span class="src-tag">FET 14</span>
+      <div class="choices"><span class="choice">scurry</span><span class="choice">honk</span><span class="choice">taste</span></div>
+    </li>
+    <li>
+      <span class="q-num">5.</span> It is quite <span class="blank"></span> today, so wear a sweater. <span class="src-tag">FET 15</span>
+      <div class="choices"><span class="choice">chilly</span><span class="choice">crisp</span><span class="choice">gray</span></div>
+    </li>
+    <li>
+      <span class="q-num">6.</span> The little <span class="blank"></span> quickly hid its food in the tree. <span class="src-tag">FET 15</span>
+      <div class="choices"><span class="choice">chipmunk</span><span class="choice">spider</span><span class="choice">rush</span></div>
+    </li>
+    <li>
+      <span class="q-num">7.</span> The top will <span class="blank"></span> around and around on the table. <span class="src-tag">FET 16</span>
+      <div class="choices"><span class="choice">spin</span><span class="choice">shake</span><span class="choice">fly</span></div>
+    </li>
+    <li>
+      <span class="q-num">8.</span> My dog loves to run and <span class="blank"></span> the ball when I throw it. <span class="src-tag">FET 16</span>
+      <div class="choices"><span class="choice">fetch</span><span class="choice">dash</span><span class="choice">shake</span></div>
+    </li>
+  </ul>
+
+  <!-- Score box -->
+  <div class="score-summary">
+    <table>
+      <tr><th>Part</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
+      <tr><td>Score</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    </table>
+  </div>
+</div><!-- end page 1 -->
+
+
+<!-- ══════════════════════════════════════
+     PAGE 2 — Parts C & D (CET Wk 10-16)
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <!-- ── Part C ── CET Wk 10-12 -->
+  <div class="part-header">
+    <span class="part-badge">Part C</span>
+    <span class="part-title">CET Week 10 – 12 &nbsp;–&nbsp; Fill in the blank. 選出正確答案填入空格</span>
+    <span class="part-score">___/ 18</span>
+  </div>
+  <p class="instruction">Choose the best word to complete each sentence.</p>
+
+  <ul class="q-list">
+    <li>
+      <span class="q-num">1.</span> We saw many old paintings at the art <span class="blank"></span>. <span class="src-tag">CET 10</span>
+      <div class="choices"><span class="choice">museum</span><span class="choice">field</span><span class="choice">fossil</span></div>
+    </li>
+    <li>
+      <span class="q-num">2.</span> Scientists found a fish <span class="blank"></span> in the solid rock. <span class="src-tag">CET 10</span>
+      <div class="choices"><span class="choice">fossil</span><span class="choice">museum</span><span class="choice">drawing</span></div>
+    </li>
+    <li>
+      <span class="q-num">3.</span> Our family went on a <span class="blank"></span> to the beach last summer. <span class="src-tag">CET 10</span>
+      <div class="choices"><span class="choice">trip</span><span class="choice">model</span><span class="choice">break</span></div>
+    </li>
+    <li>
+      <span class="q-num">4.</span> Can you help me solve this 100-piece <span class="blank"></span>? <span class="src-tag">CET 11</span>
+      <div class="choices"><span class="choice">puzzle</span><span class="choice">chicken</span><span class="choice">bird</span></div>
+    </li>
+    <li>
+      <span class="q-num">5.</span> The cat used its sharp <span class="blank"></span> to scratch the post. <span class="src-tag">CET 12</span>
+      <div class="choices"><span class="choice">claw</span><span class="choice">horn</span><span class="choice">teeth</span></div>
+    </li>
+    <li>
+      <span class="q-num">6.</span> Don't forget to brush your <span class="blank"></span> before going to bed. <span class="src-tag">CET 12</span>
+      <div class="choices"><span class="choice">teeth</span><span class="choice">claw</span><span class="choice">flat</span></div>
+    </li>
+  </ul>
+
+  <hr class="divider">
+
+  <!-- ── Part D ── CET Wk 13-16 -->
+  <div class="part-header">
+    <span class="part-badge">Part D</span>
+    <span class="part-title">CET Week 13 – 16 &nbsp;–&nbsp; Fill in the blank. 選出正確答案填入空格</span>
+    <span class="part-score">___/ 18</span>
+  </div>
+  <p class="instruction">Choose the best word to complete each sentence.</p>
+
+  <ul class="q-list">
+    <li>
+      <span class="q-num">1.</span> Watch the red balloon <span class="blank"></span> away into the air. <span class="src-tag">CET 13</span>
+      <div class="choices"><span class="choice">float</span><span class="choice">stretch</span><span class="choice">over</span></div>
+    </li>
+    <li>
+      <span class="q-num">2.</span> The <span class="blank"></span> flew the airplane safely to the airport. <span class="src-tag">CET 13</span>
+      <div class="choices"><span class="choice">pilot</span><span class="choice">doctor</span><span class="choice">silly</span></div>
+    </li>
+    <li>
+      <span class="q-num">3.</span> The <span class="blank"></span> firefighter ran into the burning house to save the dog. <span class="src-tag">CET 14</span>
+      <div class="choices"><span class="choice">brave</span><span class="choice">tough</span><span class="choice">talented</span></div>
+    </li>
+    <li>
+      <span class="q-num">4.</span> She is a very <span class="blank"></span> singer who wins many contests. <span class="src-tag">CET 14</span>
+      <div class="choices"><span class="choice">talented</span><span class="choice">brave</span><span class="choice">tough</span></div>
+    </li>
+    <li>
+      <span class="q-num">5.</span> The magician pulled a rabbit out of his hat as a cool <span class="blank"></span>. <span class="src-tag">CET 15/16</span>
+      <div class="choices"><span class="choice">trick</span><span class="choice">learn</span><span class="choice">start</span></div>
+    </li>
+    <li>
+      <span class="q-num">6.</span> She is a <span class="blank"></span> movie star and everyone knows her name. <span class="src-tag">CET 15/16</span>
+      <div class="choices"><span class="choice">famous</span><span class="choice">flew</span><span class="choice">stop</span></div>
+    </li>
+  </ul>
+
+  <hr class="divider">
+
+  <!-- ── Part E ── Word-Hint Matching -->
+  <div class="part-header">
+    <span class="part-badge">Part E</span>
+    <span class="part-title">詞義配對 &nbsp;–&nbsp; Match the word to its meaning. 連連看</span>
+    <span class="part-score">___/ 10</span>
+  </div>
+  <p class="instruction">Draw a line to connect each word to its correct Chinese meaning.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:10px;">
+    <div>
+      <table class="match-table">
+        <tr><th>Word</th><th>　</th><th>Meaning</th></tr>
+        <tr><td>slither</td><td class="ans-col"></td><td>開花 🌺</td></tr>
+        <tr><td>bloom</td><td class="ans-col"></td><td>嘗到 👅</td></tr>
+        <tr><td>crisp</td><td class="ans-col"></td><td>清爽的 🍏</td></tr>
+        <tr><td>fossil</td><td class="ans-col"></td><td>化石 🦴</td></tr>
+        <tr><td>remind</td><td class="ans-col"></td><td>滑行 🐍</td></tr>
+      </table>
+    </div>
+    <div>
+      <table class="match-table">
+        <tr><th>Word</th><th>　</th><th>Meaning</th></tr>
+        <tr><td>desert</td><td class="ans-col"></td><td>衝刺 💨</td></tr>
+        <tr><td>dash</td><td class="ans-col"></td><td>沙漠 🏜️</td></tr>
+        <tr><td>weave</td><td class="ans-col"></td><td>提醒 🔔</td></tr>
+        <tr><td>achieve</td><td class="ans-col"></td><td>編織 🕸️</td></tr>
+        <tr><td>delight</td><td class="ans-col"></td><td>達成 🏆</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div><!-- end page 2 -->
+
+
+<!-- ══════════════════════════════════════
+     PAGE 3 — Part F (造句) + Answer Key
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <!-- ── Part F ── Sentence Writing -->
+  <div class="part-header">
+    <span class="part-badge">Part F</span>
+    <span class="part-title">造句 &nbsp;–&nbsp; Write a sentence using each word. 用每個單字造一個句子</span>
+    <span class="part-score">___/ 6</span>
+  </div>
+  <p class="instruction">Write one complete sentence for each word. (每題 2 分：詞意正確 1 分 + 句子完整 1 分)</p>
+
+  <div class="write-item">
+    <div class="wi-num">1.</div>
+    <div class="wi-word">autumn <span style="font-size:13px; font-weight:normal; color:#888;">（秋天 🍁）</span></div>
+    <span class="write-line"></span>
+    <span class="write-line" style="margin-top:8px;"></span>
+  </div>
+
+  <div class="write-item">
+    <div class="wi-num">2.</div>
+    <div class="wi-word">brave <span style="font-size:13px; font-weight:normal; color:#888;">（勇敢的 🦁）</span></div>
+    <span class="write-line"></span>
+    <span class="write-line" style="margin-top:8px;"></span>
+  </div>
+
+  <div class="write-item">
+    <div class="wi-num">3.</div>
+    <div class="wi-word">spider <span style="font-size:13px; font-weight:normal; color:#888;">（蜘蛛 🕷️）</span></div>
+    <span class="write-line"></span>
+    <span class="write-line" style="margin-top:8px;"></span>
+  </div>
+
+  <hr class="divider">
+  <hr class="divider" style="margin-top:0;">
+
+  <!-- ── Answer Key ── -->
+  <div class="answer-key">
+    <h2>✅ Answer Key &nbsp;—&nbsp; Teacher Copy &nbsp;(不給學生)</h2>
+
+    <div class="ak-section">
+      <h3>Part A — FET Wk 10–12 (3 pts each)</h3>
+      <p>
+        1. <span class="ak-ans">memory</span> &nbsp;
+        2. <span class="ak-ans">achieve</span> &nbsp;
+        3. <span class="ak-ans">world</span> &nbsp;
+        4. <span class="ak-ans">whisper</span> &nbsp;
+        5. <span class="ak-ans">delight</span> &nbsp;
+        6. <span class="ak-ans">artist</span> &nbsp;
+        7. <span class="ak-ans">mountain</span> &nbsp;
+        8. <span class="ak-ans">desert</span>
+      </p>
+    </div>
+
+    <div class="ak-section">
+      <h3>Part B — FET Wk 13–16 (3 pts each)</h3>
+      <p>
+        1. <span class="ak-ans">autumn</span> &nbsp;
+        2. <span class="ak-ans">sprout</span> &nbsp;
+        3. <span class="ak-ans">flutter</span> &nbsp;
+        4. <span class="ak-ans">scurry</span> &nbsp;
+        5. <span class="ak-ans">chilly</span> &nbsp;
+        6. <span class="ak-ans">chipmunk</span> &nbsp;
+        7. <span class="ak-ans">spin</span> &nbsp;
+        8. <span class="ak-ans">fetch</span>
+      </p>
+    </div>
+
+    <div class="ak-section">
+      <h3>Part C — CET Wk 10–12 (3 pts each)</h3>
+      <p>
+        1. <span class="ak-ans">museum</span> &nbsp;
+        2. <span class="ak-ans">fossil</span> &nbsp;
+        3. <span class="ak-ans">trip</span> &nbsp;
+        4. <span class="ak-ans">puzzle</span> &nbsp;
+        5. <span class="ak-ans">claw</span> &nbsp;
+        6. <span class="ak-ans">teeth</span>
+      </p>
+    </div>
+
+    <div class="ak-section">
+      <h3>Part D — CET Wk 13–16 (3 pts each)</h3>
+      <p>
+        1. <span class="ak-ans">float</span> &nbsp;
+        2. <span class="ak-ans">pilot</span> &nbsp;
+        3. <span class="ak-ans">brave</span> &nbsp;
+        4. <span class="ak-ans">talented</span> &nbsp;
+        5. <span class="ak-ans">trick</span> &nbsp;
+        6. <span class="ak-ans">famous</span>
+      </p>
+    </div>
+
+    <div class="ak-section">
+      <h3>Part E — 詞義配對 (1 pt each)</h3>
+      <p>
+        slither → <span class="ak-ans">滑行</span> &nbsp;
+        bloom → <span class="ak-ans">開花</span> &nbsp;
+        crisp → <span class="ak-ans">清爽的</span> &nbsp;
+        fossil → <span class="ak-ans">化石</span> &nbsp;
+        remind → <span class="ak-ans">提醒</span><br>
+        desert → <span class="ak-ans">沙漠</span> &nbsp;
+        dash → <span class="ak-ans">衝刺</span> &nbsp;
+        weave → <span class="ak-ans">編織</span> &nbsp;
+        achieve → <span class="ak-ans">達成</span> &nbsp;
+        delight → <span class="ak-ans">愉快</span>
+      </p>
+    </div>
+
+    <div class="ak-section">
+      <h3>Part F — 造句 (2 pts each, 詞意正確 1 + 句子完整 1)</h3>
+      <p>
+        參考答案：<br>
+        1. <span class="ak-ans">In autumn, the leaves turn red and yellow.</span><br>
+        2. <span class="ak-ans">The brave firefighter saved the cat from the fire.</span><br>
+        3. <span class="ak-ans">A spider can weave a web to catch bugs.</span>
+      </p>
+    </div>
+
+    <div style="margin-top:20px; border-top:2px solid #a5d6a7; padding-top:14px;">
+      <strong style="color:#1b5e20;">Total: 100 points</strong><br>
+      <span style="font-size:13px; color:#555;">A(24) + B(24) + C(18) + D(18) + E(10) + F(6) = 100</span>
+    </div>
+  </div>
+
+</div><!-- end page 3 -->
+
+<div class="no-print" style="text-align:center; margin:20px; color:#888; font-size:13px;">
+  🖨️ 建議用瀏覽器列印 (Ctrl+P)，選擇「A4」，關閉頁首頁尾，縮放 100%
+</div>
+
+</body>
+</html>
