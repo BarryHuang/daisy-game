@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>房屋租賃契約書</title>
+<style>
+  @page { size: A4; margin: 10mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "DFKai-SB","BiauKai","標楷體","KaiTi","Noto Serif TC","Noto Sans CJK TC","WenQuanYi Zen Hei",serif;
+    color: #111;
+  }
+  .page {
+    width: 190mm;
+    height: 277mm;
+    page-break-after: always;
+    position: relative;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* Cover page */
+  .cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cover .title {
+    writing-mode: vertical-rl;
+    font-size: 40pt;
+    letter-spacing: 14px;
+    font-weight: 700;
+  }
+
+  /* Content pages: bordered box, vertical right-to-left text */
+  .framed {
+    border: 1.4pt solid #000;
+    height: 100%;
+    padding: 6mm 8mm;
+    writing-mode: vertical-rl;
+    line-height: 2.05;
+    font-size: 11.2pt;
+    overflow: hidden;
+  }
+  .framed .page-heading {
+    font-size: 13pt;
+    font-weight: 700;
+    margin-left: 8mm;
+  }
+  .article {
+    font-weight: 700;
+    margin-left: 4mm;
+  }
+  p { margin: 0 0 0 4mm; }
+  .party-block { margin-left: 4mm; }
+  .indent2 { margin-right: 1.2em; }
+  .small-note { font-size: 9.5pt; }
+  .sign-table {
+    margin-left: 4mm;
+    border-collapse: collapse;
+  }
+  .sign-table td, .sign-table th {
+    border: 1pt solid #000;
+    padding: 2mm 3mm;
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: Cover -->
+<div class="page cover">
+  <div class="title">房屋租賃契約書</div>
+</div>
+
+<!-- PAGE 2: Article 1-3 -->
+<div class="page">
+  <div class="framed">
+    <div class="page-heading">房屋租賃契約書</div>
+    <p class="party-block">立契約書人：出租人　林秀玉　《以下簡稱甲方》</p>
+    <p class="party-block">　　　　　　承租人　羅惟安　《以下簡稱乙方，最多二人》</p>
+    <p class="party-block">帳戶：</p>
+    <p class="party-block">郵局帳戶：(700)0311004-1095501</p>
+    <p>因房屋租賃契約事件，訂立本契約，雙方同意條件如左：</p>
+
+    <p class="article">第一條　房屋所在地及使用範圍：</p>
+    <p>新北市板橋區四維路103巷9弄9號5樓。</p>
+
+    <p class="article">第二條　租賃期限</p>
+    <p>1.甲乙雙方合意訂為一年，自民國115年4月25日起，至民國115年4月24日止。</p>
+
+    <p class="article">第三條　租金</p>
+    <p>1.每月租金新台幣玖仟元整。雙方約定於每月二十五日至月底前繳交下月房租，存入甲方郵局帳戶，無論任何理由不得以押金抵扣或拖延、拒納，如至月底未繳租者，甲方將於次月初五書面通知，仍未繳者初十將斷電，乙方不得異議。</p>
+    <p>2.押金月租二個月合新台幣壹萬捌仟元整，由乙方於訂約時交付甲方收取保管。乙方返還房屋時，由甲方無息發還，如乙方應付甲方之款項尚未付清，得由押金中扣還，乙方不得異議。</p>
+  </div>
+</div>
+
+<!-- PAGE 3: Article 4-5 -->
+<div class="page">
+  <div class="framed">
+    <p class="article">第四條　使用租賃物之限制：</p>
+    <p>1.本房屋僅供住房之用，不可有營業行為。</p>
+    <p>2.未經甲方同意，乙方不得將房屋全部或一部份轉租、出借、頂讓，或以其他方法由親人或他人使用房屋。</p>
+    <p>3.房屋不得供他人非法使用或存放危險物品，影響公共安全。</p>
+    <p>4.房屋若有改裝之必要，乙方需取得甲方同意後方得裝設，但不得損害原有建築物。乙方交還房屋時，應負責回復原狀。</p>
+    <p>5.除甲方同意繼續出租外，乙方於租賃期滿即日將房屋以原狀誠意交還甲方，不得藉詞推託，亦不得就裝修、權利金等向甲方請求償還或移轉費用，並應自行將房屋騰空遷讓交還。</p>
+    <p>6.契約期間內，乙方若擬遷移他處，不得向甲方請求償還租金或任何移轉費用。</p>
+
+    <p class="article">第五條　危險負擔：</p>
+    <p>乙方應以善良管理人之注意使用房屋。除因天災地變等不可抗拒因素發生外，因乙方之故意、過失或可歸責於乙方之事由，致房屋失火焚毀者，均應負損害賠償之責任。房屋因自然損壞而有修繕之必要時，由甲方負責修繕。</p>
+  </div>
+</div>
+
+<!-- PAGE 4: Article 6 (1-6) -->
+<div class="page">
+  <div class="framed">
+    <p class="article">第六條　違約處罰：</p>
+    <p>1.乙方違反約定方法使用房屋，或租賃期滿不交還房屋，經甲方催告限期仍不履行時，甲方得終止租約。</p>
+    <p>2.乙方於終止租約時，其訴訟費用及律師費用，一切由乙方支付。</p>
+    <p>3.乙方如發生違約事項，以致損害甲方權益，願拋棄先訴抗辯權。</p>
+    <p>4.乙方如違反約定事項，應支付違約金《房租的雙倍》新台幣壹萬捌仟元整，如發生訴訟，訴訟費用及律師費用一切由乙方支付。</p>
+    <p>5.租用期間應繳納之政府稅捐、網路費由甲方負擔。但每月水費及公用電費由乙方與其他房客平均分擔，由甲方計算乙方應繳納費用，自公佈日起五日內繳納給甲方，繳納後收據由甲方留存。</p>
+    <p>6.私人電費部份，甲方由各個房間電錶，依乙方使用電錶電量計算乙方應繳納費用，自公佈日起五日內繳納給甲方。</p>
+  </div>
+</div>
+
+<!-- PAGE 5: Article 6 (7-13) -->
+<div class="page">
+  <div class="framed">
+    <p>7.為維護住戶安全，房屋內不得使用插電熱水壺等器具，若導致瓦斯桶堵塞等情形，修繕費用由乙方自行負擔。</p>
+    <p>8.房屋內含衣柮、床、書桌椅、鞋櫃、冷氣、冰箱、電視、洗衣機等，不得故意毀損，若故意毀損，依損壞情形酌收賠償金或扣抵押金。</p>
+    <p>9.房屋鑰匙遺失者，代付之價錢由乙方自行負擔。</p>
+    <p>10.每個房間之鑰匙均由甲方提供乙方一付。</p>
+    <p>11.居住期間切勿大聲喧嘩、吸毒、妨害安寧。私人物品及垃圾勿放置於公共空間或樓梯間。</p>
+    <p>12.居住期間禁止飼養貓狗等寵物，若有飼養，屢勸不聽者，得由甲方強制解約。退租時應將彈簧床／單人床等恢復原狀，新台幣肆仟元整，乙方不得有異議。</p>
+    <p>13.乙方如不於租賃期滿時交還租賃標的物，或不遵約給付租金，或違約時不履行違約金，經催告後仍不履行者，依前述違約處罰條款處理。</p>
+  </div>
+</div>
+
+<!-- PAGE 6: Closing + Signatures -->
+<div class="page">
+  <div class="framed">
+    <p>以上條款經由雙方同意絕無反悔，恐口說無憑，特立此約一式貳份，雙方各執一份留存。契約條款未盡規定或未妥善事項，得由甲乙雙方洽商協議訂定後實施之。</p>
+
+    <p class="article">立契約書人《甲方》：林秀玉　蓋章</p>
+    <p class="small-note">聯絡電話：(H)　　　　手機：0939-777-771</p>
+    <p class="small-note">住址：新北市板橋區四維路103巷9弄9號5樓</p>
+
+    <p class="article">立契約書人《乙方》：羅惟安　蓋章</p>
+    <p class="small-note">聯絡電話：(H)　　　　手機：0968-368-858</p>
+    <p class="small-note">住址：桃園市平鎮區○○里23鄰○○路○巷○弄○號○樓</p>
+
+    <p>中華民國115年4月20日</p>
+  </div>
+</div>
+
+</body>
+</html>
