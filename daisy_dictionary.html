@@ -82,6 +82,35 @@ body{font-family:var(--read);color:var(--ink);
 .say-zh{background:var(--primary);box-shadow:0 3px 0 #e0607f}
 .say:active{transform:translateY(3px);box-shadow:none}
 
+.add{border:0;background:#fff4dc;color:#a86a00;border-radius:14px;padding:7px 12px;
+  font-size:.82rem;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #e8c98a;font-family:var(--read)}
+.add.on{background:#f6a821;color:#fff;box-shadow:0 3px 0 #c07f00}
+.add:active{transform:translateY(3px);box-shadow:none}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10001;display:none}
+.sheet-bg.on{display:block}
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:10002;
+  width:min(420px,100%);background:#fff;border-radius:22px 22px 0 0;padding:18px 16px
+  calc(20px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.25);display:none}
+.sheet.on{display:block}
+.sheet h3{font-size:1.05rem;margin-bottom:3px}
+.sheet .sub{font-size:.8rem;color:var(--muted);margin-bottom:12px}
+.sheet .row{display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:13px;
+  border:2px solid var(--line);margin-bottom:8px;cursor:pointer;background:#fff}
+.sheet .row.in{border-color:#f6a821;background:#fff9ec}
+.sheet .row b{flex:1;font-size:.98rem}
+.sheet .row span{font-size:.78rem;color:var(--muted)}
+.sheet .new{display:flex;gap:8px;margin-top:4px}
+.sheet .new input{flex:1;padding:11px;border:2px solid var(--line);border-radius:13px;
+  font-size:1rem;font-family:var(--read);outline:none}
+.sheet .new input:focus{border-color:#f6a821}
+.sheet .new button{border:0;background:#f6a821;color:#fff;border-radius:13px;padding:0 16px;
+  font-weight:800;cursor:pointer;font-family:var(--read)}
+.sheet .close{width:100%;margin-top:12px;padding:11px;border:0;border-radius:14px;
+  background:#f0eef8;color:var(--muted);font-weight:700;font-family:var(--read);cursor:pointer}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10003;
+  background:rgba(40,38,55,.94);color:#fff;padding:10px 18px;border-radius:99px;
+  font-size:.9rem;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
 .recent{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .chip{background:#fff;border:2px solid var(--line);border-radius:99px;padding:6px 13px;
   font-size:.9rem;font-weight:700;cursor:pointer;color:var(--ink)}
@@ -135,11 +164,27 @@ h2.sec{font-size:.8rem;color:var(--muted);letter-spacing:.08em;font-weight:800;
   <div id="out"></div>
 </div>
 
+<div class="sheet-bg" id="sheet-bg"></div>
+<div class="sheet" id="sheet">
+  <h3 id="sheet-title">加入單字卡</h3>
+  <div class="sub" id="sheet-sub"></div>
+  <div id="sheet-lists"></div>
+  <div class="new">
+    <input id="sheet-new" placeholder="新清單的名字" maxlength="24">
+    <button id="sheet-add">建立</button>
+  </div>
+  <button class="close" id="sheet-close">關閉</button>
+</div>
+<div class="toast" id="toast"></div>
+<div style="display:none">
+</div>
+
 <script src="./words.js"></script>
 <script src="./zhuyin.js"></script>
 <script src="./inflect.js"></script>
 <script src="./firebase-config.js"></script>
 <script src="./lookups.js"></script>
+<script src="./wordlists.js"></script>
 <script>
 // ---------- 語音 ----------
 function speak(text, lang) {
@@ -202,7 +247,7 @@ function renderCurriculum(word, entry) {
   const from = pick ? pick.text : "";
   return `<div class="card mine">
     <span class="badge mine">⭐ 你的單字表${from ? " · " + from : ""}</span>
-    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}</div>
+    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}${addBtn(word)}</div>
     ${senses}
   </div>`;
 }
@@ -225,7 +270,7 @@ function renderDict(word, hits, form) {
   }).join("");
   return `<div class="card">
     <span class="badge dict">字典</span>
-    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}</div>
+    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}${addBtn(word)}</div>
     ${senses}
   </div>`;
 }
@@ -292,6 +337,77 @@ input.addEventListener("input", () => {
 });
 document.getElementById("clear").addEventListener("click", () => {
   input.value = ""; search(""); input.focus();
+});
+
+// ---------- 單字卡清單 ----------
+let sheetWord = "";
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("on"), 1600);
+}
+
+function addBtn(word) {
+  const n = typeof listsContaining === "function" ? listsContaining(word).length : 0;
+  return `<button class="add${n ? " on" : ""}" onclick='openSheet(${attr(word)})'>` +
+         `${n ? "★ 在 " + n + " 張卡" : "＋ 單字卡"}</button>`;
+}
+
+function renderSheetLists() {
+  const box = document.getElementById("sheet-lists");
+  const lists = getLists();
+  if (!lists.length) {
+    box.innerHTML = `<div class="sub">還沒有清單，先建一個吧。</div>`;
+    return;
+  }
+  const inIds = listsContaining(sheetWord);
+  box.innerHTML = lists.map((l) => {
+    const inIt = inIds.includes(l.id);
+    return `<div class="row${inIt ? " in" : ""}" onclick='toggleInList(${attr(l.id)})'>
+      <b>${l.name}</b><span>${l.words.length} 個字</span>
+      <span>${inIt ? "✓ 已加入" : "＋"}</span></div>`;
+  }).join("");
+}
+
+function openSheet(word) {
+  sheetWord = word;
+  document.getElementById("sheet-sub").textContent = `把「${word}」放進哪一張單字卡？`;
+  renderSheetLists();
+  document.getElementById("sheet").classList.add("on");
+  document.getElementById("sheet-bg").classList.add("on");
+}
+
+function closeSheet() {
+  document.getElementById("sheet").classList.remove("on");
+  document.getElementById("sheet-bg").classList.remove("on");
+  if (lastQuery) search(lastQuery);      // 讓按鈕上的星星狀態更新
+}
+
+function toggleInList(id) {
+  if (listsContaining(sheetWord).includes(id)) {
+    removeFromList(id, sheetWord);
+    toast("已從清單移除");
+  } else {
+    addToList(id, sheetWord);
+    toast("加進單字卡了！");
+  }
+  renderSheetLists();
+}
+
+document.getElementById("sheet-close").addEventListener("click", closeSheet);
+document.getElementById("sheet-bg").addEventListener("click", closeSheet);
+document.getElementById("sheet-add").addEventListener("click", () => {
+  const input = document.getElementById("sheet-new");
+  const name = input.value.trim();
+  if (!name) return input.focus();
+  const id = createList(name);
+  addToList(id, sheetWord);
+  input.value = "";
+  renderSheetLists();
+  toast("建立「" + name + "」並加入");
 });
 
 // ---------- 語音輸入 ----------

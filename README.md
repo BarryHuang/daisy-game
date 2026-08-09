@@ -35,6 +35,8 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `zhuyin.js` | 直排注音渲染器（台灣課本排法），樣式自動注入 |
 | `inflect.js` | 詞形還原：產生候選字形再去索引裡試。含英式→美式拼法 |
 | `lookups.js` | 記錄查過的單字。先寫 localStorage，有登入才同步雲端 |
+| `wordlists.js` | 她自己建的單字卡清單。在字典加字，會出現在 `flashcards.html` 和遊戲選單 |
+| `mastery.js` | 每個字的答對／答錯／連對次數 |
 
 ### 導覽
 主頁是 `daisy_hamster.html`（PWA 的 `start_url` 也指這裡）。
@@ -71,7 +73,11 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
    （`長滿草的 ㄓㄤˇ`、`快速地 ˙ㄉㄜ`）。家長已決定 `建築物` 保留 ㄓㄨˊ、
    `記得` 保留 ㄉㄜˊ，**不要改回去**。
 
-6. **遊戲的下拉選單不能重建。** `setupConfig()` 會連帶呼叫 `init()`，
+6. **`.zh` 這個 class 撞過兩次。** 它是「中文詞本體」的樣式（字級 1.8rem 以上、
+   `flex:1`），發音鈕如果也叫 `.zh` 會被套上去，變成又大又會撐開版面。
+   按鈕一律用 `.say-zh`。
+
+7. **遊戲的下拉選單不能重建。** `setupConfig()` 會連帶呼叫 `init()`，
    Firebase 資料若在她玩到一半才回來，會把進行中的遊戲重置掉。只 append
    `<option>`。
 

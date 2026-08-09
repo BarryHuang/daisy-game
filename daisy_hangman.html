@@ -58,6 +58,7 @@
     <script src="./words.js"></script>
     <script src="./firebase-config.js"></script>
     <script src="./lookups.js"></script>
+    <script src="./wordlists.js"></script>
     <script src="./mastery.js"></script>
     <script>
 
@@ -199,6 +200,14 @@
         // 她在字典查過的字，也可以拿來玩。
         // 只加選項、不重建選單 —— 資料可能在她玩到一半才回來，
         // 重建會連帶呼叫 init() 把進行中的遊戲重置掉。
+        if (typeof attachWordlistCategory === 'function') {
+            attachWordlistCategory(words, () => {
+                const name = '⭐ 我的單字卡';
+                if (!Array.from(catS.options).some(o => o.value === name)) {
+                    catS.add(new Option(name, name));
+                }
+            });
+        }
         if (typeof attachLookupCategory === 'function') {
             attachLookupCategory(words, () => {
                 const name = '⭐ 我查過的字';

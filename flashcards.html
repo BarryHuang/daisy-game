@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>🃏 單字卡</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#7b1fa2">
+<style>
+:root{
+  --primary:#ff85a2; --secondary:#8ba4f9; --gold:#f6a821;
+  --ink:#38364a; --muted:#7c7a8d; --line:#ece9f4; --ok:#12876f; --no:#c2410c;
+  --read:"Noto Sans TC","PingFang TC","Helvetica Neue",Arial,sans-serif;
+  --play:'Comic Sans MS','Chalkboard SE',var(--read);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--read);color:var(--ink);
+  background:linear-gradient(160deg,#fff8f0 0%,#ffecd2 50%,#fff3e0 100%);
+  min-height:100vh;padding-bottom:calc(30px + env(safe-area-inset-bottom))}
+.page-header{background:linear-gradient(135deg,#4a148c,#7b1fa2 50%,#ab47bc);
+  padding:14px 16px 14px 58px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.page-header h1{color:#fff;font-size:1.2rem;flex:1;font-family:var(--play);
+  text-shadow:1px 2px 5px rgba(0,0,0,.35)}
+.wrap{max-width:520px;margin:0 auto;padding:0 14px}
+
+.pick{background:#fff;border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.09);
+  padding:16px;margin-top:16px}
+.pick h2{font-size:1rem;margin-bottom:4px}
+.pick p{font-size:.84rem;color:var(--muted);margin-bottom:12px;line-height:1.6}
+.lrow{display:flex;align-items:center;gap:10px;padding:12px 12px;border-radius:14px;
+  border:2px solid var(--line);margin-bottom:9px;cursor:pointer;background:#fff}
+.lrow:active{transform:scale(.98)}
+.lrow b{flex:1;font-size:1rem}
+.lrow span{font-size:.8rem;color:var(--muted)}
+.lrow .go{background:var(--gold);color:#fff;border-radius:11px;padding:6px 12px;
+  font-size:.82rem;font-weight:800}
+
+.bar{height:8px;background:#eee;border-radius:99px;overflow:hidden;margin:16px 0 4px}
+.bar span{display:block;height:100%;background:linear-gradient(90deg,#f6a821,#e65100);
+  border-radius:99px;transition:width .25s}
+.count{font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:12px}
+
+.card{background:#fff;border-radius:24px;box-shadow:0 10px 34px rgba(0,0,0,.13);
+  padding:30px 20px;min-height:260px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;cursor:pointer;text-align:center}
+.card .en{font-size:clamp(2rem,9vw,2.9rem);font-weight:800;letter-spacing:-.02em;
+  word-break:break-word;line-height:1.1}
+.card .zh{font-size:clamp(1.9rem,8vw,2.4rem);line-height:2}
+.card .gloss{font-size:.86rem;color:var(--muted)}
+.card .flip{font-size:.8rem;color:#b3b0c2}
+.card .src{font-size:.74rem;color:var(--gold);font-weight:700}
+
+.btns{display:flex;gap:10px;margin-top:14px}
+.btns button{flex:1;border:0;border-radius:16px;padding:14px;font-size:1rem;font-weight:800;
+  cursor:pointer;font-family:var(--read);color:#fff}
+.no{background:var(--no);box-shadow:0 4px 0 #8f2f14}
+.ok{background:var(--ok);box-shadow:0 4px 0 #0b5c4c}
+.btns button:active{transform:translateY(4px);box-shadow:none}
+.say{flex:0 0 auto;align-self:center;border:0;background:var(--secondary);color:#fff;border-radius:13px;padding:7px 13px;
+  font-size:.82rem;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #6b83d4;font-family:var(--read)}
+.say-zh{background:var(--primary);box-shadow:0 3px 0 #e0607f}
+.row{display:flex;gap:8px;justify-content:center}
+
+.done{background:#fff;border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.09);
+  padding:26px 18px;margin-top:16px;text-align:center}
+.done .big{font-size:3.4rem}
+.done .score{font-size:1.6rem;font-weight:800;margin-top:8px}
+.done p{font-size:.9rem;color:var(--muted);margin-top:6px}
+.again{border:0;background:var(--gold);color:#fff;border-radius:15px;padding:13px 26px;
+  font-size:1rem;font-weight:800;margin-top:16px;cursor:pointer;font-family:var(--read)}
+.empty{text-align:center;padding:40px 16px;color:var(--muted);line-height:1.8}
+.empty a{color:#7b1fa2;font-weight:700}
+</style>
+</head>
+<body>
+<div class="page-header"><h1>🃏 單字卡</h1></div>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="./words.js"></script>
+<script src="./zhuyin.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./wordlists.js"></script>
+<script src="./mastery.js"></script>
+<script src="./menu.js"></script>
+<script>
+const app = document.getElementById("app");
+let deck = [], pos = 0, flipped = false, right = 0, listName = "";
+let cedictReady = false;
+
+function loadCedict() {
+  return new Promise((res) => {
+    if (cedictReady) return res(true);
+    const s = document.createElement("script");
+    s.src = "./cedict.js";
+    s.onload = () => { cedictReady = true; res(true); };
+    s.onerror = () => res(false);
+    document.head.appendChild(s);
+  });
+}
+
+function speak(text, lang) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang; u.rate = lang.startsWith("zh") ? 0.85 : 0.8;
+  speechSynthesis.speak(u);
+}
+
+/** 課表的翻譯優先，查不到才用大字典 */
+function meaning(word) {
+  const e = typeof lookupWord === "function" ? lookupWord(word) : null;
+  if (e) return { senses: e.s, src: (wordSources(word)[0] || {}).text || "" };
+  if (cedictReady && CEDICT.i[word.toLowerCase()]) {
+    const id = CEDICT.i[word.toLowerCase()][0];
+    return { senses: [{ zh: CEDICT.w[id], z: CEDICT.z[id].split(",").map((n) => CEDICT.s[+n]) }],
+             gloss: CEDICT.g[id], src: "" };
+  }
+  return null;
+}
+
+function renderPicker() {
+  const lists = getLists().filter((l) => l.words.length);
+  if (!lists.length) {
+    app.innerHTML = `<div class="empty">還沒有單字卡。<br><br>
+      去 <a href="daisy_dictionary.html">查單字</a> 的時候，
+      按下單字旁邊的<b> ＋ 單字卡 </b>就可以建立。</div>`;
+    return;
+  }
+  app.innerHTML = `<div class="pick"><h2>選一張單字卡</h2>
+    <p>先看英文，想想中文是什麼，再翻開對答案。</p>` +
+    lists.map((l) => `<div class="lrow" onclick="start('${l.id}')">
+      <b>${l.name}</b><span>${l.words.length} 個字</span>
+      <span class="go">開始</span></div>`).join("") + `</div>`;
+}
+
+async function start(id) {
+  const list = getLists().find((l) => l.id === id);
+  if (!list) return;
+  listName = list.name;
+  app.innerHTML = `<div class="empty">準備中…</div>`;
+  await loadCedict();
+  deck = [...list.words].sort(() => Math.random() - 0.5);
+  pos = 0; right = 0; flipped = false;
+  renderCard();
+}
+
+function renderCard() {
+  if (pos >= deck.length) return renderDone();
+  const word = deck[pos];
+  const m = meaning(word);
+  const pct = (pos / deck.length) * 100;
+
+  const back = !m
+    ? `<div class="gloss">這個字還沒有中文，之後可以在字典補上。</div>`
+    : m.senses.map((s) => `<div class="zh zy-line">${renderZhuyin(s.zh, s.z)}</div>`).join("") +
+      (m.gloss ? `<div class="gloss">${m.gloss}</div>` : "") +
+      (m.src ? `<div class="src">⭐ ${m.src}</div>` : "");
+
+  app.innerHTML = `
+    <div class="bar"><span style="width:${pct}%"></span></div>
+    <div class="count">${listName} · 第 ${pos + 1} / ${deck.length} 張</div>
+    <div class="card" onclick="flip()">
+      <div class="en">${word}</div>
+      ${flipped ? back : `<div class="flip">👆 點一下看中文</div>`}
+      <div class="row" onclick="event.stopPropagation()">
+        <button class="say" onclick="speak('${word.replace(/'/g, "\\'")}','en-US')">🔊 英</button>
+        ${flipped && m ? `<button class="say say-zh" onclick="speak('${m.senses[0].zh}','zh-TW')">🔊 中</button>` : ""}
+      </div>
+    </div>
+    ${flipped ? `<div class="btns">
+      <button class="no" onclick="mark(false)">還不會</button>
+      <button class="ok" onclick="mark(true)">我會了</button>
+    </div>` : ""}`;
+}
+
+function flip() { flipped = true; renderCard(); }
+
+function mark(ok) {
+  // 記進熟練度，家長後台和「還沒學會的字」就會反映出來
+  if (typeof recordAttempt === "function") recordAttempt(deck[pos], ok, ok ? 0 : 3);
+  if (ok) right++;
+  pos++; flipped = false;
+  renderCard();
+}
+
+function renderDone() {
+  const n = deck.length;
+  const face = right === n ? "🏆" : right >= n * 0.7 ? "🌟" : right >= n * 0.4 ? "👍" : "🌱";
+  app.innerHTML = `<div class="done"><div class="big">${face}</div>
+    <div class="score">${right} / ${n} 會了</div>
+    <p>${right === n ? "整張卡都會了，太厲害！" : "還不會的字之後會多出現幾次。"}</p>
+    <button class="again" onclick="renderPicker()">選別張</button></div>`;
+}
+
+renderPicker();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+</script>
+</body>
+</html>

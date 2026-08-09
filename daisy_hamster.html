@@ -284,6 +284,7 @@
     </style>
 
     <script src="words.js"></script>
+    <script src="./wordlists.js"></script>
     <script src="midterm_questions.js"></script>
     <script src="final_questions.js"></script>
     <script src="exams.js"></script>
@@ -833,12 +834,27 @@
             }
         }
 
+
+        // 她自己建的單字卡（在字典加的）也可以拿來玩。
+        // 只 append 選項、不重建選單：資料可能在她玩到一半才回來，
+        // 重建會連帶呼叫 startLevel() / init() 把進行中的關卡重置掉。
+        function attachMyWordlists(select) {
+            if (typeof attachWordlistCategory !== 'function') return;
+            attachWordlistCategory(words, () => {
+                const name = '⭐ 我的單字卡';
+                if (!Array.from(select.options).some(o => o.value === name)) {
+                    select.add(new Option(name, name));
+                }
+            });
+        }
+
         function setupConfig() {
             catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
             setupWeek();
+            attachMyWordlists(catS);
         }
         function setupWeek() {
-            wkS.innerHTML = Object.keys(words[catS.value]).map(w => `<option>${w}</option>`).join('');
+            wkS.innerHTML = Object.keys(words[catS.value] || {}).map(w => `<option>${w}</option>`).join('');
             // 不立刻開始，因為可能只是切換選單
             startLevel();
         }

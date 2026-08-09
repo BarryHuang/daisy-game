@@ -593,13 +593,27 @@ const wordEntries = {
 
 // 遊戲讀的還是這個扁平結構，所以四個遊戲一行都不用改。
 // 順序：本學期 -> 常用 -> 以前學過的（新的在前）
+function activeTerm() {
+  if (curriculum[CURRENT_TERM]) return CURRENT_TERM;
+  // 很容易先把 CURRENT_TERM 改成新學期、資料卻還沒貼進來。
+  // 沒有這個保護的話，本學期的清單會整個消失而且不會報錯。
+  const fallback = Object.keys(curriculum).sort().pop();
+  if (typeof console !== "undefined") {
+    console.warn(`words.js: CURRENT_TERM "${CURRENT_TERM}" 在 curriculum 裡找不到，暫時改用 "${fallback}"`);
+  }
+  return fallback;
+}
+
+// 每個清單都標學期，本學期的也標 —— 不然「FET Spelling」到底是哪一學期
+// 的看不出來，而她同時看得到兩個學期的清單。
 function buildWords() {
   const out = {};
-  const cur = curriculum[CURRENT_TERM];
-  if (cur) for (const [list, weeks] of Object.entries(cur.lists)) out[list] = weeks;
+  const active = activeTerm();
+  const cur = curriculum[active];
+  if (cur) for (const [list, weeks] of Object.entries(cur.lists)) out[`${cur.label} · ${list}`] = weeks;
   for (const [name, weeks] of Object.entries(evergreen)) out[name] = weeks;
   for (const [term, t] of Object.entries(curriculum).sort().reverse()) {
-    if (term === CURRENT_TERM) continue;
+    if (term === active) continue;
     for (const [list, weeks] of Object.entries(t.lists)) out[`${t.label} · ${list}`] = weeks;
   }
   return out;
@@ -624,7 +638,8 @@ function wordSources(word) {
 }
 
 function isCurrentTerm(word) {
-  return wordSources(word).some((s) => s.term === CURRENT_TERM || s.term === null);
+  const active = activeTerm();
+  return wordSources(word).some((s) => s.term === active || s.term === null);
 }
 
 // ---- 向後相容層：組回舊的 "中文 (ㄅㄆㄇ)" 字串 ----

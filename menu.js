@@ -9,7 +9,8 @@ const MENU_GROUPS = [
     { href: "daisy_hamster.html", emoji: "🐹", name: "倉鼠拼字冒險", home: true }
   ]},
   { title: "查東西", items: [
-    { href: "daisy_dictionary.html", emoji: "📖", name: "查單字", note: "英翻中・有注音" }
+    { href: "daisy_dictionary.html", emoji: "📖", name: "查單字", note: "英翻中・有注音" },
+    { href: "flashcards.html", emoji: "🃏", name: "單字卡", note: "複習自己收的字" }
   ]},
   { title: "讀故事", items: [
     { href: "story_hub.html",   emoji: "📚", name: "課文複習" },
