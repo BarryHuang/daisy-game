@@ -27,6 +27,7 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `words.js` | 她的課堂單字（FET Spelling / CET Vocabulary，按週）。`wordEntries` 是主資料，每個字可有多個義項、注音逐字對齊。`wordTranslations` 由它自動產生，供舊遊戲使用 |
 | `cedict.js` | 3 MB，45,418 個中文詞、47,552 個英文查詢鍵，由 CC-CEDICT 建置（CC BY-SA 4.0） |
 | `firebase-config.js` | 全站唯一一份 Firebase 設定 + 延遲載入 SDK |
+| `exams.js` | 測驗題庫的學期登錄表。題庫綁學期，舊的留著當參考但不再是預設 |
 
 ### 共用模組
 | 檔案 | 用途 |
@@ -105,6 +106,8 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 
 ## 接下來要做的
 
+0. **二上題庫** — 新增 `term2_1_questions.js`，在 `exams.js` 的 `EXAM_TERMS`
+   加一組，`words.js` 的 `CURRENT_TERM` 改過去。倉鼠頁不用改
 1. **作業容器** — 每次閱讀作業一組生字，紀錄才有意義、遊戲題庫才有範圍
 2. **複習排程** — 熟練度資料已經在收集了，還沒有東西去用它。
    `getWeakWords()` 可以直接餵給遊戲當題庫
