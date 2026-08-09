@@ -91,6 +91,7 @@
         .stripe-orange { background: linear-gradient(90deg, #ff8f00, #e65100); }
         .stripe-red    { background: linear-gradient(90deg, #c62828, #880e4f); }
         .stripe-green  { background: linear-gradient(90deg, #43a047, #2e7d32); }
+        .stripe-purple { background: linear-gradient(90deg, #7b1fa2, #ab47bc); }
 
         .card-body {
             padding: 18px 20px 0;
@@ -135,6 +136,7 @@
         }
 
         /* big action button inside card */
+        .btn-purple { background: linear-gradient(135deg,#7b1fa2,#ab47bc); }
         .card-btn {
             display: block;
             width: 100%;
@@ -172,6 +174,23 @@
 
 <!-- Cards -->
 <div class="cards-container">
+
+    <!-- 查單字：讀到不會的字就用這個 -->
+    <a class="story-card" href="daisy_dictionary.html">
+        <div class="card-stripe stripe-purple"></div>
+        <div class="card-body">
+            <div class="card-row-top">
+                <div class="card-emoji">📖</div>
+                <div class="card-meta">
+                    <div class="card-title">查單字</div>
+                    <div class="card-author">英翻中 · 每個字都有注音</div>
+                    <span class="genre-badge" style="background:#7b1fa2;">工具</span>
+                </div>
+            </div>
+            <div class="card-desc">讀到不會的英文字就打進來。hesitated、mice 這種變化形也查得到。</div>
+        </div>
+        <div class="card-btn btn-purple">查一下 ▶</div>
+    </a>
 
     <!-- Card 1: My Autumn Book -->
     <a class="story-card" href="autumn_book.html">

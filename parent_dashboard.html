@@ -298,6 +298,20 @@
 
         <!-- 成就 -->
         <div class="card">
+            <h2>🎯 還沒學會的字</h2>
+            <p style="font-size:0.85rem;color:#999;margin-bottom:10px;">
+                從遊戲的作答紀錄算出來。連續三次乾淨答對就算學會，不再列出。</p>
+            <div id="weak-words">—</div>
+        </div>
+
+        <div class="card">
+            <h2>📖 她自己查過的字</h2>
+            <p style="font-size:0.85rem;color:#999;margin-bottom:10px;">
+                在字典查過的單字，最近的排前面。查很多次的通常是還沒記起來的。</p>
+            <div id="lookup-words">—</div>
+        </div>
+
+        <div class="card">
             <h2>🏆 成就解鎖</h2>
             <div id="achievement-list"></div>
         </div>
@@ -307,16 +321,10 @@
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./words.js"></script>
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCaWfJnDdK4R2mv2Ht3dQm2lyHhmpWIjo4",
-        authDomain: "daisygame-30452.firebaseapp.com",
-        databaseURL: "https://daisygame-30452-default-rtdb.firebaseio.com",
-        projectId: "daisygame-30452",
-        storageBucket: "daisygame-30452.firebasestorage.app",
-        messagingSenderId: "548508102123",
-        appId: "1:548508102123:web:40f02b8557ecca99523dae"
-    };
+    const firebaseConfig = FIREBASE_CONFIG;   // 見 firebase-config.js
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -327,12 +335,103 @@
         document.getElementById('loading-msg').style.display = 'block';
         document.getElementById('dashboard').style.display = 'none';
 
+        loadLookups(code);
+        loadWeakWords(code);
         db.ref('users/' + code + '/petData').once('value', snap => {
             document.getElementById('loading-msg').style.display = 'none';
             const d = snap.val();
             if (!d) { alert(`找不到帳號「${code}」的資料，請確認帳號名稱正確！`); return; }
             renderDashboard(d);
             document.getElementById('dashboard').style.display = 'block';
+        });
+    }
+
+    function loadWeakWords(code) {
+        const box = document.getElementById('weak-words');
+        box.innerHTML = '<span style="color:#aaa;font-size:0.9rem;">⏳ 載入中...</span>';
+        db.ref('users/' + code + '/mastery').once('value', snap => {
+            const val = snap.val() || {};
+            const day = 86400000, now = Date.now();
+            const rows = Object.entries(val)
+                .map(([w, m]) => ({ w, r: m.r || 0, x: m.w || 0, s: m.s || 0, t: m.t || 0 }))
+                .filter(r => r.s < 3)
+                .map(r => {
+                    const rate = r.x / Math.max(1, r.x + r.r);
+                    const stale = Math.min(30, (now - (r.t || now)) / day) / 30;
+                    return Object.assign(r, { score: rate * 3 + stale });
+                })
+                .sort((a, b) => b.score - a.score);
+
+            const done = Object.values(val).filter(m => (m.s || 0) >= 3).length;
+            if (!rows.length) {
+                box.innerHTML = '<span style="color:#aaa;font-size:0.9rem;">' +
+                    (done ? '目前列出的字都學會了 🎉' : '還沒有作答紀錄。') + '</span>';
+                return;
+            }
+
+            const ago = t => {
+                if (!t) return '';
+                const d = Math.floor((now - t) / day);
+                return d <= 0 ? '今天' : d === 1 ? '昨天' : d + ' 天前';
+            };
+
+            box.innerHTML =
+                '<div style="font-size:0.85rem;color:#888;margin-bottom:8px;">' +
+                rows.length + ' 個還在練，已學會 ' + done + ' 個</div>' +
+                rows.slice(0, 40).map(r => {
+                    const hot = r.x > r.r;
+                    return '<div style="display:flex;align-items:baseline;gap:8px;padding:7px 0;' +
+                    'border-top:1px solid #f0f0f0;flex-wrap:wrap;">' +
+                    '<b style="min-width:110px;' + (hot ? 'color:#c2410c;' : '') + '">' + r.w + '</b>' +
+                    '<span style="flex:1;color:#555;font-size:0.9rem;">' +
+                      (typeof wordTranslations !== 'undefined' ? (wordTranslations[r.w] || '') : '') + '</span>' +
+                    '<span style="background:' + (hot ? '#fdece3' : '#eef1fd') + ';color:' +
+                      (hot ? '#c2410c' : '#4459a8') + ';border-radius:99px;padding:2px 8px;' +
+                      'font-size:0.75rem;font-weight:bold;">對 ' + r.r + ' 錯 ' + r.x + '</span>' +
+                    '<span style="color:#bbb;font-size:0.75rem;">' + ago(r.t) + '</span>' +
+                    '</div>';
+                }).join('');
+        }, () => {
+            box.innerHTML = '<span style="color:#c66;font-size:0.9rem;">讀取失敗。</span>';
+        });
+    }
+
+    function loadLookups(code) {
+        const box = document.getElementById('lookup-words');
+        box.innerHTML = '<span style="color:#aaa;font-size:0.9rem;">⏳ 載入中...</span>';
+        db.ref('users/' + code + '/lookups').once('value', snap => {
+            const val = snap.val() || {};
+            const list = Object.entries(val)
+                .map(([w, v]) => ({ w, n: (v && v.n) || 1, t: (v && v.t) || 0, zh: (v && v.zh) || '' }))
+                .sort((a, b) => b.t - a.t);
+
+            if (!list.length) {
+                box.innerHTML = '<span style="color:#aaa;font-size:0.9rem;">還沒有查過任何單字。</span>';
+                return;
+            }
+
+            const day = 86400000;
+            const ago = t => {
+                if (!t) return '';
+                const d = Math.floor((Date.now() - t) / day);
+                return d <= 0 ? '今天' : d === 1 ? '昨天' : d + ' 天前';
+            };
+
+            box.innerHTML =
+                '<div style="font-size:0.85rem;color:#888;margin-bottom:8px;">共 ' +
+                list.length + ' 個字</div>' +
+                list.slice(0, 60).map(x =>
+                    '<div style="display:flex;align-items:baseline;gap:8px;padding:7px 0;' +
+                    'border-top:1px solid #f0f0f0;flex-wrap:wrap;">' +
+                    '<b style="min-width:120px;">' + x.w + '</b>' +
+                    '<span style="flex:1;color:#555;">' + (x.zh || '') + '</span>' +
+                    (x.n > 1 ? '<span style="background:#fff4dc;color:#a86a00;border-radius:99px;' +
+                               'padding:2px 8px;font-size:0.75rem;font-weight:bold;">查過 ' +
+                               x.n + ' 次</span>' : '') +
+                    '<span style="color:#bbb;font-size:0.75rem;">' + ago(x.t) + '</span>' +
+                    '</div>').join('');
+        }, () => {
+            box.innerHTML = '<span style="color:#c66;font-size:0.9rem;">讀取失敗。</span>';
         });
     }
 

@@ -28,6 +28,12 @@
     </style>
 </head>
 <body>
+<a href="index.html" aria-label="回首頁" style="position:fixed;left:10px;
+  top:calc(8px + env(safe-area-inset-top));z-index:9999;width:38px;height:38px;
+  border-radius:50%;background:rgba(123,31,162,.88);color:#fff;font-size:18px;
+  display:flex;align-items:center;justify-content:center;text-decoration:none;
+  box-shadow:0 3px 10px rgba(0,0,0,.3)">&#127968;</a>
+
     <h2 style="color:#d63384;">Daisy 拼字大挑戰 👑</h2>
     <div class="box">
         <select id="cat" onchange="setupWeek()"></select><br>
@@ -54,37 +60,11 @@
         <button class="btn btn-primary" onclick="init()">換個單字</button>
     </div>
 
+    <script src="./words.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script src="./lookups.js"></script>
+    <script src="./mastery.js"></script>
     <script>
-        const words = {
-            "FET Spelling": {
-                "Wk 2": ["beautiful", "calf", "graze", "forest", "angry", "catch", "sad", "promise", "grassy", "happy"],
-                "Wk 3": ["agree", "quickly", "return", "surprised", "pleased", "truth", "mad", "protect", "always", "promise"],
-                "Wk 4": ["school", "learn", "math", "problem", "important", "think", "art", "because", "creative", "imagination"],
-                "Wk 5": ["amazing", "music", "concentrate", "remember", "teamwork", "reason", "best", "learn"],
-                "Wk 6": ["baseball", "love", "sport", "college", "team", "allowed", "meet", "field", "cheer", "boo"],
-                "Wk 10": ["memory", "discovers", "amaze", "wonder", "tunes", "alone", "struggle", "dream", "achieve", "world"],
-                "Wk 11/12": ["wonder", "whisper", "bones", "delight", "children", "mountain", "artist", "surround", "desert", "season"],
-                "Wk 13": ["autumn", "spring", "summer", "winter", "speckled", "woven", "showers", "sprout", "bloom", "spread"],
-                "Wk 14": ["slither", "barefoot", "flutter", "taste", "scurry", "scatter", "jacket", "secret", "honk", "store"],
-                "Wk 15": ["crisp", "gray", "rush", "spider", "weave", "chilly", "zip", "agree", "chipmunk", "dig"],
-                "Wk 16": ["autumn", "whisper", "fly", "shake", "spin", "dash", "empty", "jar", "fetch", "lie"]
-            },
-            "CET Vocabulary": {
-                "Wk 1&2": ["cool", "fun", "world", "mall", "picnic", "basket", "office", "shop", "fold", "cross"],
-                "Wk 3": ["come", "piano", "violin", "music", "building", "cover", "glass", "stair", "shell", "sink"],
-                "Wk 4": ["visit", "community", "bookshelf", "library", "real", "front", "garage", "create", "elephant", "climb"],
-                "Wk 5": ["country", "hear", "quiet", "mouse", "letter", "cousin", "pick", "excited", "imagine", "phone"],
-                "Wk 6": ["feet", "scary", "street", "skateboard", "zoom", "shout", "behind", "jump", "garbage", "can"],
-                "Wk 7&8": ["ambulance", "hospital", "city", "busy", "loud", "sick", "tomorrow", "soon", "later"],
-                "Wk 10": ["field", "museum", "dinosaur", "drawing", "model", "fossil", "alive", "trip", "break"],
-                "Wk 11": ["cow", "together", "puzzle", "about", "could", "show", "chicken", "four", "bird"],
-                "Wk 12": ["claw", "catch", "horn", "teeth", "ate", "clue", "flat", "other", "meat", "past"],
-                "Wk 13": ["sky", "cloud", "float", "plane", "over", "dream", "stretch", "pilot", "doctor", "silly"],
-                "Wk 14": ["train", "neighbor", "ask", "tough", "brave", "remind", "talented", "wait", "minute", "job"],
-                "Wk 15&16": ["trick", "fly", "flew", "learn", "start", "famous", "stop"],
-                "Wk 18": ["elf", "shoemaker", "imagination", "leather", "shed", "pair", "shiny", "peek"]
-            }
-        };
 
         let current = "", guessed = [], err = 0;
         const catS = document.getElementById('cat'), wkS = document.getElementById('week');
@@ -147,7 +127,7 @@
             init();
         }
         function init() {
-            const list = words[catS.value][wkS.value];
+            const list = words[catS.value][wkS.value] || [];
             current = list[Math.floor(Math.random() * list.length)].toUpperCase();
             guessed = []; err = 0;
             const msg = document.getElementById('message');
@@ -194,6 +174,8 @@
                     document.getElementById('word-display').classList.add('correct-anim');
                     document.querySelectorAll('.key').forEach(k=>k.disabled=true);
                     triggerConfetti();
+                    // err 是猜錯幾次：沒錯就過關和錯五次才過關，熟練度差很多
+                    if (typeof recordAttempt === 'function') recordAttempt(current, true, err);
                     
                     // 答對後自動唸一次加深印象
                     setTimeout(() => speakWord(), 500);
@@ -206,6 +188,7 @@
                 
                 // 檢查是否失敗
                 if(err>=6) {
+                    if (typeof recordAttempt === 'function') recordAttempt(current, false, err);
                     const msg = document.getElementById('message');
                     msg.textContent = "答案是: " + current;
                     msg.style.color = "#dc3545";
@@ -217,6 +200,17 @@
             }
         }
         setupConfig();
+    
+        // 她在字典查過的字，也可以拿來玩。
+        // 只加選項、不重建選單 —— 資料可能在她玩到一半才回來，
+        // 重建會連帶呼叫 init() 把進行中的遊戲重置掉。
+        if (typeof attachLookupCategory === 'function') {
+            attachLookupCategory(words, () => {
+                const name = '⭐ 我查過的字';
+                const exists = Array.from(catS.options).some(o => o.value === name);
+                if (!exists) catS.add(new Option(name, name));
+            });
+        }
     </script>
 </body>
 </html>
