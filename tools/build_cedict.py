@@ -152,11 +152,14 @@ OVERRIDES = {
     "screen":      ["螢幕"],
     # 她讀的是故事書，mouse 先給動物
     "mouse":       ["老鼠", "滑鼠"],
+    # 她讀的是動物文章，scale 幾乎都是魚鱗那個意思
+    "scale":       ["鱗片", "規模"],
+    "scales":      ["鱗片", "規模"],
 }
 
 def apply_overrides(entries, index):
     """把人工指定的答案放到第一位；字典裡沒有的就補一筆新條目。"""
-    from zhuyin_build import zhuyin_of
+    from build_data import zhuyin_of
     by_word = {}
     for i, e in enumerate(entries):
         by_word.setdefault(e["w"], i)
@@ -299,6 +302,15 @@ def emit(entries, index, max_hits=4, min_zipf=2.5, min_en_zipf=2.2, gloss_len=30
             continue                                    # not a real English word
         good = [(sc, i) for sc, i in hits
                 if entries[i]["f"] >= min_zipf or entries[i].get("p")][:max_hits]
+        # 詞頻門檻是用來壓制「排序時的爛候選」，不該拿來決定收不收錄。
+        # 動植物的專名（pangolin/穿山甲、armadillo/犰狳）在兩種語言的語料裡
+        # 都天生罕見，卻毫無歧義 —— 只有一個候選就沒有東西要排序，濾掉是純損失。
+        # 全部候選都沒過門檻時，至少留最好的那一個。
+        # pangolin 的四個候選（穿山甲、鯪鯉、石鯪魚、鯪鯉甲）全在門檻下，
+        # 但它們是同一種動物的別名 —— 候選數量不等於歧義。有答案卻不給，
+        # 比給一個罕見的答案更糟。只留 1 個，避免爛候選整批回來。
+        if not good and hits:
+            good = hits[:1]
         if good:
             keep[k] = [i for _, i in good]
 
