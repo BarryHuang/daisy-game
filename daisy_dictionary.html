@@ -34,9 +34,10 @@ body{font-family:var(--read);color:var(--ink);
 
 .wrap{max-width:640px;margin:0 auto;padding:0 14px}
 
-.searchbox{position:relative;margin-top:18px}
+.searchbox{position:relative;margin-top:14px;position:sticky;top:0;z-index:9;
+  padding:10px 0;background:linear-gradient(180deg,#fff8f0 72%,rgba(255,248,240,0))}
 .searchbox input{width:100%;font-family:var(--read);font-size:1.15rem;font-weight:600;
-  padding:16px 46px 16px 18px;border:3px solid var(--secondary);border-radius:18px;
+  padding:15px 46px 15px 16px;border:3px solid var(--secondary);border-radius:18px;
   background:#fff;color:var(--ink);outline:none;box-shadow:0 4px 0 #6b83d4}
 .searchbox input::placeholder{color:#b3b0c2;font-weight:400}
 .searchbox input:focus{border-color:var(--primary);box-shadow:0 4px 0 #e0607f}
@@ -44,7 +45,17 @@ body{font-family:var(--read);color:var(--ink);
   border:0;background:#f0eef8;color:var(--muted);width:30px;height:30px;border-radius:50%;
   font-size:1rem;cursor:pointer;display:none}
 .searchbox .clear.on{display:block}
+.searchbox.has-mic input{padding-right:84px}
+.searchbox.has-mic .clear{right:46px}
+.mic{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  border:0;background:var(--primary);color:#fff;width:32px;height:32px;border-radius:50%;
+  font-size:1rem;cursor:pointer;display:none;line-height:1}
+.searchbox.has-mic .mic{display:block}
+.mic.listening{animation:mic-pulse 1s ease-in-out infinite}
+@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,133,162,.7)}50%{box-shadow:0 0 0 9px rgba(255,133,162,0)}}
+@media (prefers-reduced-motion:reduce){.mic.listening{animation:none;outline:3px solid var(--primary)}}
 .tip{font-size:.82rem;color:var(--muted);margin:9px 4px 0;line-height:1.6}
+.tip code{background:#f0eef8;border-radius:5px;padding:1px 5px;font-size:.95em}
 
 .card{background:var(--card);border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.09);
   padding:16px;margin-top:14px}
@@ -66,9 +77,9 @@ body{font-family:var(--read);color:var(--ink);
 .sense .gloss{font-size:.85rem;color:var(--muted);flex-basis:100%;margin-top:-4px}
 .sense .note{font-size:.78rem;color:var(--teal);font-weight:700}
 
-.say{background:var(--secondary);color:#fff;border:0;border-radius:14px;padding:7px 13px;
+.say{flex:0 0 auto;align-self:center;background:var(--secondary);color:#fff;border:0;border-radius:14px;padding:7px 13px;
   font-size:.82rem;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #6b83d4;font-family:var(--read)}
-.say.zh{background:var(--primary);box-shadow:0 3px 0 #e0607f}
+.say-zh{background:var(--primary);box-shadow:0 3px 0 #e0607f}
 .say:active{transform:translateY(3px);box-shadow:none}
 
 .recent{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
@@ -85,6 +96,26 @@ body{font-family:var(--read);color:var(--ink);
 @media (prefers-reduced-motion:reduce){.loading{animation:none;opacity:.6}}
 h2.sec{font-size:.8rem;color:var(--muted);letter-spacing:.08em;font-weight:800;
   margin:22px 4px 0}
+
+/* iPad 分割畫面最窄約 320pt。注音是中文字級的 0.36em，中文一縮小注音就先
+   看不清了（1.5rem 的中文 = 8.6px 的注音），所以窄欄一律從留白和英文字級
+   擠空間，.sense .zh 維持 1.7rem 不動。 */
+@media (max-width:430px){
+  .wrap{padding:0 10px}
+  .page-header{padding:10px 12px}
+  .page-header h1{font-size:1.05rem}
+  .back-btn{padding:6px 11px;font-size:.82rem}
+  .card{padding:12px;border-radius:16px;margin-top:10px}
+  .searchbox input{font-size:1.05rem;padding:13px 44px 13px 13px}
+  .headword .en{font-size:1.45rem}
+  .sense{padding:10px 0 3px;gap:8px}
+  .sense .zh{font-size:1.7rem;min-width:110px}   /* 注音的下限，不能再小 */
+  .say{padding:6px 10px;font-size:.78rem}
+  .tip{font-size:.76rem;margin-top:7px}
+  .badge{font-size:.68rem;padding:3px 9px;margin-bottom:8px}
+  .chip{padding:5px 11px;font-size:.85rem}
+  h2.sec{margin-top:16px}
+}
 </style>
 </head>
 <body>
@@ -96,10 +127,11 @@ h2.sec{font-size:.8rem;color:var(--muted);letter-spacing:.08em;font-weight:800;
 <div class="wrap">
   <div class="searchbox">
     <input id="q" type="search" autocomplete="off" autocorrect="off" autocapitalize="none"
-           spellcheck="false" placeholder="打一個英文單字，例如 hesitated">
+           spellcheck="false" placeholder="打一個英文單字">
     <button class="clear" id="clear" aria-label="清除">✕</button>
+    <button class="mic" id="mic" aria-label="用說的">🎤</button>
   </div>
-  <p class="tip" id="tip">文章裡看到不會的字就打進來。變化形也可以直接打，會自動還原。</p>
+  <p class="tip" id="tip">文章裡看到不會的字就打進來。<code>hesitated</code>、<code>mice</code> 這種變化形也查得到。</p>
   <div id="out"></div>
 </div>
 
@@ -123,7 +155,7 @@ function attr(value) {
   return JSON.stringify(String(value)).replace(/'/g, "&#39;");
 }
 function sayBtn(text, lang, label) {
-  return `<button class="say ${lang.startsWith("zh") ? "zh" : ""}"
+  return `<button class="say ${lang.startsWith("zh") ? "say-zh" : ""}"
     onclick='speak(${attr(text)},"${lang}")'>🔊 ${label}</button>`;
 }
 
@@ -172,13 +204,22 @@ function renderCurriculum(word, entry) {
   </div>`;
 }
 
-function renderDict(word, hits) {
-  const senses = hits.map((h) => `
+function renderDict(word, hits, form) {
+  // cedict.js 每個詞只存第一個釋義，不一定是命中的那個。查 field 卻在
+  // 「方面」底下看到 respect 只會誤導，所以對不上就不顯示。
+  const relevant = (gloss) => {
+    const q = String(form || word).toLowerCase();
+    return gloss && gloss.toLowerCase().includes(q) ? gloss : "";
+  };
+  const senses = hits.map((h) => {
+    const g = relevant(h.gloss);
+    return `
     <div class="sense">
       <div class="zh zy-line">${renderZhuyin(h.zh, h.z)}</div>
       ${sayBtn(h.zh, "zh-TW", "中")}
-      <div class="gloss">${h.gloss}</div>
-    </div>`).join("");
+      ${g ? `<div class="gloss">${g}</div>` : ""}
+    </div>`;
+  }).join("");
   return `<div class="card">
     <span class="badge dict">字典</span>
     <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}</div>
@@ -227,7 +268,7 @@ async function search(raw) {
   }
 
   const found = resolveWord(word, cedictLookup);
-  if (found) html += renderDict(found.form, found.hit);
+  if (found) html += renderDict(found.form, found.hit, found.form);
   if (!html) html = renderNotFound(word);
   else {
     pushRecent(word.toLowerCase());
@@ -250,7 +291,54 @@ document.getElementById("clear").addEventListener("click", () => {
   input.value = ""; search(""); input.focus();
 });
 
-out.innerHTML = renderRecent();
+// ---------- 語音輸入 ----------
+// iOS Safari 沒有語音辨識（Web Speech API 只實作了語音合成），所以那邊改成
+// 引導她用系統鍵盤上的麥克風。對七歲小孩，用唸的比用打的快得多，
+// 而且她本來就在朗讀英文。
+function setupVoice() {
+  const Recog = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const box = document.querySelector(".searchbox");
+  const mic = document.getElementById("mic");
+
+  if (!Recog) {
+    const tip = document.getElementById("tip");
+    if (tip) {
+      tip.innerHTML = "文章裡看到不會的字就打進來。" +
+        "<br>不想打字的話，用鍵盤上的 🎤 直接唸也可以。";
+    }
+    return;
+  }
+
+  box.classList.add("has-mic");
+  const recog = new Recog();
+  recog.lang = "en-US";
+  recog.interimResults = false;
+  recog.maxAlternatives = 1;
+
+  let listening = false;
+  const stop = () => { listening = false; mic.classList.remove("listening"); };
+
+  mic.addEventListener("click", () => {
+    if (listening) { recog.stop(); return stop(); }
+    try { recog.start(); listening = true; mic.classList.add("listening"); }
+    catch (e) { stop(); }
+  });
+
+  recog.onresult = (e) => {
+    const said = (e.results[0][0].transcript || "").trim().replace(/[.,!?]+$/, "");
+    if (said) { input.value = said; search(said); }
+  };
+  recog.onerror = stop;
+  recog.onend = stop;
+}
+
+setupVoice();
+
+// ?q=word 直接帶入查詢。iOS「捷徑」可以把選取的文字丟到這個網址，
+// 是 myON 選不起字時唯一能少按幾下的路。
+const initial = new URLSearchParams(location.search).get("q");
+if (initial) { input.value = initial; search(initial); }
+else out.innerHTML = renderRecent();
 loadCedict();                                   // 背景預熱，第一次查就不用等
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
 </script>
