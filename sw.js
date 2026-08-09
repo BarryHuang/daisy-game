@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-games-v7';
+const CACHE_NAME = 'daisy-games-v8';
 
 const LOCAL_ASSETS = [
   './daisy_hamster.html',
@@ -21,6 +21,17 @@ const LOCAL_ASSETS = [
   './dict-icon-192.png',
   './dict-icon-512.png',
   './dict-icon-maskable.png',
+  './final_questions.js',
+  './icon-192.png',
+  './icon-512.png',
+  './daisy_hamster_beta.html',
+  './daisy_vocab_final.html',
+  './daisy_grammar_final.html',
+  './daisy_hex.html',
+  './final_exam_pronunciation.html',
+  './autumn_book.html',
+  './every_season.html',
+  './georgia_eyes.html',
   './midterm_questions.js',
   './snake_icon.svg'
 ];

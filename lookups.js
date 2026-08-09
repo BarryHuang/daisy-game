@@ -85,7 +85,8 @@ function fetchLookups(callback) {
 // 把「我查過的字」塞進遊戲既有的 words 物件，下拉選單就會自己長出來
 function attachLookupCategory(wordsObj, onReady) {
   fetchLookups((list) => {
-    const usable = list.filter((x) => /^[a-z][a-z'-]*$/.test(x.word));
+    // Hangman 的鍵盤只有 A-Z，帶撇號或連字號的字會永遠猜不完
+    const usable = list.filter((x) => /^[a-z]{2,}$/.test(x.word));
     if (!usable.length) return;
     const recent = usable.slice(0, 20).map((x) => x.word);
     const often = usable.filter((x) => x.n > 1)
