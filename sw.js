@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-games-v14';
+const CACHE_NAME = 'daisy-20260810-0038';
 
 const LOCAL_ASSETS = [
   './',
@@ -16,6 +16,7 @@ const LOCAL_ASSETS = [
   './lookups.js',
   './mastery.js',
   './menu.js',
+  './version.js',
   './wordlists.js',
   './flashcards.html',
   './exams.js',

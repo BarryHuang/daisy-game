@@ -112,7 +112,15 @@ python3 -m http.server 8123
 
 Service Worker 需要 `http://` 或 `localhost`，用 `file://` 開測不到離線功能。
 
-改完 `sw.js` 要記得升 `CACHE_NAME` 版本號，否則舊快取不會換掉。
+**部署前一定要跑**（`CACHE_NAME` 不再手動改）：
+
+```bash
+python3 tools/stamp_version.py    # 蓋版本到 version.js 和 sw.js
+```
+
+版本號是部署時間，會顯示在每一頁左上角選單的最上面。手機上重新整理之後
+打開選單就能確認載到的是不是最新版；還是舊的就按旁邊的「強制更新」，
+它會清掉所有快取、註銷 Service Worker 再重載。
 
 ---
 

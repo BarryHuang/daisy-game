@@ -54,9 +54,15 @@ function buildMenuMarkup() {
     return (g.title ? `<div class="dm-title">${g.title}</div>` : "") + items;
   }).join("");
 
+  const ver = typeof APP_VERSION !== "undefined" ? APP_VERSION : "未知版本";
+  const foot = `<div class="dm-ver">
+      <span>版本 ${ver}</span>
+      <button id="dm-refresh" type="button">強制更新</button>
+    </div>`;
+
   return `<button class="dm-btn" id="dm-btn" aria-label="選單" aria-expanded="false">☰</button>
     <div class="dm-backdrop" id="dm-backdrop"></div>
-    <nav class="dm-panel" id="dm-panel" aria-label="全站選單">${groups}</nav>`;
+    <nav class="dm-panel" id="dm-panel" aria-label="全站選單">${foot}${groups}</nav>`;
 }
 
 function injectMenuStyles() {
@@ -91,6 +97,12 @@ function injectMenuStyles() {
 .dm-text b{font-size:.94rem;font-weight:700}
 .dm-text i{font-size:.72rem;color:#8b88a0;font-style:normal;margin-top:2px}
 .dm-dot{margin-left:auto;color:#ab47bc;font-size:.6rem}
+.dm-ver{border-bottom:1px solid #f0eef8;margin-bottom:4px;padding:6px 8px 10px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dm-ver span{font-size:.7rem;color:#8b88a0;flex:1;font-variant-numeric:tabular-nums}
+.dm-ver button{border:1.5px solid #e3dff0;background:#fff;color:#7b1fa2;border-radius:99px;
+  padding:5px 11px;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.dm-ver button:active{background:#f6f1fb}
 @media (prefers-reduced-motion:reduce){.dm-panel,.dm-backdrop{transition:none}}`;
   document.head.appendChild(el);
 }
@@ -114,6 +126,25 @@ function initMenu() {
   };
 
   btn.addEventListener("click", () => setOpen(!panel.classList.contains("dm-open")));
+
+  // 「強制更新」：清掉快取、註銷 Service Worker、重新抓。
+  // 手機上光是重新整理常常還是拿到舊的。
+  const refresh = document.getElementById("dm-refresh");
+  if (refresh) refresh.addEventListener("click", async () => {
+    refresh.textContent = "更新中…";
+    refresh.disabled = true;
+    try {
+      if (window.caches) {
+        const names = await caches.keys();
+        await Promise.all(names.map((n) => caches.delete(n)));
+      }
+      if (navigator.serviceWorker) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+    } catch (e) { /* 清不掉就算了，還是重新載入 */ }
+    location.reload(true);
+  });
   back.addEventListener("click", () => setOpen(false));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
 }
