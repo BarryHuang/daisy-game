@@ -10,21 +10,6 @@
 const LOOKUPS_KEY = "daisy_dict_lookups";
 const USER_KEY = "daisy_hamster_user";          // 沿用倉鼠遊戲的登入代碼
 
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCaWfJnDdK4R2mv2Ht3dQm2lyHhmpWIjo4",
-  authDomain: "daisygame-30452.firebaseapp.com",
-  databaseURL: "https://daisygame-30452-default-rtdb.firebaseio.com",
-  projectId: "daisygame-30452",
-  storageBucket: "daisygame-30452.firebasestorage.app",
-  messagingSenderId: "548508102123",
-  appId: "1:548508102123:web:40f02b8557ecca99523dae"
-};
-
-const FIREBASE_SDK = [
-  "https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js",
-  "https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"
-];
-
 // Firebase 的 key 不能含 . $ # [ ] /
 function lookupKey(word) {
   return String(word).toLowerCase().trim().replace(/[.$#\[\]\/]/g, "_");
@@ -44,29 +29,11 @@ function writeLocalLookups(map) {
   try { localStorage.setItem(LOOKUPS_KEY, JSON.stringify(map)); } catch (e) {}
 }
 
-// ---------- 雲端（用到才載入 SDK）----------
-let dbPromise = null;
+// ---------- 雲端（設定與 SDK 載入統一放在 firebase-config.js）----------
 function getDb() {
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve) => {
-    if (!currentUserCode()) return resolve(null);         // 還沒登入就別連
-    const ready = () => {
-      try {
-        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-        resolve(firebase.database());
-      } catch (e) { resolve(null); }
-    };
-    if (window.firebase && window.firebase.database) return ready();
-    let left = FIREBASE_SDK.length;
-    FIREBASE_SDK.forEach((src) => {
-      const s = document.createElement("script");
-      s.src = src;
-      s.onload = () => { if (--left === 0) ready(); };
-      s.onerror = () => resolve(null);
-      document.head.appendChild(s);
-    });
-  });
-  return dbPromise;
+  if (!currentUserCode()) return Promise.resolve(null);      // 還沒登入就不連
+  if (typeof getFirebaseDb !== "function") return Promise.resolve(null);
+  return getFirebaseDb();
 }
 
 // ---------- 對外 ----------

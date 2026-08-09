@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-games-v6';
+const CACHE_NAME = 'daisy-games-v7';
 
 const LOCAL_ASSETS = [
   './daisy_hamster.html',
@@ -12,6 +12,7 @@ const LOCAL_ASSETS = [
   './inflect.js',
   './cedict.js',
   './lookups.js',
+  './firebase-config.js',
   './words_review.html',
   './daisy_hangman.html',
   './daisy_scramble.html',

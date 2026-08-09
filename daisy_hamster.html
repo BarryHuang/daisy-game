@@ -16,6 +16,7 @@
     <!-- 引入 Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+    <script src="./firebase-config.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -291,16 +292,7 @@
     <script>
 
         // --- Firebase 初始化 ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCaWfJnDdK4R2mv2Ht3dQm2lyHhmpWIjo4",
-            authDomain: "daisygame-30452.firebaseapp.com",
-            databaseURL: "https://daisygame-30452-default-rtdb.firebaseio.com",
-            projectId: "daisygame-30452",
-            storageBucket: "daisygame-30452.firebasestorage.app",
-            messagingSenderId: "548508102123",
-            appId: "1:548508102123:web:40f02b8557ecca99523dae",
-            measurementId: "G-B7N0LC0D6P"
-        };
+        const firebaseConfig = FIREBASE_CONFIG;   // 見 firebase-config.js
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 

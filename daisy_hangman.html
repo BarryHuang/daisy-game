@@ -54,38 +54,10 @@
         <button class="btn btn-primary" onclick="init()">換個單字</button>
     </div>
 
+    <script src="./words.js"></script>
+    <script src="./firebase-config.js"></script>
     <script src="./lookups.js"></script>
     <script>
-        const words = {
-            "FET Spelling": {
-                "Wk 2": ["beautiful", "calf", "graze", "forest", "angry", "catch", "sad", "promise", "grassy", "happy"],
-                "Wk 3": ["agree", "quickly", "return", "surprised", "pleased", "truth", "mad", "protect", "always", "promise"],
-                "Wk 4": ["school", "learn", "math", "problem", "important", "think", "art", "because", "creative", "imagination"],
-                "Wk 5": ["amazing", "music", "concentrate", "remember", "teamwork", "reason", "best", "learn"],
-                "Wk 6": ["baseball", "love", "sport", "college", "team", "allowed", "meet", "field", "cheer", "boo"],
-                "Wk 10": ["memory", "discovers", "amaze", "wonder", "tunes", "alone", "struggle", "dream", "achieve", "world"],
-                "Wk 11/12": ["wonder", "whisper", "bones", "delight", "children", "mountain", "artist", "surround", "desert", "season"],
-                "Wk 13": ["autumn", "spring", "summer", "winter", "speckled", "woven", "showers", "sprout", "bloom", "spread"],
-                "Wk 14": ["slither", "barefoot", "flutter", "taste", "scurry", "scatter", "jacket", "secret", "honk", "store"],
-                "Wk 15": ["crisp", "gray", "rush", "spider", "weave", "chilly", "zip", "agree", "chipmunk", "dig"],
-                "Wk 16": ["autumn", "whisper", "fly", "shake", "spin", "dash", "empty", "jar", "fetch", "lie"]
-            },
-            "CET Vocabulary": {
-                "Wk 1&2": ["cool", "fun", "world", "mall", "picnic", "basket", "office", "shop", "fold", "cross"],
-                "Wk 3": ["come", "piano", "violin", "music", "building", "cover", "glass", "stair", "shell", "sink"],
-                "Wk 4": ["visit", "community", "bookshelf", "library", "real", "front", "garage", "create", "elephant", "climb"],
-                "Wk 5": ["country", "hear", "quiet", "mouse", "letter", "cousin", "pick", "excited", "imagine", "phone"],
-                "Wk 6": ["feet", "scary", "street", "skateboard", "zoom", "shout", "behind", "jump", "garbage", "can"],
-                "Wk 7&8": ["ambulance", "hospital", "city", "busy", "loud", "sick", "tomorrow", "soon", "later"],
-                "Wk 10": ["field", "museum", "dinosaur", "drawing", "model", "fossil", "alive", "trip", "break"],
-                "Wk 11": ["cow", "together", "puzzle", "about", "could", "show", "chicken", "four", "bird"],
-                "Wk 12": ["claw", "catch", "horn", "teeth", "ate", "clue", "flat", "other", "meat", "past"],
-                "Wk 13": ["sky", "cloud", "float", "plane", "over", "dream", "stretch", "pilot", "doctor", "silly"],
-                "Wk 14": ["train", "neighbor", "ask", "tough", "brave", "remind", "talented", "wait", "minute", "job"],
-                "Wk 15&16": ["trick", "fly", "flew", "learn", "start", "famous", "stop"],
-                "Wk 18": ["elf", "shoemaker", "imagination", "leather", "shed", "pair", "shiny", "peek"]
-            }
-        };
 
         let current = "", guessed = [], err = 0;
         const catS = document.getElementById('cat'), wkS = document.getElementById('week');
