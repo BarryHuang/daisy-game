@@ -464,10 +464,13 @@
             const w = reviewWords[reviewIndex];
             const lw = w.toLowerCase();
             document.getElementById('review-progress').textContent = `${reviewIndex + 1} / ${reviewWords.length}`;
-            document.getElementById('review-emoji').textContent = (wordImages && wordImages[lw]) || '📖';
+            document.getElementById('review-emoji').textContent =
+                (typeof wordImages !== 'undefined' && wordImages[lw]) || '📖';
             document.getElementById('review-word').textContent = w;
-            document.getElementById('review-translation').textContent = (wordTranslations && wordTranslations[lw]) || '';
-            document.getElementById('review-example').textContent = (wordExamples && wordExamples[lw]) || '';
+            document.getElementById('review-translation').textContent =
+                (typeof wordTranslations !== 'undefined' && wordTranslations[lw]) || '';
+            document.getElementById('review-example').textContent =
+                (typeof wordExamples !== 'undefined' && wordExamples[lw]) || '';
 
             // 下一個/完成 按鈕
             const isLast = (reviewIndex === reviewWords.length - 1);
@@ -509,9 +512,16 @@
             card.style.transform = `translateX(${dir > 0 ? '30px' : '-30px'})`;
             card.style.transition = 'opacity 0.15s, transform 0.15s';
             setTimeout(() => {
-                renderReviewCard();
-                card.style.opacity = '1';
-                card.style.transform = 'translateX(0)';
+                // 還原一定要跑到。以前放在 render 後面，render 一丟例外卡片就
+                // 永遠停在 opacity:0，畫面只剩深色遮罩，看起來像整個黑掉。
+                try {
+                    renderReviewCard();
+                } catch (err) {
+                    console.error('renderReviewCard 失敗', err);
+                } finally {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateX(0)';
+                }
             }, 150);
         }
 
