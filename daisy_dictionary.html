@@ -247,7 +247,7 @@ function renderCurriculum(word, entry) {
   const from = pick ? pick.text : "";
   return `<div class="card mine">
     <span class="badge mine">⭐ 你的單字表${from ? " · " + from : ""}</span>
-    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}${addBtn(word)}</div>
+    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}${addBtn(word, entry.s[0])}</div>
     ${senses}
   </div>`;
 }
@@ -270,7 +270,7 @@ function renderDict(word, hits, form) {
   }).join("");
   return `<div class="card">
     <span class="badge dict">字典</span>
-    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}${addBtn(word)}</div>
+    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}${addBtn(word, hits[0])}</div>
     ${senses}
   </div>`;
 }
@@ -350,7 +350,16 @@ function toast(msg) {
   t._timer = setTimeout(() => t.classList.remove("on"), 1600);
 }
 
-function addBtn(word) {
+// 加入單字卡時要把當下看到的中文一起存進去，倉鼠頁的複習卡才有東西可顯示
+// （她收的字多半來自大字典，課表的 wordTranslations 查不到）。
+const meaningOf = {};
+
+function addBtn(word, meaning) {
+  if (meaning) {
+    meaningOf[word.toLowerCase()] = meaning;
+    // 這個修正之前加的字只有英文，看到就順手補上中文
+    if (typeof backfillMeaning === "function") backfillMeaning(word, meaning);
+  }
   const n = typeof listsContaining === "function" ? listsContaining(word).length : 0;
   return `<button class="add${n ? " on" : ""}" onclick='openSheet(${attr(word)})'>` +
          `${n ? "★ 在 " + n + " 張卡" : "＋ 單字卡"}</button>`;
@@ -391,7 +400,7 @@ function toggleInList(id) {
     removeFromList(id, sheetWord);
     toast("已從清單移除");
   } else {
-    addToList(id, sheetWord);
+    addToList(id, sheetWord, meaningOf[sheetWord.toLowerCase()]);
     toast("加進單字卡了！");
   }
   renderSheetLists();
@@ -404,7 +413,7 @@ document.getElementById("sheet-add").addEventListener("click", () => {
   const name = input.value.trim();
   if (!name) return input.focus();
   const id = createList(name);
-  addToList(id, sheetWord);
+  addToList(id, sheetWord, meaningOf[sheetWord.toLowerCase()]);
   input.value = "";
   renderSheetLists();
   toast("建立「" + name + "」並加入");

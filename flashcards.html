@@ -111,6 +111,9 @@ function speak(text, lang) {
 function meaning(word) {
   const e = typeof lookupWord === "function" ? lookupWord(word) : null;
   if (e) return { senses: e.s, src: (wordSources(word)[0] || {}).text || "" };
+  // 加入單字卡時存下來的中文，不用等 cedict.js
+  const saved = typeof wordlistMeaning === "function" ? wordlistMeaning(word) : null;
+  if (saved) return { senses: [saved], src: "" };
   if (cedictReady && CEDICT.i[word.toLowerCase()]) {
     const id = CEDICT.i[word.toLowerCase()][0];
     return { senses: [{ zh: CEDICT.w[id], z: CEDICT.z[id].split(",").map((n) => CEDICT.s[+n]) }],

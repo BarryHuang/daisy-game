@@ -467,8 +467,10 @@
             document.getElementById('review-emoji').textContent =
                 (typeof wordImages !== 'undefined' && wordImages[lw]) || '📖';
             document.getElementById('review-word').textContent = w;
+            // 課表的翻譯優先；她自己收的字（大字典來的）用加入單字卡時存下來的中文
             document.getElementById('review-translation').textContent =
-                (typeof wordTranslations !== 'undefined' && wordTranslations[lw]) || '';
+                (typeof wordTranslations !== 'undefined' && wordTranslations[lw]) ||
+                (typeof wordlistMeaningText === 'function' && wordlistMeaningText(lw)) || '';
             document.getElementById('review-example').textContent =
                 (typeof wordExamples !== 'undefined' && wordExamples[lw]) || '';
 

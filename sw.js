@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-games-v13';
+const CACHE_NAME = 'daisy-games-v14';
 
 const LOCAL_ASSETS = [
   './',

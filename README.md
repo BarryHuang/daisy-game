@@ -88,6 +88,21 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 
 ---
 
+## 測試技巧：怎麼從外面驅動頁面
+
+頁面之間是 classic script，頂層的 `const`（`words`、`CURRENT_TERM`、
+`EXAM_TERMS`、`meaningOf`…）是**詞法綁定，不是 `window` 的屬性**，所以
+`iframe.contentWindow.words` 一律是 `undefined`。這一點踩過三次。
+
+要從外面驅動，把測試碼**注入成頁面自己的 `<script>`**，它就跟其他 classic
+script 共用同一個詞法環境：
+
+```js
+const s = iframe.contentDocument.createElement('script');
+s.textContent = `attachWordlistCategory(words, function(){ ... });`;
+iframe.contentDocument.body.appendChild(s);
+```
+
 ## 本機測試
 
 ```bash
