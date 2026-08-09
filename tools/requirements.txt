@@ -1,0 +1,5 @@
+pypinyin
+opencc-python-reimplemented
+wordfreq
+jieba
+lemminflect
