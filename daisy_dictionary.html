@@ -196,7 +196,10 @@ function renderCurriculum(word, entry) {
       ${sayBtn(s.zh, "zh-TW", "中")}
       ${s.note ? `<span class="note">${s.note}</span>` : ""}
     </div>`).join("");
-  const from = entry.src && entry.src.length ? entry.src[0] : "";
+  // 來源從 curriculum 即時推導；本學期的優先顯示
+  const all = typeof wordSources === "function" ? wordSources(word) : [];
+  const pick = all.find((x) => x.term === CURRENT_TERM) || all[0];
+  const from = pick ? pick.text : "";
   return `<div class="card mine">
     <span class="badge mine">⭐ 你的單字表${from ? " · " + from : ""}</span>
     <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}</div>
