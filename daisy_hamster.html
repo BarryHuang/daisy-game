@@ -20,11 +20,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<a href="index.html" aria-label="回首頁" style="position:fixed;left:10px;
-  top:calc(8px + env(safe-area-inset-top));z-index:9999;width:38px;height:38px;
-  border-radius:50%;background:rgba(123,31,162,.88);color:#fff;font-size:18px;
-  display:flex;align-items:center;justify-content:center;text-decoration:none;
-  box-shadow:0 3px 10px rgba(0,0,0,.3)">&#127968;</a>
 
     <!-- 登入視窗 -->
     <div id="login-modal">
@@ -55,9 +50,9 @@
                 📖 先複習本週單字
             </button>
 
-            <!-- 期中測驗按鈕 — gold/orange 專屬配色，呼吸脈衝吸引點擊 -->
-            <button id="btn-midterm" onclick="openMidterm()" style="width:100%; margin-bottom:8px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #bf360c; animation:midtermBtnPulse 2.4s ease-in-out infinite;">
-                📝 期中測驗 <span style="font-size:0.8rem; font-weight:normal;">（FET &amp; CET Wk 1-8）</span>
+            <!-- 測驗入口：期中/期末合併成一顆，範圍在裡面選 -->
+            <button id="btn-exam" onclick="openExam()" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #bf360c; animation:midtermBtnPulse 2.4s ease-in-out infinite;">
+                📝 測驗 <span style="font-size:0.8rem; font-weight:normal;">（期中・期末・全部）</span>
             </button>
             <style>
               @keyframes midtermBtnPulse {
@@ -71,11 +66,7 @@
                 📖 課文複習 <span style="font-size:0.8rem; font-weight:normal; opacity:0.85;">（選擇課文）</span>
             </button>
 
-            <!-- 期末測驗按鈕 — purple/indigo 專屬配色，呼吸脈衝吸引點擊 -->
-            <button id="btn-final" onclick="openFinal()" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#ab47bc,#7b1fa2); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #4a148c; animation:finalBtnPulse 2.4s ease-in-out infinite; animation-delay: 1.2s;">
-                📝 期末測驗 <span style="font-size:0.8rem; font-weight:normal;">（FET &amp; CET Wk 10-16）</span>
-            </button>
-            <style>
+                        <style>
               @keyframes finalBtnPulse {
                 0%,100%{ transform:scale(1);    box-shadow:0 4px 0 #4a148c,0 6px 18px rgba(123,31,162,.35); }
                 50%    { transform:scale(1.04); box-shadow:0 4px 0 #4a148c,0 8px 26px rgba(123,31,162,.55); }
@@ -1820,10 +1811,35 @@
         let midtermAnswered = false;// 防止重複點擊
 
         /** 隨機抽取題目，可依 source 篩選 */
+        // 期中和期末原本是兩套一模一樣的引擎（12 個平行函式，只差配色），
+        // 現在共用一套，切換範圍只是換題庫。
+        let examScope = 'mid';   // mid | final | all
+
+        function examPool() {
+            if (examScope === 'final') return finalQuestions;
+            if (examScope === 'all')   return [...midtermQuestions, ...finalQuestions];
+            return midtermQuestions;
+        }
+
+        function openExam() { examScope = 'mid'; openMidterm(); paintExamScope(); }
+
+        function setExamScope(scope) { examScope = scope; paintExamScope(); }
+
+        function paintExamScope() {
+            ['mid', 'final', 'all'].forEach((k) => {
+                const b = document.getElementById('scope-' + k);
+                if (!b) return;
+                const on = examScope === k;
+                b.style.background = on ? '#fff' : 'rgba(255,255,255,0.15)';
+                b.style.color = on ? '#e65100' : '#fff';
+                b.style.fontWeight = on ? '900' : '600';
+            });
+        }
+
         function drawMidtermQuestions(filter) {
-            let pool = midtermQuestions;
-            if (filter === 'FET') pool = midtermQuestions.filter(q => q.source.startsWith('FET'));
-            if (filter === 'CET') pool = midtermQuestions.filter(q => q.source.startsWith('CET'));
+            let pool = examPool();
+            if (filter === 'FET') pool = pool.filter(q => q.source.startsWith('FET'));
+            if (filter === 'CET') pool = pool.filter(q => q.source.startsWith('CET'));
             const shuffled = [...pool].sort(() => Math.random() - 0.5);
             return shuffled.slice(0, Math.min(20, shuffled.length));
         }
@@ -1833,9 +1849,21 @@
             document.getElementById('midterm-modal').style.display = 'flex';
             document.getElementById('midterm-category-screen').style.display = 'flex';
             document.getElementById('midterm-card').style.display = 'none';
+            document.getElementById('midterm-exit').style.display = 'none';
         }
 
+        const EXAM_LABEL = {
+            mid:   ['期中測驗', 'FET &amp; CET Wk 1-8'],
+            final: ['期末測驗', 'FET &amp; CET Wk 10-16'],
+            all:   ['全部測驗', '期中 + 期末 一起考']
+        };
+
         function startMidtermWithFilter(filter) {
+            document.getElementById('midterm-exit').style.display = 'inline-block';
+            const [name, range] = EXAM_LABEL[examScope] || EXAM_LABEL.mid;
+            document.getElementById('exam-title').innerHTML =
+                '📝 ' + name + ' <span style="font-size:0.78rem; font-weight:600; color:#999;">('
+                + range + ')</span>';
             document.getElementById('midterm-category-screen').style.display = 'none';
             document.getElementById('midterm-card').style.display = 'block';
             midtermQueue    = drawMidtermQuestions(filter);
@@ -2292,8 +2320,13 @@
 
       <!-- 分類選擇畫面 -->
       <div id="midterm-category-screen" style="display:none; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:360px;">
-        <div style="font-size:1.6rem; font-weight:900; color:white; text-align:center; margin-bottom:4px;">📝 選擇測驗範圍</div>
-        <div style="font-size:0.9rem; color:rgba(255,255,255,0.7); margin-bottom:8px;">選一個分類開始挑戰！</div>
+        <div style="font-size:1.6rem; font-weight:900; color:white; text-align:center; margin-bottom:4px;">📝 測驗</div>
+        <div style="display:flex; gap:6px; width:100%; margin-bottom:4px;">
+          <button id="scope-mid"   onclick="setExamScope('mid')"   style="flex:1; padding:9px 4px; border-radius:14px; border:2px solid rgba(255,255,255,0.35); background:#fff; color:#e65100; font-size:0.85rem; font-weight:900; cursor:pointer;">期中<br><span style="font-size:0.68rem; font-weight:400;">Wk 1-8</span></button>
+          <button id="scope-final" onclick="setExamScope('final')" style="flex:1; padding:9px 4px; border-radius:14px; border:2px solid rgba(255,255,255,0.35); background:rgba(255,255,255,0.15); color:#fff; font-size:0.85rem; font-weight:600; cursor:pointer;">期末<br><span style="font-size:0.68rem; font-weight:400;">Wk 10-16</span></button>
+          <button id="scope-all"   onclick="setExamScope('all')"   style="flex:1; padding:9px 4px; border-radius:14px; border:2px solid rgba(255,255,255,0.35); background:rgba(255,255,255,0.15); color:#fff; font-size:0.85rem; font-weight:600; cursor:pointer;">全部<br><span style="font-size:0.68rem; font-weight:400;">一起考</span></button>
+        </div>
+        <div style="font-size:0.9rem; color:rgba(255,255,255,0.7); margin-bottom:4px;">再選一個課程開始挑戰！</div>
         <button onclick="startMidtermWithFilter('all')" style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #bf360c;">🎲 綜合（全部）</button>
         <button onclick="startMidtermWithFilter('FET')" style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#42a5f5,#1565c0); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #0d47a1;">📘 FET 課程</button>
         <button onclick="startMidtermWithFilter('CET')" style="width:100%; padding:16px; border-radius:18px; background:linear-gradient(135deg,#66bb6a,#2e7d32); color:white; border:none; font-size:1.1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #1b5e20;">📗 CET 課程</button>
@@ -2303,7 +2336,7 @@
       <div id="midterm-card" style="position:relative; background:white; border-radius:28px; width:100%; max-width:460px; padding:26px 22px 22px; box-shadow:0 20px 60px rgba(0,0,0,0.5); text-align:center;">
 
         <!-- Header -->
-        <div style="font-size:1.05rem; font-weight:800; color:#e65100; margin-bottom:4px; letter-spacing:.04em;">
+        <div id="exam-title" style="font-size:1.05rem; font-weight:800; color:#e65100; margin-bottom:4px; letter-spacing:.04em;">
           📝 期中測驗 <span style="font-size:0.78rem; font-weight:600; color:#999;">(FET &amp; CET Wk 1-8)</span>
         </div>
 
@@ -2334,8 +2367,8 @@
         <div id="midterm-feedback" style="display:none; margin-top:14px; font-size:1rem; font-weight:700; border-radius:14px; padding:10px 14px;"></div>
       </div>
 
-      <!-- Close button -->
-      <button onclick="closeMidterm()" style="margin-top:16px; padding:9px 26px; border-radius:20px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.3); font-weight:bold; cursor:pointer; font-size:1rem;">✕ 離開測驗</button>
+      <!-- Close button（分類畫面已經有「取消」了，這顆只在答題時出現）-->
+      <button id="midterm-exit" onclick="closeMidterm()" style="display:none; margin-top:16px; padding:9px 26px; border-radius:20px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.3); font-weight:bold; cursor:pointer; font-size:1rem;">✕ 離開測驗</button>
     </div>
 
     <!-- 期中測驗結果畫面 -->
@@ -2450,5 +2483,6 @@
         <button onclick="closeReview()" style="margin-top:20px; padding:8px 25px; border-radius:20px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.3); font-weight:bold; cursor:pointer; font-size:1rem;">✕ 關閉複習</button>
     </div>
 
+<script src="./menu.js"></script>
 </body>
 </html>

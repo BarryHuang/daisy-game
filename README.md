@@ -35,8 +35,14 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `inflect.js` | 詞形還原：產生候選字形再去索引裡試。含英式→美式拼法 |
 | `lookups.js` | 記錄查過的單字。先寫 localStorage，有登入才同步雲端 |
 
+### 導覽
+主頁是 `daisy_hamster.html`（PWA 的 `start_url` 也指這裡）。
+`menu.js` 在每一頁左上角注入浮動下拉選單，那就是全站導覽——
+沒有獨立的首頁，`index.html` 只是把網站根目錄轉址到倉鼠頁
+（Pages 根目錄需要有 index.html，否則會退回渲染 README）。
+
 ### 頁面
-`daisy_dictionary.html`（查單字）· `story_hub.html`（入口）·
+`daisy_dictionary.html`（查單字）· `story_hub.html`（課文）·
 `daisy_hamster.html`（主遊戲）· `daisy_hangman.html` · `daisy_scramble.html` ·
 `daisy_snake.html` · `parent_dashboard.html` · `words_review.html`（注音校對工具）
 
