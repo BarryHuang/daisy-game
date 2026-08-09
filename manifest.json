@@ -13,7 +13,7 @@
       "type": "image/png"
     }
   ],
-  "start_url": "./index.html",
+  "start_url": "./daisy_hamster.html",
   "display": "standalone",
   "background_color": "#fdfbfb",
   "theme_color": "#ff85a2",
