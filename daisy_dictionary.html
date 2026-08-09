@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>📖 查單字</title>
+<link rel="manifest" href="./manifest.json">
+<style>
+:root{
+  --primary:#ff85a2; --secondary:#8ba4f9; --deep:#7b1fa2;
+  --ink:#38364a; --muted:#7c7a8d; --line:#ece9f4; --card:#fff;
+  --gold:#f6a821; --teal:#0f8a7e;
+  /* 內文改用清晰字體：長單字和多筆釋義用 Comic Sans 會很難讀 */
+  --read:"Noto Sans TC","PingFang TC","Helvetica Neue",Arial,sans-serif;
+  --play:'Comic Sans MS','Chalkboard SE',var(--read);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--read);color:var(--ink);
+     background:linear-gradient(160deg,#fff8f0 0%,#ffecd2 50%,#fff3e0 100%);
+     min-height:100vh;padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+
+.page-header{background:linear-gradient(135deg,#4a148c,#7b1fa2 50%,#ab47bc);
+  padding:14px 16px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);position:sticky;top:0;z-index:10}
+.page-header h1{color:#fff;font-size:1.25rem;flex:1;font-family:var(--play);
+  text-shadow:1px 2px 5px rgba(0,0,0,.35)}
+.back-btn{background:rgba(255,255,255,.22);color:#fff;border:2px solid rgba(255,255,255,.45);
+  padding:7px 15px;border-radius:20px;font-size:.9rem;font-weight:bold;text-decoration:none}
+
+.wrap{max-width:640px;margin:0 auto;padding:0 14px}
+
+.searchbox{position:relative;margin-top:18px}
+.searchbox input{width:100%;font-family:var(--read);font-size:1.15rem;font-weight:600;
+  padding:16px 46px 16px 18px;border:3px solid var(--secondary);border-radius:18px;
+  background:#fff;color:var(--ink);outline:none;box-shadow:0 4px 0 #6b83d4}
+.searchbox input::placeholder{color:#b3b0c2;font-weight:400}
+.searchbox input:focus{border-color:var(--primary);box-shadow:0 4px 0 #e0607f}
+.searchbox .clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  border:0;background:#f0eef8;color:var(--muted);width:30px;height:30px;border-radius:50%;
+  font-size:1rem;cursor:pointer;display:none}
+.searchbox .clear.on{display:block}
+.tip{font-size:.82rem;color:var(--muted);margin:9px 4px 0;line-height:1.6}
+
+.card{background:var(--card);border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.09);
+  padding:16px;margin-top:14px}
+.card.mine{border:3px solid var(--gold)}
+
+.badge{display:inline-block;font-size:.72rem;font-weight:800;border-radius:99px;
+  padding:4px 11px;margin-bottom:10px;font-family:var(--read)}
+.badge.mine{background:#fff4dc;color:#a86a00}
+.badge.dict{background:#eef1fd;color:#4459a8}
+
+.headword{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.headword .en{font-size:1.7rem;font-weight:800;letter-spacing:-.01em;word-break:break-word}
+.headword .from{font-size:.8rem;color:var(--muted)}
+
+.sense{border-top:1px solid var(--line);padding:12px 0 4px;display:flex;
+  gap:10px;align-items:flex-start;flex-wrap:wrap}
+.sense:first-of-type{border-top:0}
+.sense .zh{font-size:1.85rem;line-height:2;flex:1;min-width:150px}
+.sense .gloss{font-size:.85rem;color:var(--muted);flex-basis:100%;margin-top:-4px}
+.sense .note{font-size:.78rem;color:var(--teal);font-weight:700}
+
+.say{background:var(--secondary);color:#fff;border:0;border-radius:14px;padding:7px 13px;
+  font-size:.82rem;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #6b83d4;font-family:var(--read)}
+.say.zh{background:var(--primary);box-shadow:0 3px 0 #e0607f}
+.say:active{transform:translateY(3px);box-shadow:none}
+
+.recent{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:#fff;border:2px solid var(--line);border-radius:99px;padding:6px 13px;
+  font-size:.9rem;font-weight:700;cursor:pointer;color:var(--ink)}
+.chip:active{transform:scale(.96)}
+
+.state{text-align:center;padding:34px 16px;color:var(--muted)}
+.state .big{font-size:2.6rem;display:block;margin-bottom:10px}
+.state b{color:var(--ink)}
+.loading{height:3px;background:linear-gradient(90deg,var(--primary),var(--secondary));
+  border-radius:99px;margin-top:12px;animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.loading{animation:none;opacity:.6}}
+h2.sec{font-size:.8rem;color:var(--muted);letter-spacing:.08em;font-weight:800;
+  margin:22px 4px 0}
+</style>
+</head>
+<body>
+<div class="page-header">
+  <a class="back-btn" href="./story_hub.html">← 返回</a>
+  <h1>📖 查單字</h1>
+</div>
+
+<div class="wrap">
+  <div class="searchbox">
+    <input id="q" type="search" autocomplete="off" autocorrect="off" autocapitalize="none"
+           spellcheck="false" placeholder="打一個英文單字，例如 hesitated">
+    <button class="clear" id="clear" aria-label="清除">✕</button>
+  </div>
+  <p class="tip" id="tip">文章裡看到不會的字就打進來。變化形也可以直接打，會自動還原。</p>
+  <div id="out"></div>
+</div>
+
+<script src="./words.js"></script>
+<script src="./zhuyin.js"></script>
+<script src="./inflect.js"></script>
+<script>
+// ---------- 語音 ----------
+function speak(text, lang) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang;
+  u.rate = lang.startsWith("zh") ? 0.85 : 0.8;
+  speechSynthesis.speak(u);
+}
+// 屬性用單引號包，JSON 的雙引號才不會把 onclick="" 截斷
+function attr(value) {
+  return JSON.stringify(String(value)).replace(/'/g, "&#39;");
+}
+function sayBtn(text, lang, label) {
+  return `<button class="say ${lang.startsWith("zh") ? "zh" : ""}"
+    onclick='speak(${attr(text)},"${lang}")'>🔊 ${label}</button>`;
+}
+
+// ---------- 大字典（延後載入，不擋住課表查詢）----------
+let cedictReady = false, cedictLoading = null;
+function loadCedict() {
+  if (cedictLoading) return cedictLoading;
+  cedictLoading = new Promise((resolve) => {
+    const s = document.createElement("script");
+    s.src = "./cedict.js";
+    s.onload = () => { cedictReady = true; resolve(true); };
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+  return cedictLoading;
+}
+
+function cedictLookup(form) {
+  if (!cedictReady || !CEDICT.i[form]) return null;
+  return CEDICT.i[form].map((id) => ({
+    zh: CEDICT.w[id],
+    z: CEDICT.z[id].split(",").map((n) => CEDICT.s[+n]),
+    gloss: CEDICT.g[id]
+  }));
+}
+
+// ---------- 她自己的單字表優先 ----------
+function curriculumLookup(form) {
+  const e = typeof lookupWord === "function" ? lookupWord(form) : null;
+  return e ? e : null;
+}
+
+// ---------- 畫面 ----------
+function renderCurriculum(word, entry) {
+  const senses = entry.s.map((s) => `
+    <div class="sense">
+      <div class="zh zy-line">${renderZhuyin(s.zh, s.z)}</div>
+      ${sayBtn(s.zh, "zh-TW", "中")}
+      ${s.note ? `<span class="note">${s.note}</span>` : ""}
+    </div>`).join("");
+  const from = entry.src && entry.src.length ? entry.src[0] : "";
+  return `<div class="card mine">
+    <span class="badge mine">⭐ 你的單字表${from ? " · " + from : ""}</span>
+    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}</div>
+    ${senses}
+  </div>`;
+}
+
+function renderDict(word, hits) {
+  const senses = hits.map((h) => `
+    <div class="sense">
+      <div class="zh zy-line">${renderZhuyin(h.zh, h.z)}</div>
+      ${sayBtn(h.zh, "zh-TW", "中")}
+      <div class="gloss">${h.gloss}</div>
+    </div>`).join("");
+  return `<div class="card">
+    <span class="badge dict">字典</span>
+    <div class="headword"><span class="en">${word}</span>${sayBtn(word, "en-US", "英")}</div>
+    ${senses}
+  </div>`;
+}
+
+function renderNotFound(word) {
+  return `<div class="state"><span class="big">🔍</span>
+    找不到 <b>${word}</b>。<br>檢查一下拼字，或換一個說法試試看。</div>`;
+}
+
+// ---------- 最近查過 ----------
+const RECENT_KEY = "daisy_dict_recent";
+function recent() { try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch (e) { return []; } }
+function pushRecent(w) {
+  const list = [w, ...recent().filter((x) => x !== w)].slice(0, 12);
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function renderRecent() {
+  const list = recent();
+  if (!list.length) return "";
+  return `<h2 class="sec">最近查過</h2><div class="recent">` +
+    list.map((w) => `<button class="chip" onclick='go(${attr(w)})'>${w}</button>`).join("") +
+    `</div>`;
+}
+
+// ---------- 查詢流程 ----------
+const out = document.getElementById("out");
+const input = document.getElementById("q");
+let lastQuery = "";
+
+async function search(raw) {
+  const word = String(raw).trim();
+  lastQuery = word;
+  document.getElementById("clear").classList.toggle("on", !!word);
+  if (!word) { out.innerHTML = renderRecent(); return; }
+
+  const mine = resolveWord(word, curriculumLookup);
+  let html = mine ? renderCurriculum(mine.form, mine.hit) : "";
+
+  if (!cedictReady) {
+    out.innerHTML = html + `<div class="state">查字典中…<div class="loading"></div></div>`;
+    await loadCedict();
+    if (lastQuery !== word) return;            // 使用者已經改字了
+  }
+
+  const found = resolveWord(word, cedictLookup);
+  if (found) html += renderDict(found.form, found.hit);
+  if (!html) html = renderNotFound(word);
+  else pushRecent(word.toLowerCase());
+
+  out.innerHTML = html + renderRecent();
+}
+
+function go(w) { input.value = w; search(w); window.scrollTo(0, 0); }
+
+let timer = null;
+input.addEventListener("input", () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => search(input.value), 220);
+});
+document.getElementById("clear").addEventListener("click", () => {
+  input.value = ""; search(""); input.focus();
+});
+
+out.innerHTML = renderRecent();
+loadCedict();                                   // 背景預熱，第一次查就不用等
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+</script>
+</body>
+</html>
