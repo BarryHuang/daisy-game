@@ -4,6 +4,29 @@
 // 所以規則寬鬆一點也不會有壞處。
 // 規則對照 build_irregular.py 的 candidates()，兩邊要一起改。
 
+
+// 英式拼法 -> 美式。字典是美式的，但書不一定。
+// 一樣是「產生候選再去索引裡試」，多試幾個不會有壞處。
+const BRITISH = { practise:"practice", defence:"defense", licence:"license",
+  offence:"offense", grey:"gray", plough:"plow", tyre:"tire", storey:"story",
+  aeroplane:"airplane", pyjamas:"pajamas", cheque:"check", kerb:"curb" };
+
+function americanise(w) {
+  if (BRITISH[w]) return BRITISH[w];
+  let a = w
+    .replace(/our/g, "or")            // colour -> color, favourite -> favorite
+                                      // ("four" -> "for" is harmless: the original
+                                      //  spelling is always tried first and wins)
+    .replace(/isation$/, "ization")
+    .replace(/ise$/, "ize")
+    .replace(/ised$/, "ized")
+    .replace(/ising$/, "izing")
+    .replace(/yse$/, "yze")           // analyse -> analyze
+    .replace(/^(.*[bcdfgtv])re$/, "$1er");   // centre -> center
+  if (/ll(ed|ing|er)$/.test(w)) a = w.replace(/ll(ed|ing|er)$/, "l$1");
+  return a === w ? null : a;
+}
+
 function inflectCandidates(word) {
   const w = String(word).toLowerCase().trim();
   const out = [];
@@ -13,6 +36,8 @@ function inflectCandidates(word) {
 
   add(w);
   if (typeof IRREGULAR !== "undefined" && IRREGULAR[w]) add(IRREGULAR[w]);
+  const us = americanise(w);
+  if (us) { add(us); if (typeof IRREGULAR !== "undefined" && IRREGULAR[us]) add(IRREGULAR[us]); }
 
   if (w.endsWith("ies") && w.length > 4) add(w.slice(0, -3) + "y");
   if (w.endsWith("es") && w.length > 3) add(w.slice(0, -2), w.slice(0, -1));
@@ -33,6 +58,11 @@ function inflectCandidates(word) {
   if (w.endsWith("est") && w.length > 4) add(w.slice(0, -3), w.slice(0, -2));
   if (w.endsWith("ly") && w.length > 3) add(w.slice(0, -2));
 
+  // practised -> practise -> practice：字尾規則跑完再美式化一次
+  for (const cand of out.slice()) {
+    const a = americanise(cand);
+    if (a) add(a);
+  }
   return out;
 }
 
