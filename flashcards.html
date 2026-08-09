@@ -108,20 +108,33 @@ function speak(text, lang) {
   speechSynthesis.speak(u);
 }
 
-/** 課表的翻譯優先，查不到才用大字典 */
-function meaning(word) {
+/**
+ * item 是 wordlists.js 的 { w, zh, z }。
+ * 順序：加入單字卡時存的中文 -> 課表 -> 大字典。
+ */
+function meaning(item) {
+  if (item.zh) return { senses: [{ zh: item.zh, z: item.z || [] }], src: "" };
+
+  const word = item.w;
   const e = typeof lookupWord === "function" ? lookupWord(word) : null;
   if (e) return { senses: e.s, src: (wordSources(word)[0] || {}).text || "" };
-  // 加入單字卡時存下來的中文，不用等 cedict.js
-  const saved = typeof wordlistMeaning === "function" ? wordlistMeaning(word) : null;
-  if (saved) return { senses: [saved], src: "" };
-  if (cedictReady && CEDICT.i[word.toLowerCase()]) {
-    const id = CEDICT.i[word.toLowerCase()][0];
+
+  const key = String(word).toLowerCase();
+  if (cedictReady && CEDICT.i[key]) {
+    const id = CEDICT.i[key][0];
     return { senses: [{ zh: CEDICT.w[id], z: CEDICT.z[id].split(",").map((n) => CEDICT.s[+n]) }],
              gloss: CEDICT.g[id], src: "" };
   }
   return null;
 }
+
+// async 函式裡丟例外會變成 unhandled rejection，畫面只會卡在「準備中…」，
+// 使用者完全看不出發生什麼事。包起來，至少要顯示錯誤。
+window.addEventListener("unhandledrejection", (ev) => {
+  console.error(ev.reason);
+  app.innerHTML = `<div class="empty">出了點問題，請重新整理。<br>
+    <small style="color:#c66">${(ev.reason && ev.reason.message) || ev.reason}</small></div>`;
+});
 
 function renderPicker() {
   const lists = getLists().filter((l) => l.words.length);
@@ -142,17 +155,27 @@ async function start(id) {
   const list = getLists().find((l) => l.id === id);
   if (!list) return;
   listName = list.name;
-  app.innerHTML = `<div class="empty">準備中…</div>`;
-  await loadCedict();
+  // deck 裡是 { w, zh, z } 物件，不是字串
   deck = [...list.words].sort(() => Math.random() - 0.5);
   pos = 0; right = 0; flipped = false;
+
+  // 全部都有存中文的話就不用等 4.8 MB 的字典
+  if (deck.every((x) => x.zh)) return renderCard();
+
+  app.innerHTML = `<div class="empty">準備中…</div>`;
+  try {
+    await loadCedict();
+  } catch (e) {
+    console.error("cedict 載入失敗", e);
+  }
   renderCard();
 }
 
 function renderCard() {
   if (pos >= deck.length) return renderDone();
-  const word = deck[pos];
-  const m = meaning(word);
+  const item = deck[pos];
+  const word = item.w;
+  const m = meaning(item);
   const pct = (pos / deck.length) * 100;
 
   const back = !m
@@ -182,7 +205,7 @@ function flip() { flipped = true; renderCard(); }
 
 function mark(ok) {
   // 記進熟練度，家長後台和「還沒學會的字」就會反映出來
-  if (typeof recordAttempt === "function") recordAttempt(deck[pos], ok, ok ? 0 : 3);
+  if (typeof recordAttempt === "function") recordAttempt(deck[pos].w, ok, ok ? 0 : 3);
   if (ok) right++;
   pos++; flipped = false;
   renderCard();

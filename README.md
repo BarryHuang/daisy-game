@@ -87,11 +87,17 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
    後兩個只有倉鼠頁的複習卡在用，很容易在改動時被漏掉——2026-08 就漏過一次，
    結果複習卡按「下一個」直接黑畫面。
 
-8. **`.zh` 這個 class 撞過兩次。** 它是「中文詞本體」的樣式（字級 1.8rem 以上、
+8. **`wordlists.js` 的 `words` 是 `{w, zh, z}` 物件，不是字串。**
+   改成物件時漏改 `flashcards.html`，`deck[pos]` 變成物件卻還被當字串用，
+   丟出 `word.toLowerCase is not a function`。而且它發生在 `async` 函式裡，
+   變成 unhandled rejection —— **畫面只是卡在「準備中…」，什麼都不顯示**。
+   非同步流程要自己接錯誤，否則失敗是無聲的。
+
+9. **`.zh` 這個 class 撞過兩次。** 它是「中文詞本體」的樣式（字級 1.8rem 以上、
    `flex:1`），發音鈕如果也叫 `.zh` 會被套上去，變成又大又會撐開版面。
    按鈕一律用 `.say-zh`。
 
-9. **遊戲的下拉選單不能重建。** `setupConfig()` 會連帶呼叫 `init()`，
+10. **遊戲的下拉選單不能重建。** `setupConfig()` 會連帶呼叫 `init()`，
    Firebase 資料若在她玩到一半才回來，會把進行中的遊戲重置掉。只 append
    `<option>`。
 
