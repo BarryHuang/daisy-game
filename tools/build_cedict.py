@@ -268,12 +268,17 @@ if __name__ == "__main__":
               io.open("cedict_raw.json", "w", encoding="utf-8"), ensure_ascii=False)
 
 # ---------------------------------------------------------------- emit
-def emit(entries, index, max_hits=4, min_zipf=2.5, min_en_zipf=2.2, gloss_len=30):
+def emit(entries, index, max_hits=4, min_zipf=0, min_en_zipf=0, gloss_len=26):
     """Trim to something a phone can hold, then write a compact payload.
 
     Three things dominate the size, so each gets its own treatment:
       - multi-word gloss keys ("to engage in business etc") were 78% of all
         keys; only 1- and 2-word keys survive, which keeps phrasal verbs.
+
+    Frequency floors used to default to 2.5 on both sides. They were removed:
+    測過拿掉之後 25 個回歸樣本只有 4 個變動，而且第一名全部不變（多出來的
+    都落在第 3、4 位），檔案只從 4.12 長到 4.99 MB —— 也就是整部 CC-CEDICT
+    的極限。門檻對排序品質幾乎沒貢獻，卻一直在製造 pangolin 那種涵蓋漏洞。
       - glosses are truncated; the user typed the English, so the gloss only
         has to disambiguate between competing results.
       - bopomofo repeats across the dictionary, so syllables go in a codebook
