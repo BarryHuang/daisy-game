@@ -1,6 +1,6 @@
 {
-  "name": "Daisy's Hamster Adventure",
-  "short_name": "Daisy Hamster",
+  "name": "Daisy 的學習樂園",
+  "short_name": "Daisy",
   "icons": [
     {
       "src": "./icon-192.png",
@@ -13,9 +13,11 @@
       "type": "image/png"
     }
   ],
-  "start_url": "./daisy_hamster.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fdfbfb",
   "theme_color": "#ff85a2",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "scope": "./",
+  "lang": "zh-Hant"
 }

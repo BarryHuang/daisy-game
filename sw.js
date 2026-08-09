@@ -1,6 +1,8 @@
-const CACHE_NAME = 'daisy-games-v8';
+const CACHE_NAME = 'daisy-games-v9';
 
 const LOCAL_ASSETS = [
+  './',
+  './index.html',
   './daisy_hamster.html',
   './daisy_snake.html',
   './daisy_dictionary.html',
