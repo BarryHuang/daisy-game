@@ -50,6 +50,7 @@ const curriculum = {
           "imagination"
         ],
         "Wk 5": [
+          "figure out",
           "amazing",
           "music",
           "concentrate",
@@ -57,6 +58,7 @@ const curriculum = {
           "teamwork",
           "reason",
           "best",
+          "important",
           "learn"
         ],
         "Wk 6": [
@@ -77,7 +79,7 @@ const curriculum = {
           "become",
           "nasty",
           "teammate",
-          "stand",
+          "stand up",
           "admire",
           "die",
           "baseball",
@@ -341,6 +343,8 @@ const evergreen = {
 };
 
 const wordEntries = {
+  "figure out": { s:[{zh:"想出",z:["ㄒㄧㄤˇ","ㄔㄨ"]}] },
+  "stand up": { s:[{zh:"站起來",z:["ㄓㄢˋ","ㄑㄧˇ","ㄌㄞ˙"]}] },
   "beautiful": { s:[{zh:"美麗的",z:["ㄇㄟˇ","ㄌㄧˋ","ㄉㄜ˙"]}] },
   "calf": { s:[{zh:"小牛",z:["ㄒㄧㄠˇ","ㄋㄧㄡˊ"]}] },
   "graze": { s:[{zh:"吃草",z:["ㄔ","ㄘㄠˇ"]}] },
