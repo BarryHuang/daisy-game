@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-games-v5';
+const CACHE_NAME = 'daisy-games-v6';
 
 const LOCAL_ASSETS = [
   './daisy_hamster.html',
@@ -11,7 +11,15 @@ const LOCAL_ASSETS = [
   './zhuyin.js',
   './inflect.js',
   './cedict.js',
+  './lookups.js',
   './words_review.html',
+  './daisy_hangman.html',
+  './daisy_scramble.html',
+  './parent_dashboard.html',
+  './manifest_dictionary.json',
+  './dict-icon-192.png',
+  './dict-icon-512.png',
+  './dict-icon-maskable.png',
   './midterm_questions.js',
   './snake_icon.svg'
 ];

@@ -4,7 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>📖 查單字</title>
-<link rel="manifest" href="./manifest.json">
+<link rel="manifest" href="./manifest_dictionary.json">
+<meta name="theme-color" content="#7b1fa2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="查單字">
+<link rel="apple-touch-icon" href="./dict-icon-192.png">
 <style>
 :root{
   --primary:#ff85a2; --secondary:#8ba4f9; --deep:#7b1fa2;
@@ -101,6 +106,7 @@ h2.sec{font-size:.8rem;color:var(--muted);letter-spacing:.08em;font-weight:800;
 <script src="./words.js"></script>
 <script src="./zhuyin.js"></script>
 <script src="./inflect.js"></script>
+<script src="./lookups.js"></script>
 <script>
 // ---------- 語音 ----------
 function speak(text, lang) {
@@ -222,7 +228,12 @@ async function search(raw) {
   const found = resolveWord(word, cedictLookup);
   if (found) html += renderDict(found.form, found.hit);
   if (!html) html = renderNotFound(word);
-  else pushRecent(word.toLowerCase());
+  else {
+    pushRecent(word.toLowerCase());
+    // 記下來：這些字會出現在家長儀表板，也會變成遊戲的題庫
+    const zh = mine ? mine.hit.s[0].zh : (found ? found.hit[0].zh : "");
+    recordLookup(word, zh);
+  }
 
   out.innerHTML = html + renderRecent();
 }

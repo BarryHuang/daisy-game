@@ -298,6 +298,13 @@
 
         <!-- 成就 -->
         <div class="card">
+            <h2>📖 她自己查過的字</h2>
+            <p style="font-size:0.85rem;color:#999;margin-bottom:10px;">
+                在字典查過的單字，最近的排前面。查很多次的通常是還沒記起來的。</p>
+            <div id="lookup-words">—</div>
+        </div>
+
+        <div class="card">
             <h2>🏆 成就解鎖</h2>
             <div id="achievement-list"></div>
         </div>
@@ -327,12 +334,52 @@
         document.getElementById('loading-msg').style.display = 'block';
         document.getElementById('dashboard').style.display = 'none';
 
+        loadLookups(code);
         db.ref('users/' + code + '/petData').once('value', snap => {
             document.getElementById('loading-msg').style.display = 'none';
             const d = snap.val();
             if (!d) { alert(`找不到帳號「${code}」的資料，請確認帳號名稱正確！`); return; }
             renderDashboard(d);
             document.getElementById('dashboard').style.display = 'block';
+        });
+    }
+
+    function loadLookups(code) {
+        const box = document.getElementById('lookup-words');
+        box.innerHTML = '<span style="color:#aaa;font-size:0.9rem;">⏳ 載入中...</span>';
+        db.ref('users/' + code + '/lookups').once('value', snap => {
+            const val = snap.val() || {};
+            const list = Object.entries(val)
+                .map(([w, v]) => ({ w, n: (v && v.n) || 1, t: (v && v.t) || 0, zh: (v && v.zh) || '' }))
+                .sort((a, b) => b.t - a.t);
+
+            if (!list.length) {
+                box.innerHTML = '<span style="color:#aaa;font-size:0.9rem;">還沒有查過任何單字。</span>';
+                return;
+            }
+
+            const day = 86400000;
+            const ago = t => {
+                if (!t) return '';
+                const d = Math.floor((Date.now() - t) / day);
+                return d <= 0 ? '今天' : d === 1 ? '昨天' : d + ' 天前';
+            };
+
+            box.innerHTML =
+                '<div style="font-size:0.85rem;color:#888;margin-bottom:8px;">共 ' +
+                list.length + ' 個字</div>' +
+                list.slice(0, 60).map(x =>
+                    '<div style="display:flex;align-items:baseline;gap:8px;padding:7px 0;' +
+                    'border-top:1px solid #f0f0f0;flex-wrap:wrap;">' +
+                    '<b style="min-width:120px;">' + x.w + '</b>' +
+                    '<span style="flex:1;color:#555;">' + (x.zh || '') + '</span>' +
+                    (x.n > 1 ? '<span style="background:#fff4dc;color:#a86a00;border-radius:99px;' +
+                               'padding:2px 8px;font-size:0.75rem;font-weight:bold;">查過 ' +
+                               x.n + ' 次</span>' : '') +
+                    '<span style="color:#bbb;font-size:0.75rem;">' + ago(x.t) + '</span>' +
+                    '</div>').join('');
+        }, () => {
+            box.innerHTML = '<span style="color:#c66;font-size:0.9rem;">讀取失敗。</span>';
         });
     }
 

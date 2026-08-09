@@ -54,6 +54,7 @@
         <button class="btn btn-primary" onclick="init()">換個單字</button>
     </div>
 
+    <script src="./lookups.js"></script>
     <script>
         const words = {
             "FET Spelling": {
@@ -147,7 +148,7 @@
             init();
         }
         function init() {
-            const list = words[catS.value][wkS.value];
+            const list = words[catS.value][wkS.value] || [];
             current = list[Math.floor(Math.random() * list.length)].toUpperCase();
             guessed = []; err = 0;
             const msg = document.getElementById('message');
@@ -217,6 +218,17 @@
             }
         }
         setupConfig();
+    
+        // 她在字典查過的字，也可以拿來玩。
+        // 只加選項、不重建選單 —— 資料可能在她玩到一半才回來，
+        // 重建會連帶呼叫 init() 把進行中的遊戲重置掉。
+        if (typeof attachLookupCategory === 'function') {
+            attachLookupCategory(words, () => {
+                const name = '⭐ 我查過的字';
+                const exists = Array.from(catS.options).some(o => o.value === name);
+                if (!exists) catS.add(new Option(name, name));
+            });
+        }
     </script>
 </body>
 </html>
