@@ -1,56 +1,62 @@
-const CACHE_NAME = 'daisy-games-v3';
-const urlsToCache = [
+const CACHE_NAME = 'daisy-games-v4';
+
+const LOCAL_ASSETS = [
   './daisy_hamster.html',
   './daisy_snake.html',
+  './daisy_dictionary.html',
+  './story_hub.html',
   './manifest.json',
   './style.css',
   './words.js',
+  './zhuyin.js',
   './midterm_questions.js',
-  './snake_icon.svg',
+  './snake_icon.svg'
+];
+
+// 跨網域資源（CDN / Firebase）不放進 install 階段：任何一個失敗都會讓
+// cache.addAll() 整批 reject，導致 Service Worker 安裝失敗、離線完全失效。
+// 它們改由下面的 fetch handler 在實際用到時順手快取。
+const RUNTIME_ASSETS = [
   'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js',
   'https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js'
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // 強制立刻啟用新的 Service Worker
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME).then((cache) =>
+      // 逐一 add，單一檔案失敗（例如檔名打錯）不會拖垮整個安裝
+      Promise.allSettled(LOCAL_ASSETS.map((url) => cache.add(url)))
+    )
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName); // 刪除舊的快取
-          }
-        })
-      );
-    })
+    caches.keys()
+      .then((names) => Promise.all(
+        names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// 使用 "Stale-while-revalidate" (邊用舊的邊更新) 策略
+// Stale-while-revalidate：先回快取讓畫面秒開，背景抓新版蓋掉，下次開就是新的
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.match(event.request).then((cachedResponse) => {
-        const fetchedResponse = fetch(event.request).then((networkResponse) => {
-          // 將最新抓取到的版本存入快取中
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        }).catch(() => {
-          // 如果網路斷線，就回傳快取
-          return cachedResponse;
-        });
-        // 優先回傳快取讓畫面秒開，同時背景去抓新的蓋掉快取 (下次打開就會是新的)
-        return cachedResponse || fetchedResponse;
-      });
-    })
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.match(event.request).then((cached) => {
+        const network = fetch(event.request).then((response) => {
+          // 只快取成功的回應；opaque / 錯誤回應存進去會污染快取
+          if (response && response.ok) cache.put(event.request, response.clone());
+          return response;
+        }).catch(() => cached);
+
+        return cached || network;
+      })
+    )
   );
 });

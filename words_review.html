@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>單字資料校對</title>
+<style>
+  :root{
+    --primary:#ff85a2; --secondary:#8ba4f9; --ink:#3c3b47; --muted:#7d7b8c;
+    --line:#e8e6f0; --ok:#12876f; --warn:#c2410c;
+    --read:"Noto Sans TC","PingFang TC","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:linear-gradient(160deg,#fff8f0 0%,#ffecd2 50%,#fff3e0 100%);
+       min-height:100vh;padding-bottom:48px;color:var(--ink);font-family:var(--read)}
+  .page-header{background:linear-gradient(135deg,#4a148c,#7b1fa2 50%,#ab47bc);
+       padding:14px 16px;display:flex;align-items:center;gap:12px;
+       box-shadow:0 4px 12px rgba(0,0,0,.25);position:sticky;top:0;z-index:5}
+  .page-header h1{color:#fff;font-size:1.2rem;flex:1;font-family:'Comic Sans MS',var(--read)}
+  .back-btn{background:rgba(255,255,255,.22);color:#fff;border:2px solid rgba(255,255,255,.45);
+       padding:7px 15px;border-radius:20px;font-size:.9rem;font-weight:bold;text-decoration:none}
+  .wrap{max-width:760px;margin:0 auto;padding:0 14px}
+  .panel{background:#fff;border-radius:20px;box-shadow:0 6px 24px rgba(0,0,0,.08);
+       padding:18px 16px;margin-top:18px}
+  h2{font-size:1.1rem;margin-bottom:12px;color:#4a148c;font-family:'Comic Sans MS',var(--read)}
+  .stats{display:flex;flex-wrap:wrap;gap:8px}
+  .pill{background:#f4f2fb;border-radius:99px;padding:6px 13px;font-size:.85rem;font-weight:600}
+  .pill.ok{background:#e6f6f1;color:var(--ok)} .pill.warn{background:#fdece3;color:var(--warn)}
+  .diff{border-top:1px solid var(--line);padding:11px 0;display:grid;
+        grid-template-columns:96px 1fr;gap:10px;align-items:baseline}
+  .diff:first-of-type{border-top:0}
+  .diff .w{font-weight:700;font-size:1rem;word-break:break-all}
+  .old{color:var(--muted);text-decoration:line-through;font-size:1.05rem;margin-bottom:6px}
+  .new{font-size:1.55rem;line-height:2}
+  .sep{color:#c9c6d6;margin:0 .45em;font-size:.7em;vertical-align:.25em}
+  .grp{margin-top:20px}
+  .grp h3{font-size:.85rem;color:var(--muted);letter-spacing:.06em;margin-bottom:8px;font-weight:700}
+  .item{border-top:1px solid var(--line);padding:10px 0;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+  .item .w{font-weight:700;min-width:110px;font-size:1rem}
+  .item .m{font-size:1.5rem;line-height:2;flex:1;min-width:200px}
+  .say{background:var(--secondary);color:#fff;border:0;border-radius:14px;padding:5px 12px;
+       font-size:.8rem;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #6b83d4;font-family:var(--read)}
+  .say:active{transform:translateY(3px);box-shadow:none}
+  .tag{background:#fff0f4;color:#c2185b;border-radius:99px;padding:2px 9px;font-size:.7rem;font-weight:700}
+</style>
+</head>
+<body>
+<div class="page-header">
+  <a class="back-btn" href="./story_hub.html">← 返回</a>
+  <h1>單字資料校對</h1>
+</div>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>自我檢查</h2>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="panel">
+    <h2>這次改了 <span id="ndiff"></span> 筆</h2>
+    <div id="diffs"></div>
+  </div>
+
+  <div class="panel">
+    <h2>全部單字</h2>
+    <div id="all"></div>
+  </div>
+</div>
+
+<script src="./words.js"></script>
+<script src="./zhuyin.js"></script>
+<script>
+const CHANGES = {
+ "truth": {
+  "before": "真相 (ㄓㄣ ㄒㄧㄤ)",
+  "after": "真相 (ㄓㄣ ㄒㄧㄤˋ)"
+ },
+ "remember": {
+  "before": "記得 (ㄐㄧˋ ㄉㄜˊ)",
+  "after": "記得 (ㄐㄧˋ ㄉㄜ˙)"
+ },
+ "field": {
+  "before": "原野/球場 (ㄩㄢˊ ㄧㄝˇ)",
+  "after": "原野 (ㄩㄢˊ ㄧㄝˇ) / 球場 (ㄑㄧㄡˊ ㄔㄤˇ)"
+ },
+ "wonder": {
+  "before": "奇蹟/想知道 (ㄑㄧˊ ㄐㄧ)",
+  "after": "奇蹟 (ㄑㄧˊ ㄐㄧ) / 想知道 (ㄒㄧㄤˇ ㄓ ㄉㄠˋ)"
+ },
+ "bones": {
+  "before": "骨頭 (ㄍㄨˇ ㄊㄡˊ)",
+  "after": "骨頭 (ㄍㄨˇ ㄊㄡ˙)"
+ },
+ "lie": {
+  "before": "躺/說謊 (ㄊㄤˇ)",
+  "after": "躺 (ㄊㄤˇ) / 說謊 (ㄕㄨㄛ ㄏㄨㄤˇ)"
+ },
+ "hard": {
+  "before": "困難的/硬的 (ㄎㄨㄣˋ ㄋㄢˊ ㄉㄜ˙)",
+  "after": "困難的 (ㄎㄨㄣˋ ㄋㄢˊ ㄉㄜ˙) / 硬的 (ㄧㄥˋ ㄉㄜ˙)"
+ },
+ "admire": {
+  "before": "欣賞/欽佩 (ㄒㄧㄣ ㄕㄤˇ)",
+  "after": "欣賞 (ㄒㄧㄣ ㄕㄤˇ) / 欽佩 (ㄑㄧㄣ ㄆㄟˋ)"
+ },
+ "building": {
+  "before": "建築物 (ㄐㄧㄢˋ ㄓㄨˊ ㄨˋ)",
+  "after": "建築物 (ㄐㄧㄢˋ ㄓㄨˋ ㄨˋ)"
+ },
+ "country": {
+  "before": "國家/鄉村 (ㄒㄧㄤ ㄘㄨㄣ)",
+  "after": "國家 (ㄍㄨㄛˊ ㄐㄧㄚ) / 鄉村 (ㄒㄧㄤ ㄘㄨㄣ)"
+ },
+ "letter": {
+  "before": "信/字母 (ㄒㄧㄣˋ)",
+  "after": "信 (ㄒㄧㄣˋ) / 字母 (ㄗˋ ㄇㄨˇ)"
+ },
+ "behind": {
+  "before": "在...後面 (ㄗㄞˋ...ㄏㄡˋ ㄇㄧㄢˋ)",
+  "after": "在……後面 (ㄗㄞˋ ㄏㄡˋ ㄇㄧㄢ˙)"
+ },
+ "can": {
+  "before": "可以/罐子 (ㄎㄜˇ ㄧˇ)",
+  "after": "可以 (ㄎㄜˇ ㄧˇ) / 罐子 (ㄍㄨㄢˋ ㄗ˙)"
+ },
+ "ate": {
+  "before": "吃(過去式) (ㄔ)",
+  "after": "吃 (ㄔ)〔過去式〕"
+ },
+ "over": {
+  "before": "在...上方 (ㄗㄞˋ ... ㄕㄤˋ ㄈㄤ)",
+  "after": "在……上方 (ㄗㄞˋ ㄕㄤˋ ㄈㄤ)"
+ },
+ "flew": {
+  "before": "飛(過去式) (ㄈㄟ)",
+  "after": "飛 (ㄈㄟ)〔過去式〕"
+ },
+ "Monday": {
+  "before": "星期一 (ㄒㄧㄥ ㄑㄧ ㄧ)",
+  "after": "星期一 (ㄒㄧㄥ ㄑㄧˊ ㄧ)"
+ },
+ "Tuesday": {
+  "before": "星期二 (ㄒㄧㄥ ㄑㄧ ㄦˋ)",
+  "after": "星期二 (ㄒㄧㄥ ㄑㄧˊ ㄦˋ)"
+ },
+ "Wednesday": {
+  "before": "星期三 (ㄒㄧㄥ ㄑㄧ ㄙㄢ)",
+  "after": "星期三 (ㄒㄧㄥ ㄑㄧˊ ㄙㄢ)"
+ },
+ "Thursday": {
+  "before": "星期四 (ㄒㄧㄥ ㄑㄧ ㄙˋ)",
+  "after": "星期四 (ㄒㄧㄥ ㄑㄧˊ ㄙˋ)"
+ },
+ "Friday": {
+  "before": "星期五 (ㄒㄧㄥ ㄑㄧ ㄨˇ)",
+  "after": "星期五 (ㄒㄧㄥ ㄑㄧˊ ㄨˇ)"
+ },
+ "Saturday": {
+  "before": "星期六 (ㄒㄧㄥ ㄑㄧ ㄌㄧㄡˋ)",
+  "after": "星期六 (ㄒㄧㄥ ㄑㄧˊ ㄌㄧㄡˋ)"
+ },
+ "Sunday": {
+  "before": "星期日 (ㄒㄧㄥ ㄑㄧ ㄖˋ)",
+  "after": "星期日 (ㄒㄧㄥ ㄑㄧˊ ㄖˋ)"
+ }
+};
+
+function speak(text, lang){
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang; u.rate = lang.startsWith("zh") ? 0.85 : 0.8;
+  speechSynthesis.speak(u);
+}
+
+function renderEntry(entry){
+  return entry.s.map(renderSense).join('<span class="sep">／</span>');
+}
+
+function runSelfCheck(){
+  const all = Object.entries(wordEntries);
+  const misaligned = all.filter(([, e]) =>
+    e.s.some(s => s.z.length !== [...s.zh].length));
+  const noZhuyin = all.filter(([, e]) =>
+    e.s.some(s => s.z.every(z => !z)));
+  const senses = all.reduce((n, [, e]) => n + e.s.length, 0);
+  const lower = Object.values(words).flatMap(l => Object.values(l)).flat()
+    .filter(w => !wordTranslations[w.toLowerCase()]);
+
+  document.getElementById("stats").innerHTML = [
+    `<span class="pill">${all.length} 個單字</span>`,
+    `<span class="pill">${senses} 個義項</span>`,
+    `<span class="pill ${misaligned.length ? "warn" : "ok"}">注音逐字對齊 ${misaligned.length ? "✗ " + misaligned.length : "✓"}</span>`,
+    `<span class="pill ${noZhuyin.length ? "warn" : "ok"}">義項皆有注音 ${noZhuyin.length ? "✗ " + noZhuyin.length : "✓"}</span>`,
+    `<span class="pill ${lower.length ? "warn" : "ok"}">小寫查表 ${lower.length ? "✗ " + lower.length : "✓"}</span>`
+  ].join("");
+}
+
+function renderDiffs(){
+  document.getElementById("ndiff").textContent = Object.keys(CHANGES).length;
+  document.getElementById("diffs").innerHTML = Object.entries(CHANGES).map(([w, d]) => `
+    <div class="diff">
+      <div class="w">${w}</div>
+      <div>
+        <div class="old">${d.before}</div>
+        <div class="new">${renderEntry(wordEntries[w])}</div>
+      </div>
+    </div>`).join("");
+}
+
+function renderAll(){
+  const byWeek = {};
+  for (const [list, weeks] of Object.entries(words))
+    for (const [wk, ws] of Object.entries(weeks))
+      byWeek[list + " · " + wk] = ws;
+
+  document.getElementById("all").innerHTML = Object.entries(byWeek).map(([label, ws]) => `
+    <div class="grp"><h3>${label}</h3>` +
+    [...new Set(ws)].map(w => {
+      const e = lookupWord(w);
+      if (!e) return "";
+      const changed = CHANGES[w] ? ' <span class="tag">已修正</span>' : "";
+      return `<div class="item">
+        <span class="w">${w}${changed}</span>
+        <span class="m">${renderEntry(e)}</span>
+        <button class="say" onclick="speak('${w}','en-US')">🔊 英</button>
+        <button class="say" onclick="speak('${e.s[0].zh}','zh-TW')">🔊 中</button>
+      </div>`;
+    }).join("") + `</div>`).join("");
+}
+
+runSelfCheck();
+renderDiffs();
+renderAll();
+</script>
+</body>
+</html>
