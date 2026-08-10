@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🔨 單字打地鼠</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(180deg, #aee8ff 0%, #d4f5c8 45%, #8fd47a 100%);
+            margin: 0; padding: 12px 10px 40px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; user-select: none; -webkit-user-select: none;
+        }
+        h2 { color: #2e7d32; margin: 4px 0 8px; font-size: 1.3rem; text-shadow: 1px 1px 0 rgba(255,255,255,0.7); }
+
+        .box {
+            background: white; padding: 8px 12px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            text-align: center; width: 100%; max-width: 480px; margin-bottom: 8px;
+        }
+        select {
+            padding: 8px; border-radius: 8px; border: 2px solid #66bb6a;
+            outline: none; font-size: 0.92rem; margin: 3px; max-width: 100%;
+            font-family: inherit; background: #f6fff6; color: #333;
+        }
+
+        .stats {
+            display: flex; justify-content: center; gap: 16px;
+            width: 100%; max-width: 480px; margin-bottom: 8px;
+            font-weight: bold; color: #33691e; font-size: 0.92rem;
+        }
+        .stats b { color: #1b5e20; }
+
+        /* 題目板 */
+        #question {
+            background: #fffbe8; border: 3px solid #f9a825; border-radius: 16px;
+            width: 100%; max-width: 480px; padding: 10px 14px; margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-height: 64px;
+        }
+        #q-zh { font-size: 1.5rem; font-weight: bold; color: #6d4c00; text-align: center; }
+        #q-zy { font-size: 0.7rem; color: #b08a3e; margin-top: 2px; text-align: center; }
+        .btn-hear {
+            border: none; background: #f9a825; color: white; font-size: 1.3rem;
+            border-radius: 50%; width: 46px; height: 46px; cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2); flex-shrink: 0;
+        }
+        .btn-hear:active { transform: scale(0.92); }
+
+        /* 地洞區 */
+        #field {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 10px;
+            width: 100%; max-width: 480px;
+        }
+        .hole {
+            position: relative; height: 118px; overflow: hidden; cursor: pointer;
+        }
+        .hole::after {
+            content: ""; position: absolute; bottom: 4px; left: 8%; width: 84%; height: 26px;
+            background: radial-gradient(ellipse at center, #5d4037 0%, #3e2723 75%);
+            border-radius: 50%; z-index: 0;
+        }
+        .mole {
+            position: absolute; left: 0; right: 0; bottom: -4px; z-index: 1;
+            display: flex; flex-direction: column; align-items: center;
+            transform: translateY(115%); transition: transform 0.18s ease-out;
+            pointer-events: none;
+        }
+        .hole.up .mole { transform: translateY(0); }
+        .sign {
+            background: white; border: 2px solid #8d6e63; border-radius: 10px;
+            padding: 3px 6px; font-weight: bold; color: #4e342e;
+            font-size: 0.95rem; margin-bottom: 2px; max-width: 100%;
+            text-align: center; line-height: 1.1; word-break: break-word;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .sign.long { font-size: 0.72rem; }
+        .mole-emoji { font-size: 2.3rem; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25)); }
+        .hole.bonk .mole-emoji { animation: bonk 0.4s ease; }
+        @keyframes bonk {
+            0% { transform: scaleY(1); }
+            30% { transform: scaleY(0.4) translateY(20%); }
+            100% { transform: scaleY(1); }
+        }
+        .pow {
+            position: absolute; top: 6px; left: 50%; transform: translate(-50%, 0);
+            font-size: 1.6rem; z-index: 3; animation: powUp 0.55s ease forwards;
+            pointer-events: none;
+        }
+        @keyframes powUp {
+            0% { opacity: 1; transform: translate(-50%, 10px) scale(0.6); }
+            100% { opacity: 0; transform: translate(-50%, -22px) scale(1.4); }
+        }
+
+        #message { min-height: 26px; margin-top: 10px; font-weight: bold; color: #1b5e20; text-align: center; font-size: 1.05rem; }
+
+        /* 結算 */
+        #overlay {
+            position: fixed; inset: 0; background: rgba(27, 60, 30, 0.55);
+            display: none; align-items: center; justify-content: center; z-index: 50;
+        }
+        #overlay.show { display: flex; }
+        .result {
+            background: white; border-radius: 24px; padding: 26px 30px;
+            text-align: center; width: 85%; max-width: 340px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: pop 0.4s ease;
+        }
+        @keyframes pop { 0% { transform: scale(0.7); } 100% { transform: scale(1); } }
+        .result .big { font-size: 3rem; }
+        .result .stars { font-size: 2rem; letter-spacing: 6px; margin: 6px 0; }
+        .result h3 { color: #2e7d32; margin: 6px 0; }
+        .result .coin-line { font-size: 1.2rem; font-weight: bold; color: #b8860b; margin: 8px 0; }
+        .result .hint { font-size: 0.8rem; color: #999; min-height: 18px; }
+        .btn {
+            padding: 12px 20px; border-radius: 12px; border: none; color: white;
+            font-weight: bold; cursor: pointer; font-size: 1rem; font-family: inherit;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); margin: 6px 4px 0;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-again { background: #43a047; }
+        .btn-close { background: #adb5bd; }
+        .btn-start {
+            background: #f9a825; font-size: 1.2rem; padding: 14px 28px;
+            margin-top: 12px; border-radius: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🔨 單字打地鼠</h2>
+    <div class="box">
+        <select id="cat" onchange="setupWeek()"></select>
+        <select id="week" onchange="resetGame()"></select>
+    </div>
+    <div class="stats">
+        <span>第 <b id="s-round">-</b>/<b id="s-total">-</b> 題</span>
+        <span>答對 <b id="s-good">0</b></span>
+        <span>連對 <b id="s-combo">0</b></span>
+        <span>💰 <b id="s-coins">0</b></span>
+    </div>
+
+    <div id="question">
+        <div>
+            <div id="q-zh">按「開始」來玩！</div>
+            <div id="q-zy"></div>
+        </div>
+        <button class="btn-hear" id="btn-hear" onclick="speakCurrent()" style="display:none;">🔊</button>
+    </div>
+
+    <div id="field"></div>
+    <div id="message">聽發音、看中文，敲拿著對的單字牌的小地鼠！</div>
+    <button class="btn btn-start" id="btn-start" onclick="startGame()">開始遊戲 ▶</button>
+
+    <div id="overlay">
+        <div class="result">
+            <div class="big">🎉</div>
+            <div class="stars" id="r-stars"></div>
+            <h3 id="r-title"></h3>
+            <div class="coin-line" id="r-coins"></div>
+            <div class="hint" id="r-hint"></div>
+            <button class="btn btn-again" onclick="hideOverlay(); startGame()">再玩一次 🔄</button>
+            <button class="btn btn-close" onclick="hideOverlay()">關閉</button>
+        </div>
+    </div>
+
+    <script src="./words.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script src="./lookups.js"></script>
+    <script src="./wordlists.js"></script>
+    <script src="./mastery.js"></script>
+    <script src="./rewards.js"></script>
+    <script>
+        const catS = document.getElementById('cat'), wkS = document.getElementById('week');
+        const field = document.getElementById('field');
+        const HOLES = 9;
+
+        let queue = [], round = 0, good = 0, combo = 0, coinsEarned = 0;
+        let current = null, wrongThisRound = 0, playing = false;
+        let gameToken = 0, cycleTimer = null, roundTimer = null;
+
+        // 音效
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start();
+                g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                o.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function speak(word) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US'; u.rate = 0.8; u.pitch = 1.2;
+            window.speechSynthesis.speak(u);
+        }
+        function speakCurrent() { if (current) speak(current.word); }
+
+        function meaningOf(word) {
+            if (typeof lookupWord === 'function') {
+                const e = lookupWord(word);
+                if (e && e.s && e.s[0] && e.s[0].zh)
+                    return { zh: e.s[0].zh, zy: (e.s[0].z || []).filter(Boolean).join(' ') };
+            }
+            if (typeof wordlistMeaningText === 'function') {
+                const t = wordlistMeaningText(word);
+                if (t) return { zh: String(t).split('/')[0].replace(/\s*\(.*?\)/g, '').trim(), zy: '' };
+            }
+            return null;
+        }
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function setupConfig() {
+            catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            setupWeek();
+        }
+        function setupWeek() {
+            wkS.innerHTML = Object.keys(words[catS.value] || {}).map(w => `<option>${w}</option>`).join('');
+            resetGame();
+        }
+
+        function buildField() {
+            field.innerHTML = Array.from({ length: HOLES }, (_, i) => `
+                <div class="hole" data-i="${i}">
+                    <div class="mole">
+                        <div class="sign"></div>
+                        <div class="mole-emoji">🐹</div>
+                    </div>
+                </div>`).join('');
+            field.querySelectorAll('.hole').forEach(h => {
+                h.addEventListener('pointerdown', () => whack(h));
+            });
+        }
+
+        function resetGame() {
+            gameToken++;
+            clearTimeout(cycleTimer); clearTimeout(roundTimer);
+            playing = false; current = null;
+            round = 0; good = 0; combo = 0; coinsEarned = 0;
+            buildField();
+            document.getElementById('q-zh').textContent = '按「開始」來玩！';
+            document.getElementById('q-zy').textContent = '';
+            document.getElementById('btn-hear').style.display = 'none';
+            document.getElementById('btn-start').style.display = '';
+            document.getElementById('message').textContent = '聽發音、看中文，敲拿著對的單字牌的小地鼠！';
+            document.getElementById('s-round').textContent = '-';
+            document.getElementById('s-total').textContent = '-';
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('s-good').textContent = good;
+            document.getElementById('s-combo').textContent = combo;
+            document.getElementById('s-coins').textContent = coinsEarned;
+        }
+
+        function startGame() {
+            const token = ++gameToken;
+            clearTimeout(cycleTimer); clearTimeout(roundTimer);
+
+            const list = shuffle((words[catS.value]?.[wkS.value] || []).slice());
+            const usable = list.filter(w => meaningOf(w));
+            if (usable.length < 3) {
+                document.getElementById('message').textContent = '這組單字太少或還沒有中文資料，換一組玩玩看！';
+                return;
+            }
+            queue = usable.slice(0, 10);
+            round = 0; good = 0; combo = 0; coinsEarned = 0;
+            playing = true;
+            document.getElementById('btn-start').style.display = 'none';
+            document.getElementById('btn-hear').style.display = '';
+            document.getElementById('s-total').textContent = queue.length;
+            document.getElementById('message').textContent = '';
+            buildField();
+            updateStats();
+            nextRound(token, usable);
+        }
+
+        function nextRound(token, pool) {
+            if (token !== gameToken) return;
+            if (round >= queue.length) { finish(); return; }
+
+            const word = queue[round];
+            round++;
+            wrongThisRound = 0;
+            document.getElementById('s-round').textContent = round;
+
+            const m = meaningOf(word);
+            current = { word, m, done: false };
+            document.getElementById('q-zh').textContent = m.zh;
+            document.getElementById('q-zy').textContent = m.zy || '';
+            speak(word);
+
+            // 干擾字：同一組的其他字
+            const others = shuffle(pool.filter(w => w !== word)).slice(0, 2);
+            const popWords = shuffle([word, ...others]);
+
+            // 難度：越後面地鼠探頭的時間越短
+            const stay = Math.max(1200, 2300 - round * 120);
+            popCycle(token, popWords, stay);
+        }
+
+        // 同一批地鼠換洞重新探頭，直到打中對的
+        function popCycle(token, popWords, stay) {
+            if (token !== gameToken || !current || current.done) return;
+
+            const holes = shuffle(Array.from(field.querySelectorAll('.hole'))).slice(0, popWords.length);
+            field.querySelectorAll('.hole').forEach(h => { h.classList.remove('up'); h.dataset.word = ''; });
+
+            holes.forEach((h, i) => {
+                const w = popWords[i];
+                const sign = h.querySelector('.sign');
+                sign.textContent = w;
+                sign.classList.toggle('long', w.length > 7);
+                h.querySelector('.mole-emoji').textContent = '🐹';
+                h.dataset.word = w;
+                h.classList.add('up');
+            });
+
+            cycleTimer = setTimeout(() => {
+                if (token !== gameToken || !current || current.done) return;
+                field.querySelectorAll('.hole').forEach(h => h.classList.remove('up'));
+                // 縮回去再換洞出現
+                cycleTimer = setTimeout(() => popCycle(token, shuffle(popWords), stay), 350);
+            }, stay);
+        }
+
+        function whack(h) {
+            if (!playing || !current || current.done) return;
+            if (!h.classList.contains('up') || !h.dataset.word) return;
+
+            const token = gameToken;
+            const w = h.dataset.word;
+            h.classList.remove('bonk'); void h.offsetWidth;
+            h.classList.add('bonk');
+
+            if (w === current.word) {
+                current.done = true;
+                clearTimeout(cycleTimer);
+                h.querySelector('.mole-emoji').textContent = '😵';
+                splash(h, '💥');
+                playTone(700, 'sine', 0.12);
+                setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+
+                good++;
+                combo++;
+                let gain = 2 + (wrongThisRound === 0 ? 1 : 0);
+                if (combo > 0 && combo % 5 === 0) { gain += 3; splash(h, '🔥'); }
+                coinsEarned += gain;
+                if (typeof recordAttempt === 'function')
+                    recordAttempt(current.word, true, wrongThisRound);
+                updateStats();
+
+                document.getElementById('message').textContent =
+                    wrongThisRound === 0 ? `${current.word} ✔ 太厲害了！` : `${current.word} ✔ 答對了！`;
+
+                roundTimer = setTimeout(() => {
+                    if (token !== gameToken) return;
+                    field.querySelectorAll('.hole').forEach(x => x.classList.remove('up'));
+                    document.getElementById('message').textContent = '';
+                    setTimeout(() => nextRound(token, queue), 400);
+                }, 700);
+            } else {
+                wrongThisRound++;
+                combo = 0;
+                h.querySelector('.mole-emoji').textContent = '😝';
+                splash(h, '💨');
+                playTone(200, 'sawtooth', 0.18);
+                updateStats();
+                // 打錯兩次算這題沒過，公布答案再前進
+                if (wrongThisRound >= 2) {
+                    current.done = true;
+                    clearTimeout(cycleTimer);
+                    if (typeof recordAttempt === 'function')
+                        recordAttempt(current.word, false, wrongThisRound);
+                    document.getElementById('message').textContent = `答案是 ${current.word}，再加油！`;
+                    speak(current.word);
+                    roundTimer = setTimeout(() => {
+                        if (token !== gameToken) return;
+                        field.querySelectorAll('.hole').forEach(x => x.classList.remove('up'));
+                        document.getElementById('message').textContent = '';
+                        setTimeout(() => nextRound(token, queue), 400);
+                    }, 1400);
+                }
+            }
+        }
+
+        function splash(h, emoji) {
+            const p = document.createElement('div');
+            p.className = 'pow'; p.textContent = emoji;
+            h.appendChild(p);
+            setTimeout(() => p.remove(), 600);
+        }
+
+        function finish() {
+            playing = false;
+            const total = queue.length;
+            let stars, title;
+            if (good === total) { stars = '⭐⭐⭐'; title = '全部打中！超級神槌！'; coinsEarned += 10; }
+            else if (good >= total * 0.7) { stars = '⭐⭐'; title = '打得好棒！'; coinsEarned += 5; }
+            else { stars = '⭐'; title = '完成挑戰！'; }
+
+            document.getElementById('r-stars').textContent = stars;
+            document.getElementById('r-title').textContent = `${title}（${good}/${total}）`;
+            document.getElementById('r-coins').textContent = `獲得 💰 ${coinsEarned} 金幣`;
+            updateStats();
+
+            const hint = document.getElementById('r-hint');
+            hint.textContent = '';
+            awardCoins(coinsEarned, (ok) => {
+                hint.textContent = ok ? '金幣已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後金幣才能入帳喔）';
+            });
+
+            document.getElementById('overlay').classList.add('show');
+            if (good === queue.length && typeof confetti !== 'undefined') {
+                confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+            }
+        }
+
+        function hideOverlay() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('btn-start').style.display = '';
+        }
+
+        setupConfig();
+
+        if (typeof getWeakWords === 'function') {
+            const weak = getWeakWords(20).map(x => x.word).filter(w => meaningOf(w));
+            if (weak.length >= 4) {
+                const group = { '最需要練的': weak.slice(0, 10) };
+                if (weak.length > 10) group['第二批'] = weak.slice(10, 20);
+                words['🔥 加強複習'] = group;
+                catS.add(new Option('🔥 加強複習', '🔥 加強複習'));
+            }
+        }
+        if (typeof attachWordlistCategory === 'function') {
+            attachWordlistCategory(words, () => {
+                const name = '⭐ 我的單字卡';
+                if (!Array.from(catS.options).some(o => o.value === name))
+                    catS.add(new Option(name, name));
+            });
+        }
+        if (typeof attachLookupCategory === 'function') {
+            attachLookupCategory(words, () => {
+                const name = '⭐ 我查過的字';
+                if (!Array.from(catS.options).some(o => o.value === name))
+                    catS.add(new Option(name, name));
+            });
+        }
+    </script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

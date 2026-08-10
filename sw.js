@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20260810-0734';
+const CACHE_NAME = 'daisy-20260810-0736';
 
 const LOCAL_ASSETS = [
   './',
@@ -34,6 +34,7 @@ const LOCAL_ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './daisy_memory.html',
+  './daisy_whack.html',
   './rewards.js',
   './daisy_vocab_final.html',
   './daisy_grammar_final.html',
