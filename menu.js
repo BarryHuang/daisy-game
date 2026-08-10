@@ -23,6 +23,7 @@ const MENU_GROUPS = [
     { href: "daisy_whack.html",    emoji: "🔨", name: "打地鼠", note: "聽發音敲對的字" },
     { href: "daisy_boss.html",     emoji: "⚔️", name: "弱字怪獸戰", note: "打倒不熟的字" },
     { href: "daisy_runner.html",   emoji: "🏃", name: "倉鼠跑酷", note: "衝進對的那道門" },
+    { href: "daisy_restaurant.html", emoji: "🍳", name: "倉鼠餐廳", note: "聽客人用英文點餐" },
     { href: "daisy_hangman.html",  emoji: "🎯", name: "猜單字" },
     { href: "daisy_scramble.html", emoji: "🫧", name: "字母重組" },
     { href: "daisy_snake.html",    emoji: "🐛", name: "彩虹小蟲" },

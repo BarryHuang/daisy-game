@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🍳 倉鼠餐廳</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(180deg, #ffe0b2 0%, #ffccbc 45%, #fff3e0 100%);
+            margin: 0; padding: 8px 8px 30px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; user-select: none; -webkit-user-select: none;
+        }
+        h2 { color: #bf360c; margin: 2px 0 6px; font-size: 1.2rem; text-shadow: 1px 1px 0 rgba(255,255,255,0.6); }
+        .wrap { width: 100%; max-width: 460px; }
+
+        .stats {
+            display: flex; justify-content: center; gap: 14px; align-items: center;
+            font-weight: bold; color: #6d4c41; font-size: 0.9rem; margin-bottom: 6px;
+        }
+
+        /* 客人區 */
+        #counter {
+            background: linear-gradient(180deg, #fff8e1 0%, #ffe0b2 100%);
+            border: 3px solid #a1887f; border-radius: 16px; padding: 10px;
+            margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+        }
+        .row { display: flex; align-items: flex-start; gap: 10px; }
+        #customer { font-size: 3rem; line-height: 1; flex-shrink: 0; }
+        #customer.happy { animation: hop 0.6s ease; }
+        #customer.sad { animation: droop 0.6s ease; }
+        @keyframes hop { 0%,100% { transform: translateY(0) } 40% { transform: translateY(-14px) scale(1.1) } }
+        @keyframes droop { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-12deg) translateY(6px) } }
+
+        .bubble {
+            position: relative; flex: 1; background: white; border-radius: 14px;
+            padding: 9px 11px; border: 2px solid #d7ccc8; min-height: 56px;
+        }
+        .bubble::before {
+            content: ""; position: absolute; left: -9px; top: 16px;
+            border: 8px solid transparent; border-right-color: white;
+        }
+        #order-en { font-size: 1.02rem; color: #3e2723; font-weight: bold; line-height: 1.35; }
+        #order-en.hidden-text { filter: blur(6px); }
+        #order-zh { font-size: 0.72rem; color: #8d6e63; margin-top: 3px; }
+        .bubble-tools { display: flex; gap: 6px; margin-top: 6px; }
+        .mini {
+            border: none; border-radius: 8px; padding: 5px 9px; font-size: 0.78rem;
+            font-family: inherit; font-weight: bold; cursor: pointer; color: #fff;
+        }
+        .mini.hear { background: #f9a825; }
+        .mini.eye  { background: #7e57c2; }
+
+        /* 耐心條 */
+        #patience-wrap { height: 8px; background: #efebe9; border-radius: 6px; margin-top: 8px; overflow: hidden; }
+        #patience { height: 100%; width: 100%; background: linear-gradient(90deg, #66bb6a, #fdd835, #ef5350); }
+
+        /* 托盤 */
+        #tray-box {
+            background: #fff; border: 3px dashed #bcaaa4; border-radius: 16px;
+            padding: 8px; margin-bottom: 8px; min-height: 74px;
+        }
+        .tray-title { font-size: 0.78rem; color: #8d6e63; margin-bottom: 4px; font-weight: bold; }
+        #tray { display: flex; flex-wrap: wrap; gap: 6px; min-height: 44px; align-items: center; }
+        .tray-item {
+            background: #fff3e0; border: 2px solid #ffb74d; border-radius: 10px;
+            padding: 3px 8px; font-size: 1.35rem; cursor: pointer; position: relative;
+            display: flex; align-items: center; gap: 3px;
+        }
+        .tray-item .n { font-size: 0.85rem; font-weight: bold; color: #e65100; }
+        .tray-empty { color: #bcaaa4; font-size: 0.85rem; }
+
+        /* 食材架 */
+        #shelf {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+            margin-bottom: 8px;
+        }
+        .item {
+            background: white; border: 2px solid #d7ccc8; border-radius: 12px;
+            padding: 7px 2px 5px; cursor: pointer; text-align: center;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.12); font-family: inherit;
+        }
+        .item:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
+        .item .emoji { font-size: 1.8rem; line-height: 1.1; }
+        .item .en { font-size: 0.68rem; font-weight: bold; color: #5d4037; word-break: break-word; }
+        .item.new { animation: glow 1.6s ease 3; }
+        @keyframes glow { 50% { box-shadow: 0 0 12px 3px #ffd54f; } }
+
+        .actions { display: flex; gap: 8px; }
+        .btn {
+            flex: 1; padding: 13px 10px; border-radius: 14px; border: none; color: white;
+            font-weight: bold; cursor: pointer; font-size: 1.05rem; font-family: inherit;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.22);
+        }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.22); }
+        .btn-serve { background: #43a047; }
+        .btn-clear { background: #bcaaa4; flex: 0 0 34%; }
+        .btn-start { background: #ff7043; }
+
+        #message { min-height: 26px; margin-top: 8px; font-weight: bold; color: #bf360c; text-align: center; }
+
+        /* 遮罩 */
+        .veil {
+            position: fixed; inset: 0; background: rgba(80, 40, 10, 0.55);
+            display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px;
+        }
+        .veil.show { display: flex; }
+        .card {
+            background: white; border-radius: 24px; padding: 22px 24px; text-align: center;
+            width: 100%; max-width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+            animation: pop 0.4s ease;
+        }
+        @keyframes pop { 0% { transform: scale(0.7) } 100% { transform: scale(1) } }
+        .card .big { font-size: 2.8rem; }
+        .card h3 { color: #bf360c; margin: 6px 0; }
+        .card p { font-size: 0.9rem; color: #6d4c41; line-height: 1.5; margin: 6px 0; }
+        .card .coin-line { font-size: 1.15rem; font-weight: bold; color: #b8860b; margin: 8px 0; }
+        .card .hint { font-size: 0.78rem; color: #aaa; min-height: 16px; }
+        .card .menu-new { font-size: 1.6rem; margin: 6px 0; }
+    </style>
+</head>
+<body>
+
+    <h2>🍳 倉鼠餐廳</h2>
+    <div class="wrap">
+        <div class="stats">
+            <span>⭐ Lv.<b id="s-level">1</b></span>
+            <span>客人 <b id="s-served">0</b>/<b id="s-shift">5</b></span>
+            <span>💰 小費 <b id="s-tips">0</b></span>
+        </div>
+
+        <div id="counter">
+            <div class="row">
+                <div id="customer">🐰</div>
+                <div class="bubble">
+                    <div id="order-en">歡迎光臨！按「開店」開始營業 🍽️</div>
+                    <div id="order-zh"></div>
+                    <div class="bubble-tools" id="tools" style="display:none;">
+                        <button class="mini hear" onclick="speakOrder()">🔊 再聽一次</button>
+                        <button class="mini eye" id="btn-eye" onclick="toggleText()">🙈 只用聽的</button>
+                    </div>
+                </div>
+            </div>
+            <div id="patience-wrap"><div id="patience"></div></div>
+        </div>
+
+        <div id="tray-box">
+            <div class="tray-title">🍽️ 托盤（點一下可以拿掉）</div>
+            <div id="tray"><span class="tray-empty">還沒放東西</span></div>
+        </div>
+
+        <div id="shelf"></div>
+
+        <div class="actions">
+            <button class="btn btn-clear" onclick="clearTray()">清空</button>
+            <button class="btn btn-serve" id="btn-serve" onclick="serve()">送餐 🍽️</button>
+        </div>
+        <div id="message">先按下面的「開店」吧！</div>
+        <div class="actions" style="margin-top:6px;">
+            <button class="btn btn-start" id="btn-start" onclick="startShift()">🔔 開店營業</button>
+        </div>
+    </div>
+
+    <div class="veil" id="veil-shift">
+        <div class="card">
+            <div class="big" id="v-emoji">🎉</div>
+            <h3 id="v-title"></h3>
+            <p id="v-body"></p>
+            <div class="menu-new" id="v-menu"></div>
+            <div class="coin-line" id="v-coins"></div>
+            <div class="hint" id="v-hint"></div>
+            <div class="actions" style="margin-top:10px;">
+                <button class="btn btn-clear" onclick="closeVeil()">休息</button>
+                <button class="btn btn-serve" onclick="closeVeil(); startShift()">再營業 🔔</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./firebase-config.js"></script>
+    <script src="./words.js"></script>
+    <script src="./lookups.js"></script>
+    <script src="./wordlists.js"></script>
+    <script src="./mastery.js"></script>
+    <script src="./rewards.js"></script>
+    <script>
+        // 菜單自己帶：食物和數量是課本以外、但每天用得到的字，
+        // 而且可數名詞的複數要對，所以每一項都自己寫清楚單複數。
+        const MENU = [
+            { en: "apple",     pl: "apples",     zh: "蘋果",   emoji: "🍎", lv: 1 },
+            { en: "egg",       pl: "eggs",       zh: "蛋",     emoji: "🥚", lv: 1 },
+            { en: "cookie",    pl: "cookies",    zh: "餅乾",   emoji: "🍪", lv: 1 },
+            { en: "banana",    pl: "bananas",    zh: "香蕉",   emoji: "🍌", lv: 1 },
+            { en: "carrot",    pl: "carrots",    zh: "紅蘿蔔", emoji: "🥕", lv: 2 },
+            { en: "orange",    pl: "oranges",    zh: "柳橙",   emoji: "🍊", lv: 2 },
+            { en: "hamburger", pl: "hamburgers", zh: "漢堡",   emoji: "🍔", lv: 3 },
+            { en: "hot dog",   pl: "hot dogs",   zh: "熱狗",   emoji: "🌭", lv: 3 },
+            { en: "donut",     pl: "donuts",     zh: "甜甜圈", emoji: "🍩", lv: 4 },
+            { en: "cupcake",   pl: "cupcakes",   zh: "杯子蛋糕", emoji: "🧁", lv: 4 },
+            { en: "sandwich",  pl: "sandwiches", zh: "三明治", emoji: "🥪", lv: 5 },
+            { en: "strawberry",pl: "strawberries", zh: "草莓", emoji: "🍓", lv: 5 },
+            { en: "pizza",     pl: "pizzas",     zh: "披薩",   emoji: "🍕", lv: 6 },
+            { en: "ice cream", pl: "ice creams", zh: "冰淇淋", emoji: "🍦", lv: 6 },
+            { en: "fish",      pl: "fish",       zh: "魚",     emoji: "🐟", lv: 7 },
+            { en: "cheese",    pl: "cheeses",    zh: "起司",   emoji: "🧀", lv: 7 }
+        ];
+        const NUM = ["", "one", "two", "three"];
+        const NUM_ZH = ["", "一", "兩", "三"];
+        const PATTERNS = [
+            { en: (l) => `I want ${l}, please.`,   zh: (l) => `我想要 ${l}，謝謝。` },
+            { en: (l) => `Can I have ${l}?`,       zh: (l) => `可以給我 ${l} 嗎？` },
+            { en: (l) => `I would like ${l}.`,     zh: (l) => `我想要 ${l}。` },
+            { en: (l) => `May I have ${l}, please?`, zh: (l) => `請問可以給我 ${l} 嗎？` }
+        ];
+        const GUESTS = ["🐰", "🐻", "🐼", "🦊", "🐨", "🐯", "🐷", "🐸", "🐵", "🐶", "🐱", "🦉"];
+        const SAVE_KEY = "daisy_restaurant";
+        const SHIFT = 5;
+
+        let shop = { level: 1, served: 0 };       // 長期進度
+        let shift = null;                          // 這一輪營業
+        let tray = {};                             // { en: count }
+        let hideText = false;
+
+        function loadShop() {
+            try {
+                const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+                if (s && s.level) shop = { level: s.level, served: s.served || 0 };
+            } catch (e) {}
+        }
+        function saveShop() {
+            try { localStorage.setItem(SAVE_KEY, JSON.stringify(shop)); } catch (e) {}
+        }
+
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start();
+                g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                o.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+        function speak(text, rate) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'en-US'; u.rate = rate || 0.82; u.pitch = 1.15;
+            window.speechSynthesis.speak(u);
+        }
+        function speakOrder() { if (shift && shift.order) speak(shift.order.en); }
+
+        function unlockedMenu() { return MENU.filter(m => m.lv <= shop.level); }
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function renderShelf(newOnes) {
+            const shelf = document.getElementById('shelf');
+            shelf.innerHTML = unlockedMenu().map(m =>
+                `<button class="item${newOnes && newOnes.includes(m.en) ? ' new' : ''}" data-en="${m.en}">
+                    <div class="emoji">${m.emoji}</div>
+                    <div class="en">${m.en}</div>
+                 </button>`).join('');
+            shelf.querySelectorAll('.item').forEach(b => {
+                b.onclick = () => addItem(b.dataset.en);
+            });
+        }
+
+        function addItem(en) {
+            if (!shift || shift.done) return;
+            const m = MENU.find(x => x.en === en);
+            tray[en] = (tray[en] || 0) + 1;
+            speak(en, 0.9);
+            playTone(520, 'sine', 0.07);
+            renderTray();
+        }
+        function removeItem(en) {
+            if (!tray[en]) return;
+            tray[en]--;
+            if (!tray[en]) delete tray[en];
+            playTone(300, 'sine', 0.06);
+            renderTray();
+        }
+        function clearTray() {
+            tray = {};
+            renderTray();
+        }
+        function renderTray() {
+            const el = document.getElementById('tray');
+            const keys = Object.keys(tray);
+            if (!keys.length) { el.innerHTML = '<span class="tray-empty">還沒放東西</span>'; return; }
+            el.innerHTML = keys.map(en => {
+                const m = MENU.find(x => x.en === en);
+                return `<div class="tray-item" data-en="${en}">${m.emoji}<span class="n">×${tray[en]}</span></div>`;
+            }).join('');
+            el.querySelectorAll('.tray-item').forEach(d => {
+                d.onclick = () => removeItem(d.dataset.en);
+            });
+        }
+
+        // 訂單：等級越高，品項越多、數量越大
+        function makeOrder() {
+            const menu = unlockedMenu();
+            const kinds = Math.min(menu.length, shop.level >= 5 ? 3 : (shop.level >= 2 ? 2 : 1));
+            const maxQty = shop.level >= 3 ? 3 : 2;
+            const picks = shuffle(menu.slice()).slice(0, kinds).map(m => ({
+                item: m, n: 1 + Math.floor(Math.random() * maxQty)
+            }));
+
+            const partEn = picks.map(p => `${NUM[p.n]} ${p.n > 1 ? p.item.pl : p.item.en}`);
+            const partZh = picks.map(p => `${NUM_ZH[p.n]}個${p.item.zh}`);
+            const listEn = partEn.length === 1 ? partEn[0]
+                : partEn.slice(0, -1).join(', ') + ' and ' + partEn[partEn.length - 1];
+            const listZh = partZh.join('、');
+            const pat = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+
+            const want = {};
+            picks.forEach(p => { want[p.item.en] = (want[p.item.en] || 0) + p.n; });
+            return { picks, want, en: pat.en(listEn), zh: pat.zh(listZh) };
+        }
+
+        function startShift() {
+            shift = { n: 0, tips: 0, perfect: 0, start: 0, done: false, order: null, levelUps: [] };
+            tray = {};
+            document.getElementById('btn-start').style.display = 'none';
+            document.getElementById('tools').style.display = '';
+            document.getElementById('s-shift').textContent = SHIFT;
+            renderShelf();
+            renderTray();
+            updateStats();
+            nextCustomer();
+        }
+
+        function nextCustomer() {
+            if (!shift) return;
+            if (shift.n >= SHIFT) { endShift(); return; }
+            shift.n++;
+            tray = {};
+            renderTray();
+
+            const order = makeOrder();
+            shift.order = order;
+            shift.start = Date.now();
+            shift.done = false;
+
+            const guest = GUESTS[Math.floor(Math.random() * GUESTS.length)];
+            const c = document.getElementById('customer');
+            c.className = ''; c.textContent = guest;
+
+            const en = document.getElementById('order-en');
+            en.textContent = order.en;
+            en.classList.toggle('hidden-text', hideText);
+            document.getElementById('order-zh').textContent = hideText ? '' : order.zh;
+            document.getElementById('message').textContent = '把客人要的東西放到托盤上！';
+
+            // 耐心條：只影響小費，不會失敗
+            const p = document.getElementById('patience');
+            p.style.transition = 'none';
+            p.style.width = '100%';
+            void p.offsetWidth;
+            p.style.transition = 'width 40s linear';
+            p.style.width = '0%';
+
+            updateStats();
+            setTimeout(() => speak(order.en), 350);
+        }
+
+        function toggleText() {
+            hideText = !hideText;
+            document.getElementById('btn-eye').textContent = hideText ? '👀 看句子' : '🙈 只用聽的';
+            const en = document.getElementById('order-en');
+            en.classList.toggle('hidden-text', hideText);
+            document.getElementById('order-zh').textContent =
+                (hideText || !shift || !shift.order) ? '' : shift.order.zh;
+            if (hideText) speakOrder();
+        }
+
+        function serve() {
+            if (!shift || shift.done || !shift.order) return;
+            const want = shift.order.want;
+            const keys = new Set([...Object.keys(want), ...Object.keys(tray)]);
+            let ok = true;
+            for (const k of keys) if ((want[k] || 0) !== (tray[k] || 0)) { ok = false; break; }
+            if (!ok && !Object.keys(tray).length) {
+                document.getElementById('message').textContent = '托盤還是空的喔！';
+                return;
+            }
+            shift.done = true;
+
+            const secs = (Date.now() - shift.start) / 1000;
+            const c = document.getElementById('customer');
+            const msg = document.getElementById('message');
+            // 訂單裡的每個字都記一次，聽懂整句才算會
+            shift.order.picks.forEach(p => {
+                if (typeof recordAttempt === 'function') recordAttempt(p.item.en, ok, ok ? 0 : 1);
+            });
+
+            if (ok) {
+                const speedBonus = secs <= 15 ? 3 : (secs <= 25 ? 1 : 0);
+                const tip = 4 + shop.level + speedBonus;
+                shift.tips += tip;
+                shift.perfect++;
+                shop.served++;
+                c.className = 'happy'; c.textContent = '😻';
+                playTone(760, 'sine', 0.11);
+                setTimeout(() => playTone(1040, 'sine', 0.14), 95);
+                msg.innerHTML = `太完美了！小費 +${tip} 💰` + (speedBonus ? ' <span style="color:#e65100">（手腳好快！）</span>' : '');
+                speak('Thank you! Delicious!', 0.9);
+            } else {
+                c.className = 'sad'; c.textContent = '🙀';
+                playTone(200, 'sawtooth', 0.2);
+                const rightList = shift.order.picks
+                    .map(p => `${p.n}×${p.item.emoji}${p.item.en}`).join('、');
+                msg.textContent = `客人要的是 ${rightList}`;
+                speak(shift.order.en, 0.72);
+            }
+            document.getElementById('patience').style.transition = 'none';
+            updateStats();
+            setTimeout(nextCustomer, ok ? 1500 : 2600);
+        }
+
+        function updateStats() {
+            document.getElementById('s-level').textContent = shop.level;
+            document.getElementById('s-served').textContent = shift ? shift.n : 0;
+            document.getElementById('s-tips').textContent = shift ? shift.tips : 0;
+        }
+
+        function endShift() {
+            const perfect = shift.perfect;
+            let bonus = 0;
+            if (perfect === SHIFT) bonus = 10;
+            else if (perfect >= 3) bonus = 4;
+            const total = shift.tips + bonus;
+
+            // 升級：每服務滿 5 位滿意的客人升一級，同時解鎖新菜色
+            const before = shop.level;
+            shop.level = Math.min(8, 1 + Math.floor(shop.served / 5));
+            const newItems = MENU.filter(m => m.lv > before && m.lv <= shop.level);
+            saveShop();
+
+            document.getElementById('v-emoji').textContent = perfect === SHIFT ? '🏆' : (perfect >= 3 ? '🎉' : '🍽️');
+            document.getElementById('v-title').textContent =
+                perfect === SHIFT ? '五星好評！全部都對！' : (perfect >= 3 ? '生意不錯！' : '今天先這樣，明天更好！');
+            document.getElementById('v-body').innerHTML =
+                `滿意的客人 <b>${perfect}</b>/${SHIFT}` +
+                (shop.level > before ? `<br>🎊 餐廳升到 <b>Lv.${shop.level}</b>！` : '') +
+                (bonus ? `<br>好評獎金 +${bonus} 💰` : '');
+            document.getElementById('v-menu').textContent =
+                newItems.length ? '新菜色：' + newItems.map(m => m.emoji + m.en).join('　') : '';
+            document.getElementById('v-coins').textContent = `今日小費 💰 ${total}`;
+
+            const hint = document.getElementById('v-hint');
+            hint.textContent = '';
+            if (total > 0) {
+                awardCoins(total, (ok) => {
+                    hint.textContent = ok ? '小費已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後小費才能入帳喔）';
+                });
+            }
+
+            renderShelf(newItems.map(m => m.en));
+            updateStats();
+            document.getElementById('veil-shift').classList.add('show');
+            if (perfect === SHIFT && typeof confetti !== 'undefined')
+                confetti({ particleCount: 130, spread: 100, origin: { y: 0.6 } });
+
+            shift = null;
+            document.getElementById('btn-start').style.display = '';
+        }
+
+        function closeVeil() {
+            document.getElementById('veil-shift').classList.remove('show');
+            document.getElementById('message').textContent = '準備好就再開店吧！';
+        }
+
+        loadShop();
+        renderShelf();
+        renderTray();
+        updateStats();
+    </script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
