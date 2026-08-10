@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>⚔️ 弱字怪獸戰</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(180deg, #2b1a4e 0%, #4a2c7a 55%, #7a4fa8 100%);
+            margin: 0; padding: 12px 10px 40px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; user-select: none; -webkit-user-select: none;
+        }
+        h2 { color: #ffd54f; margin: 4px 0 8px; font-size: 1.3rem; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+
+        .stats {
+            display: flex; justify-content: center; align-items: center; gap: 16px;
+            width: 100%; max-width: 480px; margin-bottom: 8px;
+            font-weight: bold; color: #fff; font-size: 1rem;
+        }
+        #s-hearts { letter-spacing: 2px; }
+
+        /* 戰鬥舞台 */
+        #stage {
+            position: relative; width: 100%; max-width: 480px; height: 240px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.18) 100%);
+            border-radius: 20px; margin-bottom: 10px; overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.25);
+        }
+        #stage .ground {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
+            background: linear-gradient(180deg, #3d2b12 0%, #241806 100%);
+        }
+        /* 怪獸 */
+        #monster-wrap {
+            position: absolute; top: 12px; right: 18px; width: 55%;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        #m-sign {
+            background: #fffbe8; border: 2px solid #b58a3c; border-radius: 12px;
+            padding: 4px 12px; font-weight: bold; color: #5d4000;
+            font-size: 1.15rem; text-align: center; max-width: 100%;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3); min-height: 34px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        #m-sign .zy { font-size: 0.62rem; color: #a8853e; }
+        #m-emoji { font-size: 4.2rem; line-height: 1.1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); transition: transform 0.15s; }
+        #m-emoji.boss { font-size: 5.4rem; }
+        #m-emoji.hurt { animation: hurt 0.45s ease; }
+        @keyframes hurt {
+            0%,100% { transform: translateX(0) rotate(0); filter: none; }
+            25% { transform: translateX(-10px) rotate(-8deg); filter: brightness(2) drop-shadow(0 0 8px #fff); }
+            60% { transform: translateX(8px) rotate(6deg); }
+        }
+        #m-emoji.die { animation: die 0.7s ease forwards; }
+        @keyframes die {
+            30% { transform: scale(1.15) rotate(10deg); filter: brightness(2.2); }
+            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+        #m-hp { display: flex; gap: 4px; }
+        #m-hp span { font-size: 1rem; }
+        /* 倉鼠勇者 */
+        #hero {
+            position: absolute; bottom: 18px; left: 24px; font-size: 3rem;
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.4)); transition: transform 0.2s;
+        }
+        #hero.attack { animation: lunge 0.5s ease; }
+        @keyframes lunge {
+            0%,100% { transform: translateX(0); }
+            40% { transform: translateX(120px) translateY(-24px) rotate(14deg); }
+        }
+        #hero.hurt { animation: heroHurt 0.5s ease; }
+        @keyframes heroHurt {
+            0%,100% { transform: translateX(0); filter: none; }
+            30% { transform: translateX(-14px); filter: brightness(2) sepia(1) hue-rotate(-50deg); }
+        }
+        .floaty {
+            position: absolute; font-size: 1.5rem; font-weight: bold; z-index: 5;
+            animation: floatUp 0.8s ease forwards; pointer-events: none;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.7); }
+            100% { opacity: 0; transform: translateY(-46px) scale(1.3); }
+        }
+
+        /* 題目與選項 */
+        #q-label {
+            color: #ffe082; font-weight: bold; margin-bottom: 8px; font-size: 1.02rem;
+            text-align: center; min-height: 24px; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        #choices {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            width: 100%; max-width: 480px;
+        }
+        .choice {
+            padding: 14px 8px; border-radius: 14px; border: none; cursor: pointer;
+            font-family: inherit; font-size: 1.05rem; font-weight: bold;
+            background: #fff; color: #4a2c7a;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.25); transition: transform 0.1s;
+            line-height: 1.2; word-break: break-word;
+        }
+        .choice:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+        .choice.good { background: #43a047; color: #fff; }
+        .choice.bad  { background: #e53935; color: #fff; animation: wob 0.4s ease; }
+        .choice:disabled { opacity: 0.85; }
+        @keyframes wob { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .choice .zy { display: block; font-size: 0.6rem; font-weight: normal; color: inherit; opacity: 0.75; }
+
+        #message { min-height: 24px; margin-top: 10px; font-weight: bold; color: #ffe082; text-align: center; }
+
+        .btn {
+            padding: 12px 22px; border-radius: 14px; border: none; color: white;
+            font-weight: bold; cursor: pointer; font-size: 1.05rem; font-family: inherit;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3); margin: 6px 4px 0;
+        }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+        .btn-start { background: #ff7043; font-size: 1.2rem; padding: 14px 28px; border-radius: 16px; }
+        .btn-again { background: #7e57c2; }
+        .btn-close { background: #adb5bd; }
+
+        /* 開場說明 */
+        #intro {
+            background: rgba(255,255,255,0.95); border-radius: 20px; padding: 20px;
+            width: 100%; max-width: 480px; text-align: center; color: #4a2c7a;
+            margin-top: 6px;
+        }
+        #intro .big { font-size: 2.6rem; }
+        #intro p { margin: 8px 0; line-height: 1.5; font-size: 0.95rem; }
+
+        /* 結算 */
+        #overlay {
+            position: fixed; inset: 0; background: rgba(20, 8, 40, 0.65);
+            display: none; align-items: center; justify-content: center; z-index: 50;
+        }
+        #overlay.show { display: flex; }
+        .result {
+            background: white; border-radius: 24px; padding: 26px 30px;
+            text-align: center; width: 85%; max-width: 340px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            animation: pop 0.4s ease;
+        }
+        @keyframes pop { 0% { transform: scale(0.7); } 100% { transform: scale(1); } }
+        .result .big { font-size: 3rem; }
+        .result h3 { color: #4a2c7a; margin: 6px 0; }
+        .result .coin-line { font-size: 1.2rem; font-weight: bold; color: #b8860b; margin: 8px 0; }
+        .result .hint { font-size: 0.8rem; color: #999; min-height: 18px; }
+        .result .review { font-size: 0.85rem; color: #666; margin: 6px 0; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+    <h2>⚔️ 弱字怪獸戰</h2>
+    <div class="stats">
+        <span id="s-hearts">❤️❤️❤️</span>
+        <span>第 <b id="s-num">-</b>/<b id="s-total">-</b> 隻</span>
+        <span>💰 <b id="s-coins">0</b></span>
+    </div>
+
+    <div id="stage" style="display:none;">
+        <div class="ground"></div>
+        <div id="hero">🐹</div>
+        <div id="monster-wrap">
+            <div id="m-sign"></div>
+            <div id="m-emoji">👾</div>
+            <div id="m-hp"></div>
+        </div>
+    </div>
+
+    <div id="q-label" style="display:none;"></div>
+    <div id="choices"></div>
+    <div id="message"></div>
+
+    <div id="intro">
+        <div class="big">🐹⚔️👾</div>
+        <p><b>單字怪獸</b>抓走了倉鼠的點心！</p>
+        <p>牠們都是你<b>還不太熟的字</b>變成的。<br>答對題目就能攻擊，答錯會被反擊！<br>每隻怪獸要打中 2 下，魔王要 3 下！</p>
+        <p id="intro-info" style="color:#7e57c2;"></p>
+        <button class="btn btn-start" onclick="startBattle()">出發打怪 ⚔️</button>
+    </div>
+
+    <div id="overlay">
+        <div class="result">
+            <div class="big" id="r-emoji">🏆</div>
+            <h3 id="r-title"></h3>
+            <div class="review" id="r-review"></div>
+            <div class="coin-line" id="r-coins"></div>
+            <div class="hint" id="r-hint"></div>
+            <button class="btn btn-again" onclick="hideOverlay(); startBattle()">再戰一場 ⚔️</button>
+            <button class="btn btn-close" onclick="backToIntro()">休息一下</button>
+        </div>
+    </div>
+
+    <script src="./words.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script src="./lookups.js"></script>
+    <script src="./wordlists.js"></script>
+    <script src="./mastery.js"></script>
+    <script src="./rewards.js"></script>
+    <script>
+        const MONSTERS = ['👾', '🧟', '🦖', '👹'];
+        const BOSS = '🐲';
+        const TOTAL = 5;
+
+        let battle = null;   // { queue, idx, hearts, coins, defeated, missed }
+        let busy = false;
+
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start();
+                g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                o.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+        function speak(word) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US'; u.rate = 0.8; u.pitch = 1.2;
+            window.speechSynthesis.speak(u);
+        }
+
+        function meaningOf(word) {
+            if (typeof lookupWord === 'function') {
+                const e = lookupWord(word);
+                if (e && e.s && e.s[0] && e.s[0].zh)
+                    return { zh: e.s[0].zh, zy: (e.s[0].z || []).filter(Boolean).join(' ') };
+            }
+            if (typeof wordlistMeaningText === 'function') {
+                const t = wordlistMeaningText(word);
+                if (t) return { zh: String(t).split('/')[0].replace(/\s*\(.*?\)/g, '').trim(), zy: '' };
+            }
+            return null;
+        }
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // 本學期所有的字（發問時拿來當干擾選項，也拿來補怪獸數量）
+        function currentTermPool() {
+            const pool = [];
+            for (const weeks of Object.values(words))
+                for (const list of Object.values(weeks))
+                    for (const w of list)
+                        if (typeof isCurrentTerm !== 'function' || isCurrentTerm(w)) pool.push(w);
+            return [...new Set(pool.map(w => String(w)))].filter(w => meaningOf(w));
+        }
+
+        // 怪獸名單：弱字優先，不足就抽本學期的字補滿
+        function buildQueue() {
+            const pool = currentTermPool();
+            let weak = [];
+            if (typeof getWeakWords === 'function')
+                weak = getWeakWords(TOTAL, pool).map(x => x.word)
+                    .map(w => pool.find(p => p.toLowerCase() === w) || w)
+                    .filter(w => meaningOf(w));
+            const rest = shuffle(pool.filter(w => !weak.some(x => x.toLowerCase() === w.toLowerCase())));
+            const queue = [...weak, ...rest].slice(0, TOTAL);
+            return { queue, weakCount: Math.min(weak.length, TOTAL), pool };
+        }
+
+        function setupIntro() {
+            const { weakCount } = buildQueue();
+            document.getElementById('intro-info').textContent =
+                weakCount > 0
+                    ? `偵察兵回報：有 ${weakCount} 隻怪獸是你最近常錯或很久沒練的字變的！`
+                    : '你最近都沒有錯字，怪獸只好隨機變身，太強啦！';
+        }
+
+        function startBattle() {
+            const { queue, pool } = buildQueue();
+            if (queue.length < 2) {
+                document.getElementById('intro-info').textContent = '單字資料還不夠，先去玩別的遊戲累積一下吧！';
+                return;
+            }
+            battle = { queue, pool, idx: 0, hearts: 3, coins: 0, defeated: [], missed: [] };
+            busy = false;
+            document.getElementById('intro').style.display = 'none';
+            document.getElementById('stage').style.display = '';
+            document.getElementById('q-label').style.display = '';
+            document.getElementById('s-total').textContent = queue.length;
+            document.getElementById('hero').textContent = '🐹';
+            updateStats();
+            nextMonster();
+        }
+
+        function isBossIdx(i) { return i === battle.queue.length - 1; }
+
+        function nextMonster() {
+            const i = battle.idx;
+            if (i >= battle.queue.length) { finish(true); return; }
+            const word = battle.queue[i];
+            const boss = isBossIdx(i);
+            const hp = boss ? 3 : 2;
+            battle.mon = { word, m: meaningOf(word), hp, maxHp: hp, boss, wrong: 0 };
+
+            const em = document.getElementById('m-emoji');
+            em.className = boss ? 'boss' : '';
+            em.textContent = boss ? BOSS : MONSTERS[i % MONSTERS.length];
+            em.style.opacity = 1;
+            document.getElementById('s-num').textContent = i + 1;
+            document.getElementById('message').textContent = boss ? '⚠️ 魔王出現了！' : '';
+            askQuestion();
+        }
+
+        // 同一隻怪獸每一滴血問不同題型：看英選中 → 聽音選英 →（魔王）看中選英
+        function askQuestion() {
+            const mon = battle.mon;
+            const stagePos = mon.maxHp - mon.hp;   // 0,1,2
+            const type = ['en2zh', 'listen', 'zh2en'][stagePos] || 'en2zh';
+            mon.qtype = type;
+            renderHp();
+
+            const sign = document.getElementById('m-sign');
+            const qLabel = document.getElementById('q-label');
+            const others = shuffle(battle.pool.filter(w => w.toLowerCase() !== mon.word.toLowerCase())).slice(0, 3);
+            let choices;
+
+            if (type === 'en2zh') {
+                sign.innerHTML = mon.word;
+                qLabel.textContent = `「${mon.word}」是什麼意思？答對就攻擊！`;
+                speak(mon.word);
+                choices = shuffle([mon.word, ...others]).map(w => {
+                    const m = meaningOf(w);
+                    return { key: w, html: m.zh + (m.zy ? `<span class="zy">${m.zy}</span>` : '') };
+                });
+            } else if (type === 'listen') {
+                sign.innerHTML = '❓ <button class="btn-hear" style="border:none;background:#f9a825;color:#fff;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;" onclick="speak(battle.mon.word)">🔊</button>';
+                qLabel.textContent = '仔細聽！怪獸唸的是哪個字？';
+                speak(mon.word);
+                choices = shuffle([mon.word, ...others]).map(w => ({ key: w, html: w }));
+            } else {
+                sign.innerHTML = mon.m.zh;
+                qLabel.textContent = `「${mon.m.zh}」的英文是哪一個？最後一擊！`;
+                choices = shuffle([mon.word, ...others]).map(w => ({ key: w, html: w }));
+            }
+
+            document.getElementById('choices').innerHTML = choices.map(c =>
+                `<button class="choice" data-key="${c.key.replace(/"/g, '&quot;')}">${c.html}</button>`).join('');
+            document.getElementById('choices').querySelectorAll('.choice').forEach(btn => {
+                btn.onclick = () => answer(btn);
+            });
+            busy = false;
+        }
+
+        function answer(btn) {
+            if (busy || !battle || !battle.mon) return;
+            busy = true;
+            const mon = battle.mon;
+            const pick = btn.dataset.key;
+            const correct = pick.toLowerCase() === mon.word.toLowerCase();
+            document.getElementById('choices').querySelectorAll('.choice').forEach(b => b.disabled = true);
+
+            if (correct) {
+                btn.classList.add('good');
+                playTone(700, 'sine', 0.12);
+                setTimeout(() => playTone(1050, 'sine', 0.15), 110);
+                heroAttack();
+            } else {
+                btn.classList.add('bad');
+                // 把正確的亮出來讓她看見
+                document.getElementById('choices').querySelectorAll('.choice').forEach(b => {
+                    if (b.dataset.key.toLowerCase() === mon.word.toLowerCase()) b.classList.add('good');
+                });
+                playTone(200, 'sawtooth', 0.2);
+                mon.wrong++;
+                monsterAttack();
+            }
+        }
+
+        function heroAttack() {
+            const mon = battle.mon;
+            const hero = document.getElementById('hero');
+            hero.classList.remove('attack'); void hero.offsetWidth;
+            hero.classList.add('attack');
+
+            setTimeout(() => {
+                const em = document.getElementById('m-emoji');
+                em.classList.remove('hurt'); void em.offsetWidth;
+                mon.hp--;
+                renderHp();
+                floaty('💥', '-1');
+                if (mon.hp <= 0) {
+                    em.classList.add('die');
+                    // 這個字整隻怪獸打完才記一次：全程沒答錯才算乾淨過關
+                    if (typeof recordAttempt === 'function')
+                        recordAttempt(mon.word, true, mon.wrong);
+                    const gain = mon.boss ? 6 : 3;
+                    battle.coins += gain;
+                    battle.defeated.push(mon.word);
+                    updateStats();
+                    document.getElementById('message').textContent =
+                        (mon.boss ? '🏆 魔王被打倒了！' : '怪獸被打倒了！') + ` +${gain} 💰`;
+                    speak(mon.word);
+                    setTimeout(() => {
+                        battle.idx++;
+                        document.getElementById('m-sign').innerHTML = '';
+                        document.getElementById('choices').innerHTML = '';
+                        nextMonster();
+                    }, 1200);
+                } else {
+                    em.classList.add('hurt');
+                    document.getElementById('message').textContent = '打中了！再來一擊！';
+                    setTimeout(askQuestion, 800);
+                }
+            }, 260);
+        }
+
+        function monsterAttack() {
+            const mon = battle.mon;
+            const em = document.getElementById('m-emoji');
+            em.classList.remove('hurt'); void em.offsetWidth;
+            const hero = document.getElementById('hero');
+
+            setTimeout(() => {
+                hero.classList.remove('hurt'); void hero.offsetWidth;
+                hero.classList.add('hurt');
+                battle.hearts--;
+                if (!battle.missed.includes(mon.word)) battle.missed.push(mon.word);
+                updateStats();
+                floaty('⚡', '');
+                document.getElementById('message').textContent = `哎呀被反擊了！正確答案是「${mon.qtype === 'en2zh' ? mon.m.zh : mon.word}」`;
+                speak(mon.word);
+
+                if (battle.hearts <= 0) {
+                    if (typeof recordAttempt === 'function')
+                        recordAttempt(mon.word, false, mon.wrong);
+                    setTimeout(() => finish(false), 1100);
+                } else {
+                    // 同一題型再問一次（選項重洗），直到答對才扣怪獸血
+                    setTimeout(askQuestion, 1400);
+                }
+            }, 200);
+        }
+
+        function floaty(emoji, text) {
+            const stage = document.getElementById('stage');
+            const p = document.createElement('div');
+            p.className = 'floaty';
+            p.textContent = emoji + text;
+            p.style.right = '30%'; p.style.top = '40%';
+            stage.appendChild(p);
+            setTimeout(() => p.remove(), 850);
+        }
+
+        function renderHp() {
+            const mon = battle.mon;
+            document.getElementById('m-hp').innerHTML =
+                Array.from({ length: mon.maxHp }, (_, i) =>
+                    `<span>${i < mon.hp ? '🟥' : '⬛'}</span>`).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('s-hearts').textContent =
+                '❤️'.repeat(Math.max(0, battle.hearts)) + '🖤'.repeat(3 - Math.max(0, battle.hearts));
+            document.getElementById('s-coins').textContent = battle.coins;
+        }
+
+        function finish(win) {
+            if (win && battle.hearts === 3) battle.coins += 5;   // 無傷通關
+            document.getElementById('r-emoji').textContent = win ? (battle.hearts === 3 ? '👑' : '🏆') : '💤';
+            document.getElementById('r-title').textContent = win
+                ? (battle.hearts === 3 ? '無傷通關！太傳奇了！' : '打倒了所有怪獸！')
+                : '倉鼠勇者需要休息一下…';
+            const rv = document.getElementById('r-review');
+            rv.innerHTML = battle.missed.length
+                ? '這些字怪獸最強，再練練：<br><b>' + battle.missed.join('、') + '</b>'
+                : (win ? '每一題都答對，這些字都難不倒你！' : '');
+            document.getElementById('r-coins').textContent = `獲得 💰 ${battle.coins} 金幣`;
+
+            const hint = document.getElementById('r-hint');
+            hint.textContent = '';
+            if (battle.coins > 0) {
+                awardCoins(battle.coins, (ok) => {
+                    hint.textContent = ok ? '金幣已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後金幣才能入帳喔）';
+                });
+            }
+            document.getElementById('overlay').classList.add('show');
+            if (win && typeof confetti !== 'undefined') {
+                confetti({ particleCount: 130, spread: 100, origin: { y: 0.6 } });
+            }
+        }
+
+        function hideOverlay() {
+            document.getElementById('overlay').classList.remove('show');
+        }
+        function backToIntro() {
+            hideOverlay();
+            document.getElementById('stage').style.display = 'none';
+            document.getElementById('q-label').style.display = 'none';
+            document.getElementById('choices').innerHTML = '';
+            document.getElementById('message').textContent = '';
+            document.getElementById('intro').style.display = '';
+            setupIntro();
+        }
+
+        setupIntro();
+    </script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
