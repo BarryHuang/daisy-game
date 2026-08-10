@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🎴 翻翻樂 - Memory Match</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(160deg, #e8f5ff 0%, #f3e8ff 55%, #ffe8f3 100%);
+            margin: 0; padding: 12px 10px 40px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+        h2 { color: #6f42c1; margin: 4px 0 10px; font-size: 1.35rem; text-shadow: 1px 1px 0 #fff; }
+
+        .box {
+            background: white; padding: 10px 12px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            text-align: center; width: 100%; max-width: 520px; margin-bottom: 10px;
+        }
+        select {
+            padding: 8px; border-radius: 8px; border: 2px solid #9b6fe8;
+            outline: none; font-size: 0.95rem; margin: 3px; max-width: 100%;
+            font-family: inherit; background: #faf6ff; color: #333;
+        }
+
+        /* 狀態列 */
+        .stats {
+            display: flex; justify-content: center; gap: 18px;
+            width: 100%; max-width: 520px; margin-bottom: 10px;
+            font-weight: bold; color: #555; font-size: 0.95rem;
+        }
+        .stats span b { color: #6f42c1; }
+
+        /* 牌桌 */
+        #board {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 8px; width: 100%; max-width: 520px;
+            perspective: 900px;
+        }
+        .card {
+            aspect-ratio: 3 / 4; cursor: pointer; position: relative;
+            transform-style: preserve-3d; transition: transform 0.45s;
+        }
+        .card.flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; inset: 0; border-radius: 12px;
+            backface-visibility: hidden; -webkit-backface-visibility: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            padding: 4px; overflow: hidden;
+        }
+        /* 牌背：英文牌藍色、中文牌橘色，幫助她鎖定「一藍配一橘」 */
+        .cover { font-size: 1.5rem; font-weight: bold; color: rgba(255,255,255,0.95); }
+        .cover-en { background: linear-gradient(135deg, #5b8def 0%, #3b5fc9 100%); }
+        .cover-zh { background: linear-gradient(135deg, #ffa751 0%, #f76b1c 100%); }
+        .cover small { font-size: 0.65rem; opacity: 0.8; margin-top: 2px; }
+
+        /* 牌面 */
+        .face { background: white; transform: rotateY(180deg); border: 3px solid #ddd; }
+        .face-en { border-color: #5b8def; }
+        .face-zh { border-color: #ffa751; }
+        .face .en-word {
+            font-weight: bold; color: #2b4aa0; font-size: 1.05rem;
+            text-align: center; word-break: break-word; line-height: 1.15;
+        }
+        .face .en-word.long { font-size: 0.82rem; }
+        .face .zh-word {
+            font-weight: bold; color: #c05600; font-size: 1.1rem;
+            text-align: center; line-height: 1.2;
+        }
+        .face .zh-word.long { font-size: 0.85rem; }
+        .face .zhuyin { font-size: 0.6rem; color: #b98a5e; margin-top: 3px; text-align: center; }
+        .face .spk { font-size: 0.85rem; margin-top: 3px; }
+
+        .card.matched { pointer-events: none; }
+        .card.matched .face {
+            border-color: #34c759; background: #f0fff4;
+            animation: pop 0.4s ease;
+        }
+        .card.matched::after {
+            content: "✓"; position: absolute; top: 2px; right: 6px;
+            color: #34c759; font-weight: bold; transform: rotateY(180deg);
+            font-size: 0.9rem; z-index: 2;
+        }
+        @keyframes pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+        .card.shake { animation: shake 0.4s ease; }
+        @keyframes shake {
+            0%,100% { transform: rotateY(180deg) translateX(0); }
+            25% { transform: rotateY(180deg) translateX(-5px); }
+            75% { transform: rotateY(180deg) translateX(5px); }
+        }
+
+        #message { min-height: 26px; margin-top: 10px; font-weight: bold; color: #6f42c1; text-align: center; }
+
+        /* 結算畫面 */
+        #overlay {
+            position: fixed; inset: 0; background: rgba(60, 30, 100, 0.55);
+            display: none; align-items: center; justify-content: center; z-index: 50;
+        }
+        #overlay.show { display: flex; }
+        .result {
+            background: white; border-radius: 24px; padding: 26px 30px;
+            text-align: center; width: 85%; max-width: 340px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: pop 0.4s ease;
+        }
+        .result .big { font-size: 3rem; }
+        .result .stars { font-size: 2rem; letter-spacing: 6px; margin: 6px 0; }
+        .result h3 { color: #6f42c1; margin: 6px 0; }
+        .result .coin-line { font-size: 1.2rem; font-weight: bold; color: #b8860b; margin: 8px 0; }
+        .result .hint { font-size: 0.8rem; color: #999; min-height: 18px; }
+        .btn {
+            padding: 12px 20px; border-radius: 12px; border: none; color: white;
+            font-weight: bold; cursor: pointer; font-size: 1rem; font-family: inherit;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); margin: 6px 4px 0;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-again { background: #6f42c1; }
+        .btn-close { background: #adb5bd; }
+    </style>
+</head>
+<body>
+
+    <h2>🎴 翻翻樂 Memory Match</h2>
+    <div class="box">
+        <select id="cat" onchange="setupWeek()"></select>
+        <select id="week" onchange="deal()"></select>
+    </div>
+    <div class="stats">
+        <span>配對 <b id="s-pairs">0</b>/<b id="s-total">0</b></span>
+        <span>翻牌 <b id="s-moves">0</b> 次</span>
+        <span>💰 <b id="s-coins">0</b></span>
+    </div>
+    <div id="board"></div>
+    <div id="message">藍色是英文、橘色是中文，找出一對好朋友！</div>
+
+    <div id="overlay">
+        <div class="result">
+            <div class="big">🎉</div>
+            <div class="stars" id="r-stars"></div>
+            <h3 id="r-title">全部配對成功！</h3>
+            <div class="coin-line" id="r-coins"></div>
+            <div class="hint" id="r-hint"></div>
+            <button class="btn btn-again" onclick="hideOverlay(); deal()">再玩一次 🔄</button>
+            <button class="btn btn-close" onclick="hideOverlay()">關閉</button>
+        </div>
+    </div>
+
+    <script src="./words.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script src="./lookups.js"></script>
+    <script src="./wordlists.js"></script>
+    <script src="./mastery.js"></script>
+    <script src="./rewards.js"></script>
+    <script>
+        const catS = document.getElementById('cat'), wkS = document.getElementById('week');
+        const board = document.getElementById('board');
+        let first = null, lock = false, moves = 0, matchedPairs = 0, totalPairs = 0;
+        let wrongTries = 0, miss = {}, coinsEarned = 0, dealToken = 0;
+
+        // 音效
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start();
+                g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                o.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function speak(word) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US'; u.rate = 0.8; u.pitch = 1.2;
+            window.speechSynthesis.speak(u);
+        }
+
+        // 取一個字的中文（優先字典；她自建清單裡查不到的字退回清單存的意思）
+        function meaningOf(word) {
+            if (typeof lookupWord === 'function') {
+                const e = lookupWord(word);
+                if (e && e.s && e.s[0] && e.s[0].zh)
+                    return { zh: e.s[0].zh, zy: (e.s[0].z || []).filter(Boolean).join(' ') };
+            }
+            if (typeof wordlistMeaningText === 'function') {
+                const t = wordlistMeaningText(word);
+                if (t) return { zh: String(t).split('/')[0].replace(/\s*\(.*?\)/g, '').trim(), zy: '' };
+            }
+            return null;
+        }
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function setupConfig() {
+            catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            setupWeek();
+        }
+        function setupWeek() {
+            wkS.innerHTML = Object.keys(words[catS.value] || {}).map(w => `<option>${w}</option>`).join('');
+            deal();
+        }
+
+        function deal() {
+            const token = ++dealToken;   // 讓還沒跑完的蓋牌 timer 認得出局已換
+            const list = shuffle((words[catS.value]?.[wkS.value] || []).slice());
+            const pairs = [];
+            for (const w of list) {
+                const m = meaningOf(w);
+                if (m) pairs.push({ w, m });
+                if (pairs.length >= 10) break;
+            }
+
+            first = null; lock = false; moves = 0; matchedPairs = 0;
+            wrongTries = 0; miss = {}; coinsEarned = 0;
+            totalPairs = pairs.length;
+            updateStats();
+
+            if (pairs.length < 2) {
+                board.innerHTML = '';
+                document.getElementById('message').textContent = '這組單字還沒有中文資料，換一組玩玩看！';
+                return;
+            }
+            document.getElementById('message').textContent = '藍色是英文、橘色是中文，找出一對好朋友！';
+
+            const cards = [];
+            pairs.forEach(p => {
+                cards.push({ word: p.w, type: 'en' });
+                cards.push({ word: p.w, type: 'zh', zh: p.m.zh, zy: p.m.zy });
+            });
+            shuffle(cards);
+
+            board.innerHTML = cards.map((c, i) => {
+                const cover = c.type === 'en'
+                    ? `<div class="card-face cover cover-en">Aa<small>English</small></div>`
+                    : `<div class="card-face cover cover-zh">中<small>中文</small></div>`;
+                let face;
+                if (c.type === 'en') {
+                    const long = c.word.length > 8 ? ' long' : '';
+                    face = `<div class="card-face face face-en">
+                              <div class="en-word${long}">${c.word}</div>
+                              <div class="spk">🔊</div>
+                            </div>`;
+                } else {
+                    const long = c.zh.length > 4 ? ' long' : '';
+                    face = `<div class="card-face face face-zh">
+                              <div class="zh-word${long}">${c.zh}</div>
+                              ${c.zy ? `<div class="zhuyin">${c.zy}</div>` : ''}
+                            </div>`;
+                }
+                return `<div class="card" data-i="${i}">${cover}${face}</div>`;
+            }).join('');
+
+            board.querySelectorAll('.card').forEach((el, i) => {
+                el.onclick = () => onTap(el, cards[i], token);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('s-pairs').textContent = matchedPairs;
+            document.getElementById('s-total').textContent = totalPairs;
+            document.getElementById('s-moves').textContent = moves;
+            document.getElementById('s-coins').textContent = coinsEarned;
+        }
+
+        function onTap(el, data, token) {
+            if (lock || el.classList.contains('flipped')) return;
+            el.classList.add('flipped');
+            if (data.type === 'en') speak(data.word);
+            playTone(440, 'sine', 0.08);
+
+            if (!first) { first = { el, data }; return; }
+
+            moves++;
+            const a = first; first = null;
+            const isMatch = a.data.word === data.word && a.data.type !== data.type;
+
+            if (isMatch) {
+                a.el.classList.add('matched');
+                el.classList.add('matched');
+                matchedPairs++;
+                coinsEarned += 2;
+                playTone(700, 'sine', 0.12);
+                setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+                // 配對前為這個字翻錯過幾次，會影響「乾淨過關」的連對紀錄
+                if (typeof recordAttempt === 'function')
+                    recordAttempt(data.word, true, miss[data.word] || 0);
+                updateStats();
+                if (matchedPairs === totalPairs) setTimeout(finish, 500);
+            } else {
+                wrongTries++;
+                miss[a.data.word] = (miss[a.data.word] || 0) + 1;
+                miss[data.word] = (miss[data.word] || 0) + 1;
+                playTone(220, 'sawtooth', 0.15);
+                a.el.classList.add('shake'); el.classList.add('shake');
+                lock = true;
+                setTimeout(() => {
+                    if (token !== dealToken) return;   // 已經換局就不動新牌
+                    a.el.classList.remove('flipped', 'shake');
+                    el.classList.remove('flipped', 'shake');
+                    lock = false;
+                }, 900);
+                updateStats();
+            }
+        }
+
+        function finish() {
+            let stars, title;
+            if (wrongTries === 0) { stars = '⭐⭐⭐'; title = '零失誤！太神啦！'; coinsEarned += 10; }
+            else if (wrongTries <= totalPairs) { stars = '⭐⭐'; title = '記憶力好棒！'; coinsEarned += 5; }
+            else { stars = '⭐'; title = '全部配對成功！'; }
+
+            document.getElementById('r-stars').textContent = stars;
+            document.getElementById('r-title').textContent = title;
+            document.getElementById('r-coins').textContent = `獲得 💰 ${coinsEarned} 金幣`;
+            updateStats();
+
+            const hint = document.getElementById('r-hint');
+            hint.textContent = '';
+            awardCoins(coinsEarned, (ok) => {
+                hint.textContent = ok ? '金幣已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後金幣才能入帳喔）';
+            });
+
+            document.getElementById('overlay').classList.add('show');
+            if (typeof confetti !== 'undefined') {
+                confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+                setTimeout(() => confetti({ particleCount: 80, spread: 120, origin: { y: 0.4 } }), 400);
+            }
+        }
+
+        function hideOverlay() {
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        setupConfig();
+
+        // 她需要加強的字（各遊戲的作答紀錄）也可以拿來配對
+        if (typeof getWeakWords === 'function') {
+            const weak = getWeakWords(20).map(x => x.word).filter(w => meaningOf(w));
+            if (weak.length >= 4) {
+                const group = { '最需要練的': weak.slice(0, 10) };
+                if (weak.length > 10) group['第二批'] = weak.slice(10, 20);
+                words['🔥 加強複習'] = group;
+                catS.add(new Option('🔥 加強複習', '🔥 加強複習'));
+            }
+        }
+        // 她自建的單字清單、查過的字（資料可能晚點才同步回來，只加選項不重建）
+        if (typeof attachWordlistCategory === 'function') {
+            attachWordlistCategory(words, () => {
+                const name = '⭐ 我的單字卡';
+                if (!Array.from(catS.options).some(o => o.value === name))
+                    catS.add(new Option(name, name));
+            });
+        }
+        if (typeof attachLookupCategory === 'function') {
+            attachLookupCategory(words, () => {
+                const name = '⭐ 我查過的字';
+                if (!Array.from(catS.options).some(o => o.value === name))
+                    catS.add(new Option(name, name));
+            });
+        }
+    </script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

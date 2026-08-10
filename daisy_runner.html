@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🏃 倉鼠跑酷</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { overscroll-behavior: none; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(180deg, #7ec8f0 0%, #b8e6a0 100%);
+            margin: 0; padding: 8px 8px 30px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; user-select: none; -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        h2 { color: #1b5e20; margin: 2px 0 6px; font-size: 1.2rem; text-shadow: 1px 1px 0 rgba(255,255,255,0.6); }
+
+        .stats {
+            display: flex; justify-content: center; gap: 14px; align-items: center;
+            width: 100%; max-width: 460px; margin-bottom: 6px;
+            font-weight: bold; color: #1b5e20; font-size: 0.92rem;
+        }
+
+        /* 提示板 */
+        #prompt {
+            width: 100%; max-width: 460px; background: #fffbe8;
+            border: 3px solid #f9a825; border-radius: 14px;
+            padding: 8px 12px; margin-bottom: 6px; min-height: 58px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+        #p-text { font-size: 1.35rem; font-weight: bold; color: #6d4c00; text-align: center; line-height: 1.15; }
+        #p-zy { font-size: 0.65rem; color: #b08a3e; text-align: center; }
+        .btn-hear {
+            border: none; background: #f9a825; color: white; font-size: 1.2rem;
+            border-radius: 50%; width: 42px; height: 42px; cursor: pointer;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2); flex-shrink: 0;
+        }
+
+        /* 跑道 */
+        #track {
+            position: relative; width: 100%; max-width: 460px; height: 58vh;
+            min-height: 320px; max-height: 480px; overflow: hidden;
+            border-radius: 18px; border: 3px solid #6d4c41;
+            background:
+                repeating-linear-gradient(90deg,
+                    rgba(255,255,255,0.16) 0 2px, transparent 2px 33.33%),
+                linear-gradient(180deg, #9ccc65 0%, #7cb342 60%, #689f38 100%);
+            box-shadow: inset 0 8px 20px rgba(0,0,0,0.15);
+        }
+        /* 往下捲動的地面紋理，製造往前跑的感覺 */
+        #stripes {
+            position: absolute; inset: -60px 0 0 0; z-index: 0;
+            background: repeating-linear-gradient(180deg,
+                rgba(255,255,255,0.14) 0 18px, transparent 18px 60px);
+        }
+        #track.dash { border-color: #ff4081; }
+        #track.dash #stripes {
+            background: repeating-linear-gradient(180deg,
+                rgba(255,0,128,0.18) 0 12px, rgba(255,255,0,0.18) 12px 24px, transparent 24px 52px);
+        }
+
+        .gate {
+            position: absolute; left: 0; right: 0; display: flex; z-index: 1;
+            gap: 4px; padding: 0 4px;
+        }
+        .door {
+            flex: 1; height: 54px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1rem; color: #fff; text-align: center;
+            background: linear-gradient(180deg, #42a5f5 0%, #1565c0 100%);
+            border: 2px solid rgba(255,255,255,0.7);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+            word-break: break-word; line-height: 1.05; padding: 2px;
+        }
+        .door.small { font-size: 0.75rem; }
+        .door.hit-good { background: linear-gradient(180deg, #66bb6a 0%, #2e7d32 100%); }
+        .door.hit-bad  { background: linear-gradient(180deg, #ef5350 0%, #c62828 100%); }
+
+        #hamster {
+            position: absolute; bottom: 14px; z-index: 3; font-size: 2.6rem;
+            width: 33.33%; text-align: center; left: 0;
+            transition: left 0.12s ease-out;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,0.35));
+        }
+        #hamster.run { animation: bob 0.28s infinite; }
+        @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-7px) } }
+        #hamster.crash { animation: spin 0.6s ease; }
+        @keyframes spin {
+            0% { transform: rotate(0) scale(1); }
+            50% { transform: rotate(-25deg) scale(0.85) translateY(6px); }
+            100% { transform: rotate(0) scale(1); }
+        }
+        #hamster.dash { filter: drop-shadow(0 0 12px #ff4081) drop-shadow(0 3px 4px rgba(0,0,0,0.35)); }
+
+        .puff {
+            position: absolute; z-index: 4; font-size: 1.6rem; pointer-events: none;
+            animation: puffUp 0.7s ease forwards;
+        }
+        @keyframes puffUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.7); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.4); }
+        }
+
+        /* 觸控區 */
+        #taps { position: absolute; inset: 0; z-index: 5; display: flex; }
+        #taps div { flex: 1; }
+
+        #message {
+            min-height: 24px; margin-top: 8px; font-weight: bold;
+            color: #1b5e20; text-align: center; font-size: 1rem;
+        }
+
+        .btn {
+            padding: 12px 22px; border-radius: 14px; border: none; color: white;
+            font-weight: bold; cursor: pointer; font-size: 1.05rem; font-family: inherit;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.25); margin: 6px 4px 0;
+        }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+        .btn-start { background: #ff7043; font-size: 1.15rem; padding: 13px 26px; border-radius: 16px; }
+        .btn-again { background: #43a047; }
+        .btn-close { background: #adb5bd; }
+
+        #intro {
+            position: absolute; inset: 0; z-index: 8; background: rgba(255,255,255,0.94);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; color: #33691e; padding: 18px; border-radius: 15px;
+        }
+        #intro .big { font-size: 2.6rem; }
+        #intro p { margin: 6px 0; font-size: 0.92rem; line-height: 1.5; }
+        #intro.hidden { display: none; }
+
+        #overlay {
+            position: fixed; inset: 0; background: rgba(20, 50, 20, 0.6);
+            display: none; align-items: center; justify-content: center; z-index: 50;
+        }
+        #overlay.show { display: flex; }
+        .result {
+            background: white; border-radius: 24px; padding: 24px 28px;
+            text-align: center; width: 85%; max-width: 340px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.35); animation: pop 0.4s ease;
+        }
+        @keyframes pop { 0% { transform: scale(0.7) } 100% { transform: scale(1) } }
+        .result .big { font-size: 3rem; }
+        .result h3 { color: #2e7d32; margin: 6px 0; }
+        .result .line { font-size: 0.95rem; color: #555; margin: 4px 0; }
+        .result .coin-line { font-size: 1.2rem; font-weight: bold; color: #b8860b; margin: 8px 0; }
+        .result .hint { font-size: 0.8rem; color: #999; min-height: 18px; }
+    </style>
+</head>
+<body>
+
+    <h2>🏃 倉鼠跑酷</h2>
+    <div class="stats">
+        <span id="s-lives">❤️❤️❤️</span>
+        <span>🏁 <b id="s-dist">0</b> m</span>
+        <span>🔥 <b id="s-combo">0</b></span>
+        <span>💰 <b id="s-coins">0</b></span>
+    </div>
+
+    <div id="prompt">
+        <div>
+            <div id="p-text">準備好就出發！</div>
+            <div id="p-zy"></div>
+        </div>
+        <button class="btn-hear" id="btn-hear" onclick="speakCurrent()" style="display:none;">🔊</button>
+    </div>
+
+    <div id="track">
+        <div id="stripes"></div>
+        <div id="hamster" class="run">🐹</div>
+        <div id="taps"><div data-lane="0"></div><div data-lane="1"></div><div data-lane="2"></div></div>
+        <div id="intro">
+            <div class="big">🐹💨</div>
+            <p><b>倉鼠往前衝！</b></p>
+            <p>上面會出現一個中文（或發音 🔊），<br>跑道上有三道門寫著英文字。<br><b>點左／中／右</b>把倉鼠移到對的門！</p>
+            <p>連續答對會進入 🌈 <b>彩虹衝刺</b>，跑得更快、金幣加倍！</p>
+            <button class="btn btn-start" onclick="startRun()">開始跑 🏃</button>
+        </div>
+    </div>
+
+    <div id="message">點左／中／右移動倉鼠</div>
+
+    <div id="overlay">
+        <div class="result">
+            <div class="big" id="r-emoji">🏁</div>
+            <h3 id="r-title"></h3>
+            <div class="line" id="r-line"></div>
+            <div class="coin-line" id="r-coins"></div>
+            <div class="hint" id="r-hint"></div>
+            <button class="btn btn-again" onclick="hideOverlay(); startRun()">再跑一次 🔄</button>
+            <button class="btn btn-close" onclick="backToIntro()">休息一下</button>
+        </div>
+    </div>
+
+    <script src="./words.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script src="./lookups.js"></script>
+    <script src="./wordlists.js"></script>
+    <script src="./mastery.js"></script>
+    <script src="./rewards.js"></script>
+    <script>
+        const track = document.getElementById('track');
+        const hamster = document.getElementById('hamster');
+        const LANES = 3;
+
+        let run = null;       // 進行中的狀態
+        let rafId = null;
+        let gateEl = null;
+
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start();
+                g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                o.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+        function speak(word) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US'; u.rate = 0.85; u.pitch = 1.2;
+            window.speechSynthesis.speak(u);
+        }
+        function speakCurrent() { if (run && run.gate) speak(run.gate.word); }
+
+        function meaningOf(word) {
+            if (typeof lookupWord === 'function') {
+                const e = lookupWord(word);
+                if (e && e.s && e.s[0] && e.s[0].zh)
+                    return { zh: e.s[0].zh, zy: (e.s[0].z || []).filter(Boolean).join(' ') };
+            }
+            if (typeof wordlistMeaningText === 'function') {
+                const t = wordlistMeaningText(word);
+                if (t) return { zh: String(t).split('/')[0].replace(/\s*\(.*?\)/g, '').trim(), zy: '' };
+            }
+            return null;
+        }
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // 跑酷不分週次：本學期的字全部混在一起跑，弱字出現機率高一點
+        function buildPool() {
+            const all = [];
+            for (const weeks of Object.values(words))
+                for (const list of Object.values(weeks))
+                    for (const w of list) all.push(String(w));
+            const uniq = [...new Set(all)].filter(w => /^[a-zA-Z][a-zA-Z '-]*$/.test(w) && meaningOf(w));
+            const cur = uniq.filter(w => typeof isCurrentTerm !== 'function' || isCurrentTerm(w));
+            const pool = cur.length >= 8 ? cur : uniq;
+
+            let weak = [];
+            if (typeof getWeakWords === 'function')
+                weak = getWeakWords(12, pool).map(x => pool.find(p => p.toLowerCase() === x.word)).filter(Boolean);
+            return { pool, weak };
+        }
+
+        function laneLeft(i) { return (100 / LANES) * i + '%'; }
+
+        function setLane(i) {
+            if (!run || run.over) return;
+            run.lane = Math.max(0, Math.min(LANES - 1, i));
+            hamster.style.left = laneLeft(run.lane);
+        }
+
+        document.getElementById('taps').querySelectorAll('div').forEach(d => {
+            d.addEventListener('pointerdown', () => setLane(+d.dataset.lane));
+        });
+        window.addEventListener('keydown', (e) => {
+            if (!run || run.over) return;
+            if (e.key === 'ArrowLeft') setLane(run.lane - 1);
+            if (e.key === 'ArrowRight') setLane(run.lane + 1);
+        });
+
+        function startRun() {
+            cancelAnimationFrame(rafId);
+            const { pool, weak } = buildPool();
+            if (pool.length < 4) {
+                document.getElementById('message').textContent = '單字資料還不夠，先去別的遊戲玩玩看！';
+                return;
+            }
+            run = {
+                pool, weak, lane: 1, lives: 3, dist: 0, coins: 0,
+                combo: 0, best: 0, correct: 0, total: 0,
+                speed: 150, dash: 0, over: false, gate: null, last: 0, missed: []
+            };
+            document.getElementById('intro').classList.add('hidden');
+            document.getElementById('btn-hear').style.display = '';
+            document.getElementById('message').textContent = '點左／中／右移動倉鼠';
+            hamster.classList.add('run');
+            setLane(1);
+            updateStats();
+            spawnGate();
+            run.last = performance.now();
+            rafId = requestAnimationFrame(tick);
+        }
+
+        function spawnGate() {
+            if (gateEl) { gateEl.remove(); gateEl = null; }
+            if (!run || run.over) return;
+            run.spawnPending = false;
+
+            // 三成機率抽弱字，讓不熟的字更常出現
+            const useWeak = run.weak.length && Math.random() < 0.35;
+            const word = useWeak
+                ? run.weak[Math.floor(Math.random() * run.weak.length)]
+                : run.pool[Math.floor(Math.random() * run.pool.length)];
+            const m = meaningOf(word);
+            const others = shuffle(run.pool.filter(w => w.toLowerCase() !== word.toLowerCase())).slice(0, LANES - 1);
+            if (others.length < LANES - 1) return;
+            const doors = shuffle([word, ...others]);
+
+            // 每三題出一題聽力題
+            const listen = run.total > 0 && run.total % 3 === 2;
+            run.gate = { word, m, doors, answer: doors.indexOf(word), y: -60, listen, judged: false };
+            run.total++;
+
+            const pText = document.getElementById('p-text');
+            const pZy = document.getElementById('p-zy');
+            if (listen) {
+                pText.textContent = '🔊 聽聽看是哪個字？';
+                pZy.textContent = '';
+                speak(word);
+            } else {
+                pText.textContent = m.zh;
+                pZy.textContent = m.zy || '';
+            }
+
+            const g = document.createElement('div');
+            g.className = 'gate';
+            g.innerHTML = doors.map(w =>
+                `<div class="door${w.length > 8 ? ' small' : ''}">${w}</div>`).join('');
+            g.style.top = '-60px';
+            track.appendChild(g);
+            gateEl = g;
+        }
+
+        function tick(now) {
+            if (!run || run.over) return;
+            let dt = (now - run.last) / 1000;
+            run.last = now;
+            if (dt > 0.1) dt = 0.1;            // 切到別的分頁再回來不要瞬移
+
+            const dashing = run.dash > 0;
+            if (dashing) run.dash -= dt;
+            const speed = run.speed * (dashing ? 1.75 : 1);
+
+            run.dist += speed * dt / 12;        // 換算成好看的「公尺」
+            document.getElementById('s-dist').textContent = Math.floor(run.dist);
+            track.classList.toggle('dash', dashing);
+            hamster.classList.toggle('dash', dashing);
+
+            if (run.gate && gateEl) {
+                run.gate.y += speed * dt;
+                gateEl.style.top = run.gate.y + 'px';
+
+                const hitLine = track.clientHeight - 96;   // 門要整排看得見時才判定
+                if (!run.gate.judged && run.gate.y >= hitLine) {
+                    judge();
+                } else if (run.gate.y > track.clientHeight + 20 && !run.spawnPending) {
+                    // 判定後由 judge() 排下一組；這裡只負責萬一沒被判定到的門
+                    spawnGate();
+                }
+            }
+            rafId = requestAnimationFrame(tick);
+        }
+
+        function judge() {
+            const g = run.gate;
+            g.judged = true;
+            const doors = gateEl.querySelectorAll('.door');
+            const ok = run.lane === g.answer;
+
+            if (ok) {
+                doors[g.answer].classList.add('hit-good');
+                run.correct++;
+                run.combo++;
+                run.best = Math.max(run.best, run.combo);
+                let gain = run.dash > 0 ? 4 : 2;
+                run.coins += gain;
+                run.speed = Math.min(430, run.speed + 12);
+                playTone(760, 'sine', 0.1);
+                setTimeout(() => playTone(1040, 'sine', 0.12), 90);
+                puff('✨', run.lane);
+                if (typeof recordAttempt === 'function') recordAttempt(g.word, true, 0);
+
+                if (run.combo > 0 && run.combo % 3 === 0) {
+                    run.dash = 5;
+                    run.coins += 3;
+                    document.getElementById('message').textContent = `🌈 彩虹衝刺！${run.combo} 連對！`;
+                    puff('🌈', run.lane);
+                } else {
+                    document.getElementById('message').textContent = `${g.word} ✔`;
+                }
+            } else {
+                doors[run.lane].classList.add('hit-bad');
+                doors[g.answer].classList.add('hit-good');
+                run.combo = 0;
+                run.dash = 0;
+                run.lives--;
+                run.speed = Math.max(150, run.speed - 30);
+                if (!run.missed.includes(g.word)) run.missed.push(g.word);
+                playTone(180, 'sawtooth', 0.22);
+                hamster.classList.remove('crash'); void hamster.offsetWidth;
+                hamster.classList.add('crash');
+                puff('💥', run.lane);
+                if (typeof recordAttempt === 'function') recordAttempt(g.word, false, 1);
+                document.getElementById('message').textContent = `是「${g.word}」！`;
+                speak(g.word);
+            }
+            updateStats();
+
+            // 兩處都要標記，否則這道門捲出畫面時 tick 會補生一組新的門
+            run.spawnPending = true;
+            if (run.lives <= 0) { setTimeout(finish, 700); return; }
+            setTimeout(() => { if (run && !run.over) spawnGate(); }, 550);
+        }
+
+        function puff(emoji, lane) {
+            const p = document.createElement('div');
+            p.className = 'puff';
+            p.textContent = emoji;
+            p.style.left = `calc(${laneLeft(lane)} + 12%)`;
+            p.style.bottom = '50px';
+            track.appendChild(p);
+            setTimeout(() => p.remove(), 750);
+        }
+
+        function updateStats() {
+            document.getElementById('s-lives').textContent =
+                '❤️'.repeat(Math.max(0, run.lives)) + '🖤'.repeat(Math.max(0, 3 - run.lives));
+            document.getElementById('s-combo').textContent = run.combo;
+            document.getElementById('s-coins').textContent = run.coins;
+        }
+
+        function finish() {
+            if (!run || run.over) return;
+            run.over = true;
+            cancelAnimationFrame(rafId);
+            if (gateEl) { gateEl.remove(); gateEl = null; }
+            hamster.classList.remove('run', 'dash');
+            track.classList.remove('dash');
+
+            const distBonus = Math.floor(run.dist / 50);
+            run.coins += distBonus;
+
+            document.getElementById('r-emoji').textContent = run.best >= 9 ? '🌈' : (run.best >= 5 ? '🏆' : '🏁');
+            document.getElementById('r-title').textContent =
+                run.best >= 9 ? '彩虹跑者！太厲害了！' : (run.best >= 5 ? '跑得又快又準！' : '跑完囉！');
+            document.getElementById('r-line').innerHTML =
+                `跑了 <b>${Math.floor(run.dist)}</b> 公尺・答對 <b>${run.correct}</b>/${run.total - (run.gate && !run.gate.judged ? 1 : 0)}・最高連對 <b>${run.best}</b>` +
+                (run.missed.length ? `<br>撞到的字：<b>${run.missed.join('、')}</b>` : '');
+            document.getElementById('r-coins').textContent =
+                `獲得 💰 ${run.coins} 金幣` + (distBonus ? `（距離獎勵 +${distBonus}）` : '');
+
+            const hint = document.getElementById('r-hint');
+            hint.textContent = '';
+            if (run.coins > 0) {
+                awardCoins(run.coins, (ok) => {
+                    hint.textContent = ok ? '金幣已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後金幣才能入帳喔）';
+                });
+            }
+            document.getElementById('overlay').classList.add('show');
+            if (run.best >= 5 && typeof confetti !== 'undefined')
+                confetti({ particleCount: 120, spread: 95, origin: { y: 0.6 } });
+        }
+
+        function hideOverlay() { document.getElementById('overlay').classList.remove('show'); }
+        function backToIntro() {
+            hideOverlay();
+            document.getElementById('intro').classList.remove('hidden');
+            document.getElementById('btn-hear').style.display = 'none';
+            document.getElementById('p-text').textContent = '準備好就出發！';
+            document.getElementById('p-zy').textContent = '';
+            document.getElementById('message').textContent = '點左／中／右移動倉鼠';
+        }
+
+        // 切到別的分頁時停住，回來再繼續（不然回來會瞬間撞好幾道門）
+        document.addEventListener('visibilitychange', () => {
+            if (!run || run.over) return;
+            if (document.hidden) cancelAnimationFrame(rafId);
+            else { run.last = performance.now(); rafId = requestAnimationFrame(tick); }
+        });
+    </script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

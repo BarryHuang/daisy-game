@@ -37,6 +37,7 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `lookups.js` | 記錄查過的單字。先寫 localStorage，有登入才同步雲端 |
 | `wordlists.js` | 她自己建的單字卡清單。在字典加字，會出現在 `flashcards.html` 和遊戲選單 |
 | `mastery.js` | 每個字的答對／答錯／連對次數 |
+| `rewards.js` | `awardCoins()`：遊戲把金幣加進倉鼠存檔。用 transaction，因為倉鼠頁可能同時開著並整包寫回 `petData` |
 
 ### 導覽
 主頁是 `daisy_hamster.html`（PWA 的 `start_url` 也指這裡）。
@@ -46,8 +47,22 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 
 ### 頁面
 `daisy_dictionary.html`（查單字）· `story_hub.html`（課文）·
-`daisy_hamster.html`（主遊戲）· `daisy_hangman.html` · `daisy_scramble.html` ·
-`daisy_snake.html` · `parent_dashboard.html` · `words_review.html`（注音校對工具）
+`daisy_hamster.html`（主遊戲）· `parent_dashboard.html` ·
+`words_review.html`（注音校對工具）
+
+遊戲頁（都吃同一組題庫來源：本學期字表 → 她自建的清單 → 查過的字 → 弱字）：
+
+| 頁面 | 練什麼 |
+|---|---|
+| `daisy_hangman.html` 猜單字 | 拼字 |
+| `daisy_scramble.html` 字母重組 | 拼字 |
+| `daisy_snake.html` 彩虹小蟲 | 拼字 |
+| `daisy_hex.html` 圍貓貓 | 純益智，不練單字 |
+| `daisy_memory.html` 翻翻樂 | 英文↔中文配對 |
+| `daisy_whack.html` 打地鼠 | 聽發音／看中文，選對的字 |
+| `daisy_boss.html` 弱字怪獸戰 | 弱字，一個字問三種題型 |
+| `daisy_runner.html` 倉鼠跑酷 | 反射速度下的字義判斷 |
+| `daisy_restaurant.html` 倉鼠餐廳 | 整句聽力＋食物與數量（菜單寫在頁面內，不吃課本字表） |
 
 ---
 
