@@ -19,6 +19,7 @@ const MENU_GROUPS = [
     { href: "georgia_eyes.html",emoji: "🎨", name: "Through Georgia's Eyes" }
   ]},
   { title: "玩遊戲", items: [
+    { href: "daisy_memory.html",   emoji: "🎴", name: "翻翻樂", note: "配對英文和中文" },
     { href: "daisy_hangman.html",  emoji: "🎯", name: "猜單字" },
     { href: "daisy_scramble.html", emoji: "🫧", name: "字母重組" },
     { href: "daisy_snake.html",    emoji: "🐛", name: "彩虹小蟲" },
