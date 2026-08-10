@@ -170,8 +170,6 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 - ⚠️ **Realtime Database 安全規則**（家長要確認）。repo 是公開的，資料庫位址
   等於公開，防線全在規則上。若是 `{".read": true, ".write": true}`，任何人都能
   讀寫甚至清空她的學習紀錄
-- `daisy_hamster.html` 與 `daisy_hamster_beta.html` 有 1,275 行差異，是兩份
-  平行演化的複本
 - `parent_dashboard.html` 用 Firebase 8.10.1，其餘頁面用 10.9.0
 
 ---
