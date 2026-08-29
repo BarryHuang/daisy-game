@@ -233,6 +233,7 @@
     </div>
 
     <script src="./words.js"></script>
+    <script src="./wordset.js"></script>
     <script src="./zhuyin.js"></script>
     <script src="./firebase-config.js"></script>
     <script src="./lookups.js"></script>
@@ -542,10 +543,12 @@
         // ---- 遊戲流程 ----
         function setupConfig() {
             catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            pickRandomCategory(catS);   // 每次進來換一組，不要都停在第一個
             setupWeek();
         }
         function setupWeek() {
             wkS.innerHTML = Object.keys(words[catS.value] || {}).map(w => `<option>${w}</option>`).join('');
+            applyPendingWeek(wkS);
             resetGame();
         }
 
