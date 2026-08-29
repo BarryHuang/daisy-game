@@ -38,6 +38,7 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `wordlists.js` | 她自己建的單字卡清單。在字典加字，會出現在 `flashcards.html` 和遊戲選單 |
 | `mastery.js` | 每個字的答對／答錯／連對次數 |
 | `rewards.js` | `awardCoins()`：遊戲把金幣加進倉鼠存檔。用 transaction，因為倉鼠頁可能同時開著並整包寫回 `petData` |
+| `wordset.js` | 進遊戲時隨機挑一組單字集。`pickRandomCategory()` / `applyPendingWeek()` 各加一行，見下面第 12 條 |
 
 ### 導覽
 主頁是 `daisy_hamster.html`（PWA 的 `start_url` 也指這裡）。
@@ -131,6 +132,30 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 
    鋪幣的密度要按台面面積算（`AREA_PER_COIN`），不能寫死顆數：同樣 70 顆在
    手機上擠爆、在 iPad 上稀到推力傳不過去。
+
+12. **隨機單字集要從「所有 (類別, 週次) 組合」裡抽，不能先抽類別再抽週次。**
+   `words` 的三個類別大小差很多：FET Spelling 12 組、CET Vocabulary 13 組，
+   常用單字只有 2 組（星期、月份）。先抽類別的話，她有三分之一的機會拿到星期
+   或月份。實測 3000 抽：改成攤平抽之後，常用單字佔 7.3%（2/27 = 7.4%），
+   27 組每組 92～130 次。
+
+   接法是 `wordset.js` 的兩個一行呼叫，順序不能顛倒 —— 週次的 `<option>` 在
+   `setupWeek()` 跑完之前並不存在，所以抽到的週次要先記在 `pendingWeek`：
+
+   ```js
+   function setupConfig() {
+       catS.innerHTML = ...;
+       pickRandomCategory(catS);      // 記下類別和週次
+       setupWeek();
+   }
+   function setupWeek() {
+       wkS.innerHTML = ...;
+       applyPendingWeek(wkS);         // 一定要在下面那行開局之前
+       resetGame();
+   }
+   ```
+
+   只在載入時生效一次，之後她自己換類別，週次照舊停在第一組。
 
 ---
 
