@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🕹️ 單字夾娃娃 - Claw Machine</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(160deg, #ffe8f3 0%, #f3e8ff 55%, #e8f5ff 100%);
+            margin: 0; padding: 12px 10px 40px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+        h2 { color: #d6336c; margin: 4px 0 10px; font-size: 1.35rem; text-shadow: 1px 1px 0 #fff; }
+
+        .box {
+            background: white; padding: 10px 12px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            text-align: center; width: 100%; max-width: 520px; margin-bottom: 10px;
+        }
+        select {
+            padding: 8px; border-radius: 8px; border: 2px solid #f06595;
+            outline: none; font-size: 0.95rem; margin: 3px; max-width: 100%;
+            font-family: inherit; background: #fff5f8; color: #333;
+        }
+
+        .stats {
+            display: flex; justify-content: center; gap: 16px;
+            width: 100%; max-width: 520px; margin-bottom: 8px;
+            font-weight: bold; color: #555; font-size: 0.95rem;
+        }
+        .stats span b { color: #d6336c; }
+
+        .ask {
+            width: 100%; max-width: 520px; background: white; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08); padding: 10px 12px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-bottom: 8px; min-height: 62px;
+        }
+        #q-zh { font-size: 1.7rem; font-weight: bold; color: #a61e4d; line-height: 1.25; }
+        #q-zy { font-size: 0.8rem; color: #c98aa8; }
+        .say-zh {
+            border: none; background: #ffd9e6; color: #a61e4d; border-radius: 50%;
+            width: 38px; height: 38px; font-size: 1.1rem; cursor: pointer; flex: none;
+        }
+        .say-zh:active { transform: scale(0.92); }
+
+        /* 機台 */
+        #cabinet {
+            position: relative; width: 100%; max-width: 520px; height: 250px;
+            border: 7px solid #e64980; border-radius: 16px; overflow: hidden;
+            background: linear-gradient(180deg, #dff3ff 0%, #f6e6ff 60%, #ffe7f2 100%);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2), inset 0 0 30px rgba(255,255,255,0.7);
+            touch-action: none;
+        }
+        /* 玻璃反光 */
+        #cabinet::before {
+            content: ""; position: absolute; top: -40px; left: -60px;
+            width: 120px; height: 460px; transform: rotate(18deg);
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 100%);
+            pointer-events: none; z-index: 6;
+        }
+        .rail {
+            position: absolute; top: 10px; left: 0; right: 0; height: 7px;
+            background: linear-gradient(180deg, #9aa4bb, #5d6780);
+            border-radius: 3px; z-index: 2;
+        }
+        #claw {
+            position: absolute; top: 12px; left: 0; z-index: 4;
+            width: 0; display: flex; flex-direction: column; align-items: center;
+            transition: left 0.12s linear;
+        }
+        #claw.glide { transition: left 0.7s ease-in-out; }
+        .rope { width: 3px; height: 12px; background: #7b8494; transition: height 0.75s ease-in-out; }
+        .head { position: relative; width: 54px; height: 34px; }
+        .head .body {
+            position: absolute; left: 50%; top: -6px; transform: translateX(-50%);
+            width: 26px; height: 13px; border-radius: 4px;
+            background: linear-gradient(180deg, #cfd6e6, #8c95ab);
+        }
+        .arm {
+            position: absolute; top: 4px; width: 7px; height: 30px; border-radius: 4px;
+            background: linear-gradient(180deg, #cfd6e6, #7b8494);
+            transition: transform 0.25s ease;
+        }
+        .arm.l { left: 10px; transform-origin: top center; transform: rotate(-26deg); }
+        .arm.r { right: 10px; transform-origin: top center; transform: rotate(26deg); }
+        #claw.closed .arm.l { transform: rotate(-6deg); }
+        #claw.closed .arm.r { transform: rotate(6deg); }
+        .held {
+            position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+            font-size: 30px; line-height: 1;
+        }
+
+        .doll {
+            position: absolute; z-index: 3; text-align: center;
+            transform: translateX(-50%);
+            transition: bottom 0.5s ease-in, opacity 0.3s;
+        }
+        .doll .face { font-size: 34px; line-height: 1.05; display: block; }
+        .doll .tag {
+            display: inline-block; max-width: 78px; margin-top: 1px;
+            background: #fff; color: #444; border: 1.5px solid #f06595;
+            border-radius: 7px; padding: 1px 4px; font-size: 0.58rem;
+            font-weight: bold; word-break: break-all; line-height: 1.1;
+        }
+        .doll.gone { opacity: 0; }
+
+        /* 出獎口 */
+        .chute {
+            position: absolute; right: 0; bottom: 0; width: 74px; height: 96px;
+            background: linear-gradient(180deg, rgba(60,20,45,0.10), rgba(60,20,45,0.30));
+            border-left: 3px dashed rgba(214,51,108,0.5);
+            border-top-left-radius: 12px; z-index: 2;
+            display: flex; align-items: flex-end; justify-content: center;
+            padding-bottom: 5px; font-size: 0.6rem; color: #a61e4d; font-weight: bold;
+        }
+
+        /* 控制列 */
+        #pad { display: flex; gap: 8px; width: 100%; max-width: 520px; margin-top: 10px; }
+        .pad-btn {
+            flex: 1 1 0; padding: 15px 6px; border: none; border-radius: 14px;
+            font-family: inherit; font-weight: bold; font-size: 1.15rem; color: #fff;
+            cursor: pointer; background: linear-gradient(180deg, #f783ac, #d6336c);
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
+        }
+        .pad-btn.go { flex: 1.4 1 0; background: linear-gradient(180deg, #ffd43b, #f08c00); color: #6b3600; }
+        .pad-btn:active { transform: translateY(2px); }
+        .pad-btn:disabled { opacity: 0.45; }
+
+        #shelf {
+            width: 100%; max-width: 520px; margin-top: 10px; background: #fff;
+            border-radius: 12px; padding: 7px 10px; font-size: 0.75rem; color: #777;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06); text-align: center;
+        }
+        #shelf b { color: #d6336c; }
+        #shelf .row { font-size: 1.15rem; letter-spacing: 2px; margin-top: 2px; }
+
+        #message { min-height: 26px; margin-top: 10px; font-weight: bold; color: #d6336c; text-align: center; }
+        #btn-start {
+            padding: 12px 26px; border-radius: 12px; border: none; color: white; background: #e64980;
+            font-weight: bold; cursor: pointer; font-size: 1.05rem; font-family: inherit;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); margin-top: 8px;
+        }
+        #btn-start:active { transform: scale(0.95); }
+
+        #overlay {
+            position: fixed; inset: 0; background: rgba(100, 20, 60, 0.55);
+            display: none; align-items: center; justify-content: center; z-index: 50;
+        }
+        #overlay.show { display: flex; }
+        .result {
+            background: white; border-radius: 24px; padding: 26px 30px;
+            text-align: center; width: 85%; max-width: 340px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: pop 0.4s ease;
+        }
+        @keyframes pop { 0% { transform: scale(0.85); } 100% { transform: scale(1); } }
+        .result .big { font-size: 3rem; }
+        .result .stars { font-size: 2rem; letter-spacing: 6px; margin: 6px 0; }
+        .result h3 { color: #d6336c; margin: 6px 0; }
+        .result .coin-line { font-size: 1.2rem; font-weight: bold; color: #b8860b; margin: 8px 0; }
+        .result .prizes { font-size: 1.5rem; letter-spacing: 3px; min-height: 26px; }
+        .result .hint { font-size: 0.8rem; color: #999; min-height: 18px; }
+        .btn {
+            padding: 12px 20px; border-radius: 12px; border: none; color: white;
+            font-weight: bold; cursor: pointer; font-size: 1rem; font-family: inherit;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); margin: 6px 4px 0;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-again { background: #e64980; }
+        .btn-close { background: #adb5bd; }
+    </style>
+</head>
+<body>
+
+    <h2>🕹️ 單字夾娃娃 Claw Machine</h2>
+    <div class="box">
+        <select id="cat" onchange="setupWeek()"></select>
+        <select id="week" onchange="resetGame()"></select>
+    </div>
+    <div class="stats">
+        <span>第 <b id="s-round">-</b>/<b id="s-total">-</b> 題</span>
+        <span>夾到 <b id="s-got">0</b> 隻</span>
+        <span>💰 <b id="s-coins">0</b></span>
+    </div>
+
+    <div class="ask">
+        <div>
+            <div id="q-zh">按「開始」來玩！</div>
+            <div id="q-zy"></div>
+        </div>
+        <button class="say-zh" id="btn-hear" onclick="speakCurrent()" style="display:none">🔊</button>
+    </div>
+
+    <div id="cabinet">
+        <div class="rail"></div>
+        <div id="claw">
+            <div class="rope" id="rope"></div>
+            <div class="head">
+                <div class="body"></div>
+                <div class="arm l"></div>
+                <div class="arm r"></div>
+                <div class="held" id="held"></div>
+            </div>
+        </div>
+        <div class="chute">出獎口 🎁</div>
+    </div>
+
+    <div id="pad">
+        <button class="pad-btn" id="btn-left">◀</button>
+        <button class="pad-btn go" id="btn-drop">下爪 🕹️</button>
+        <button class="pad-btn" id="btn-right">▶</button>
+    </div>
+
+    <div id="shelf"></div>
+    <div id="message">按住 ◀ ▶ 移動爪子，對準要夾的娃娃！</div>
+    <button id="btn-start" onclick="startGame()">開始 ▶</button>
+
+    <div id="overlay">
+        <div class="result">
+            <div class="big">🧸</div>
+            <div class="stars" id="r-stars"></div>
+            <h3 id="r-title"></h3>
+            <div class="prizes" id="r-prizes"></div>
+            <div class="coin-line" id="r-coins"></div>
+            <div class="hint" id="r-hint"></div>
+            <button class="btn btn-again" onclick="hideOverlay(); startGame()">再玩一次 🔄</button>
+            <button class="btn btn-close" onclick="hideOverlay()">關閉</button>
+        </div>
+    </div>
+
+    <script src="./words.js"></script>
+    <script src="./zhuyin.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script src="./lookups.js"></script>
+    <script src="./wordlists.js"></script>
+    <script src="./mastery.js"></script>
+    <script src="./rewards.js"></script>
+    <script>
+        const catS = document.getElementById('cat'), wkS = document.getElementById('week');
+        const cab = document.getElementById('cabinet');
+        const clawEl = document.getElementById('claw'), ropeEl = document.getElementById('rope');
+        const heldEl = document.getElementById('held');
+
+        const QUESTIONS = 10;
+        const DOLLS = 5;            // 一題放幾隻娃娃（1 隻正解 + 干擾）
+        const GRAB_R = 30;          // 爪子中心離娃娃多近才夾得到
+        const REACH = 150;          // 爪子放到底時繩子的長度
+        const SHELF_KEY = 'daisy_claw_shelf';
+
+        // 課本沒給 emoji 的字，用字串雜湊挑一隻固定的娃娃：
+        // 同一個字每次出現都是同一隻，收藏櫃才有「收集」的感覺
+        const PLUSH = ['🧸','🐰','🐻','🐼','🐨','🐯','🦊','🐷','🐸','🐙',
+                       '🦄','🐥','🐣','🐳','🍓','🌈','⭐','🍀','🐹','🦉'];
+
+        let dolls = [], clawX = 60, cabW = 340, moveTimer = null, busy = false;
+        let queue = [], pool = [], round = 0, good = 0, combo = 0, coinsEarned = 0;
+        let current = null, wrongThisRound = 0, gotThisGame = [];
+        let playing = false, gameToken = 0, roundTimer = null;
+
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+        // ---- 音效 ----
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start();
+                g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                o.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function speak(word) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US'; u.rate = 0.8; u.pitch = 1.2;
+            window.speechSynthesis.speak(u);
+        }
+        function speakCurrent() { if (current) speak(current.word); }
+
+        function meaningOf(word) {
+            if (typeof lookupWord === 'function') {
+                const e = lookupWord(word);
+                if (e && e.s && e.s[0] && e.s[0].zh)
+                    return { zh: e.s[0].zh, z: e.s[0].z || [] };
+            }
+            if (typeof wordlistMeaning === 'function') {
+                const m = wordlistMeaning(word);
+                if (m && m.zh) return { zh: m.zh, z: m.z || [] };
+            }
+            if (typeof wordlistMeaningText === 'function') {
+                const t = wordlistMeaningText(word);
+                if (t) return { zh: String(t).split('/')[0].replace(/\s*\(.*?\)/g, '').trim(), z: [] };
+            }
+            return null;
+        }
+
+        function showPrompt(m) {
+            const zh = document.getElementById('q-zh'), zy = document.getElementById('q-zy');
+            if (m && m.z && m.z.length && typeof renderZhuyin === 'function') {
+                zh.innerHTML = renderZhuyin(m.zh, m.z);
+                zy.textContent = '';
+            } else {
+                zh.textContent = m ? m.zh : '';
+                zy.textContent = m ? (m.z || []).filter(Boolean).join(' ') : '';
+            }
+        }
+
+        function dollFace(word) {
+            if (typeof wordImages !== 'undefined' && wordImages[word]) return wordImages[word];
+            let h = 0;
+            for (const ch of String(word)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+            return PLUSH[h % PLUSH.length];
+        }
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function say(t) { document.getElementById('message').textContent = t; }
+
+        // ---- 收藏櫃 ----
+        function readShelf() {
+            try { return JSON.parse(localStorage.getItem(SHELF_KEY)) || {}; }
+            catch (e) { return {}; }
+        }
+        function keepPrize(word) {
+            const s = readShelf();
+            const isNew = !s[word];
+            s[word] = dollFace(word);
+            try { localStorage.setItem(SHELF_KEY, JSON.stringify(s)); } catch (e) {}
+            renderShelf();
+            return isNew;
+        }
+        function renderShelf() {
+            const s = readShelf(), keys = Object.keys(s);
+            const row = keys.slice(-14).map(w => s[w]).join('');
+            document.getElementById('shelf').innerHTML = keys.length
+                ? `收藏櫃：夾回家 <b>${keys.length}</b> 隻娃娃<div class="row">${row}</div>`
+                : '收藏櫃還是空的 —— 夾到的娃娃會留在這裡 🧸';
+        }
+
+        // ---- 機台 ----
+        function measure() {
+            cabW = Math.max(240, cab.clientWidth || 340);
+            clawX = Math.min(cabW - 30, Math.max(30, clawX));
+            clawEl.style.left = clawX + 'px';
+        }
+
+        function layoutDolls(list) {
+            dolls.forEach(d => d.el.remove());
+            dolls = [];
+            // 右邊整個出獎口的寬度都要讓出來，還要留娃娃名牌的半個寬度，
+            // 不然最右邊那隻會壓在出獎口上
+            const usableW = cabW - 112;
+            const gap = usableW / list.length;
+            list.forEach((word, i) => {
+                const cx = 20 + gap * (i + 0.5);
+                const el = document.createElement('div');
+                el.className = 'doll';
+                el.style.left = cx + 'px';
+                el.style.bottom = (10 + (i % 2) * 26) + 'px';
+                el.innerHTML = `<span class="face">${dollFace(word)}</span>` +
+                               `<span class="tag">${word}</span>`;
+                // 掉進機台的動畫：一開局娃娃是從上面倒下來的
+                el.style.transform = 'translateX(-50%) translateY(-260px)';
+                cab.appendChild(el);
+                requestAnimationFrame(() => {
+                    el.style.transition = 'transform 0.5s cubic-bezier(.34,1.3,.64,1), bottom .5s ease-in, opacity .3s';
+                    el.style.transform = 'translateX(-50%)';
+                });
+                dolls.push({ el, word, cx, bottom: parseFloat(el.style.bottom), taken: false });
+            });
+        }
+
+        function moveClaw(dir) {
+            if (busy || !playing) return;
+            clearInterval(moveTimer);
+            moveTimer = setInterval(() => {
+                if (busy || !playing) { clearInterval(moveTimer); return; }
+                clawX = Math.min(cabW - 26, Math.max(26, clawX + dir * 2.6));
+                clawEl.style.left = clawX + 'px';
+            }, 16);
+        }
+        function stopClaw() { clearInterval(moveTimer); }
+
+        /** 爪子夾得到的娃娃：水平最近的那一隻，超過 GRAB_R 就是落空 */
+        function targetDoll() {
+            let best = null, bestD = Infinity;
+            for (const d of dolls) {
+                if (d.taken) continue;
+                const dist = Math.abs(d.cx - clawX);
+                if (dist < bestD) { bestD = dist; best = d; }
+            }
+            return bestD <= GRAB_R ? best : null;
+        }
+
+        async function dropClaw() {
+            if (busy || !playing || !current || current.done) return;
+            busy = true;
+            const token = gameToken;
+            stopClaw();
+            setPad(false);
+
+            playTone(300, 'square', 0.1);
+            ropeEl.style.height = REACH + 'px';
+            await wait(800);
+            if (token !== gameToken) return finishMove();
+
+            clawEl.classList.add('closed');
+            playTone(520, 'square', 0.08);
+            await wait(280);
+            if (token !== gameToken) return finishMove();
+
+            const got = targetDoll();
+            if (got) {
+                got.taken = true;
+                got.el.style.opacity = '0';
+                heldEl.textContent = dollFace(got.word);
+            }
+
+            ropeEl.style.height = '12px';
+            await wait(800);
+            if (token !== gameToken) return finishMove();
+
+            if (!got) {
+                clawEl.classList.remove('closed');
+                say('爪子撲空了！再對準一點 🤏');
+                playTone(180, 'sawtooth', 0.2);
+                busy = false; setPad(true);
+                return;
+            }
+
+            if (got.word === current.word) {
+                await deliver(token, got);
+            } else {
+                await slip(token, got);
+            }
+        }
+
+        /** 夾對了：送到出獎口放下 */
+        async function deliver(token, got) {
+            clawEl.classList.add('glide');
+            clawEl.style.left = (cabW - 40) + 'px';
+            await wait(720);
+            if (token !== gameToken) return finishMove();
+
+            clawEl.classList.remove('closed');
+            heldEl.textContent = '';
+            playTone(700, 'sine', 0.12);
+            setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+
+            current.done = true;
+            good++; combo++;
+            let gain = 3 + (wrongThisRound === 0 ? 2 : 0);
+            if (combo > 0 && combo % 3 === 0) gain += 3;
+            coinsEarned += gain;
+            gotThisGame.push(dollFace(got.word));
+            if (typeof recordAttempt === 'function')
+                recordAttempt(current.word, true, wrongThisRound);
+            const isNew = keepPrize(got.word);
+            updateStats();
+
+            say(`夾到 ${got.word} 了！${isNew ? '新娃娃進收藏櫃 🎉' : ''} +${gain} 💰`);
+            if (typeof confetti !== 'undefined')
+                confetti({ particleCount: 60, spread: 60, origin: { y: 0.55 } });
+
+            // 爪子歸位到左邊。不同步更新 clawX 的話，下一題她一按 ◀▶，
+            // 爪子會從出獎口瞬間跳回上一題的位置
+            await wait(420);
+            clawX = 40;
+            clawEl.style.left = clawX + 'px';
+            await wait(500);
+            clawEl.classList.remove('glide');
+            roundTimer = setTimeout(() => nextRound(token), 500);
+            busy = false;
+        }
+
+        /** 夾錯了：半路滑掉，娃娃掉回機台 */
+        async function slip(token, got) {
+            clawEl.classList.add('glide');
+            clawEl.style.left = Math.min(cabW - 40, clawX + 40) + 'px';
+            await wait(340);
+            if (token !== gameToken) return finishMove();
+
+            clawEl.classList.remove('closed');
+            heldEl.textContent = '';
+            got.taken = false;
+            got.el.style.opacity = '1';
+            got.el.style.bottom = '10px';
+            playTone(200, 'sawtooth', 0.2);
+
+            wrongThisRound++; combo = 0;
+            const m = meaningOf(got.word);
+            say(`${got.word} 是「${m ? m.zh : '別的字'}」，娃娃滑掉了！`);
+
+            clawEl.classList.remove('glide');
+            clawEl.style.left = clawX + 'px';
+
+            // 錯兩次就公布答案往下一題，不要卡在同一題
+            if (wrongThisRound >= 2) {
+                current.done = true;
+                if (typeof recordAttempt === 'function')
+                    recordAttempt(current.word, false, wrongThisRound);
+                const hit = dolls.find(d => d.word === current.word);
+                if (hit) hit.el.style.outline = '3px solid #40c057';
+                say(`答案是 ${current.word}（${current.m.zh}），下一題再夾！`);
+                speak(current.word);
+                roundTimer = setTimeout(() => nextRound(token), 2000);
+                busy = false;
+                return;
+            }
+            busy = false; setPad(true);
+        }
+
+        function finishMove() {
+            busy = false;
+            clawEl.classList.remove('closed', 'glide');
+            heldEl.textContent = '';
+            ropeEl.style.height = '12px';
+        }
+
+        function setPad(on) {
+            ['btn-left', 'btn-right', 'btn-drop'].forEach(id => {
+                document.getElementById(id).disabled = !on;
+            });
+        }
+
+        // ---- 遊戲流程 ----
+        function setupConfig() {
+            catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            setupWeek();
+        }
+        function setupWeek() {
+            wkS.innerHTML = Object.keys(words[catS.value] || {}).map(w => `<option>${w}</option>`).join('');
+            resetGame();
+        }
+
+        function updateStats() {
+            document.getElementById('s-got').textContent = good;
+            document.getElementById('s-coins').textContent = coinsEarned;
+        }
+
+        function resetGame() {
+            gameToken++;
+            clearTimeout(roundTimer); stopClaw();
+            finishMove();
+            playing = false; current = null;
+            round = 0; good = 0; combo = 0; coinsEarned = 0; gotThisGame = [];
+            dolls.forEach(d => d.el.remove()); dolls = [];
+            document.getElementById('q-zh').textContent = '按「開始」來玩！';
+            document.getElementById('q-zy').textContent = '';
+            document.getElementById('btn-hear').style.display = 'none';
+            document.getElementById('btn-start').style.display = '';
+            document.getElementById('s-round').textContent = '-';
+            document.getElementById('s-total').textContent = '-';
+            say('按住 ◀ ▶ 移動爪子，對準要夾的娃娃！');
+            setPad(false);
+            updateStats();
+        }
+
+        function startGame() {
+            const token = ++gameToken;
+            clearTimeout(roundTimer);
+
+            const usable = shuffle((words[catS.value]?.[wkS.value] || []).slice())
+                .filter(w => meaningOf(w));
+            if (usable.length < 3) {
+                say('這組單字太少或還沒有中文資料，換一組玩玩看！');
+                return;
+            }
+            measure();
+            pool = usable;
+            queue = usable.slice(0, QUESTIONS);
+            round = 0; good = 0; combo = 0; coinsEarned = 0; gotThisGame = [];
+            playing = true;
+            document.getElementById('btn-start').style.display = 'none';
+            document.getElementById('btn-hear').style.display = '';
+            document.getElementById('s-total').textContent = queue.length;
+            updateStats();
+            nextRound(token);
+        }
+
+        function nextRound(token) {
+            if (token !== gameToken) return;
+            if (round >= queue.length) { finish(token); return; }
+
+            const word = queue[round];
+            round++;
+            wrongThisRound = 0;
+            document.getElementById('s-round').textContent = round;
+
+            const m = meaningOf(word);
+            current = { word, m, done: false };
+            showPrompt(m);
+            speak(word);
+            say(`夾出「${m.zh}」那一隻！`);
+
+            const others = shuffle(pool.filter(w => w !== word)).slice(0, DOLLS - 1);
+            layoutDolls(shuffle([word, ...others]));
+            setPad(true);
+        }
+
+        function finish(token) {
+            if (token !== gameToken) return;
+            playing = false;
+            setPad(false);
+            dolls.forEach(d => d.el.remove()); dolls = [];
+
+            const total = queue.length;
+            let stars, title;
+            if (good === total) { stars = '⭐⭐⭐'; title = '每一隻都夾到！夾娃娃高手！'; coinsEarned += 10; }
+            else if (good >= total * 0.7) { stars = '⭐⭐'; title = '夾得很棒！'; coinsEarned += 5; }
+            else { stars = '⭐'; title = '玩完一輪囉！'; }
+
+            document.getElementById('r-stars').textContent = stars;
+            document.getElementById('r-title').textContent = `${title}（${good}/${total}）`;
+            document.getElementById('r-prizes').textContent = gotThisGame.join('');
+            document.getElementById('r-coins').textContent = `獲得 💰 ${coinsEarned} 金幣`;
+            updateStats();
+
+            const hint = document.getElementById('r-hint');
+            hint.textContent = '';
+            awardCoins(coinsEarned, (ok) => {
+                hint.textContent = ok ? '金幣已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後金幣才能入帳喔）';
+            });
+
+            document.getElementById('overlay').classList.add('show');
+            if (good === total && typeof confetti !== 'undefined')
+                confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+        }
+
+        function hideOverlay() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('btn-start').style.display = '';
+            document.getElementById('q-zh').textContent = '再按一次「開始」！';
+            document.getElementById('q-zy').textContent = '';
+        }
+
+        // ---- 控制 ----
+        function holdBtn(id, dir) {
+            const b = document.getElementById(id);
+            b.addEventListener('pointerdown', (e) => { e.preventDefault(); moveClaw(dir); });
+            ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+                b.addEventListener(ev, stopClaw));
+        }
+        holdBtn('btn-left', -1);
+        holdBtn('btn-right', 1);
+        document.getElementById('btn-drop').addEventListener('click', dropClaw);
+        window.addEventListener('resize', measure);
+
+        measure();
+        renderShelf();
+        setupConfig();
+
+        if (typeof getWeakWords === 'function') {
+            const weak = getWeakWords(20).map(x => x.word).filter(w => meaningOf(w));
+            if (weak.length >= 4) {
+                const group = { '最需要練的': weak.slice(0, 10) };
+                if (weak.length > 10) group['第二批'] = weak.slice(10, 20);
+                words['🔥 加強複習'] = group;
+                catS.add(new Option('🔥 加強複習', '🔥 加強複習'));
+            }
+        }
+        if (typeof attachWordlistCategory === 'function') {
+            attachWordlistCategory(words, () => {
+                const name = '⭐ 我的單字卡';
+                if (!Array.from(catS.options).some(o => o.value === name))
+                    catS.add(new Option(name, name));
+            });
+        }
+        if (typeof attachLookupCategory === 'function') {
+            attachLookupCategory(words, () => {
+                const name = '⭐ 我查過的字';
+                if (!Array.from(catS.options).some(o => o.value === name))
+                    catS.add(new Option(name, name));
+            });
+        }
+    </script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

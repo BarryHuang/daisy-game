@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>💰 單字推幣機 - Coin Pusher</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(160deg, #fff4e0 0%, #ffe8f3 55%, #f0e8ff 100%);
+            margin: 0; padding: 12px 10px 40px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+        h2 { color: #b8860b; margin: 4px 0 10px; font-size: 1.35rem; text-shadow: 1px 1px 0 #fff; }
+
+        .box {
+            background: white; padding: 10px 12px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            text-align: center; width: 100%; max-width: 520px; margin-bottom: 10px;
+        }
+        select {
+            padding: 8px; border-radius: 8px; border: 2px solid #e0a52e;
+            outline: none; font-size: 0.95rem; margin: 3px; max-width: 100%;
+            font-family: inherit; background: #fffaf0; color: #333;
+        }
+
+        .stats {
+            display: flex; justify-content: center; gap: 18px;
+            width: 100%; max-width: 520px; margin-bottom: 8px;
+            font-weight: bold; color: #555; font-size: 0.95rem;
+        }
+        .stats span b { color: #b8860b; }
+
+        /* 題目卡 */
+        .ask {
+            width: 100%; max-width: 520px; background: white; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08); padding: 10px 12px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-bottom: 8px; min-height: 62px;
+        }
+        #q-zh { font-size: 1.7rem; font-weight: bold; color: #7a4b00; line-height: 1.25; }
+        #q-zy { font-size: 0.8rem; color: #b98a5e; }
+        .say-zh {
+            border: none; background: #ffe9b0; color: #8a5a00; border-radius: 50%;
+            width: 38px; height: 38px; font-size: 1.1rem; cursor: pointer; flex: none;
+        }
+        .say-zh:active { transform: scale(0.92); }
+
+        /* 投幣口 */
+        #slots {
+            display: flex; gap: 6px; width: 100%; max-width: 520px; margin-bottom: 4px;
+        }
+        .slot {
+            flex: 1 1 0; min-width: 0; padding: 11px 4px 13px; border: none; cursor: pointer;
+            border-radius: 12px 12px 4px 4px; font-family: inherit; font-weight: bold;
+            font-size: 0.95rem; color: #fff; word-break: break-word; line-height: 1.15;
+            background: linear-gradient(180deg, #6b7a8f 0%, #46536b 100%);
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25);
+        }
+        .slot small { display: block; font-size: 0.6rem; opacity: 0.75; font-weight: normal; margin-top: 3px; }
+        .slot:active { transform: translateY(2px); }
+        .slot.dead { background: #b9b4ad; opacity: 0.55; pointer-events: none; }
+        .slot.nope { animation: shake 0.35s ease; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        #machine {
+            display: block; width: 100%; max-width: 520px; height: 340px;
+            border-radius: 4px 4px 16px 16px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+        }
+
+        #message { min-height: 26px; margin-top: 10px; font-weight: bold; color: #b8860b; text-align: center; }
+        #btn-start {
+            padding: 12px 26px; border-radius: 12px; border: none; color: white; background: #e0a52e;
+            font-weight: bold; cursor: pointer; font-size: 1.05rem; font-family: inherit;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); margin-top: 8px;
+        }
+        #btn-start:active { transform: scale(0.95); }
+
+        #overlay {
+            position: fixed; inset: 0; background: rgba(80, 50, 10, 0.55);
+            display: none; align-items: center; justify-content: center; z-index: 50;
+        }
+        #overlay.show { display: flex; }
+        .result {
+            background: white; border-radius: 24px; padding: 26px 30px;
+            text-align: center; width: 85%; max-width: 340px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: pop 0.4s ease;
+        }
+        @keyframes pop { 0% { transform: scale(0.85); } 100% { transform: scale(1); } }
+        .result .big { font-size: 3rem; }
+        .result .stars { font-size: 2rem; letter-spacing: 6px; margin: 6px 0; }
+        .result h3 { color: #b8860b; margin: 6px 0; }
+        .result .coin-line { font-size: 1.2rem; font-weight: bold; color: #b8860b; margin: 8px 0; }
+        .result .hint { font-size: 0.8rem; color: #999; min-height: 18px; }
+        .btn {
+            padding: 12px 20px; border-radius: 12px; border: none; color: white;
+            font-weight: bold; cursor: pointer; font-size: 1rem; font-family: inherit;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); margin: 6px 4px 0;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-again { background: #e0a52e; }
+        .btn-close { background: #adb5bd; }
+    </style>
+</head>
+<body>
+
+    <h2>💰 單字推幣機 Coin Pusher</h2>
+    <div class="box">
+        <select id="cat" onchange="setupWeek()"></select>
+        <select id="week" onchange="resetGame()"></select>
+    </div>
+    <div class="stats">
+        <span>第 <b id="s-round">-</b>/<b id="s-total">-</b> 題</span>
+        <span>推落 <b id="s-drop">0</b> 枚</span>
+        <span>💰 <b id="s-coins">0</b></span>
+    </div>
+
+    <div class="ask">
+        <div>
+            <div id="q-zh">按「開始」來玩！</div>
+            <div id="q-zy"></div>
+        </div>
+        <button class="say-zh" id="btn-hear" onclick="speakCurrent()" style="display:none">🔊</button>
+    </div>
+
+    <div id="slots"></div>
+    <canvas id="machine"></canvas>
+    <div id="message">選對的投幣口，硬幣才進得去！</div>
+    <button id="btn-start" onclick="startGame()">開始 ▶</button>
+
+    <div id="overlay">
+        <div class="result">
+            <div class="big">💰</div>
+            <div class="stars" id="r-stars"></div>
+            <h3 id="r-title"></h3>
+            <div class="coin-line" id="r-coins"></div>
+            <div class="hint" id="r-hint"></div>
+            <button class="btn btn-again" onclick="hideOverlay(); startGame()">再玩一次 🔄</button>
+            <button class="btn btn-close" onclick="hideOverlay()">關閉</button>
+        </div>
+    </div>
+
+    <script src="./words.js"></script>
+    <script src="./zhuyin.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script src="./lookups.js"></script>
+    <script src="./wordlists.js"></script>
+    <script src="./mastery.js"></script>
+    <script src="./rewards.js"></script>
+    <script>
+        const catS = document.getElementById('cat'), wkS = document.getElementById('week');
+        const cv = document.getElementById('machine'), ctx = cv.getContext('2d');
+        const slotsEl = document.getElementById('slots');
+
+        const QUESTIONS = 10;
+        const COIN_R = 14, PRIZE_R = 16;
+        const TRAY_H = 46;                 // 前緣以下是獎池
+        const PERIOD = 2.4;                // 推板來回一趟的秒數
+        const PLATE_MIN = 34, PLATE_AMP = 58;
+        // 開局鋪幣的密度。幣堆必須夠密，推力才傳得到前緣 —— 太鬆的話投進去的幣
+        // 只是填空隙，永遠不會有東西掉下來。密度要按台面面積算，不能寫死顆數：
+        // 同樣 70 顆在手機上擠爆、在 iPad 上稀稀落落。
+        const AREA_PER_COIN = 780;         // 一顆幣分到的台面面積（越小越密）
+        const VALUE = { coin: 2, gift: 8, gem: 20 };
+
+        let W = 360, H = 340, EDGE = H - TRAY_H, dpr = 1;
+        let field = [], plateY = 34, clock = 0, lastFrame = 0, raf = 0;
+        let live = true;                   // 結算後停機，見 finish()
+        let packLimit = 0;                 // 鋪幣時的前緣上限，見 fillMachine
+
+        let queue = [], pool = [], round = 0, good = 0, combo = 0;
+        let coinsEarned = 0, dropped = 0, current = null, wrongThisRound = 0;
+        let playing = false, gameToken = 0, roundTimer = null;
+
+        // ---- 音效 ----
+        let audioCtx;
+        function playTone(freq, type, duration) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start();
+                g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                o.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function speak(word) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US'; u.rate = 0.8; u.pitch = 1.2;
+            window.speechSynthesis.speak(u);
+        }
+        function speakCurrent() { if (current) speak(current.word); }
+
+        function meaningOf(word) {
+            if (typeof lookupWord === 'function') {
+                const e = lookupWord(word);
+                if (e && e.s && e.s[0] && e.s[0].zh)
+                    return { zh: e.s[0].zh, z: e.s[0].z || [] };
+            }
+            if (typeof wordlistMeaning === 'function') {
+                const m = wordlistMeaning(word);
+                if (m && m.zh) return { zh: m.zh, z: m.z || [] };
+            }
+            if (typeof wordlistMeaningText === 'function') {
+                const t = wordlistMeaningText(word);
+                if (t) return { zh: String(t).split('/')[0].replace(/\s*\(.*?\)/g, '').trim(), z: [] };
+            }
+            return null;
+        }
+
+        // 中文題目：有注音就用直排注音，沒有就退回純文字
+        function showPrompt(m) {
+            const zh = document.getElementById('q-zh'), zy = document.getElementById('q-zy');
+            if (m && m.z && m.z.length && typeof renderZhuyin === 'function') {
+                zh.innerHTML = renderZhuyin(m.zh, m.z);
+                zy.textContent = '';
+            } else {
+                zh.textContent = m ? m.zh : '';
+                zy.textContent = m ? (m.z || []).filter(Boolean).join(' ') : '';
+            }
+        }
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // ---- 機台 ----
+        function resize() {
+            W = Math.max(260, cv.clientWidth || 360);
+            H = 340; EDGE = H - TRAY_H;
+            dpr = Math.min(2, window.devicePixelRatio || 1);
+            cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            field.forEach(c => { c.x = Math.min(W - c.r, Math.max(c.r, c.x)); });
+        }
+
+        function newCoin(x, y, kind, word) {
+            const r = kind === 'coin' ? COIN_R : PRIZE_R;
+            return { x, y, r, kind, word: word || '', state: 'on', t: 0 };
+        }
+
+        /**
+         * 開局鋪滿一台幣。
+         *
+         * 推板從「完全伸出」開始，幣堆就緊貼在推板前面：這樣推板自己來回
+         * 不會再把任何東西往前推（縮回時幣堆留在原地，下一趟只推到同一點），
+         * 幣堆只有在新硬幣掉進推板讓出的空隙時才會前進 —— 就是真的推幣機的手感。
+         * 反過來說，開局若讓推板從縮回的位置起跑，第一趟就會把整堆往前平移一個
+         * 衝程，還沒投幣就先嘩啦啦掉一排。
+         */
+        function fillMachine() {
+            field = [];
+            clock = PERIOD / 2;
+            plateY = PLATE_MIN + PLATE_AMP;
+            // 鋪到幾乎貼齊出口。單層幣堆的物理是「投一顆，整堆前進一顆的面積除以台寬」
+            // ≈ 2px，所以只要前緣留下一道空隙，就要投十幾顆才會有第一枚掉下來。
+            // 開局就鋪到滿，才是真的推幣機：投一顆、大概掉一顆，偶爾雪崩。
+            const front = EDGE - 1, back = plateY + COIN_R + 2;
+            // 鋪的時候把前緣當成牆，否則擠開的過程會把幣推出台面，一開局就白掉一排
+            packLimit = front;
+            const n = Math.max(30, Math.min(110, Math.round(W * (front - back) / AREA_PER_COIN)));
+            for (let i = 0; i < n; i++)
+                field.push(newCoin(COIN_R + Math.random() * (W - 2 * COIN_R),
+                                   back + Math.random() * (front - back), 'coin'));
+            // 大獎埋在中段：掉出來的順序是由前緣往後，太靠前等於白送
+            field.push(newCoin(W / 2, front - 62, 'gem'));
+            field.push(newCoin(W * 0.28, front - 26, 'gift'));
+            field.push(newCoin(W * 0.72, front - 96, 'gift'));
+            for (let i = 0; i < 140; i++) separate();
+            packLimit = 0;
+        }
+
+        /** 把互相重疊的幣推開；同時擋住推板、側牆 */
+        function separate() {
+            for (let i = 0; i < field.length; i++) {
+                const a = field[i];
+                if (a.state !== 'on') continue;
+                for (let j = i + 1; j < field.length; j++) {
+                    const b = field[j];
+                    if (b.state !== 'on') continue;
+                    const dx = b.x - a.x, dy = b.y - a.y, rr = a.r + b.r;
+                    const d2 = dx * dx + dy * dy;
+                    if (d2 >= rr * rr) continue;
+                    if (d2 < 0.0001) { b.x += 0.5; continue; }
+                    const d = Math.sqrt(d2), push = (rr - d) / 2, nx = dx / d, ny = dy / d;
+                    a.x -= nx * push; a.y -= ny * push;
+                    b.x += nx * push; b.y += ny * push;
+                }
+            }
+            for (const c of field) {
+                if (c.state !== 'on') continue;
+                c.x = Math.min(W - c.r, Math.max(c.r, c.x));
+                if (c.y - c.r < plateY) c.y = plateY + c.r;   // 推板是一道會前進的牆
+                if (packLimit && c.y > packLimit) c.y = packLimit;
+            }
+        }
+
+        function step(dt) {
+            clock += dt;
+            plateY = PLATE_MIN + PLATE_AMP * (0.5 - 0.5 * Math.cos(clock * 2 * Math.PI / PERIOD));
+
+            for (const c of field) {
+                if (c.state === 'fall') {
+                    c.t = Math.min(1, c.t + dt / 0.26);
+                    const e = 1 - (1 - c.t) * (1 - c.t);
+                    c.y = c.fy0 + (c.fy1 - c.fy0) * e;
+                    if (c.t >= 1) { c.state = 'on'; c.t = 0; }
+                } else if (c.state === 'pay') {
+                    c.t += dt / 0.45;
+                    c.y += 70 * dt;
+                }
+            }
+            for (let i = 0; i < 3; i++) separate();
+
+            for (const c of field) {
+                if (c.state === 'on' && c.y > EDGE) { c.state = 'pay'; c.t = 0; payout(c); }
+            }
+            field = field.filter(c => !(c.state === 'pay' && c.t >= 1));
+        }
+
+        function payout(c) {
+            const gain = VALUE[c.kind] || 2;
+            coinsEarned += gain; dropped++;
+            updateStats();
+            if (c.kind === 'gem') {
+                playTone(1200, 'sine', 0.2);
+                say('💎 大獎！+' + gain + ' 金幣');
+                if (typeof confetti !== 'undefined')
+                    confetti({ particleCount: 70, spread: 70, origin: { y: 0.75 } });
+            } else if (c.kind === 'gift') {
+                playTone(880, 'triangle', 0.16);
+                say('🎁 禮物盒掉出來了！+' + gain);
+            } else {
+                playTone(620 + Math.random() * 120, 'sine', 0.07);
+            }
+        }
+
+        // ---- 畫面 ----
+        function roundRect(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        function drawCoin(c) {
+            // 越靠近前緣畫得越大，做出一點景深
+            const s = 0.86 + 0.28 * (c.y / H);
+            const r = c.r * s;
+            const alpha = c.state === 'pay' ? Math.max(0, 1 - c.t) : 1;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+
+            if (c.kind === 'coin') {
+                ctx.beginPath(); ctx.ellipse(c.x, c.y + r * 0.28, r, r * 0.6, 0, 0, 7);
+                ctx.fillStyle = '#8a6a10'; ctx.fill();
+                const g = ctx.createLinearGradient(c.x - r, c.y - r, c.x + r, c.y + r);
+                g.addColorStop(0, '#ffe89a'); g.addColorStop(0.5, '#f5c23e'); g.addColorStop(1, '#c8930f');
+                ctx.beginPath(); ctx.ellipse(c.x, c.y, r, r * 0.6, 0, 0, 7);
+                ctx.fillStyle = g; ctx.fill();
+                ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.stroke();
+                if (c.word) drawCoinWord(c.word, c.x, c.y, r);
+            } else {
+                ctx.beginPath(); ctx.ellipse(c.x, c.y + r * 0.3, r * 0.9, r * 0.45, 0, 0, 7);
+                ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fill();
+                ctx.font = Math.round(r * 1.7) + 'px serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(c.kind === 'gem' ? '💎' : '🎁', c.x, c.y);
+            }
+            ctx.restore();
+        }
+
+        /** 幣面上的字：先縮字級塞進去，真的塞不下才截斷 */
+        function drawCoinWord(word, x, y, r) {
+            const maxW = r * 1.65;
+            let size = 9, text = word;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            while (size > 5) {
+                ctx.font = 'bold ' + size + 'px sans-serif';
+                if (ctx.measureText(text).width <= maxW) break;
+                size -= 0.5;
+            }
+            ctx.font = 'bold ' + size + 'px sans-serif';
+            while (text.length > 2 && ctx.measureText(text).width > maxW) text = text.slice(0, -1);
+            if (text !== word) text = text.slice(0, -1) + '·';
+            ctx.fillStyle = '#6b4c05';
+            ctx.fillText(text, x, y);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            const bg = ctx.createLinearGradient(0, 0, 0, EDGE);
+            bg.addColorStop(0, '#2b3350'); bg.addColorStop(1, '#5a6488');
+            ctx.fillStyle = bg; ctx.fillRect(0, 0, W, EDGE);
+
+            // 台面的橫紋，讓推板前進看得出來
+            ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+            for (let y = 110; y < EDGE; y += 26) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+            }
+
+            // 推板
+            const pg = ctx.createLinearGradient(0, 0, 0, plateY);
+            pg.addColorStop(0, '#8f9bb8'); pg.addColorStop(1, '#c8d2e8');
+            ctx.fillStyle = pg; ctx.fillRect(0, -6, W, plateY + 6);
+            ctx.fillStyle = '#e9eefb'; ctx.fillRect(0, plateY - 5, W, 5);
+            ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fillRect(0, plateY, W, 4);
+
+            // 側牆
+            ctx.fillStyle = 'rgba(255,255,255,0.10)';
+            ctx.fillRect(0, 0, 4, EDGE); ctx.fillRect(W - 4, 0, 4, EDGE);
+
+            // 最上方的投幣槽口（固定不動，對齊上面三個投幣口按鈕），
+            // 硬幣就是從這裡滑下來的
+            ctx.fillStyle = '#1b2036'; ctx.fillRect(0, 0, W, 13);
+            const lanes = Math.max(1, slotsEl.children.length || 3);
+            for (let i = 0; i < lanes; i++) {
+                const cx = (i + 0.5) * (W / lanes);
+                ctx.fillStyle = '#0c0f1c';
+                roundRect(cx - 17, 3, 34, 7, 3.5); ctx.fill();
+            }
+
+            [...field].sort((a, b) => a.y - b.y).forEach(drawCoin);
+
+            // 前緣與獎池
+            ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(0, EDGE - 2, W, 2);
+            ctx.fillStyle = '#241d13';
+            roundRect(0, EDGE, W, TRAY_H, 14); ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.10)';
+            roundRect(8, EDGE + 8, W - 16, TRAY_H - 16, 9); ctx.fill();
+            ctx.fillStyle = '#f5c23e';
+            ctx.font = 'bold 15px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('獎池 ' + dropped + ' 枚　💰 ' + coinsEarned, W / 2, EDGE + TRAY_H / 2);
+        }
+
+        function loop(now) {
+            const dt = Math.min(0.05, lastFrame ? (now - lastFrame) / 1000 : 0.016);
+            lastFrame = now;
+            if (live) step(dt);
+            draw();
+            raf = requestAnimationFrame(loop);
+        }
+
+        // ---- 遊戲流程 ----
+        function setupConfig() {
+            catS.innerHTML = Object.keys(words).map(c => `<option>${c}</option>`).join('');
+            setupWeek();
+        }
+        function setupWeek() {
+            wkS.innerHTML = Object.keys(words[catS.value] || {}).map(w => `<option>${w}</option>`).join('');
+            resetGame();
+        }
+
+        function say(text) { document.getElementById('message').textContent = text; }
+
+        function resetGame() {
+            gameToken++;
+            clearTimeout(roundTimer);
+            playing = false; current = null; live = true;
+            round = 0; good = 0; combo = 0; coinsEarned = 0; dropped = 0;
+            fillMachine();
+            document.getElementById('q-zh').textContent = '按「開始」來玩！';
+            document.getElementById('q-zy').textContent = '';
+            document.getElementById('btn-hear').style.display = 'none';
+            document.getElementById('btn-start').style.display = '';
+            slotsEl.innerHTML = '';
+            say('選對的投幣口，硬幣才進得去！');
+            document.getElementById('s-round').textContent = '-';
+            document.getElementById('s-total').textContent = '-';
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('s-drop').textContent = dropped;
+            document.getElementById('s-coins').textContent = coinsEarned;
+        }
+
+        function startGame() {
+            const token = ++gameToken;
+            clearTimeout(roundTimer);
+            live = true;
+
+            const usable = shuffle((words[catS.value]?.[wkS.value] || []).slice())
+                .filter(w => meaningOf(w));
+            if (usable.length < 3) {
+                say('這組單字太少或還沒有中文資料，換一組玩玩看！');
+                return;
+            }
+            pool = usable;
+            queue = usable.slice(0, QUESTIONS);
+            round = 0; good = 0; combo = 0; coinsEarned = 0; dropped = 0;
+            playing = true;
+            fillMachine();
+            document.getElementById('btn-start').style.display = 'none';
+            document.getElementById('btn-hear').style.display = '';
+            document.getElementById('s-total').textContent = queue.length;
+            updateStats();
+            nextRound(token);
+        }
+
+        function nextRound(token) {
+            if (token !== gameToken) return;
+            if (round >= queue.length) { finish(token); return; }
+
+            const word = queue[round];
+            round++;
+            wrongThisRound = 0;
+            document.getElementById('s-round').textContent = round;
+
+            const m = meaningOf(word);
+            current = { word, m, done: false };
+            showPrompt(m);
+            speak(word);
+            // 用引號夾住中文，否則「長滿草的」後面再接「的那一格」會變成兩個的
+            say('把硬幣投進「' + m.zh + '」那一格！');
+
+            const others = shuffle(pool.filter(w => w !== word)).slice(0, 2);
+            const choices = shuffle([word, ...others]);
+            slotsEl.innerHTML = choices.map(w =>
+                `<button class="slot" data-w="${w}">${w}<small>投幣口</small></button>`).join('');
+            slotsEl.querySelectorAll('.slot').forEach(b => {
+                b.addEventListener('click', () => tapSlot(b, token));
+            });
+        }
+
+        function tapSlot(btn, token) {
+            if (token !== gameToken || !playing || !current || current.done) return;
+            const w = btn.dataset.w;
+            const idx = Array.from(slotsEl.children).indexOf(btn);
+            const slotX = (idx + 0.5) * (W / slotsEl.children.length);
+
+            if (w === current.word) {
+                current.done = true;
+                good++; combo++;
+                playTone(700, 'sine', 0.12);
+                setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+                if (typeof recordAttempt === 'function')
+                    recordAttempt(current.word, true, wrongThisRound);
+
+                // 一次投兩枚（沒錯過才有第二枚）：幣堆是單層的，投一枚大概只推得掉
+                // 一枚，一題一枚會讓整場都在等。第二枚同時也是「一次就答對」的獎勵。
+                dropCoin(slotX, 'coin', current.word);
+                if (wrongThisRound === 0) setTimeout(() => dropCoin(slotX + 10, 'coin'), 170);
+                // 連對三次加碼一顆寶石，讓她有理由連著答對
+                if (combo > 0 && combo % 3 === 0) {
+                    setTimeout(() => dropCoin(slotX, 'gem'), 340);
+                    say('連對 ' + combo + ' 次！💎 加碼一顆寶石');
+                } else {
+                    say(current.word + (wrongThisRound === 0 ? ' ✔ 兩枚投進去了！' : ' ✔ 投進去了！'));
+                }
+                slotsEl.querySelectorAll('.slot').forEach(b => b.classList.add('dead'));
+                roundTimer = setTimeout(() => nextRound(token), 1300);
+            } else {
+                wrongThisRound++; combo = 0;
+                playTone(200, 'sawtooth', 0.18);
+                btn.classList.remove('nope'); void btn.offsetWidth;
+                btn.classList.add('nope');
+                btn.classList.add('dead');
+                const m = meaningOf(w);
+                say(w + ' 是「' + (m ? m.zh : '別的字') + '」，投錯了！');
+                // 錯兩次就公布答案往下走，不要卡在同一題
+                if (wrongThisRound >= 2) {
+                    current.done = true;
+                    if (typeof recordAttempt === 'function')
+                        recordAttempt(current.word, false, wrongThisRound);
+                    say('答案是 ' + current.word + '，這題沒有硬幣，再加油！');
+                    speak(current.word);
+                    slotsEl.querySelectorAll('.slot').forEach(b => b.classList.add('dead'));
+                    roundTimer = setTimeout(() => nextRound(token), 1800);
+                }
+            }
+        }
+
+        function dropCoin(x, kind, word) {
+            const r = kind === 'coin' ? COIN_R : PRIZE_R;
+            const c = newCoin(Math.min(W - r, Math.max(r, x + (Math.random() * 16 - 8))),
+                              0, kind, word);
+            c.state = 'fall'; c.t = 0;
+            c.fy0 = -r;                      // 從機台後方的投幣槽滑下來
+            c.fy1 = plateY + r + 2;          // 落在推板前面，下一趟就會被推
+            c.y = c.fy0;
+            field.push(c);
+            playTone(330, 'square', 0.06);
+        }
+
+        function finish(token) {
+            playing = false;
+            slotsEl.innerHTML = '';
+            say('最後再推一波……');
+            // 多推兩秒，讓最後投的幣有機會掉下來再結算
+            roundTimer = setTimeout(() => {
+                if (token !== gameToken) return;
+                // 停機再結算：不然結算後還在掉的幣會讓狀態列的數字比獎狀上的大，
+                // 而且那些幣是發不出去的（金幣已經匯出去了）
+                live = false;
+                const total = queue.length;
+                let stars, title;
+                if (good === total) { stars = '⭐⭐⭐'; title = '全部投對！推幣大師！'; coinsEarned += 10; }
+                else if (good >= total * 0.7) { stars = '⭐⭐'; title = '投得很準！'; coinsEarned += 5; }
+                else { stars = '⭐'; title = '玩完一輪囉！'; }
+
+                document.getElementById('r-stars').textContent = stars;
+                document.getElementById('r-title').textContent = `${title}（${good}/${total}）`;
+                document.getElementById('r-coins').textContent =
+                    `推落 ${dropped} 枚，獲得 💰 ${coinsEarned} 金幣`;
+                updateStats();
+
+                const hint = document.getElementById('r-hint');
+                hint.textContent = '';
+                awardCoins(coinsEarned, (ok) => {
+                    hint.textContent = ok ? '金幣已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後金幣才能入帳喔）';
+                });
+
+                document.getElementById('overlay').classList.add('show');
+                if (good === total && typeof confetti !== 'undefined')
+                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+            }, 2200);
+        }
+
+        function hideOverlay() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('btn-start').style.display = '';
+            document.getElementById('q-zh').textContent = '再按一次「開始」！';
+            document.getElementById('q-zy').textContent = '';
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        setupConfig();
+        raf = requestAnimationFrame(loop);
+
+        if (typeof getWeakWords === 'function') {
+            const weak = getWeakWords(20).map(x => x.word).filter(w => meaningOf(w));
+            if (weak.length >= 4) {
+                const group = { '最需要練的': weak.slice(0, 10) };
+                if (weak.length > 10) group['第二批'] = weak.slice(10, 20);
+                words['🔥 加強複習'] = group;
+                catS.add(new Option('🔥 加強複習', '🔥 加強複習'));
+            }
+        }
+        if (typeof attachWordlistCategory === 'function') {
+            attachWordlistCategory(words, () => {
+                const name = '⭐ 我的單字卡';
+                if (!Array.from(catS.options).some(o => o.value === name))
+                    catS.add(new Option(name, name));
+            });
+        }
+        if (typeof attachLookupCategory === 'function') {
+            attachLookupCategory(words, () => {
+                const name = '⭐ 我查過的字';
+                if (!Array.from(catS.options).some(o => o.value === name))
+                    catS.add(new Option(name, name));
+            });
+        }
+    </script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
