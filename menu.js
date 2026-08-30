@@ -111,8 +111,56 @@ function injectMenuStyles() {
 .dm-ver button{border:1.5px solid #e3dff0;background:#fff;color:#7b1fa2;border-radius:99px;
   padding:5px 11px;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
 .dm-ver button:active{background:#f6f1fb}
+.dm-stale span{color:#d6336c;font-weight:700}
+.dm-stale span::before{content:"有新版本　"}
+.dm-stale button{border-color:#f06595;background:#ffe8ef;color:#c2255c}
+.dm-hasnew::after{content:"";position:absolute;right:1px;top:1px;
+  width:11px;height:11px;border-radius:50%;background:#ff4757;border:2px solid #fff}
 @media (prefers-reduced-motion:reduce){.dm-panel,.dm-backdrop{transition:none}}`;
   document.head.appendChild(el);
+}
+
+/** 等新的 Service Worker 接手；等不到也不卡住，重載一次通常就換過去了 */
+function waitForNewWorker(ms) {
+  return new Promise((done) => {
+    const timer = setTimeout(done, ms);
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      clearTimeout(timer);
+      done();
+    }, { once: true });
+  });
+}
+
+/**
+ * 從網路核對版本。
+ * 選單上顯示的版本號是從快取裡的 version.js 來的 —— 快取是舊的，那個數字就是舊的，
+ * 所以光看它分不出「已經是最新」和「根本沒更新到」。這支直接問網路，
+ * 有新版就把按鈕改成看得懂的字，並在 ☰ 上點一顆紅點。
+ */
+function checkForUpdate() {
+  if (typeof fetch !== "function") return;
+  fetch("./version.js?ts=" + Date.now(), { cache: "no-store" })
+    .then((r) => (r.ok ? r.text() : null))
+    .then((text) => {
+      const m = text && text.match(/APP_VERSION\s*=\s*"([^"]+)"/);
+      const here = typeof APP_VERSION !== "undefined" ? APP_VERSION : "";
+      if (!m || !here || m[1] === here) return;
+
+      const box = document.querySelector(".dm-ver");
+      const btn = document.getElementById("dm-refresh");
+      const hamburger = document.getElementById("dm-btn");
+      if (box) box.classList.add("dm-stale");
+      if (btn) btn.textContent = "更新到 " + m[1];
+      if (hamburger) hamburger.classList.add("dm-hasnew");
+
+      // 既然已經知道有新版，就順手叫 Service Worker 去裝，不用等瀏覽器自己想到。
+      // 裝好之後她下次打開就是新的，連按鈕都不用按。
+      if (navigator.serviceWorker)
+        navigator.serviceWorker.getRegistrations()
+          .then((regs) => regs.forEach((r) => r.update().catch(() => {})))
+          .catch(() => {});
+    })
+    .catch(() => { /* 離線就算了，本來就沒得更新 */ });
 }
 
 function initMenu() {
@@ -135,8 +183,16 @@ function initMenu() {
 
   btn.addEventListener("click", () => setOpen(!panel.classList.contains("dm-open")));
 
-  // 「強制更新」：清掉快取、註銷 Service Worker、重新抓。
-  // 手機上光是重新整理常常還是拿到舊的。
+  // 「強制更新」：清掉快取，叫 Service Worker 重抓一份新的，等它接手再重載。
+  //
+  // 這裡踩過三個坑，都會讓按鈕看起來沒作用：
+  //   1. 原本會 unregister() Service Worker。註銷之後頁面重新註冊、重新 install，
+  //      而 install 預設走 HTTP 快取，等於把剛剛刪掉的舊檔又抓回來一次。
+  //      改成 update()：它會繞過 HTTP 快取重抓 sw.js，新的 SW 再用
+  //      cache:'reload' 裝一份真正新鮮的檔案（見 sw.js 的 install）。
+  //   2. 原本結尾是 location.reload(true)。那個 true 早就從規範拿掉、
+  //      所有瀏覽器都忽略，等於普通重整，照樣吃 HTTP 快取。
+  //   3. 順序不能顛倒：一定要先刪快取再 update()，反過來會把新裝好的檔案刪掉。
   const refresh = document.getElementById("dm-refresh");
   if (refresh) refresh.addEventListener("click", async () => {
     refresh.textContent = "更新中…";
@@ -148,11 +204,14 @@ function initMenu() {
       }
       if (navigator.serviceWorker) {
         const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
+        await Promise.all(regs.map((r) => r.update().catch(() => {})));
+        await waitForNewWorker(6000);
       }
     } catch (e) { /* 清不掉就算了，還是重新載入 */ }
-    location.reload(true);
+    location.reload();
   });
+
+  checkForUpdate();
   back.addEventListener("click", () => setOpen(false));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
 }
