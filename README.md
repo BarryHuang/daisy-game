@@ -47,9 +47,14 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 （Pages 根目錄需要有 index.html，否則會退回渲染 README）。
 
 ### 頁面
-`daisy_dictionary.html`（查單字）· `story_hub.html`（課文）·
-`daisy_hamster.html`（主遊戲）· `parent_dashboard.html` ·
-`words_review.html`（注音校對工具）
+`daisy_dictionary.html`（查單字）· `wordbook.html`（單字總表）·
+`story_hub.html`（課文）· `daisy_hamster.html`（主遊戲）·
+`parent_dashboard.html` · `words_review.html`（注音校對工具）
+
+`wordbook.html` 是給她自己翻的總表：課表 243 個字（外加她的單字卡和查過的字），
+可搜尋英文或中文、依課表或字母排序、只看要加強的；每個字顯示 emoji、中文加注音、
+熟練度（✅ 學會／🔥 要加強／○ 沒練過），點一下會唸出來並展開例句。
+家長後台的「還沒學會的字」是給爸媽看雲端紀錄的，兩者不重疊。
 
 遊戲頁（都吃同一組題庫來源：本學期字表 → 她自建的清單 → 查過的字 → 弱字）：
 

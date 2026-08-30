@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20260829-0538';
+const CACHE_NAME = 'daisy-20260830-0215';
 
 const LOCAL_ASSETS = [
   './',
@@ -20,6 +20,7 @@ const LOCAL_ASSETS = [
   './wordlists.js',
   './wordset.js',
   './flashcards.html',
+  './wordbook.html',
   './exams.js',
   './final_questions.js',
   './firebase-config.js',
