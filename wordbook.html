@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📒 單字總表</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(160deg, #eef4ff 0%, #f5ecff 55%, #ffeef6 100%);
+            margin: 0; padding: 10px 10px 60px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; color: #3c3b47;
+        }
+        .wrap { width: 100%; max-width: 560px; }
+        h2 { color: #6f42c1; margin: 4px 0 10px; font-size: 1.3rem; text-align: center;
+             text-shadow: 1px 1px 0 #fff; }
+
+        /* 控制列黏在上面：清單很長，捲到一半還是要能搜尋 */
+        .controls {
+            position: sticky; top: 0; z-index: 5;
+            background: rgba(247,244,255,0.96); backdrop-filter: blur(6px);
+            border-radius: 14px; padding: 9px; margin-bottom: 8px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+        #q {
+            width: 100%; padding: 10px 12px; border-radius: 10px; font-size: 1rem;
+            border: 2px solid #d9cdf0; outline: none; font-family: inherit;
+            background: #fff; color: #333;
+        }
+        #q:focus { border-color: #9b6fe8; }
+        .row2 { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+        select {
+            flex: 1 1 0; min-width: 0; padding: 7px; border-radius: 9px;
+            border: 2px solid #d9cdf0; background: #fff; color: #333;
+            font-family: inherit; font-size: 0.85rem; outline: none;
+        }
+        .chip {
+            border: 2px solid #d9cdf0; background: #fff; color: #7a6f92;
+            border-radius: 99px; padding: 7px 12px; font-size: 0.8rem;
+            font-family: inherit; font-weight: bold; cursor: pointer; white-space: nowrap;
+        }
+        .chip.on { background: #ffe8ef; border-color: #f06595; color: #c2255c; }
+
+        .tally {
+            display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+            font-size: 0.78rem; color: #7a6f92; padding: 7px 2px 2px;
+        }
+        .tally b { font-size: 0.95rem; }
+        .tally .ok b { color: #2f9e44 } .tally .weak b { color: #e8590c }
+        .tally .new b { color: #868e96 } .tally .all b { color: #6f42c1 }
+
+        .grp {
+            position: sticky; top: 108px; z-index: 3;
+            margin: 14px 0 5px; padding: 5px 11px; border-radius: 99px;
+            background: #6f42c1; color: #fff; font-size: 0.76rem; font-weight: bold;
+            display: inline-block; box-shadow: 0 2px 6px rgba(111,66,193,0.3);
+        }
+
+        .card { background: #fff; border-radius: 14px; overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 6px; }
+        .row {
+            display: flex; align-items: center; gap: 10px; width: 100%;
+            padding: 9px 11px; border: 0; background: none; cursor: pointer;
+            font-family: inherit; text-align: left; color: inherit;
+        }
+        .row:active { background: #f7f2ff; }
+        .emo { font-size: 1.6rem; line-height: 1; width: 30px; text-align: center; flex: none; }
+        .mid { flex: 1; min-width: 0; }
+        /* 一定要用直接子選擇器：zhuyin.js 的聲調符號也是 <b>，
+           `.mid b` 會一起選到它，把顏色和字級蓋掉（README 已知的坑第 9 條） */
+        .mid > b { display: block; font-size: 1.05rem; color: #2b2a35; word-break: break-word; }
+        .mid .zh { font-size: 0.92rem; color: #6f42c1; line-height: 1.5; }
+        .badge { flex: none; font-size: 1rem; width: 24px; text-align: center; }
+        .badge.new { opacity: 0.28; }
+        .ex {
+            padding: 0 12px 11px 51px; font-size: 0.85rem; color: #6d6a7d;
+            line-height: 1.5; border-top: 1px dashed #efeaf8; padding-top: 9px;
+        }
+        .ex em { font-style: normal; color: #9b6fe8; font-weight: bold; }
+        .ex .say {
+            border: 0; background: #f0e9fb; color: #6f42c1; border-radius: 99px;
+            padding: 4px 12px; font-size: 0.76rem; font-weight: bold;
+            font-family: inherit; cursor: pointer; margin-top: 7px;
+        }
+        .hidden { display: none; }
+
+        .empty { text-align: center; color: #9b96ad; padding: 36px 10px; font-size: 0.9rem; }
+        #top {
+            position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom));
+            width: 42px; height: 42px; border-radius: 50%; border: 0; cursor: pointer;
+            background: rgba(111,66,193,0.9); color: #fff; font-size: 1.1rem; z-index: 20;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3); display: none;
+        }
+        #top.show { display: block; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h2>📒 單字總表</h2>
+
+    <div class="controls">
+        <input id="q" type="search" placeholder="搜尋英文或中文…　例如 forest、森林" autocomplete="off">
+        <div class="row2">
+            <select id="scope"></select>
+            <select id="order">
+                <option value="book">依課表順序</option>
+                <option value="az">依字母 A → Z</option>
+            </select>
+            <button class="chip" id="only">只看要加強</button>
+        </div>
+        <div class="tally" id="tally"></div>
+    </div>
+
+    <div id="list"></div>
+</div>
+<button id="top" title="回到最上面">↑</button>
+
+<script src="./words.js"></script>
+<script src="./zhuyin.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./lookups.js"></script>
+<script src="./wordlists.js"></script>
+<script src="./mastery.js"></script>
+<script>
+    const qEl = document.getElementById('q'), scopeEl = document.getElementById('scope');
+    const orderEl = document.getElementById('order'), onlyEl = document.getElementById('only');
+    const listEl = document.getElementById('list'), tallyEl = document.getElementById('tally');
+
+    const ALL = '全部';
+    let onlyWeak = false;
+    let opened = null;                 // 展開中的那個字（一次只開一個）
+
+    function speak(word) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(word);
+        u.lang = 'en-US'; u.rate = 0.8; u.pitch = 1.2;
+        window.speechSynthesis.speak(u);
+    }
+
+    function meaningOf(word) {
+        if (typeof lookupWord === 'function') {
+            const e = lookupWord(word);
+            if (e && e.s && e.s[0] && e.s[0].zh) return { zh: e.s[0].zh, z: e.s[0].z || [] };
+        }
+        if (typeof wordlistMeaning === 'function') {
+            const m = wordlistMeaning(word);
+            if (m && m.zh) return { zh: m.zh, z: m.z || [] };
+        }
+        return null;
+    }
+
+    function faceOf(word) {
+        return (typeof wordImages !== 'undefined' && wordImages[word]) || '🔤';
+    }
+    function exampleOf(word) {
+        return (typeof wordExamples !== 'undefined' && wordExamples[word]) || '';
+    }
+
+    /** ✅ 連對三次就算學會、🔥 錯過而且還沒學會、○ 還沒練過 */
+    function statusOf(word) {
+        if (typeof getMastery !== 'function') return 'new';
+        const m = getMastery(word);
+        if (!m) return 'new';
+        if ((m.s || 0) >= 3) return 'ok';
+        return (m.w || 0) > 0 ? 'weak' : 'new';
+    }
+    const BADGE = { ok: '✅', weak: '🔥', new: '○' };
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"]/g, c =>
+            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    // ---- 資料：把 words 攤平成一筆一筆，保留它是哪一組的 ----
+    function collect() {
+        const rows = [];
+        for (const [cat, weeks] of Object.entries(words))
+            for (const [wk, list] of Object.entries(weeks || {}))
+                for (const w of list) rows.push({ w, cat, wk });
+        return rows;
+    }
+
+    function buildScope() {
+        const cats = Object.keys(words);
+        const keep = scopeEl.value;
+        scopeEl.innerHTML = `<option value="${ALL}">全部單字</option>` +
+            cats.map(c => `<option value="${c}">${escapeHtml(c)}</option>`).join('');
+        if (keep && Array.from(scopeEl.options).some(o => o.value === keep)) scopeEl.value = keep;
+    }
+
+    function matches(row, needle) {
+        if (!needle) return true;
+        if (row.w.toLowerCase().includes(needle)) return true;
+        const m = meaningOf(row.w);
+        return !!(m && m.zh.includes(needle));
+    }
+
+    function render() {
+        const needle = qEl.value.trim().toLowerCase();
+        const scope = scopeEl.value;
+        const byAz = orderEl.value === 'az';
+
+        let rows = collect()
+            .filter(r => scope === ALL || r.cat === scope)
+            .filter(r => !onlyWeak || statusOf(r.w) === 'weak')
+            .filter(r => matches(r, needle));
+
+        // 字母排序時同一個字只留一筆：promise 在 Wk 2 和 Wk 3 都出現過
+        if (byAz) {
+            const seen = new Set();
+            rows = rows.filter(r => {
+                const k = r.w.toLowerCase();
+                if (seen.has(k)) return false;
+                seen.add(k); return true;
+            }).sort((a, b) => a.w.toLowerCase().localeCompare(b.w.toLowerCase()));
+        }
+
+        countUp(rows);
+
+        if (!rows.length) {
+            listEl.innerHTML = `<div class="empty">找不到符合的單字${
+                onlyWeak ? '<br>（目前只顯示「要加強」的字）' : ''}</div>`;
+            return;
+        }
+
+        let html = '', group = '';
+        for (const r of rows) {
+            if (!byAz) {
+                const g = `${r.cat} ・ ${r.wk}`;
+                if (g !== group) { group = g; html += `<div class="grp">${escapeHtml(g)}</div>`; }
+            }
+            const m = meaningOf(r.w);
+            const zh = m
+                ? (typeof renderZhuyin === 'function' && m.z.length
+                    ? renderZhuyin(m.zh, m.z) : escapeHtml(m.zh))
+                : '<span style="opacity:.45">（還沒有中文）</span>';
+            const st = statusOf(r.w);
+            html += `<div class="card">
+                <button class="row" data-w="${escapeHtml(r.w)}">
+                    <span class="emo">${faceOf(r.w)}</span>
+                    <span class="mid"><b>${escapeHtml(r.w)}</b><span class="zh">${zh}</span></span>
+                    <span class="badge ${st}">${BADGE[st]}</span>
+                </button>
+                <div class="ex hidden" data-ex="${escapeHtml(r.w)}"></div>
+            </div>`;
+        }
+        listEl.innerHTML = html;
+
+        listEl.querySelectorAll('.row').forEach(b => {
+            b.addEventListener('click', () => toggle(b.dataset.w, b));
+        });
+        opened = null;
+    }
+
+    function countUp(rows) {
+        const uniq = new Set(rows.map(r => r.w.toLowerCase()));
+        let ok = 0, weak = 0, plain = 0;
+        for (const r of rows) {
+            if (!uniq.has(r.w.toLowerCase())) continue;
+            uniq.delete(r.w.toLowerCase());
+            const s = statusOf(r.w);
+            if (s === 'ok') ok++; else if (s === 'weak') weak++; else plain++;
+        }
+        tallyEl.innerHTML =
+            `<span class="all">共 <b>${ok + weak + plain}</b> 字</span>` +
+            `<span class="ok">✅ 學會 <b>${ok}</b></span>` +
+            `<span class="weak">🔥 要加強 <b>${weak}</b></span>` +
+            `<span class="new">○ 還沒練 <b>${plain}</b></span>`;
+    }
+
+    /** 點一下：唸給她聽，並展開例句。一次只開一個，清單才不會越滑越亂 */
+    function toggle(word, btn) {
+        speak(word);
+        const box = btn.parentElement.querySelector('.ex');
+        if (opened && opened !== box) opened.classList.add('hidden');
+        if (box.classList.contains('hidden')) {
+            const ex = exampleOf(word);
+            box.innerHTML = ex
+                ? `${highlight(ex, word)}<br><button class="say">🔊 唸整句</button>`
+                : `<button class="say">🔊 再唸一次</button>`;
+            box.querySelector('.say').addEventListener('click', (e) => {
+                e.stopPropagation();
+                speak(ex || word);
+            });
+            box.classList.remove('hidden');
+            opened = box;
+        } else {
+            box.classList.add('hidden');
+            opened = null;
+        }
+    }
+
+    // 例句裡把這個字標出來（含 -s/-ed/-ing 之類的變化）
+    function highlight(sentence, word) {
+        const safe = escapeHtml(sentence);
+        const stem = escapeHtml(word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return safe.replace(new RegExp(`\\b(${stem}\\w*)`, 'ig'), '<em>$1</em>');
+    }
+
+    qEl.addEventListener('input', render);
+    scopeEl.addEventListener('change', render);
+    orderEl.addEventListener('change', render);
+    onlyEl.addEventListener('click', () => {
+        onlyWeak = !onlyWeak;
+        onlyEl.classList.toggle('on', onlyWeak);
+        render();
+    });
+
+    const topBtn = document.getElementById('top');
+    topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    window.addEventListener('scroll', () => topBtn.classList.toggle('show', window.scrollY > 400));
+
+    buildScope();
+    render();
+
+    // 熟練度和她自己的清單都可能晚點才從雲端回來。只補資料再重畫，
+    // 不重建 <select>（會把她選到一半的範圍洗掉）
+    if (typeof syncMastery === 'function') syncMastery(() => render());
+    if (typeof attachWordlistCategory === 'function')
+        attachWordlistCategory(words, () => { buildScope(); render(); });
+    if (typeof attachLookupCategory === 'function')
+        attachLookupCategory(words, () => { buildScope(); render(); });
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
