@@ -80,7 +80,7 @@
         }
         .legend b { color: #fff; font-weight: bold; }
 
-        /* 投幣口 */
+        /* 答案選項 */
         #slots {
             display: flex; gap: 6px; width: 100%; margin-bottom: 4px;
         }
@@ -92,6 +92,7 @@
             box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25);
         }
         .slot small { display: block; font-size: 0.6rem; opacity: 0.75; font-weight: normal; margin-top: 3px; }
+        .slot.picked { background: linear-gradient(180deg, #6dbf73, #3f8f47); }
         .slot:active { transform: translateY(2px); }
         .slot.dead { background: #b9b4ad; opacity: 0.55; pointer-events: none; }
         .slot.nope { animation: shake 0.35s ease; }
@@ -100,6 +101,23 @@
             25% { transform: translateX(-6px); }
             75% { transform: translateX(6px); }
         }
+
+        /* 投幣鈕：整個技巧都在這一下的時機 */
+        #btn-coin {
+            width: 100%; margin-top: 7px; padding: 14px 8px; border: none;
+            border-radius: 14px; font-family: inherit; font-weight: bold; font-size: 1.1rem;
+            color: #6b3600; cursor: pointer;
+            background: linear-gradient(180deg, #ffe066, #f08c00);
+            box-shadow: inset 0 -5px 0 rgba(0,0,0,0.22);
+        }
+        #btn-coin:active { transform: translateY(2px); }
+        #btn-coin:disabled {
+            background: linear-gradient(180deg, #cfc9c0, #a8a29a);
+            color: #f4f1ec; box-shadow: inset 0 -5px 0 rgba(0,0,0,0.12);
+        }
+        #btn-coin.ready { animation: pulse 0.9s infinite; }
+        @keyframes pulse { 0%,100% { filter: brightness(1) } 50% { filter: brightness(1.16) } }
+        @media (prefers-reduced-motion: reduce) { #btn-coin.ready { animation: none } }
 
         #machine {
             display: block; width: 100%; height: 340px;
@@ -171,13 +189,14 @@
         </div>
         <div id="slots"></div>
         <canvas id="machine"></canvas>
+        <button id="btn-coin" disabled>先選對答案</button>
         <!-- 這幾個數字要跟下面的 VALUE 一致 -->
         <div class="legend">
             <span>💎 <b>20</b></span><span>🧸 <b>12</b></span><span>🎁 <b>8</b></span>
             <span>⭐ <b>5</b></span><span>🍭 <b>4</b></span><span>🪙 <b>2</b></span>
         </div>
     </div>
-    <div id="message">選對的投幣口，硬幣才進得去！</div>
+    <div id="message">選對答案拿硬幣，再抓準時機投下去！</div>
     <button id="btn-start" onclick="startGame()">開始 ▶</button>
 
     <div id="overlay">
@@ -215,8 +234,9 @@
         // 同樣 70 顆在手機上擠爆、在 iPad 上稀稀落落。
         const AREA_PER_COIN = 780;         // 一顆幣分到的台面面積（越小越密）
         // 台上埋的獎品。畫面下方的價目表要跟著改
+        const TABLE_KEY = 'daisy_pusher_table';   // 台面存檔，見 ensureTable()
         const VALUE = { coin: 2, candy: 4, star: 5, gift: 8, bear: 12, gem: 20 };
-        const FACE = { candy: '🍭', star: '⭐', gift: '🎁', bear: '🧸', gem: '💎' };
+        const FACE = { coin: '🪙', candy: '🍭', star: '⭐', gift: '🎁', bear: '🧸', gem: '💎' };
 
         let W = 360, H = 340, EDGE = H - TRAY_H, dpr = 1;
         let field = [], plateY = 34, clock = 0, lastFrame = 0, raf = 0;
@@ -228,6 +248,14 @@
         let queue = [], pool = [], round = 0, good = 0, combo = 0;
         let coinsEarned = 0, dropped = 0, current = null, wrongThisRound = 0;
         let playing = false, gameToken = 0, roundTimer = null;
+
+        // 投幣頭在軌道上來回跑，她按下投幣的那一刻決定硬幣落在哪 ——
+        // 遊戲的技巧就在這一下：要把幣投在快掉下去的那一疊上面。
+        let dropX = 60, dropDir = 1;
+        let phase = 'idle';            // idle：不能投／drop：手上有幣等她投
+        let dropQueue = [];            // 這一題還沒投出去的幣（先進先出）
+        let turbo = 0;                 // 連對的加碼：推板衝程變大幾秒
+        const TURBO_EXTRA = 20;
 
         // ---- 音效 ----
         let audioCtx;
@@ -364,7 +392,15 @@
 
         function step(dt) {
             clock += dt;
-            plateY = PLATE_MIN + PLATE_AMP * (0.5 - 0.5 * Math.cos(clock * 2 * Math.PI / PERIOD));
+            // 越後面的題目投幣頭跑越快，時機越難抓
+            const speed = 130 + Math.min(90, round * 9);
+            dropX += dropDir * speed * dt;
+            if (dropX < 20) { dropX = 20; dropDir = 1; }
+            if (dropX > W - 20) { dropX = W - 20; dropDir = -1; }
+
+            if (turbo > 0) turbo = Math.max(0, turbo - dt);
+            const amp = PLATE_AMP + (turbo > 0 ? TURBO_EXTRA : 0);
+            plateY = PLATE_MIN + amp * (0.5 - 0.5 * Math.cos(clock * 2 * Math.PI / PERIOD));
 
             for (const c of field) {
                 if (c.state === 'fall') {
@@ -532,18 +568,10 @@
                 ctx.beginPath(); ctx.arc(W - 2.5, y, 1.6, 0, 7); ctx.fill();
             }
 
-            // 最上方的投幣槽口（固定不動，對齊上面三個投幣口按鈕）
-            ctx.fillStyle = '#161b30'; ctx.fillRect(0, 0, W, 14);
-            const lanes = Math.max(1, slotsEl.children.length || 3);
-            for (let i = 0; i < lanes; i++) {
-                const cx = (i + 0.5) * (W / lanes);
-                ctx.fillStyle = '#05070f';
-                roundRect(cx - 17, 3, 34, 8, 4); ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,0.22)';
-                roundRect(cx - 17, 3, 34, 2, 1); ctx.fill();
-            }
+            drawDropper();
 
             [...field].sort((a, b) => a.y - b.y).forEach(drawCoin);
+            markNearlyThere();
 
             for (const sp of sparks) {                            // 掉幣的碎光
                 ctx.globalAlpha = 1 - sp.t;
@@ -560,6 +588,58 @@
                 ctx.fillRect(-8, -8, W + 16, H + 16);
             }
             ctx.restore();
+        }
+
+        /**
+         * 快掉下去的獎品畫一圈會呼吸的光。
+         * 台面是留著的，所以「上次推到一半的那顆寶石」是這個遊戲最有價值的東西 ——
+         * 得讓她一眼看到它就在那裡，而且快掉了。
+         */
+        function markNearlyThere() {
+            const pulse = 0.55 + 0.45 * Math.sin(clock * 5);
+            for (const c of field) {
+                if (c.state !== 'on' || c.kind === 'coin' || c.y < EDGE - 46) continue;
+                const r = c.r * (0.86 + 0.28 * (c.y / H));
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255,214,102,' + (0.9 * pulse).toFixed(2) + ')';
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.ellipse(c.x, c.y, r * 1.35, r * 0.95, 0, 0, 7); ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        /** 台面上還剩什麼大獎、離出口多近 —— 開局時拿來提醒她上次推到哪 */
+        function frontPrize() {
+            let best = null;
+            for (const c of field)
+                if (c.state === 'on' && c.kind !== 'coin' && (!best || c.y > best.y)) best = c;
+            return best;
+        }
+
+        /** 最上方的軌道和來回跑的投幣頭，外加能投的時候才出現的瞄準線 */
+        function drawDropper() {
+            ctx.fillStyle = '#141930'; ctx.fillRect(0, 0, W, 17);
+            ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(0, 15, W, 2);
+
+            if (phase === 'drop') {
+                ctx.strokeStyle = 'rgba(255,214,102,0.4)';
+                ctx.lineWidth = 2; ctx.setLineDash([5, 7]);
+                ctx.beginPath(); ctx.moveTo(dropX, 18); ctx.lineTo(dropX, EDGE - 2); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            const hot = phase === 'drop';
+            const g = ctx.createLinearGradient(0, 0, 0, 15);
+            g.addColorStop(0, hot ? '#ffe066' : '#8992a8');
+            g.addColorStop(1, hot ? '#e8930b' : '#5c6478');
+            ctx.fillStyle = g;
+            roundRect(dropX - 18, 1, 36, 14, 5); ctx.fill();
+            ctx.fillStyle = '#05070f';
+            roundRect(dropX - 11, 11, 22, 5, 2.5); ctx.fill();
+            if (hot) {
+                ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                ctx.beginPath(); ctx.arc(dropX, 7, 2.2, 0, 7); ctx.fill();
+            }
         }
 
         function drawPlate() {
@@ -625,18 +705,76 @@
 
         function say(text) { document.getElementById('message').textContent = text; }
 
+        /**
+         * 台面不重置。
+         *
+         * 上一局辛苦推到快掉下去的寶石，開新局如果重鋪就白費了 —— 那是這個遊戲
+         * 最有價值的東西。所以台面只在「真的空了」的時候才重鋪，平常一路留著，
+         * 連關掉頁面也留著（存在 localStorage）。
+         */
+        function ensureTable() {
+            const on = field.filter(c => c.state === 'on').length;
+            if (on >= 25) return;
+            if (!on && loadTable()) return;
+            fillMachine();
+        }
+
+        function saveTable() {
+            try {
+                const on = field.filter(c => c.state === 'on').slice(0, 150)
+                    .map(c => [Math.round(c.x), Math.round(c.y), c.kind, c.word || '']);
+                localStorage.setItem(TABLE_KEY, JSON.stringify({ w: Math.round(W), c: on }));
+            } catch (e) {}
+        }
+
+        function loadTable() {
+            try {
+                const d = JSON.parse(localStorage.getItem(TABLE_KEY));
+                if (!d || !Array.isArray(d.c) || d.c.length < 12) return false;
+                // 存的是上次的台寬。換手機或轉向時整個等比例縮過來，
+                // 不然幣會全部擠在左邊或超出台面
+                const k = d.w ? W / d.w : 1;
+                field = d.c.map(([x, y, kind, word]) => newCoin(
+                    Math.min(W - 18, Math.max(18, x * k)),
+                    Math.min(EDGE - 3, Math.max(40, y)), kind, word));
+                // 存下來的排法本來就已經擠開過了，只要稍微收一下邊界就好；
+                // 跑太多次會把她辛苦推到前緣的那一疊往回推散
+                for (let i = 0; i < 8; i++) separate();
+                return true;
+            } catch (e) { return false; }
+        }
+
+        /**
+         * 台面不重鋪，獎品被推下去就再也不會有了。每題檢查一次，少於兩個就補一個。
+         *
+         * 只補小獎（🍭⭐🎁）。💎 和 🧸 要嘛是開台就埋在裡面的，要嘛是連對三次
+         * 換來的 —— 大獎跟著本事走，不能靠站著等它自己長出來。
+         * 實測補太大方的版本，一局打完台上躺著四顆 💎，那就不用推了。
+         */
+        function topUpPrizes() {
+            const n = field.filter(c => c.state === 'on' && c.kind !== 'coin').length;
+            if (n >= 2) return;
+            const small = ['candy', 'star', 'gift'];
+            spawn(30 + Math.random() * (W - 60), small[Math.floor(Math.random() * small.length)], '');
+        }
+
         function resetGame() {
             gameToken++;
             clearTimeout(roundTimer);
             playing = false; current = null; live = true;
+            phase = 'idle'; dropQueue = [];
             round = 0; good = 0; combo = 0; coinsEarned = 0; dropped = 0;
-            fillMachine();
+            ensureTable();
             document.getElementById('q-zh').textContent = '按「開始」來玩！';
             document.getElementById('q-zy').textContent = '';
             document.getElementById('btn-hear').style.display = 'none';
             document.getElementById('btn-start').style.display = '';
             slotsEl.innerHTML = '';
-            say('選對的投幣口，硬幣才進得去！');
+            setCoinBtn();
+            const near = frontPrize();
+            say(near && near.y > EDGE - 60
+                ? '上次推到一半的 ' + FACE[near.kind] + ' 還在最前面，快掉下去了！'
+                : '選對答案拿硬幣，再抓準時機投下去！');
             document.getElementById('s-round').textContent = '-';
             document.getElementById('s-total').textContent = '-';
             updateStats();
@@ -645,6 +783,18 @@
         function updateStats() {
             document.getElementById('s-drop').textContent = dropped;
             document.getElementById('s-coins').textContent = coinsEarned;
+        }
+
+        /** 投幣鈕的文字就是現在該做什麼 */
+        function setCoinBtn() {
+            const b = document.getElementById('btn-coin');
+            const on = phase === 'drop' && dropQueue.length > 0;
+            b.disabled = !on;
+            b.classList.toggle('ready', on);
+            b.textContent = on
+                ? (dropQueue.length > 1 ? `投幣 ${FACE[dropQueue[0]] || '🪙'} × ${dropQueue.length}`
+                                        : `投幣 ${FACE[dropQueue[0]] || '🪙'}`)
+                : (playing ? '先選對答案' : '按「開始」來玩');
         }
 
         function startGame() {
@@ -661,8 +811,9 @@
             pool = usable;
             queue = usable.slice(0, QUESTIONS);
             round = 0; good = 0; combo = 0; coinsEarned = 0; dropped = 0;
+            phase = 'idle'; dropQueue = [];
             playing = true;
-            fillMachine();
+            ensureTable();                      // 只有空了才重鋪，上一局的台面留著
             document.getElementById('btn-start').style.display = 'none';
             document.getElementById('btn-hear').style.display = '';
             document.getElementById('s-total').textContent = queue.length;
@@ -677,19 +828,21 @@
             const word = queue[round];
             round++;
             wrongThisRound = 0;
+            phase = 'idle'; dropQueue = [];
+            setCoinBtn();
+            topUpPrizes();
             document.getElementById('s-round').textContent = round;
 
             const m = meaningOf(word);
             current = { word, m, done: false };
             showPrompt(m);
             speak(word);
-            // 用引號夾住中文，否則「長滿草的」後面再接「的那一格」會變成兩個的
-            say('把硬幣投進「' + m.zh + '」那一格！');
+            say('哪一個是「' + m.zh + '」？');
 
             const others = shuffle(pool.filter(w => w !== word)).slice(0, 2);
             const choices = shuffle([word, ...others]);
             slotsEl.innerHTML = choices.map(w =>
-                `<button class="slot" data-w="${w}">${w}<small>投幣口</small></button>`).join('');
+                `<button class="slot" data-w="${w}">${w}<small>選這個</small></button>`).join('');
             slotsEl.querySelectorAll('.slot').forEach(b => {
                 b.addEventListener('click', () => tapSlot(b, token));
             });
@@ -698,8 +851,6 @@
         function tapSlot(btn, token) {
             if (token !== gameToken || !playing || !current || current.done) return;
             const w = btn.dataset.w;
-            const idx = Array.from(slotsEl.children).indexOf(btn);
-            const slotX = (idx + 0.5) * (W / slotsEl.children.length);
 
             if (w === current.word) {
                 current.done = true;
@@ -709,19 +860,21 @@
                 if (typeof recordAttempt === 'function')
                     recordAttempt(current.word, true, wrongThisRound);
 
-                // 一次投兩枚（沒錯過才有第二枚）：幣堆是單層的，投一枚大概只推得掉
-                // 一枚，一題一枚會讓整場都在等。第二枚同時也是「一次就答對」的獎勵。
-                dropCoin(slotX, 'coin', current.word);
-                if (wrongThisRound === 0) setTimeout(() => dropCoin(slotX + 10, 'coin'), 170);
+                // 答對拿到的是「投幣的權利」，投在哪由她自己抓時機。
+                // 兩枚（沒錯過才有第二枚）：幣堆是單層的，投一枚大概只推得掉一枚。
+                dropQueue = wrongThisRound === 0 ? ['coin', 'coin'] : ['coin'];
                 // 連對三次加碼一顆寶石，讓她有理由連著答對
                 if (combo > 0 && combo % 3 === 0) {
-                    setTimeout(() => dropCoin(slotX, 'gem'), 340);
-                    say('連對 ' + combo + ' 次！💎 加碼一顆寶石');
+                    dropQueue.push('gem');
+                    turbo = PERIOD;             // 順便讓推板多推一趟大的
+                    say('連對 ' + combo + ' 次！💎 加碼寶石，推板加速！');
                 } else {
-                    say(current.word + (wrongThisRound === 0 ? ' ✔ 兩枚投進去了！' : ' ✔ 投進去了！'));
+                    say(current.word + ' ✔ 拿到 ' + dropQueue.length + ' 枚，看準位置投下去！');
                 }
+                btn.classList.add('picked');
                 slotsEl.querySelectorAll('.slot').forEach(b => b.classList.add('dead'));
-                roundTimer = setTimeout(() => nextRound(token), 1300);
+                phase = 'drop';
+                setCoinBtn();
             } else {
                 wrongThisRound++; combo = 0;
                 playTone(200, 'sawtooth', 0.18);
@@ -729,7 +882,7 @@
                 btn.classList.add('nope');
                 btn.classList.add('dead');
                 const m = meaningOf(w);
-                say(w + ' 是「' + (m ? m.zh : '別的字') + '」，投錯了！');
+                say(w + ' 是「' + (m ? m.zh : '別的字') + '」，選錯了！');
                 // 錯兩次就公布答案往下走，不要卡在同一題
                 if (wrongThisRound >= 2) {
                     current.done = true;
@@ -743,20 +896,47 @@
             }
         }
 
-        function dropCoin(x, kind, word) {
+        /** 投幣：硬幣從投幣頭「當下」的位置落下，時機就是準頭 */
+        function pressCoin() {
+            if (phase !== 'drop' || !dropQueue.length) return;
+            const token = gameToken;
+            const kind = dropQueue.shift();
+            // 只有第一枚印上她剛答對的那個字
+            dropCoin(dropX, kind, kind === 'coin' && current ? current.word : '');
+
+            if (dropQueue.length) {
+                say('還有 ' + dropQueue.length + ' 枚！');
+                setCoinBtn();
+                return;
+            }
+            phase = 'idle';
+            setCoinBtn();
+            roundTimer = setTimeout(() => nextRound(token), 1000);
+        }
+
+        /** 從機台上方放一個東西下來，落在推板前面，下一趟就會被推 */
+        function spawn(x, kind, word) {
             const r = kind === 'coin' ? COIN_R : PRIZE_R;
-            const c = newCoin(Math.min(W - r, Math.max(r, x + (Math.random() * 16 - 8))),
-                              0, kind, word);
+            const c = newCoin(Math.min(W - r, Math.max(r, x)), 0, kind, word);
             c.state = 'fall'; c.t = 0;
-            c.fy0 = -r;                      // 從機台後方的投幣槽滑下來
-            c.fy1 = plateY + r + 2;          // 落在推板前面，下一趟就會被推
+            c.fy0 = -r;
+            c.fy1 = plateY + r + 2;
             c.y = c.fy0;
             field.push(c);
+            return c;
+        }
+
+        function dropCoin(x, kind, word) {
+            // 不加隨機偏移：落點就是她按下去的那一刻投幣頭在的地方，
+            // 偏移會讓「抓時機」這件事變得沒有意義
+            spawn(x, kind, word);
             playTone(330, 'square', 0.06);
         }
 
         function finish(token) {
             playing = false;
+            phase = 'idle'; dropQueue = [];
+            setCoinBtn();
             slotsEl.innerHTML = '';
             say('最後再推一波……');
             // 多推兩秒，讓最後投的幣有機會掉下來再結算
@@ -783,6 +963,9 @@
                     hint.textContent = ok ? '金幣已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後金幣才能入帳喔）';
                 });
 
+                // 台面留給下一局，順便存起來 —— 快推下去的寶石不該因為關掉頁面就沒了
+                saveTable();
+
                 document.getElementById('overlay').classList.add('show');
                 if (good === total && typeof confetti !== 'undefined')
                     confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
@@ -795,6 +978,17 @@
             document.getElementById('q-zh').textContent = '再按一次「開始」！';
             document.getElementById('q-zy').textContent = '';
         }
+
+        document.getElementById('btn-coin').addEventListener('click', pressCoin);
+        // 空白鍵也能投（她用 iPad 接鍵盤時比較好按）
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && phase === 'drop') { e.preventDefault(); pressCoin(); }
+        });
+        // 關頁面／切到背景就存一次台面，不然辛苦推到一半的進度會沒掉
+        window.addEventListener('pagehide', saveTable);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') saveTable();
+        });
 
         window.addEventListener('resize', resize);
         buildCoinArt();
