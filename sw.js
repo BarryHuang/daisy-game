@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20260830-0215';
+const CACHE_NAME = 'daisy-20260830-0230';
 
 const LOCAL_ASSETS = [
   './',
@@ -68,7 +68,15 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
       // 逐一 add，單一檔案失敗（例如檔名打錯）不會拖垮整個安裝
-      Promise.allSettled(LOCAL_ASSETS.map((url) => cache.add(url)))
+      //
+      // cache: 'reload' 不能拿掉。cache.add(url) 預設會走瀏覽器的 HTTP 快取，
+      // 而 GitHub Pages 對這些檔案送 max-age=600 —— 於是「清掉快取重裝」會
+      // 從 HTTP 快取抓回同一批舊檔，原封不動存進新名字的快取裡。
+      // 看起來像更新過了（快取名是新的、版本號卻還是舊的），實際上一個字都沒換。
+      // 手機上「按了強制更新還是舊版」就是這樣來的。
+      Promise.allSettled(
+        LOCAL_ASSETS.map((url) => cache.add(new Request(url, { cache: 'reload' })))
+      )
     )
   );
 });
@@ -87,16 +95,21 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  // 帶查詢字串的一律直接走網路，也不進快取。
+  // 目前是選單那支 version.js?ts=… 在用它核對有沒有新版：那本來就是要問網路的，
+  // 快取它只會多出一堆一次性的鍵。
+  const hasQuery = new URL(event.request.url).search !== '';
+
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
       cache.match(event.request).then((cached) => {
         const network = fetch(event.request).then((response) => {
           // 只快取成功的回應；opaque / 錯誤回應存進去會污染快取
-          if (response && response.ok) cache.put(event.request, response.clone());
+          if (response && response.ok && !hasQuery) cache.put(event.request, response.clone());
           return response;
         }).catch(() => cached);
 
-        return cached || network;
+        return (hasQuery ? null : cached) || network;
       })
     )
   );
