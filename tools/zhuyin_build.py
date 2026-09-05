@@ -63,6 +63,11 @@ OVERRIDE = {
  "生長":["ㄕㄥ","ㄓㄤˇ"],
  # 台灣讀音：期 ㄑㄧˊ（同 星期）、唯一的「一」不變調
  "假期":["ㄐㄧㄚˋ","ㄑㄧˊ"], "唯一":["ㄨㄟˊ","ㄧ"],
+ # 台灣讀音：播 ㄅㄛˋ、啜 ㄔㄨㄛˋ；「撒粉」的撒是灑的意思，讀 ㄙㄚˇ
+ "播放":["ㄅㄛˋ","ㄈㄤˋ"], "啜飲":["ㄔㄨㄛˋ","ㄧㄣˇ"], "撒粉":["ㄙㄚˇ","ㄈㄣˇ"],
+ # 趨向補語的「起來」，來讀輕聲（包起來、站起來、想起來）
+ "起來":["ㄑㄧˇ","ㄌㄞ˙"],
+ "整齊地":["ㄓㄥˇ","ㄑㄧˊ","ㄉㄜ˙"],
 }
 # single characters pypinyin reads with the wrong default for these texts;
 # words in OVERRIDE are applied afterwards and win where the reading differs.

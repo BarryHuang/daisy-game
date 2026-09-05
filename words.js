@@ -665,6 +665,83 @@ const curriculum = {
           "protect",
           "endangered"
         ]
+      },
+      "Santa Sleigh": {
+        "第 1 組": [
+          "powdered sugar",
+          "fingerprint",
+          "print",
+          "look after",
+          "rock out",
+          "electric",
+          "nearby",
+          "hangout",
+          "choice",
+          "cop"
+        ],
+        "第 2 組": [
+          "play",
+          "better",
+          "go ahead",
+          "change your mind",
+          "delicious",
+          "jelly beans",
+          "toward",
+          "held",
+          "gotta",
+          "north"
+        ],
+        "第 3 組": [
+          "police",
+          "mystery",
+          "sleigh",
+          "solve",
+          "crime",
+          "scratch",
+          "town",
+          "garage",
+          "store",
+          "scene"
+        ],
+        "第 4 組": [
+          "scrape",
+          "cold",
+          "greatest",
+          "detective",
+          "case",
+          "sip",
+          "eggnog",
+          "dust",
+          "chill",
+          "spill"
+        ],
+        "第 5 組": [
+          "explain",
+          "admit",
+          "grab",
+          "lost",
+          "clue",
+          "out of",
+          "return",
+          "North Pole",
+          "pretty",
+          "pointy"
+        ],
+        "第 6 組": [
+          "understand",
+          "confuse",
+          "reach",
+          "behind",
+          "pull out",
+          "pet the cat",
+          "neatly",
+          "wrap",
+          "exclaim",
+          "sneeze"
+        ],
+        "第 7 組": [
+          "allergy"
+        ]
       }
     }
   }
@@ -715,7 +792,7 @@ const wordEntries = {
   "happy": { s:[{zh:"快樂的",z:["ㄎㄨㄞˋ","ㄌㄜˋ","ㄉㄜ˙"]}] },
   "agree": { s:[{zh:"同意",z:["ㄊㄨㄥˊ","ㄧˋ"]}] },
   "quickly": { s:[{zh:"快速地",z:["ㄎㄨㄞˋ","ㄙㄨˋ","ㄉㄜ˙"]}] },
-  "return": { s:[{zh:"返回",z:["ㄈㄢˇ","ㄏㄨㄟˊ"]}] },
+  "return": { s:[{zh:"返回",z:["ㄈㄢˇ","ㄏㄨㄟˊ"]},{zh:"歸還",z:["ㄍㄨㄟ","ㄏㄨㄢˊ"]}] },
   "surprised": { s:[{zh:"驚訝的",z:["ㄐㄧㄥ","ㄧㄚˋ","ㄉㄜ˙"]}] },
   "pleased": { s:[{zh:"高興的",z:["ㄍㄠ","ㄒㄧㄥˋ","ㄉㄜ˙"]}] },
   "truth": { s:[{zh:"真相",z:["ㄓㄣ","ㄒㄧㄤˋ"]}] },
@@ -1173,7 +1250,62 @@ const wordEntries = {
   "blind": { s:[{zh:"失明的",z:["ㄕ","ㄇㄧㄥˊ","ㄉㄜ˙"]}] },
   "sense": { s:[{zh:"感官",z:["ㄍㄢˇ","ㄍㄨㄢ"]}] },
   "attract": { s:[{zh:"吸引",z:["ㄒㄧ","ㄧㄣˇ"]}] },
-  "endangered": { s:[{zh:"瀕臨絕種的",z:["ㄅㄧㄣ","ㄌㄧㄣˊ","ㄐㄩㄝˊ","ㄓㄨㄥˇ","ㄉㄜ˙"]}] }
+  "endangered": { s:[{zh:"瀕臨絕種的",z:["ㄅㄧㄣ","ㄌㄧㄣˊ","ㄐㄩㄝˊ","ㄓㄨㄥˇ","ㄉㄜ˙"]}] },
+
+  // ---- 二上 · Santa Sleigh ----
+  "powdered sugar": { s:[{zh:"糖粉",z:["ㄊㄤˊ","ㄈㄣˇ"]}] },
+  "fingerprint": { s:[{zh:"指紋",z:["ㄓˇ","ㄨㄣˊ"]}] },
+  "print": { s:[{zh:"印記",z:["ㄧㄣˋ","ㄐㄧˋ"]}] },
+  "look after": { s:[{zh:"照顧",z:["ㄓㄠˋ","ㄍㄨˋ"]}] },
+  "rock out": { s:[{zh:"盡情狂歡",z:["ㄐㄧㄣˋ","ㄑㄧㄥˊ","ㄎㄨㄤˊ","ㄏㄨㄢ"]}] },
+  "electric": { s:[{zh:"電動的",z:["ㄉㄧㄢˋ","ㄉㄨㄥˋ","ㄉㄜ˙"]}] },
+  "nearby": { s:[{zh:"在附近的",z:["ㄗㄞˋ","ㄈㄨˋ","ㄐㄧㄣˋ","ㄉㄜ˙"]}] },
+  "hangout": { s:[{zh:"常去的地方",z:["ㄔㄤˊ","ㄑㄩˋ","ㄉㄜ˙","ㄉㄧˋ","ㄈㄤ"]}] },
+  "choice": { s:[{zh:"選擇",z:["ㄒㄩㄢˇ","ㄗㄜˊ"]}] },
+  "cop": { s:[{zh:"警察",z:["ㄐㄧㄥˇ","ㄔㄚˊ"]}] },
+  "play": { s:[{zh:"播放",z:["ㄅㄛˋ","ㄈㄤˋ"]}] },
+  "better": { s:[{zh:"更好的",z:["ㄍㄥˋ","ㄏㄠˇ","ㄉㄜ˙"]}] },
+  "go ahead": { s:[{zh:"去吧",z:["ㄑㄩˋ","ㄅㄚ˙"]}] },
+  "change your mind": { s:[{zh:"改變心意",z:["ㄍㄞˇ","ㄅㄧㄢˋ","ㄒㄧㄣ","ㄧˋ"]}] },
+  "delicious": { s:[{zh:"美味的",z:["ㄇㄟˇ","ㄨㄟˋ","ㄉㄜ˙"]}] },
+  "jelly beans": { s:[{zh:"雷根糖",z:["ㄌㄟˊ","ㄍㄣ","ㄊㄤˊ"]}] },
+  "toward": { s:[{zh:"朝……的方向",z:["ㄔㄠˊ","","","ㄉㄜ˙","ㄈㄤ","ㄒㄧㄤˋ"]}] },
+  "held": { s:[{zh:"舉著",z:["ㄐㄩˇ","ㄓㄜ˙"]}] },
+  "gotta": { s:[{zh:"必須",z:["ㄅㄧˋ","ㄒㄩ"]}] },
+  "north": { s:[{zh:"北方",z:["ㄅㄟˇ","ㄈㄤ"]}] },
+  "police": { s:[{zh:"警察",z:["ㄐㄧㄥˇ","ㄔㄚˊ"]}] },
+  "mystery": { s:[{zh:"謎團",z:["ㄇㄧˊ","ㄊㄨㄢˊ"]}] },
+  "sleigh": { s:[{zh:"雪橇",z:["ㄒㄩㄝˇ","ㄑㄧㄠ"]}] },
+  "crime": { s:[{zh:"犯罪",z:["ㄈㄢˋ","ㄗㄨㄟˋ"]}] },
+  "scratch": { s:[{zh:"刮痕",z:["ㄍㄨㄚ","ㄏㄣˊ"]}] },
+  "town": { s:[{zh:"城鎮",z:["ㄔㄥˊ","ㄓㄣˋ"]}] },
+  "scene": { s:[{zh:"現場",z:["ㄒㄧㄢˋ","ㄔㄤˇ"]}] },
+  "scrape": { s:[{zh:"擦傷",z:["ㄘㄚ","ㄕㄤ"]}] },
+  "cold": { s:[{zh:"感冒",z:["ㄍㄢˇ","ㄇㄠˋ"]}] },
+  "greatest": { s:[{zh:"最棒的",z:["ㄗㄨㄟˋ","ㄅㄤˋ","ㄉㄜ˙"]}] },
+  "detective": { s:[{zh:"偵探",z:["ㄓㄣ","ㄊㄢˋ"]}] },
+  "case": { s:[{zh:"案件",z:["ㄢˋ","ㄐㄧㄢˋ"]}] },
+  "sip": { s:[{zh:"啜飲",z:["ㄔㄨㄛˋ","ㄧㄣˇ"]}] },
+  "eggnog": { s:[{zh:"蛋酒",z:["ㄉㄢˋ","ㄐㄧㄡˇ"]}] },
+  "dust": { s:[{zh:"撒粉",z:["ㄙㄚˇ","ㄈㄣˇ"]}] },
+  "chill": { s:[{zh:"冷卻",z:["ㄌㄥˇ","ㄑㄩㄝˋ"]}] },
+  "spill": { s:[{zh:"灑出",z:["ㄙㄚˇ","ㄔㄨ"]}] },
+  "admit": { s:[{zh:"承認",z:["ㄔㄥˊ","ㄖㄣˋ"]}] },
+  "grab": { s:[{zh:"抓取",z:["ㄓㄨㄚ","ㄑㄩˇ"]}] },
+  "lost": { s:[{zh:"弄丟",z:["ㄋㄨㄥˋ","ㄉㄧㄡ"]}] },
+  "out of": { s:[{zh:"用完了",z:["ㄩㄥˋ","ㄨㄢˊ","ㄌㄜ˙"]}] },
+  "North Pole": { s:[{zh:"北極",z:["ㄅㄟˇ","ㄐㄧˊ"]}] },
+  "pretty": { s:[{zh:"相當",z:["ㄒㄧㄤ","ㄉㄤ"]}] },
+  "pointy": { s:[{zh:"尖尖的",z:["ㄐㄧㄢ","ㄐㄧㄢ","ㄉㄜ˙"]}] },
+  "understand": { s:[{zh:"理解",z:["ㄌㄧˇ","ㄐㄧㄝˇ"]}] },
+  "confuse": { s:[{zh:"使困惑",z:["ㄕˇ","ㄎㄨㄣˋ","ㄏㄨㄛˋ"]}] },
+  "reach": { s:[{zh:"伸手拿",z:["ㄕㄣ","ㄕㄡˇ","ㄋㄚˊ"]}] },
+  "pull out": { s:[{zh:"拿出",z:["ㄋㄚˊ","ㄔㄨ"]}] },
+  "pet the cat": { s:[{zh:"摸摸貓咪",z:["ㄇㄛ","ㄇㄛ","ㄇㄠ","ㄇㄧ"]}] },
+  "neatly": { s:[{zh:"整齊地",z:["ㄓㄥˇ","ㄑㄧˊ","ㄉㄜ˙"]}] },
+  "wrap": { s:[{zh:"包起來",z:["ㄅㄠ","ㄑㄧˇ","ㄌㄞ˙"]}] },
+  "sneeze": { s:[{zh:"打噴嚏",z:["ㄉㄚˇ","ㄆㄣ","ㄊㄧˋ"]}] },
+  "allergy": { s:[{zh:"過敏",z:["ㄍㄨㄛˋ","ㄇㄧㄣˇ"]}] }
 };
 
 // 倉鼠頁的「先複習本週單字」卡片會用到這兩個。
@@ -1237,7 +1369,15 @@ const wordImages = {
             "cottage": "🏡", "general": "📋", "wonderful": "🤩", "beg": "🙇", "lesson": "📖", "in case": "☂️", "nervously": "😬", "ready": "🏁",
             "exclaim": "❗", "slip into": "👕", "scared": "😨", "decision": "🤔", "deep": "🌊", "almost": "🔜", "worry": "😟", "proud": "🦚",
             "even though": "🔀", "sunscreen": "🧴", "discover": "🔍", "spine": "🦴", "predator": "🦁", "nutrient": "🥗", "mammal": "🐻", "blind": "🦯",
-            "sense": "👂", "attract": "🧲", "endangered": "🐼"
+            "sense": "👂", "attract": "🧲", "endangered": "🐼",
+            // ---- 二上 · Santa Sleigh ----
+            "powdered sugar": "🍩", "fingerprint": "👆", "print": "👣", "look after": "🤗", "rock out": "🎸", "electric": "⚡", "nearby": "📍", "hangout": "🛋️",
+            "choice": "🗳️", "cop": "👮", "play": "▶️", "better": "⬆️", "go ahead": "👉", "change your mind": "↩️", "delicious": "😋", "jelly beans": "🫘",
+            "toward": "↗️", "held": "🙌", "gotta": "📌", "north": "🧭", "police": "🚓", "mystery": "🔮", "sleigh": "🛷", "crime": "🚨",
+            "scratch": "🐱", "town": "🏘️", "scene": "🎬", "scrape": "🩹", "cold": "🤒", "greatest": "🥇", "detective": "🕵️", "case": "📁",
+            "sip": "🥤", "eggnog": "🥛", "dust": "🧹", "chill": "❄️", "spill": "💦", "admit": "🤚", "grab": "✊", "lost": "🙁",
+            "out of": "📭", "North Pole": "🐻‍❄️", "pretty": "🔝", "pointy": "📐", "understand": "🧠", "confuse": "😕", "reach": "🖐️", "pull out": "🪄",
+            "pet the cat": "🐈", "neatly": "📏", "wrap": "🎁", "sneeze": "🤧", "allergy": "😷"
         };
 
 const wordExamples = {
@@ -1326,7 +1466,26 @@ const wordExamples = {
             "deep": "The lake is very deep.", "almost": "We are almost there!", "worry": "Don't worry about the test.", "proud": "Mom is proud of me.",
             "even though": "She swam even though it was cold.", "sunscreen": "Put on sunscreen before you swim.", "discover": "Scientists discover new animals.", "spine": "A mole has a strong spine.",
             "predator": "An owl is a predator.", "nutrient": "Roots take nutrients from the soil.", "mammal": "A bat is a mammal.", "blind": "Moles are almost blind.",
-            "sense": "Bats use their sense of hearing.", "attract": "Flowers attract bees.", "endangered": "Pandas are an endangered animal."
+            "sense": "Bats use their sense of hearing.", "attract": "Flowers attract bees.", "endangered": "Pandas are an endangered animal.",
+            // ---- 二上 · Santa Sleigh ----
+            "powdered sugar": "The cookies are covered with powdered sugar.", "fingerprint": "The detective found a fingerprint on the glass.", "print": "There is a print in the snow.",
+            "look after": "Please look after my cat.", "rock out": "They rock out to the music.", "electric": "Santa has an electric sleigh!",
+            "nearby": "The store is nearby.", "hangout": "The park is our favorite hangout.", "choice": "You have to make a choice.",
+            "cop": "The cop looked at the clue.", "play": "Play the song again!", "better": "This one is better.",
+            "go ahead": "Go ahead and open the box.", "change your mind": "You can change your mind later.", "delicious": "The cookies are delicious!",
+            "jelly beans": "She ate all the jelly beans.", "toward": "He walked toward the garage.", "held": "She held the box with both hands.",
+            "gotta": "I gotta go home now.", "north": "The sleigh flew north.", "police": "The police came to the store.",
+            "mystery": "Who took the cookies? It's a mystery!", "sleigh": "Santa's sleigh is missing!", "crime": "Taking the cookies is not a crime.",
+            "scratch": "There is a scratch on the door.", "town": "Everyone in town was asleep.", "scene": "They looked around the crime scene.",
+            "scrape": "He got a scrape on his knee.", "cold": "She stayed home with a bad cold.", "greatest": "He is the greatest detective in town.",
+            "detective": "The detective solved the case.", "case": "This is a hard case.", "sip": "She took a sip of eggnog.",
+            "eggnog": "We drink eggnog at Christmas.", "dust": "Dust the cookies with sugar.", "chill": "Let the cookies chill first.",
+            "spill": "Don't spill the milk!", "admit": "He had to admit he ate them.", "grab": "She will grab her coat and go.",
+            "lost": "Santa lost his sleigh.", "out of": "We are out of milk.", "North Pole": "Santa lives at the North Pole.",
+            "pretty": "That was pretty easy!", "pointy": "The elf has pointy ears.", "understand": "Now I understand the clue!",
+            "confuse": "The two boxes confuse me.", "reach": "She had to reach for the top shelf.", "pull out": "He will pull out his notebook.",
+            "pet the cat": "May I pet the cat?", "neatly": "The gifts are neatly wrapped.", "wrap": "Wrap the gift with red paper.",
+            "sneeze": "The cat made her sneeze.", "allergy": "She has an allergy to cats."
         };
 
 // ---- 以下都是推導出來的，不要手動維護 ----
