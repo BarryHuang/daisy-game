@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>✖️ 九九乘法</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        [hidden] { display: none !important; }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', -apple-system, sans-serif;
+            background: linear-gradient(160deg, #e8f5ff 0%, #f3e8ff 55%, #ffe8f3 100%);
+            margin: 0; padding: 12px 10px 40px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+        h2 { color: #6f42c1; margin: 4px 0 10px; font-size: 1.35rem; text-shadow: 1px 1px 0 #fff; }
+
+        .box {
+            background: white; padding: 10px 12px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            text-align: center; width: 100%; max-width: 520px; margin-bottom: 10px;
+        }
+
+        /* 上面兩個大分頁：看表 / 練習 */
+        .tabs { display: flex; gap: 8px; width: 100%; max-width: 520px; margin-bottom: 10px; }
+        .tab {
+            flex: 1; padding: 10px; border: 2px solid #d9cdf0; border-radius: 14px;
+            background: #fff; color: #7a6f95; font-family: inherit; font-size: 1rem;
+            font-weight: bold; cursor: pointer;
+        }
+        .tab-on { background: #6f42c1; border-color: #6f42c1; color: #fff; }
+
+        /* 段數的小藥丸 */
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+        .chip {
+            border: 2px solid #d9cdf0; background: #faf6ff; color: #5b4a86;
+            border-radius: 99px; padding: 7px 13px; font-family: inherit;
+            font-size: 0.95rem; font-weight: bold; cursor: pointer; min-width: 52px;
+        }
+        .chip-on { background: #6f42c1; border-color: #6f42c1; color: #fff; }
+        .chip:disabled { opacity: 0.4; cursor: default; }
+
+        /* ---- 乘法表 ---- */
+        #table-rows {
+            width: 100%; max-width: 520px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
+        .row {
+            background: #fff; border-radius: 14px; padding: 12px 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.07);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-size: 1.15rem; font-weight: bold; color: #444; cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .row:active { transform: scale(0.97); }
+        .row.speaking { border-color: #6f42c1; background: #f6f1fb; }
+        .row .eq { color: #6f42c1; }
+        .row .mark { font-size: 0.9rem; }
+        .row .mark.none { color: #ccc; }
+        .sum {
+            font-size: 0.85rem; color: #8b88a0; margin: 2px 0 10px; text-align: center;
+        }
+        .speak-all {
+            background: #ff9800; color: #fff; border: none; border-radius: 99px;
+            padding: 9px 20px; font-family: inherit; font-size: 0.95rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 3px 0 #e65100; margin-top: 4px;
+        }
+        .speak-all:active { transform: translateY(3px); box-shadow: none; }
+
+        /* ---- 練習 ---- */
+        #bar { width: 100%; max-width: 520px; height: 12px; background: #e9e2f5;
+               border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+        #bar-fill { height: 100%; width: 0; border-radius: 99px;
+                    background: linear-gradient(90deg, #a06fe8, #6f42c1); transition: width .3s; }
+        .stats {
+            display: flex; justify-content: center; gap: 18px;
+            width: 100%; max-width: 520px; margin-bottom: 10px;
+            font-weight: bold; color: #555; font-size: 0.95rem;
+        }
+        .stats b { color: #6f42c1; }
+        #q-text {
+            background: #fff; border-radius: 20px; width: 100%; max-width: 520px;
+            padding: 26px 10px; text-align: center;
+            font-size: 2.6rem; font-weight: bold; color: #6f42c1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+        #choices {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            width: 100%; max-width: 520px;
+        }
+        .choice {
+            padding: 20px 6px; border-radius: 16px; border: none; cursor: pointer;
+            background: linear-gradient(135deg, #8ba4f9, #5b6fd8); color: #fff;
+            font-family: inherit; font-size: 1.7rem; font-weight: bold;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15); font-variant-numeric: tabular-nums;
+        }
+        .choice:active { transform: translateY(3px); box-shadow: none; }
+        .choice.good { background: linear-gradient(135deg, #4cd97b, #26a65b); }
+        .choice.bad  { background: #d0cddc; box-shadow: none; }
+        .choice:disabled { cursor: default; }
+        #q-msg { min-height: 26px; margin-top: 10px; font-weight: bold; color: #6f42c1; }
+
+        .tip { font-size: 0.8rem; color: #8b88a0; margin-top: 10px; text-align: center; }
+
+        /* ---- 結算 ---- */
+        #overlay {
+            position: fixed; inset: 0; background: rgba(60, 30, 100, 0.55);
+            display: none; align-items: center; justify-content: center; z-index: 50;
+        }
+        #overlay.show { display: flex; }
+        .result {
+            background: white; border-radius: 24px; padding: 26px 30px;
+            text-align: center; width: 85%; max-width: 340px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: pop 0.4s ease;
+        }
+        @keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+        .result .big { font-size: 3rem; }
+        .result .stars { font-size: 2rem; letter-spacing: 6px; margin: 6px 0; }
+        .result h3 { color: #6f42c1; margin: 6px 0; }
+        .result .coin-line { font-size: 1.2rem; font-weight: bold; color: #b8860b; margin: 8px 0; }
+        .result .hint { font-size: 0.8rem; color: #999; min-height: 18px; }
+        .btn {
+            padding: 12px 20px; border-radius: 12px; border: none; color: white;
+            font-weight: bold; cursor: pointer; font-size: 1rem; font-family: inherit;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); margin: 6px 4px 0;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-again { background: #6f42c1; }
+        .btn-close { background: #adb5bd; }
+
+        @media (max-width: 360px) {
+            #table-rows { grid-template-columns: 1fr; }
+            #q-text { font-size: 2.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>✖️ 九九乘法</h2>
+
+    <div class="tabs">
+        <button class="tab tab-on" id="tab-table" type="button">📖 乘法表</button>
+        <button class="tab" id="tab-quiz" type="button">✏️ 練習</button>
+    </div>
+
+    <!-- ---------- 乘法表 ---------- -->
+    <div id="view-table" style="width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center">
+        <div class="box">
+            <div class="chips" id="table-chips"></div>
+            <button class="speak-all" id="btn-speak-all" type="button">🔊 整段唸一遍</button>
+        </div>
+        <div class="sum" id="table-sum"></div>
+        <div id="table-rows"></div>
+        <div class="tip">點一格會唸給妳聽。<br>✅ 已經很熟　🔥 還要多練　○ 還沒練過</div>
+    </div>
+
+    <!-- ---------- 練習 ---------- -->
+    <div id="view-quiz" hidden style="width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center">
+        <div class="box">
+            <div class="chips" id="quiz-chips"></div>
+        </div>
+        <div id="bar"><div id="bar-fill"></div></div>
+        <div class="stats">
+            <span>第 <b id="s-idx">1</b>/<b id="s-total">9</b> 題</span>
+            <span>答對 <b id="s-right">0</b></span>
+            <span>💰 <b id="s-coins">0</b></span>
+        </div>
+        <div id="q-text">—</div>
+        <div id="choices"></div>
+        <div id="q-msg"></div>
+    </div>
+
+    <div id="overlay">
+        <div class="result">
+            <div class="big">🎉</div>
+            <div class="stars" id="r-stars"></div>
+            <h3 id="r-title"></h3>
+            <div class="coin-line" id="r-coins"></div>
+            <div class="hint" id="r-hint"></div>
+            <button class="btn btn-again" id="r-again" type="button">再練一次 🔄</button>
+            <button class="btn btn-close" id="r-close" type="button">關閉</button>
+        </div>
+    </div>
+
+    <script src="./firebase-config.js"></script>
+    <script src="./rewards.js"></script>
+    <script>
+    // =====================================================================
+    // 進度：哪幾個乘法她還不熟
+    //
+    // 為什麼不共用 mastery.js：那份是「單字」的熟練度，而 getWeakWords() 不帶
+    // pool 時會把整份資料倒給弱字怪獸戰當題庫 —— "7x8" 混進去，遊戲會叫她拼
+    // 一個不存在的單字。所以另開一個 key。
+    //
+    // 資料格式刻意跟 mastery.js 一模一樣（r 對／w 錯／t 時間／s 連續乾淨答對），
+    // 以後要放進家長後台或做複習排程都能直接接。
+    //   本機： localStorage["daisy_multiply"] = { "7x8": {r,w,t,s} }
+    //   雲端： users/<CODE>/multiply/<key>
+    // =====================================================================
+    const MUL_KEY = 'daisy_multiply';
+    const MASTER_STREAK = 3;          // 連續乾淨答對三次就算學會了
+
+    function factKey(a, b) { return a + 'x' + b; }
+
+    function readFacts() {
+        try { return JSON.parse(localStorage.getItem(MUL_KEY)) || {}; }
+        catch (e) { return {}; }
+    }
+    function writeFacts(map) {
+        try { localStorage.setItem(MUL_KEY, JSON.stringify(map)); } catch (e) {}
+    }
+    function mulUser() {
+        try { return localStorage.getItem('daisy_hamster_user') || ''; } catch (e) { return ''; }
+    }
+
+    /** errors = 答對之前錯了幾次。錯過才對，不算連對 —— 跟 mastery.js 同一套判準 */
+    function recordFact(a, b, correct, errors) {
+        const key = factKey(a, b);
+        const map = readFacts();
+        const prev = map[key] || { r: 0, w: 0, s: 0 };
+        map[key] = {
+            r: (prev.r || 0) + (correct ? 1 : 0),
+            w: (prev.w || 0) + (correct ? 0 : 1),
+            t: Date.now(),
+            s: (correct && !errors) ? (prev.s || 0) + 1 : 0
+        };
+        writeFacts(map);
+
+        const code = mulUser();
+        if (!code || typeof getFirebaseDb !== 'function') return;
+        getFirebaseDb().then((db) => {
+            if (!db) return;
+            db.ref('users/' + code + '/multiply/' + key).set(map[key]).catch(() => {});
+        });
+    }
+
+    function factStat(a, b) { return readFacts()[factKey(a, b)] || null; }
+
+    /** ✅ 學會 / 🔥 要加強 / ○ 沒練過 */
+    function factMark(a, b) {
+        const m = factStat(a, b);
+        if (!m) return { icon: '○', cls: 'none' };
+        if ((m.s || 0) >= MASTER_STREAK) return { icon: '✅', cls: 'ok' };
+        return { icon: '🔥', cls: 'weak' };
+    }
+
+    /** 錯得多的排前面；同分時很久沒練的優先（照 mastery.js 的 getWeakWords） */
+    function weakFacts() {
+        const map = readFacts(), now = Date.now(), day = 86400000;
+        const out = [];
+        for (const [key, m] of Object.entries(map)) {
+            const parts = key.split('x').map(Number);
+            if (parts.length !== 2 || !parts[0] || !parts[1]) continue;
+            if ((m.s || 0) >= MASTER_STREAK) continue;
+            const wrong = m.w || 0, right = m.r || 0;
+            const rate = wrong / Math.max(1, wrong + right);
+            const stale = Math.min(30, (now - (m.t || now)) / day) / 30;
+            out.push({ a: parts[0], b: parts[1], score: rate * 3 + stale });
+        }
+        return out.sort((x, y) => y.score - x.score);
+    }
+
+    /** 換裝置時把雲端的合併進來；本機較新的不覆蓋 */
+    function syncFacts(done) {
+        const code = mulUser();
+        if (!code || typeof getFirebaseDb !== 'function') return done && done();
+        getFirebaseDb().then((db) => {
+            if (!db) return done && done();
+            db.ref('users/' + code + '/multiply').once('value').then((snap) => {
+                const remote = snap.val() || {}, local = readFacts(), merged = {};
+                for (const k of new Set([...Object.keys(remote), ...Object.keys(local)])) {
+                    const a = remote[k] || {}, b = local[k] || {};
+                    const newer = (b.t || 0) >= (a.t || 0) ? b : a;
+                    merged[k] = {
+                        r: Math.max(a.r || 0, b.r || 0),
+                        w: Math.max(a.w || 0, b.w || 0),
+                        t: newer.t || 0,
+                        s: newer.s || 0
+                    };
+                }
+                writeFacts(merged);
+                done && done();
+            }).catch(() => done && done());
+        });
+    }
+
+    // =====================================================================
+    // 唸出來
+    // =====================================================================
+    const ZH_DIGIT = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+    /** 1~81 轉國字。TTS 唸阿拉伯數字時中英混音不穩，所以自己轉。 */
+    function numToZh(n) {
+        if (n < 10) return ZH_DIGIT[n];
+        const tens = Math.floor(n / 10), ones = n % 10;
+        return (tens === 1 ? '' : ZH_DIGIT[tens]) + '十' + (ones ? ZH_DIGIT[ones] : '');
+    }
+
+    /**
+     * 唸「七乘八等於五十六」。
+     * 不用「七八五十六」的口訣，是因為 TTS 唸那串會變成一長串數字，聽不出斷句。
+     */
+    function factSentence(a, b) {
+        return numToZh(a) + '乘' + numToZh(b) + '等於' + numToZh(a * b);
+    }
+
+    function speakFact(a, b, queued) {
+        if (!('speechSynthesis' in window)) return;
+        if (!queued) window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(factSentence(a, b));
+        u.lang = 'zh-TW'; u.rate = 0.85; u.pitch = 1.1;
+        window.speechSynthesis.speak(u);
+        return u;
+    }
+
+    let audioCtx;
+    function playTone(freq, type, duration) {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = type; o.frequency.value = freq;
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start();
+            g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            o.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    // =====================================================================
+    // 乘法表
+    // =====================================================================
+    const tableChips = document.getElementById('table-chips');
+    const tableRows = document.getElementById('table-rows');
+    const tableSum = document.getElementById('table-sum');
+    let tableStep = 2;                 // 1 的段太簡單，預設從 2 開始
+
+    function buildTableChips() {
+        tableChips.innerHTML = '';
+        for (let n = 1; n <= 9; n++) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'chip' + (n === tableStep ? ' chip-on' : '');
+            b.textContent = n + ' 的段';
+            b.onclick = () => { tableStep = n; buildTableChips(); renderTable(); };
+            tableChips.appendChild(b);
+        }
+    }
+
+    function renderTable() {
+        tableRows.innerHTML = '';
+        let ok = 0, weak = 0, none = 0;
+        for (let b = 1; b <= 9; b++) {
+            const mark = factMark(tableStep, b);
+            mark.cls === 'ok' ? ok++ : mark.cls === 'weak' ? weak++ : none++;
+            const el = document.createElement('div');
+            el.className = 'row';
+            el.innerHTML = `<span>${tableStep} × ${b}</span>
+                <span class="eq">= ${tableStep * b}</span>
+                <span class="mark ${mark.cls}">${mark.icon}</span>`;
+            el.onclick = () => {
+                document.querySelectorAll('.row.speaking').forEach((x) => x.classList.remove('speaking'));
+                el.classList.add('speaking');
+                const u = speakFact(tableStep, b);
+                if (u) u.onend = () => el.classList.remove('speaking');
+                else setTimeout(() => el.classList.remove('speaking'), 600);
+            };
+            tableRows.appendChild(el);
+        }
+        tableSum.textContent = `這一段：✅ ${ok}　🔥 ${weak}　○ ${none}`;
+    }
+
+    document.getElementById('btn-speak-all').onclick = () => {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        for (let b = 1; b <= 9; b++) speakFact(tableStep, b, true);
+    };
+
+    // =====================================================================
+    // 練習
+    // =====================================================================
+    const quizChips = document.getElementById('quiz-chips');
+    const qText = document.getElementById('q-text');
+    const choicesEl = document.getElementById('choices');
+    const qMsg = document.getElementById('q-msg');
+    const barFill = document.getElementById('bar-fill');
+
+    let quizStep = 2;                  // 數字 = 那一段，'all' = 全部，'weak' = 加強
+    let queue = [], idx = 0, rightCount = 0, missedQs = 0, coins = 0, errThisQ = 0, locked = false;
+
+    function buildQuizChips() {
+        quizChips.innerHTML = '';
+        const add = (value, label, disabled) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'chip' + (value === quizStep ? ' chip-on' : '');
+            b.textContent = label;
+            b.disabled = !!disabled;
+            b.onclick = () => { quizStep = value; buildQuizChips(); startRound(); };
+            quizChips.appendChild(b);
+        };
+        for (let n = 1; n <= 9; n++) add(n, n + ' 的段');
+        add('all', '全部');
+        add('weak', '🔥 加強', weakFacts().length < 4);
+    }
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    /**
+     * 一回合的題目。
+     * 選單段時剛好把那一段九題各出一次（背一段就是要背完整段，不能有漏網的）；
+     * 全部和加強則抽 10 題。
+     */
+    function buildQueue() {
+        if (typeof quizStep === 'number') {
+            return shuffle(Array.from({ length: 9 }, (_, i) => ({ a: quizStep, b: i + 1 })));
+        }
+        if (quizStep === 'weak') {
+            const weak = weakFacts().slice(0, 10).map((x) => ({ a: x.a, b: x.b }));
+            if (weak.length) return shuffle(weak);
+        }
+        const all = [];
+        for (let a = 2; a <= 9; a++) for (let b = 1; b <= 9; b++) all.push({ a, b });
+        return shuffle(all).slice(0, 10);
+    }
+
+    /**
+     * 干擾選項取「隔壁的積」—— 她真正會搞混的是 7×8 和 7×7、6×8。
+     *
+     * 兩件事不能做：
+     *   - 隨機亂數：一眼就能刪掉，練不到東西
+     *   - 答案 ±1：2×8 的選項變成 15/16/17，偶數那個就是答案，用奇偶數就能猜中
+     * 所以優先只用乘法表裡真的存在的積；湊不滿三個才退而求其次（1 的段會遇到）。
+     */
+    function makeChoices(a, b) {
+        const answer = a * b;
+        const take = (cands, into) => {
+            for (const n of shuffle(cands))
+                if (n > 0 && n <= 81 && n !== answer && !into.includes(n) && into.length < 3)
+                    into.push(n);
+            return into;
+        };
+        // 第一順位：同一段的鄰居、同一個乘數換一段
+        const out = take([a * (b - 1), a * (b + 1), a * (b + 2), a * (b - 2),
+                          (a - 1) * b, (a + 1) * b, (a + 2) * b, (a - 2) * b], []);
+        // 第二順位：同一段再遠一點（1 的段的鄰居太少，不補的話會掉到亂數）
+        if (out.length < 3) take([a * (b + 3), a * (b + 4), (a + 3) * b, (a + 4) * b], out);
+        if (out.length < 3) take([answer + 1, answer - 1, answer + 2, answer - 2], out);
+        while (out.length < 3) {
+            const n = 1 + Math.floor(Math.random() * 81);
+            if (n !== answer && !out.includes(n)) out.push(n);
+        }
+        return shuffle(out.concat(answer));
+    }
+
+    function startRound() {
+        queue = buildQueue();
+        idx = 0; rightCount = 0; missedQs = 0; coins = 0;
+        document.getElementById('s-total').textContent = queue.length;
+        showQuestion();
+    }
+
+    function showQuestion() {
+        locked = false; errThisQ = 0;
+        qMsg.textContent = '';
+        const q = queue[idx];
+        qText.textContent = `${q.a} × ${q.b} = ?`;
+        document.getElementById('s-idx').textContent = idx + 1;
+        document.getElementById('s-right').textContent = rightCount;
+        document.getElementById('s-coins').textContent = coins;
+        barFill.style.width = (idx / queue.length * 100) + '%';
+
+        choicesEl.innerHTML = '';
+        for (const v of makeChoices(q.a, q.b)) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'choice';
+            btn.textContent = v;
+            btn.onclick = () => answer(v, btn);
+            choicesEl.appendChild(btn);
+        }
+    }
+
+    function answer(value, btn) {
+        if (locked) return;
+        const q = queue[idx];
+        const correct = q.a * q.b;
+
+        if (value !== correct) {
+            errThisQ++;
+            btn.classList.add('bad');
+            btn.disabled = true;
+            playTone(220, 'sawtooth', 0.15);
+            qMsg.textContent = '再想想～ 🤔';
+            return;                                  // 讓她自己找到對的，不直接跳過
+        }
+
+        locked = true;
+        btn.classList.add('good');
+        choicesEl.querySelectorAll('button').forEach((b) => (b.disabled = true));
+        playTone(700, 'sine', 0.12);
+        setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+        speakFact(q.a, q.b);
+
+        if (!errThisQ) { rightCount++; coins += 2; qMsg.textContent = '答對了！ 🎉'; }
+        else { missedQs++; qMsg.textContent = `記起來囉：${q.a} × ${q.b} = ${correct}`; }
+        recordFact(q.a, q.b, true, errThisQ);
+
+        document.getElementById('s-right').textContent = rightCount;
+        document.getElementById('s-coins').textContent = coins;
+
+        setTimeout(() => {
+            idx++;
+            if (idx >= queue.length) finishRound();
+            else showQuestion();
+        }, errThisQ ? 1500 : 750);
+    }
+
+    function finishRound() {
+        barFill.style.width = '100%';
+        let stars, title;
+        if (missedQs === 0) { stars = '⭐⭐⭐'; title = '全部一次就對！'; coins += 10; }
+        else if (missedQs <= 2) { stars = '⭐⭐'; title = '很厲害！'; coins += 5; }
+        else { stars = '⭐'; title = '練完囉，再來一次會更熟！'; }
+
+        document.getElementById('r-stars').textContent = stars;
+        document.getElementById('r-title').textContent = title;
+        document.getElementById('r-coins').textContent = `獲得 💰 ${coins} 金幣`;
+        document.getElementById('s-coins').textContent = coins;
+
+        const hint = document.getElementById('r-hint');
+        hint.textContent = '';
+        if (typeof awardCoins === 'function')
+            awardCoins(coins, (ok) => {
+                hint.textContent = ok ? '金幣已存進倉鼠撲滿 🐹' : '（登入倉鼠遊戲後金幣才能入帳喔）';
+            });
+
+        document.getElementById('overlay').classList.add('show');
+        if (typeof confetti !== 'undefined') {
+            confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+            setTimeout(() => confetti({ particleCount: 80, spread: 120, origin: { y: 0.4 } }), 400);
+        }
+        buildQuizChips();          // 練完可能就解鎖（或不再需要）🔥 加強
+        renderTable();             // 表上的 ✅／🔥 也跟著更新
+    }
+
+    document.getElementById('r-again').onclick = () => {
+        document.getElementById('overlay').classList.remove('show');
+        startRound();
+    };
+    document.getElementById('r-close').onclick = () => {
+        document.getElementById('overlay').classList.remove('show');
+    };
+
+    // =====================================================================
+    // 分頁切換
+    // =====================================================================
+    const viewTable = document.getElementById('view-table');
+    const viewQuiz = document.getElementById('view-quiz');
+    const tabTable = document.getElementById('tab-table');
+    const tabQuiz = document.getElementById('tab-quiz');
+
+    function showView(which) {
+        const quiz = which === 'quiz';
+        viewQuiz.hidden = !quiz;
+        viewTable.hidden = quiz;
+        tabQuiz.classList.toggle('tab-on', quiz);
+        tabTable.classList.toggle('tab-on', !quiz);
+        if (quiz) { buildQuizChips(); startRound(); }
+        else { renderTable(); if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+    }
+    tabTable.onclick = () => showView('table');
+    tabQuiz.onclick = () => showView('quiz');
+
+    // 先用本機資料畫出來（離線也看得到），雲端回來再重畫一次
+    buildTableChips();
+    renderTable();
+    syncFacts(() => { renderTable(); buildQuizChips(); });
+    </script>
+
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

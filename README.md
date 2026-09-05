@@ -72,6 +72,12 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `daisy_pusher.html` 單字推幣機 | 答對拿硬幣，再抓時機投；台面跨局累積不重鋪 |
 | `daisy_claw.html` 單字夾娃娃 | 同上，外加瞄準；夾到的字留在收藏櫃 |
 
+`daisy_multiply.html`（九九乘法）是唯一不吃單字表的頁面：左邊看整段乘法表、
+點一格用中文唸出來，右邊做選擇題。它自己記熟練度（`localStorage["daisy_multiply"]`
+＋ `users/<CODE>/multiply`），格式跟 `mastery.js` 一樣但**故意不共用** ——
+`getWeakWords()` 不帶 pool 時會把整份資料倒給弱字怪獸戰當題庫，
+`"7x8"` 混進去，遊戲會叫她拼一個不存在的單字。
+
 ---
 
 ## 已知的坑（動手前先讀）
