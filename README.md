@@ -24,7 +24,7 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 ### 資料層
 | 檔案 | 內容 |
 |---|---|
-| `words.js` | 她的課堂單字（FET Spelling / CET Vocabulary，按週）。`wordEntries` 是主資料，每個字可有多個義項、注音逐字對齊。`wordTranslations` 由它自動產生，供舊遊戲使用 |
+| `words.js` | 她的課堂單字（FET Spelling / CET Vocabulary 按週，Santa Sleigh 這種讀本單元按組）。`wordEntries` 是主資料，每個字可有多個義項、注音逐字對齊。`wordTranslations` 由它自動產生，供舊遊戲使用 |
 | `cedict.js` | 4.8 MB（gzip 1.75 MB），71,753 個中文詞、68,664 個英文查詢鍵。整部 CC-CEDICT，無門檻（CC BY-SA 4.0） |
 | `firebase-config.js` | 全站唯一一份 Firebase 設定 + 延遲載入 SDK |
 | `exams.js` | 測驗題庫的學期登錄表。題庫綁學期，舊的留著當參考但不再是預設 |
@@ -51,7 +51,7 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 `story_hub.html`（課文）· `daisy_hamster.html`（主遊戲）·
 `parent_dashboard.html` · `words_review.html`（注音校對工具）
 
-`wordbook.html` 是給她自己翻的總表：課表 243 個字（外加她的單字卡和查過的字），
+`wordbook.html` 是給她自己翻的總表：課表 523 個字（外加她的單字卡和查過的字），
 可搜尋英文或中文、依課表或字母排序、只看要加強的；每個字顯示 emoji、中文加注音、
 熟練度（✅ 學會／🔥 要加強／○ 沒練過），點一下會唸出來並展開例句。
 家長後台的「還沒學會的字」是給爸媽看雲端紀錄的，兩者不重疊。
@@ -162,8 +162,9 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 
 12. **隨機單字集要從「所有 (類別, 週次) 組合」裡抽，不能先抽類別再抽週次。**
    `words` 的各類別大小差很多：二上 FET Spelling 15 組、二上 CET Vocabulary
-   14 組、一下兩份各 12／13 組，常用單字只有 2 組（星期、月份）。先抽類別的話，
-   她有五分之一的機會拿到星期或月份。攤平抽之後常用單字佔 2/56 ≈ 3.6%。
+   14 組、二上 Santa Sleigh 7 組、一下兩份各 12／13 組，常用單字只有 2 組
+   （星期、月份）。先抽類別的話，她有六分之一的機會拿到星期或月份。
+   攤平抽之後常用單字佔 2/63 ≈ 3.2%。
    （當初只有一下時的實測：3000 抽，常用單字 7.3%，對上 2/27 = 7.4%，
    27 組每組 92～130 次。）
 
