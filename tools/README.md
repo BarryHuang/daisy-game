@@ -66,14 +66,50 @@ python3 import_wordlist.py 單字表.pdf --draft draft.json
 （逗號當句點）、`because con`（沒句點）、`mountain n..`（兩個句點）、
 孤兒的 `n.` 自成一行。解析器都有處理。
 
+詞性有兩種寫法，**同一間學校同一學期的兩份表就不一樣**：FET 是 `shadow n.`，
+CET 是 `visit (v.)`。括號在解析器裡是選擇性的。二年級的表還多了 `phr.`（片語）
+和 `PV`（片語動詞）兩種標記。
+
+格子裡的詞太長時會被拆成好幾行，整列跟著散掉：
+
+```
+8. garden n. 8. scent n. 8. arrive v. 8. hermit
+crab
+n. 8. empty adj. 8. lead v. 8. pleasure adj.
+```
+
+`join_wrapped()` 把不是以「數字.」開頭的行接回上一行，但**只在上一行「收不完」
+時才接**（編號數量 > 解析出來的格子數）。不加這個條件的話，
+`1. lie (v.) 1. bottom (n.)` 後面那行 `Review Midterm` 會被黏進最後一格，
+`bottom` 就消失了。表頭也會被拆行（`Week 16&17 Week` / `18&19` / `W20`），
+另外用 `WEEK_CONT` 接。
+
+### ⚠️ 中間夾一欄 Review 時，週次會對錯格
+
+週次和欄位是**照順序**對上的（`weeks[:欄數]`）。Review 欄在最後幾欄時沒問題
+（Week 8/9 期中、Week 18/19 期末都沒有自己的單字，直接被切掉），但
+2026-2027 Fall 的 CET 最後一個表格是：
+
+| Week 14 | Week 15 | Week 16&17 | Week 18&19 | W20 |
+|---|---|---|---|---|
+| sugar… | excited… | hard… | *Review & Final* | discover… |
+
+只有 4 欄有字，第 4 欄其實是 **W20 不是 18&19**；而且 `Review & Final` 那格
+佔滿整列高度，把 `1. discover (v.)` 擠成獨立一行，被算進第 1 欄（Week 14）。
+解析器會印警告，但**修不了 —— 一定要拿 PDF 對一遍再貼進 `words.js`**。
+
 **詞性標記（adj. / v. / n.）是這份 PDF 白送的**，而且正好解掉最常見的錯誤 ——
 `interesting` 標 adj. 就不會給「興趣」。
 
-### 拿 2025-2026 Spring（一下）驗證的結果
+### 驗證結果
 
-12 週有 10 週跟手打的 `words.js` 完全吻合。兩處不符都是**手打資料有錯**：
-Wk 5 少了 `figure out` 和 `important`（只有 8 個字），Wk 7 的 `stand up`
-被截成 `stand`。已修正。
+**2025-2026 Spring（一下）**：12 週有 10 週跟手打的 `words.js` 完全吻合。
+兩處不符都是**手打資料有錯**：Wk 5 少了 `figure out` 和 `important`
+（只有 8 個字），Wk 7 的 `stand up` 被截成 `stand`。已修正。
+
+**2026-2027 Fall（二上）**：FET 15 週 150 字、CET 14 週 140 字，
+去重後 257 個字。除了上面那個 Review 夾在中間的欄位要人工調整之外，
+其餘全部照解析結果匯入；`--check` 兩份都是零差異。
 
 ## 檔案
 
