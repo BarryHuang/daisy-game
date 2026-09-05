@@ -57,17 +57,22 @@
         .row:active { transform: scale(0.97); }
         .row.speaking { border-color: #6f42c1; background: #f6f1fb; }
         .row .eq { color: #6f42c1; }
+        /* 蓋住答案時那個「?」：看得出來是可以點開的，不是壞掉 */
+        .row.hid { background: #f7f3fd; border-style: dashed; border-color: #d9cdf0; }
+        .row.hid .eq { color: #b09ada; }
         .row .mark { font-size: 0.9rem; }
         .row .mark.none { color: #ccc; }
         .sum {
             font-size: 0.85rem; color: #8b88a0; margin: 2px 0 10px; text-align: center;
         }
-        .speak-all {
-            background: #ff9800; color: #fff; border: none; border-radius: 99px;
-            padding: 9px 20px; font-family: inherit; font-size: 0.95rem; font-weight: bold;
-            cursor: pointer; box-shadow: 0 3px 0 #e65100; margin-top: 4px;
+        .toolbar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+        .tool-btn {
+            border: none; border-radius: 99px; padding: 9px 18px;
+            font-family: inherit; font-size: 0.95rem; font-weight: bold; cursor: pointer;
         }
-        .speak-all:active { transform: translateY(3px); box-shadow: none; }
+        .tool-btn:active { transform: translateY(3px); box-shadow: none !important; }
+        .speak-all { background: #ff9800; color: #fff; box-shadow: 0 3px 0 #e65100; }
+        .ans-btn { background: #6f42c1; color: #fff; box-shadow: 0 3px 0 #4b2c85; }
 
         /* ---- 練習 ---- */
         #bar { width: 100%; max-width: 520px; height: 12px; background: #e9e2f5;
@@ -150,11 +155,14 @@
     <div id="view-table" style="width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center">
         <div class="box">
             <div class="chips" id="table-chips"></div>
-            <button class="speak-all" id="btn-speak-all" type="button">🔊 整段唸一遍</button>
+            <div class="toolbar">
+                <button class="tool-btn ans-btn" id="btn-answers" type="button">👀 顯示答案</button>
+                <button class="tool-btn speak-all" id="btn-speak-all" type="button">🔊 整段唸一遍</button>
+            </div>
         </div>
         <div class="sum" id="table-sum"></div>
         <div id="table-rows"></div>
-        <div class="tip">點一格會唸給妳聽。<br>✅ 已經很熟　🔥 還要多練　○ 還沒練過</div>
+        <div class="tip" id="table-tip"></div>
     </div>
 
     <!-- ---------- 練習 ---------- -->
@@ -338,6 +346,12 @@
     const tableSum = document.getElementById('table-sum');
     let tableStep = 2;                 // 1 的段太簡單，預設從 2 開始
 
+    // 答案預設蓋住 —— 這一頁是拿來背的，攤開來就只是一張答案卡。
+    // 她先自己想，點那一格才翻開（順便唸出來），等於一張一張的自我測驗。
+    // 刻意不記住她上次的選擇：每次進來都從「蓋住」開始，不然開一次就永遠攤開了。
+    let showAnswers = false;
+    let revealed = new Set();          // 蓋住時她自己點開的那幾格；換段或全部收合就清空
+
     function buildTableChips() {
         tableChips.innerHTML = '';
         for (let n = 1; n <= 9; n++) {
@@ -345,9 +359,26 @@
             b.type = 'button';
             b.className = 'chip' + (n === tableStep ? ' chip-on' : '');
             b.textContent = n + ' 的段';
-            b.onclick = () => { tableStep = n; buildTableChips(); renderTable(); };
+            b.onclick = () => {
+                tableStep = n;
+                revealed.clear();      // 換一段就重新蓋起來，不然新的一段會有幾格是開的
+                buildTableChips();
+                renderTable();
+            };
             tableChips.appendChild(b);
         }
+    }
+
+    function isOpen(b) { return showAnswers || revealed.has(b); }
+
+    /** 只重畫一格。整張重畫會把 .speaking 的高亮一起洗掉。 */
+    function paintRow(el, b) {
+        const open = isOpen(b);
+        const mark = factMark(tableStep, b);
+        el.classList.toggle('hid', !open);
+        el.innerHTML = `<span>${tableStep} × ${b}</span>
+            <span class="eq">= ${open ? tableStep * b : '?'}</span>
+            <span class="mark ${mark.cls}">${mark.icon}</span>`;
     }
 
     function renderTable() {
@@ -358,10 +389,11 @@
             mark.cls === 'ok' ? ok++ : mark.cls === 'weak' ? weak++ : none++;
             const el = document.createElement('div');
             el.className = 'row';
-            el.innerHTML = `<span>${tableStep} × ${b}</span>
-                <span class="eq">= ${tableStep * b}</span>
-                <span class="mark ${mark.cls}">${mark.icon}</span>`;
+            paintRow(el, b);
             el.onclick = () => {
+                // 還蓋著就先翻開這一格（翻開之後不會再自己蓋回去 —— 唸到一半
+                // 被收走會看不到答案，要收就按上面的「蓋住答案」）
+                if (!isOpen(b)) { revealed.add(b); paintRow(el, b); }
                 document.querySelectorAll('.row.speaking').forEach((x) => x.classList.remove('speaking'));
                 el.classList.add('speaking');
                 const u = speakFact(tableStep, b);
@@ -371,7 +403,25 @@
             tableRows.appendChild(el);
         }
         tableSum.textContent = `這一段：✅ ${ok}　🔥 ${weak}　○ ${none}`;
+        paintAnswerUI();
     }
+
+    const btnAnswers = document.getElementById('btn-answers');
+    const tableTip = document.getElementById('table-tip');
+
+    function paintAnswerUI() {
+        btnAnswers.textContent = showAnswers ? '🙈 蓋住答案' : '👀 顯示答案';
+        tableTip.innerHTML = (showAnswers
+            ? '點一格會唸給妳聽。'
+            : '先自己想答案，點一格就翻開並唸給妳聽。')
+            + '<br>✅ 已經很熟　🔥 還要多練　○ 還沒練過';
+    }
+
+    btnAnswers.onclick = () => {
+        showAnswers = !showAnswers;
+        revealed.clear();              // 按「蓋住答案」就是全部收回去，包含她點開的那幾格
+        renderTable();
+    };
 
     document.getElementById('btn-speak-all').onclick = () => {
         if (!('speechSynthesis' in window)) return;
