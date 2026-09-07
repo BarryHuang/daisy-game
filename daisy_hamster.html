@@ -813,6 +813,11 @@
         }
 
         function speakWord(w) {
+            // 唸的時候一定要轉小寫。畫面上的字是大寫的（拼字格子需要），
+            // 但 TTS 看到全大寫會當成縮寫，一個字母一個字母唸出來 ——
+            // "WINDOW BOX" 會變成 "W-I-N-D-O-W B-O-X"（回報過的問題）。
+            w = String(w).toLowerCase();
+
             // 判斷是否為 iOS 裝置 (Safari/Webview 環境下 .catch() 的非同步會導致失去 User Gesture 權限)
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 

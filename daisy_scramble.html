@@ -139,7 +139,10 @@
         function speakWord() {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(currentWord);
+            // 唸的時候一定要轉小寫。畫面上的字是大寫的（拼字格子需要），
+            // 但 TTS 看到全大寫會當成縮寫，一個字母一個字母唸出來 ——
+            // "WINDOW BOX" 會變成 "W-I-N-D-O-W B-O-X"（回報過的問題）。
+                const utterance = new SpeechSynthesisUtterance(currentWord.toLowerCase());
                 utterance.lang = 'en-US';
                 utterance.rate = 0.85;
                 utterance.pitch = 1.2;
