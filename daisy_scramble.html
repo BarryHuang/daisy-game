@@ -35,6 +35,8 @@
             text-transform: uppercase; padding-bottom: 5px; transition: 0.3s;
         }
         .slot.filled { border-bottom-color: transparent; }
+        /* 分隔符（window box 的空白）：不給泡泡、不給底線，自動填 */
+        .slot.sep { width: 18px; border-bottom-color: transparent; }
         
         #bubbles-container {
             display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
@@ -162,6 +164,20 @@
             init();
         }
 
+        // "window box" 這種多字詞的空白（和 "hula-hoop" 的連字號）不做成泡泡 ——
+        // 空泡泡看起來像壞掉。這些位置自動填好並跳過，她只要點字母。
+        const TYPABLE = /[A-Z]/;
+
+        function skipSeparators() {
+            const slots = document.getElementsByClassName('slot');
+            while (currentIndex < targetLetters.length && !TYPABLE.test(targetLetters[currentIndex])) {
+                slots[currentIndex].textContent =
+                    targetLetters[currentIndex] === ' ' ? '' : targetLetters[currentIndex];
+                slots[currentIndex].classList.add('filled');
+                currentIndex++;
+            }
+        }
+
         // 隨機產生不相關的干擾字母
         function getRandomLetter() {
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -180,14 +196,15 @@
             // 建立目標空格
             const slotsContainer = document.getElementById('target-slots');
             slotsContainer.innerHTML = '';
-            targetLetters.forEach(() => {
+            targetLetters.forEach((ch) => {
                 const slot = document.createElement('div');
-                slot.className = 'slot';
+                slot.className = 'slot' + (TYPABLE.test(ch) ? '' : ' sep');
                 slotsContainer.appendChild(slot);
             });
+            skipSeparators();
 
-            // 準備泡泡字串 (包含正確字母)
-            let bubbleLetters = [...targetLetters];
+            // 準備泡泡字串（只放她點得到的字母：空白做成泡泡會是一顆空的圓圈）
+            let bubbleLetters = targetLetters.filter((ch) => TYPABLE.test(ch));
             
             // 加入干擾字母 (單字越長，干擾可能越多，這裡預設加 2~3 個干擾)
             let numDistractors = Math.floor(Math.random() * 2) + 2; 
@@ -240,9 +257,10 @@
                 slots[currentIndex].classList.add('pop-anim');
                 
                 currentIndex++;
+                skipSeparators();
                 
                 // 檢查是否拼完了
-                if(currentIndex === targetLetters.length) {
+                if(currentIndex >= targetLetters.length) {
                     if (typeof recordAttempt === 'function')
                         recordAttempt(currentWord, true, wrongTaps);
                     document.getElementById('message').textContent = "Daisy 太強了！🎉";

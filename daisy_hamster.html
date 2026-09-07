@@ -952,17 +952,36 @@
             // 隱藏翻譯
             document.getElementById('word-translation').style.display = 'none';
 
-            // 繪製格子
+            // 繪製格子。分隔符（空白、連字號）用窄縫表示，等一下由 skipSeparators() 填掉
             const slotsContainer = document.getElementById('target-slots');
             slotsContainer.innerHTML = '';
-            targetLetters.forEach((_, i) => {
+            targetLetters.forEach((ch) => {
                 const slot = document.createElement('div');
-                slot.className = 'slot' + (i === 0 ? ' current' : '');
+                slot.className = 'slot' + (TYPABLE.test(ch) ? '' : ' sep');
                 slotsContainer.appendChild(slot);
             });
+            skipSeparators();
 
             createKeyboard();
             setTimeout(() => speakWord(currentWord), 400);
+        }
+
+        // 課表裡有 "window box"、"hermit crab"、"hula-hoop" 這種多字詞，但鍵盤只有
+        // A-Z —— 空白和連字號她永遠按不出來，那一題就卡死在那裡（回報過的 bug）。
+        // 所以這些位置自動填好並跳過：她只要照著拼字母，分隔符自己會出現。
+        const TYPABLE = /[A-Z]/;
+
+        function skipSeparators() {
+            const slots = document.getElementsByClassName('slot');
+            while (currentIndex < targetLetters.length && !TYPABLE.test(targetLetters[currentIndex])) {
+                slots[currentIndex].classList.remove('current');
+                slots[currentIndex].classList.add('filled');
+                // 空白留白就好，連字號要看得到
+                slots[currentIndex].textContent =
+                    targetLetters[currentIndex] === ' ' ? '' : targetLetters[currentIndex];
+                currentIndex++;
+            }
+            if (currentIndex < targetLetters.length) slots[currentIndex].classList.add('current');
         }
 
         function recordMistake(word) {
@@ -984,12 +1003,9 @@
                 slots[currentIndex].textContent = letter;
                 
                 currentIndex++;
-                if(currentIndex < targetLetters.length) {
-                    slots[currentIndex].classList.add('current');
-                } else {
-                    // 完成單字
-                    wordCleared();
-                }
+                skipSeparators();
+                // 全部填完就過關（分隔符已經由 skipSeparators() 填掉了）
+                if(currentIndex >= targetLetters.length) wordCleared();
             } else {
                 // 錯了，抖動鍵盤按鈕，不扣分
                 mistakeCount++;
