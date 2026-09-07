@@ -97,6 +97,12 @@
             box-shadow: 0 4px 10px rgba(255,133,162,0.25);
             transform: scale(1.05);
         }
+        /* 分隔符（window box 的空白、hula-hoop 的連字號）。鍵盤只有 A-Z，
+           她按不出來，所以由程式自動填掉；畫成一個窄縫，讓她看得出來是兩個字 */
+        .slot.sep {
+            width: 16px; background: none; border: none; box-shadow: none;
+            color: #cbbfe4; font-size: 1.2rem;
+        }
         .slot.current {
             border-color: var(--primary); border-width: 2px;
             box-shadow: 0 0 0 3px rgba(255,133,162,0.25);
