@@ -18,6 +18,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
     <script src="./firebase-config.js"></script>
     <link rel="stylesheet" href="style.css">
+
+    <!-- 圓體英文字型（字型檔自己託管，見 fx.css）。原本全站寫的
+         'Comic Sans MS' / 'Chalkboard SE' 在 Android 兩個都沒有，
+         所以她手機上一直是系統預設字體。中文維持系統字型。 -->
+    <link rel="stylesheet" href="fx.css">
+    <script src="./fx.js"></script>
 </head>
 <body>
 
@@ -32,7 +38,11 @@
         </div>
     </div>
 
-    <h2>Daisy's Hamster Adventure 🐹</h2>
+    <div class="fx-scene"></div>
+
+    <header class="fx-header">
+        <h2 class="fx-title">Daisy's Hamster Adventure 🐹</h2>
+    </header>
     
     <div class="app-container">
         <!-- 左側：拼字挑戰 10 關 -->
@@ -46,24 +56,24 @@
             <div id="progress-bar"><div id="progress-fill"></div></div>
 
             <!-- 複習單字按鈕 -->
-            <button id="btn-review" onclick="openReview()" style="width:100%; margin-bottom:8px; padding:10px; border-radius:15px; background:linear-gradient(135deg,#8ba4f9,#6c5ce7); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #4f3ce0;">
+            <button id="btn-review" class="fx-btn purple" onclick="openReview()" style="width:100%; margin-bottom:8px;">
                 📖 先複習本週單字
             </button>
 
             <!-- 測驗入口：期中/期末合併成一顆，範圍在裡面選 -->
-            <button id="btn-exam" onclick="openExam()" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#f9a825,#e65100); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #bf360c; animation:midtermBtnPulse 2.4s ease-in-out infinite;">
-                📝 測驗 <span style="font-size:0.8rem; font-weight:normal;">（期中・期末・全部）</span>
+            <button id="btn-exam" class="fx-btn orange fx-pulse" onclick="openExam()" style="width:100%; margin-bottom:8px;">
+                📝 測驗 <span style="font-size:0.8rem; font-weight:normal; opacity:.9;">（期中・期末・全部）</span>
             </button>
             <style>
-              @keyframes midtermBtnPulse {
-                0%,100%{ transform:scale(1);    box-shadow:0 4px 0 #bf360c,0 6px 18px rgba(230,81,0,.35); }
-                50%    { transform:scale(1.04); box-shadow:0 4px 0 #bf360c,0 8px 26px rgba(230,81,0,.55); }
-              }
+              /* 只放大、不動陰影 —— 陰影交給 .fx-btn，兩邊都寫會互相蓋掉 */
+              @keyframes fxPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.035); } }
+              .fx-pulse { animation: fxPulse 2.4s ease-in-out infinite; }
+              @media (prefers-reduced-motion: reduce) { .fx-pulse { animation: none; } }
             </style>
 
             <!-- 課文複習 hub -->
-            <button onclick="window.location.href='story_hub.html'" style="width:100%; margin-bottom:12px; padding:11px; border-radius:15px; background:linear-gradient(135deg,#4a148c,#7b1fa2); color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 0 #311b92; display:flex; align-items:center; justify-content:center; gap:8px;">
-                📖 課文複習 <span style="font-size:0.8rem; font-weight:normal; opacity:0.85;">（選擇課文）</span>
+            <button class="fx-btn ghost" onclick="window.location.href='story_hub.html'" style="width:100%; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                📖 課文複習 <span style="font-size:0.8rem; font-weight:normal; opacity:0.7;">（選擇課文）</span>
             </button>
 
                         <style>
@@ -74,8 +84,8 @@
             </style>
 
             <div style="display: flex; gap: 10px; margin-bottom: 20px; width: 100%;">
-                <button class="btn-speak" style="flex: 1; margin-bottom: 0;" onclick="speakWord(currentWord)">🔊 聽發音</button>
-                <button class="btn-speak" style="flex: 1; margin-bottom: 0; background: #00bcd4; box-shadow: 0 4px 0 #0097a7;" id="btn-hint" onclick="useHint()">💡 提示 (2💰)</button>
+                <button class="fx-btn teal" style="flex: 1;" onclick="speakWord(currentWord)">🔊 聽發音</button>
+                <button class="fx-btn ghost" style="flex: 1;" id="btn-hint" onclick="useHint()">💡 提示 (2💰)</button>
             </div>
             <div id="target-slots"></div>
             <div id="game-message">聽發音並拼出單字吧！</div>
@@ -436,6 +446,9 @@
             
             // 如果還沒開始遊戲 (第一次登入)，初始化遊戲關卡
             if (currentLevelQueue.length === 0) {
+                // 進場交錯落下：一次全部出現很平，錯開一點就有「發牌」的感覺
+                if (typeof fxStagger === 'function') fxStagger('.app-container > .card', 90);
+
                 setupConfig();
             }
         }
@@ -813,6 +826,11 @@
         }
 
         function speakWord(w) {
+            // 唸的時候一定要轉小寫。畫面上的字是大寫的（拼字格子需要），
+            // 但 TTS 看到全大寫會當成縮寫，一個字母一個字母唸出來 ——
+            // "WINDOW BOX" 會變成 "W-I-N-D-O-W B-O-X"（回報過的問題）。
+            w = String(w).toLowerCase();
+
             // 判斷是否為 iOS 裝置 (Safari/Webview 環境下 .catch() 的非同步會導致失去 User Gesture 權限)
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
@@ -883,7 +901,10 @@
             const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
             const offsets = ['0%', '5%', '15%'];
             k.innerHTML = rows.map((row, i) =>
-                `<div style="display:flex; flex-direction:row; justify-content:center; gap:4px; padding:0 ${offsets[i]}; box-sizing:border-box;">` +
+                // class="key-row" 不能少：style.css 的彩虹配色是用
+                // .key-row:nth-child(n) .key 選的，少了 class 那三條規則一條都不會命中，
+                // 鍵盤就是瀏覽器預設的灰色按鈕（一直以來都是這樣）。
+                `<div class="key-row" style="display:flex; flex-direction:row; justify-content:center; gap:4px; padding:0 ${offsets[i]}; box-sizing:border-box;">` +
                     row.split('').map(l =>
                         `<button class="key" id="key-${l}" onclick="handleKey('${l}')" style="flex:1; min-width:0;">${l}</button>`
                     ).join('') +
@@ -1001,7 +1022,14 @@
                 slots[currentIndex].classList.remove('current');
                 slots[currentIndex].classList.add('filled');
                 slots[currentIndex].textContent = letter;
-                
+
+                // 手感：格子彈一下、從按到的那顆鍵噴出碎片、輕微震動
+                if (typeof fxPop === 'function') {
+                    fxPop(slots[currentIndex]);
+                    fxBurst(document.getElementById('key-' + letter), 7);
+                    fxHaptic(12);
+                }
+
                 currentIndex++;
                 skipSeparators();
                 // 全部填完就過關（分隔符已經由 skipSeparators() 填掉了）
@@ -1012,6 +1040,7 @@
                 recordMistake(currentWord);
                 playTone(200, 'sawtooth', 0.15);
                 const btn = document.getElementById(`key-${letter}`);
+                if (typeof fxShake === 'function') fxShake(btn);
                 if(btn) {
                     btn.style.backgroundColor = '#ff4757';
                     btn.style.color = 'white';
@@ -1096,7 +1125,15 @@
             }
             
             document.getElementById('keyboard').innerHTML = '';
-            
+
+            // 手感：整排格子中央噴碎片，金幣數字往上飄
+            if (typeof fxBurst === 'function') {
+                const slotsEl = document.getElementById('target-slots');
+                fxBurst(slotsEl, mistakeCount === 0 ? 20 : 12);
+                fxFloat('+' + totalReward + ' 💰', slotsEl);
+                fxHaptic(mistakeCount === 0 ? [18, 40, 18] : 18);
+            }
+
             petData.coins += totalReward;
             petData.totalWordsCleared += 1;
             
