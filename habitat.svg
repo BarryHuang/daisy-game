@@ -1,98 +1,147 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
   <!-- habitat.svg — 倉鼠的家：地平線以下的場景
-       上緣留透明，天空交給 .hamster-cage 的 CSS 漸層（那裡有日／夕陽／夜的切換），
-       所以這張圖只畫遠山以下。原本天空和草地是同一條 linear-gradient 的兩個色停，
-       中間會出現一條筆直的硬邊；改成起伏的山稜線就接得自然了。 -->
+       上緣留透明，天空交給 .hamster-cage 的 CSS 漸層（那裡有日/夕陽/夜的切換）。
+       每一層都給亮面和暗面：只有單一填色的話，遠山和草地會像色塊而不是地形。 -->
   <defs>
     <linearGradient id="hFar" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#cdeccd"/><stop offset="1" stop-color="#a9dcaa"/>
+      <stop offset="0" stop-color="#d7f0d4"/><stop offset="1" stop-color="#a9d9ab"/>
     </linearGradient>
     <linearGradient id="hMid" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#a3dba8"/><stop offset="1" stop-color="#7ec98a"/>
+      <stop offset="0" stop-color="#b2e2b3"/><stop offset="1" stop-color="#7cc78a"/>
     </linearGradient>
     <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#8ed398"/><stop offset=".55" stop-color="#6fc07e"/>
-      <stop offset="1" stop-color="#57ab68"/>
+      <stop offset="0" stop-color="#95d99d"/><stop offset=".45" stop-color="#72c482"/>
+      <stop offset="1" stop-color="#4f9f62"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2b382"/><stop offset=".5" stop-color="#c79358"/>
+      <stop offset="1" stop-color="#a16f3c"/>
     </linearGradient>
     <radialGradient id="clearing" cx=".5" cy=".5">
-      <stop offset="0" stop-color="#d8c79a" stop-opacity=".85"/>
-      <stop offset="1" stop-color="#d8c79a" stop-opacity="0"/>
+      <stop offset="0" stop-color="#e0cfa2" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#e0cfa2" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="bushLight" x1=".3" y1="0" x2=".7" y2="1">
+      <stop offset="0" stop-color="#9fdca8"/><stop offset="1" stop-color="#5faa6f"/>
+    </linearGradient>
   </defs>
 
-  <!-- 遠山：兩層起伏，愈遠愈淡 -->
-  <path d="M0 74 Q52 44 108 70 T214 62 T300 74 T360 66 L360 200 L0 200 Z" fill="url(#hFar)" opacity=".9"/>
-  <path d="M0 98 Q74 70 150 96 T268 88 T360 100 L360 200 L0 200 Z" fill="url(#hMid)"/>
+  <!-- 遠山：兩層，各有一道亮的稜線 -->
+  <path d="M0 70 Q52 40 108 66 T214 58 T300 70 T360 62 L360 200 L0 200 Z" fill="url(#hFar)" opacity=".92"/>
+  <path d="M0 70 Q52 40 108 66 T214 58 T300 70 T360 62" fill="none" stroke="#e8f8e4" stroke-width="2.5" opacity=".55"/>
+  <path d="M0 96 Q74 66 150 94 T268 84 T360 98 L360 200 L0 200 Z" fill="url(#hMid)"/>
+  <path d="M0 96 Q74 66 150 94 T268 84 T360 98" fill="none" stroke="#d2f0cf" stroke-width="2.5" opacity=".5"/>
 
-  <!-- 遠處樹叢：疊圓形，比畫葉子輕量也比較卡通 -->
-  <g opacity=".85">
-    <g fill="#79c187">
-      <circle cx="40" cy="88" r="17"/><circle cx="58" cy="94" r="13"/><circle cx="24" cy="96" r="11"/>
-      <circle cx="286" cy="84" r="15"/><circle cx="303" cy="92" r="12"/><circle cx="270" cy="93" r="10"/>
+  <!-- 樹叢：亮面在左上、暗面在右下，才有體積 -->
+  <g>
+    <g transform="translate(40 86)">
+      <circle cx="0" cy="0" r="17" fill="#79c187"/><circle cx="18" cy="7" r="13" fill="#6bb47b"/>
+      <circle cx="-17" cy="8" r="11" fill="#6bb47b"/>
+      <circle cx="-5" cy="-5" r="11" fill="#9bd9a4" opacity=".85"/>
+      <path d="M-24 14 a24 14 0 0 0 44 2" fill="#4f9c60" opacity=".45"/>
     </g>
-    <g fill="#8ed09a">
-      <circle cx="168" cy="92" r="12"/><circle cx="183" cy="97" r="9"/>
+    <g transform="translate(286 82)">
+      <circle cx="0" cy="0" r="15" fill="#79c187"/><circle cx="16" cy="8" r="12" fill="#6bb47b"/>
+      <circle cx="-16" cy="9" r="10" fill="#6bb47b"/>
+      <circle cx="-4" cy="-5" r="10" fill="#9bd9a4" opacity=".85"/>
+      <path d="M-22 15 a22 13 0 0 0 40 2" fill="#4f9c60" opacity=".45"/>
+    </g>
+    <g transform="translate(172 90) scale(.85)">
+      <circle cx="0" cy="0" r="13" fill="#8ed09a"/><circle cx="14" cy="6" r="10" fill="#7cc48a"/>
+      <circle cx="-4" cy="-4" r="8" fill="#a9e0b0" opacity=".8"/>
     </g>
   </g>
 
-  <!-- 木柵欄：橫桿 + 立柱，給畫面一個「這是一個家」的邊界 -->
+  <!-- 木柵欄：橫桿有木紋、立柱有亮暗兩面 -->
   <g>
-    <rect x="0" y="112" width="360" height="7" rx="3" fill="#c79a6b"/>
-    <rect x="0" y="126" width="360" height="7" rx="3" fill="#b8874f"/>
-    <g fill="#d9ab7c">
-      <rect x="18"  y="104" width="11" height="38" rx="4"/>
-      <rect x="96"  y="104" width="11" height="38" rx="4"/>
-      <rect x="174" y="104" width="11" height="38" rx="4"/>
-      <rect x="252" y="104" width="11" height="38" rx="4"/>
-      <rect x="330" y="104" width="11" height="38" rx="4"/>
+    <rect x="0" y="110" width="360" height="8" rx="3.5" fill="url(#wood)"/>
+    <rect x="0" y="125" width="360" height="8" rx="3.5" fill="url(#wood)"/>
+    <g stroke="#a16f3c" stroke-width="1" opacity=".45">
+      <path d="M0 114h360M0 129h360"/>
+      <path d="M40 111v6M132 111v6M228 111v6M312 111v6M76 126v6M196 126v6M296 126v6"/>
     </g>
-    <!-- 柱頂的小斜面，看起來像削過的木頭 -->
-    <g fill="#e8c096">
-      <path d="M18 104 l5.5 -5 5.5 5 z"/><path d="M96 104 l5.5 -5 5.5 5 z"/>
-      <path d="M174 104 l5.5 -5 5.5 5 z"/><path d="M252 104 l5.5 -5 5.5 5 z"/>
-      <path d="M330 104 l5.5 -5 5.5 5 z"/>
+    <g>
+      <g fill="url(#wood)">
+        <rect x="18"  y="102" width="12" height="42" rx="4"/>
+        <rect x="96"  y="102" width="12" height="42" rx="4"/>
+        <rect x="174" y="102" width="12" height="42" rx="4"/>
+        <rect x="252" y="102" width="12" height="42" rx="4"/>
+        <rect x="330" y="102" width="12" height="42" rx="4"/>
+      </g>
+      <!-- 立柱右側暗面 -->
+      <g fill="#8d5f31" opacity=".35">
+        <rect x="26"  y="102" width="4" height="42" rx="2"/>
+        <rect x="104" y="102" width="4" height="42" rx="2"/>
+        <rect x="182" y="102" width="4" height="42" rx="2"/>
+        <rect x="260" y="102" width="4" height="42" rx="2"/>
+        <rect x="338" y="102" width="4" height="42" rx="2"/>
+      </g>
+      <!-- 削尖的柱頂 -->
+      <g fill="#e8c096">
+        <path d="M18 103 l6 -6 6 6 z"/><path d="M96 103 l6 -6 6 6 z"/>
+        <path d="M174 103 l6 -6 6 6 z"/><path d="M252 103 l6 -6 6 6 z"/>
+        <path d="M330 103 l6 -6 6 6 z"/>
+      </g>
     </g>
   </g>
 
   <!-- 地面 -->
-  <path d="M0 138 Q90 128 180 138 T360 136 L360 200 L0 200 Z" fill="url(#ground)"/>
-  <!-- 倉鼠站的那塊空地，讓主角不會糊在草裡 -->
-  <ellipse cx="180" cy="186" rx="118" ry="26" fill="url(#clearing)"/>
+  <path d="M0 136 Q90 126 180 136 T360 134 L360 200 L0 200 Z" fill="url(#ground)"/>
+  <path d="M0 136 Q90 126 180 136 T360 134" fill="none" stroke="#b6e8bb" stroke-width="2" opacity=".5"/>
+  <!-- 草地上的深淺斑塊，讓地面不是一整片單色 -->
+  <g fill="#5fae70" opacity=".22">
+    <ellipse cx="62"  cy="158" rx="46" ry="11"/>
+    <ellipse cx="250" cy="152" rx="52" ry="10"/>
+    <ellipse cx="150" cy="180" rx="60" ry="12"/>
+  </g>
+  <!-- 倉鼠站的空地 -->
+  <ellipse cx="180" cy="186" rx="116" ry="25" fill="url(#clearing)"/>
 
-  <!-- 草叢：三叉的小草，沿地面散開 -->
-  <g stroke="#4f9c60" stroke-width="3" stroke-linecap="round" fill="none" opacity=".75">
-    <path d="M14 168 q2 -11 5 -15 M20 168 q0 -9 1 -13 M26 168 q-2 -11 -4 -15"/>
-    <path d="M78 176 q2 -11 5 -15 M84 176 q0 -9 1 -13"/>
-    <path d="M232 174 q-2 -11 -5 -15 M226 174 q0 -9 -1 -13"/>
-    <path d="M318 166 q2 -11 5 -15 M324 166 q0 -9 1 -13 M330 166 q-2 -11 -4 -15"/>
+  <!-- 草叢 -->
+  <g stroke="#468f58" stroke-width="3" stroke-linecap="round" fill="none" opacity=".8">
+    <path d="M14 168q2-12 5-16M20 168q0-10 1-14M26 168q-2-12-4-16"/>
+    <path d="M78 176q2-12 5-16M84 176q0-10 1-14"/>
+    <path d="M232 174q-2-12-5-16M226 174q0-10-1-14"/>
+    <path d="M318 166q2-12 5-16M324 166q0-10 1-14M330 166q-2-12-4-16"/>
+    <path d="M124 190q2-10 4-13M130 190q0-9 1-12"/>
+    <path d="M276 192q-2-10-4-13M270 192q0-9-1-12"/>
   </g>
 
-  <!-- 小花：花瓣四片 + 花心，比 emoji 一致，也不會隨系統換樣子 -->
+  <!-- 小花 -->
   <g>
     <g transform="translate(52 160)">
-      <g fill="#ffd0e4"><circle cx="0" cy="-4" r="3.4"/><circle cx="0" cy="4" r="3.4"/>
-        <circle cx="-4" cy="0" r="3.4"/><circle cx="4" cy="0" r="3.4"/></g>
+      <path d="M0 4q1 9 0 13" stroke="#468f58" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g fill="#ffd0e4"><circle cx="0" cy="-4" r="3.6"/><circle cx="0" cy="4" r="3.6"/>
+        <circle cx="-4" cy="0" r="3.6"/><circle cx="4" cy="0" r="3.6"/></g>
       <circle r="2.4" fill="#ffe680"/>
-      <path d="M0 4 q1 8 0 12" stroke="#4f9c60" stroke-width="2" fill="none" stroke-linecap="round"/>
     </g>
     <g transform="translate(140 172) scale(.9)">
-      <g fill="#fff0b3"><circle cx="0" cy="-4" r="3.4"/><circle cx="0" cy="4" r="3.4"/>
-        <circle cx="-4" cy="0" r="3.4"/><circle cx="4" cy="0" r="3.4"/></g>
+      <path d="M0 4q-1 9 0 13" stroke="#468f58" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g fill="#fff0b3"><circle cx="0" cy="-4" r="3.6"/><circle cx="0" cy="4" r="3.6"/>
+        <circle cx="-4" cy="0" r="3.6"/><circle cx="4" cy="0" r="3.6"/></g>
       <circle r="2.4" fill="#ffb347"/>
-      <path d="M0 4 q-1 8 0 12" stroke="#4f9c60" stroke-width="2" fill="none" stroke-linecap="round"/>
     </g>
     <g transform="translate(288 164) scale(.95)">
-      <g fill="#e0d4ff"><circle cx="0" cy="-4" r="3.4"/><circle cx="0" cy="4" r="3.4"/>
-        <circle cx="-4" cy="0" r="3.4"/><circle cx="4" cy="0" r="3.4"/></g>
+      <path d="M0 4q1 9 0 13" stroke="#468f58" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g fill="#e0d4ff"><circle cx="0" cy="-4" r="3.6"/><circle cx="0" cy="4" r="3.6"/>
+        <circle cx="-4" cy="0" r="3.6"/><circle cx="4" cy="0" r="3.6"/></g>
       <circle r="2.4" fill="#ffe680"/>
-      <path d="M0 4 q1 8 0 12" stroke="#4f9c60" stroke-width="2" fill="none" stroke-linecap="round"/>
     </g>
   </g>
 
-  <!-- 小石頭，補一點地面的變化 -->
-  <g fill="#b9b0a4" opacity=".55">
-    <ellipse cx="108" cy="190" rx="7" ry="4"/>
-    <ellipse cx="262" cy="194" rx="5.5" ry="3.2"/>
-    <ellipse cx="198" cy="196" rx="4.5" ry="2.6"/>
+  <!-- 小蘑菇，增加一點趣味 -->
+  <g transform="translate(330 182)">
+    <rect x="-2.2" y="-4" width="4.4" height="7" rx="2" fill="#f4e6d2"/>
+    <path d="M-7 -3a7 5.5 0 0 1 14 0z" fill="#e8737f"/>
+    <g fill="#fff" opacity=".85"><circle cx="-3" cy="-5" r="1.4"/><circle cx="2.5" cy="-4.4" r="1.1"/></g>
   </g>
+
+  <!-- 石頭：加一道亮面就不會是灰色橢圓 -->
+  <g>
+    <ellipse cx="108" cy="190" rx="8" ry="4.5" fill="#b3aa9e"/>
+    <path d="M102 189a8 4.5 0 0 1 9-3.5" fill="none" stroke="#d6cec2" stroke-width="1.6" stroke-linecap="round"/>
+    <ellipse cx="262" cy="194" rx="6" ry="3.4" fill="#b3aa9e"/>
+    <path d="M257 193a6 3.4 0 0 1 7-2.6" fill="none" stroke="#d6cec2" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+
 </svg>

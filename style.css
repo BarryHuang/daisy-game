@@ -492,7 +492,9 @@
         }
         .btn-login:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 /* 變髒特效 */
-.hamster-svg.dirty { filter: sepia(0.6) brightness(0.9) contrast(1.1); }
+/* 髒掉時也要保留接地陰影和時段色調 —— 只寫 sepia 的話 filter 會整個被取代，
+   倉鼠會突然沒有影子、而且晚上還亮著 */
+.hamster-svg.dirty { filter: drop-shadow(0 10px 5px rgba(60,40,18,.38)) var(--tint) sepia(.55) brightness(.92) contrast(1.08); }
 .hamster-svg.dirty::after { content: '泥土'; position: absolute; }
 
 /* 場景替換 */
