@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 860" preserveAspectRatio="xMidYMax slice">
+  <!-- scene-meadow.svg — 全站背景場景
+       手寫 SVG 而不是點陣圖：4KB、任何螢幕都不糊、離線可用、風格由自己控制。
+       刻意低對比 —— 背景太搶眼會讓上面的字變難讀。 -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#cfeaff"/>
+      <stop offset=".45" stop-color="#e9f0ff"/>
+      <stop offset=".78" stop-color="#fdeef6"/>
+      <stop offset="1"   stop-color="#ffe6f0"/>
+    </linearGradient>
+    <radialGradient id="sunGlow">
+      <stop offset="0"  stop-color="#fff3b8" stop-opacity=".95"/>
+      <stop offset=".55" stop-color="#ffeaa0" stop-opacity=".35"/>
+      <stop offset="1"  stop-color="#ffe9a8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hillFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bfe3c4"/><stop offset="1" stop-color="#a6d6ad"/>
+    </linearGradient>
+    <linearGradient id="hillNear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9ad6a4"/><stop offset="1" stop-color="#7cc48a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="420" height="860" fill="url(#sky)"/>
+
+  <!-- 太陽 -->
+  <circle cx="345" cy="88" r="105" fill="url(#sunGlow)"/>
+  <circle cx="345" cy="88" r="34" fill="#ffe27a" opacity=".85"/>
+
+  <!-- 雲：三顆重疊的圓比一條路徑更像卡通雲 -->
+  <g fill="#ffffff" opacity=".8">
+    <g transform="translate(58 128)">
+      <ellipse cx="0"  cy="0" rx="30" ry="21"/><ellipse cx="26" cy="6" rx="24" ry="16"/>
+      <ellipse cx="-24" cy="7" rx="21" ry="14"/>
+    </g>
+    <g transform="translate(300 210) scale(.78)" opacity=".75">
+      <ellipse cx="0"  cy="0" rx="30" ry="21"/><ellipse cx="26" cy="6" rx="24" ry="16"/>
+      <ellipse cx="-24" cy="7" rx="21" ry="14"/>
+    </g>
+    <g transform="translate(150 300) scale(.55)" opacity=".55">
+      <ellipse cx="0"  cy="0" rx="30" ry="21"/><ellipse cx="26" cy="6" rx="24" ry="16"/>
+      <ellipse cx="-24" cy="7" rx="21" ry="14"/>
+    </g>
+  </g>
+
+  <!-- 遠山 -->
+  <path d="M0 705 Q70 655 140 700 T290 692 T420 712 L420 860 L0 860 Z" fill="url(#hillFar)" opacity=".85"/>
+  <!-- 近坡 -->
+  <path d="M0 762 Q95 715 196 758 T420 748 L420 860 L0 860 Z" fill="url(#hillNear)"/>
+
+  <!-- 樹叢：兩顆圓加一根樹幹 -->
+  <g>
+    <rect x="52" y="726" width="9" height="30" rx="4" fill="#a97b52"/>
+    <circle cx="56" cy="718" r="25" fill="#79c187"/><circle cx="74" cy="730" r="18" fill="#8ed09a"/>
+    <rect x="352" y="736" width="8" height="26" rx="4" fill="#a97b52"/>
+    <circle cx="356" cy="729" r="21" fill="#79c187"/><circle cx="340" cy="740" r="15" fill="#8ed09a"/>
+  </g>
+
+  <!-- 草地小花 -->
+  <g>
+    <g fill="#ffd9e8"><circle cx="118" cy="800" r="5"/><circle cx="252" cy="818" r="4"/><circle cx="386" cy="798" r="5"/></g>
+    <g fill="#fff0a8"><circle cx="118" cy="800" r="2"/><circle cx="252" cy="818" r="1.7"/><circle cx="386" cy="798" r="2"/></g>
+    <g stroke="#6bb47a" stroke-width="2.4" stroke-linecap="round" opacity=".7">
+      <path d="M32 830 q4 -18 9 -26"/><path d="M186 842 q-4 -16 -8 -24"/><path d="M312 834 q5 -17 10 -24"/>
+    </g>
+  </g>
+</svg>
