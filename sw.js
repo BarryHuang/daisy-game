@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20260915-2302';
+const CACHE_NAME = 'daisy-20260915-2317';
 
 const LOCAL_ASSETS = [
   './',
@@ -51,6 +51,7 @@ const LOCAL_ASSETS = [
   './fx.js',
   './fredoka-latin.woff2',
   './scene-meadow.svg',
+  './habitat.svg',
   './final_exam_pronunciation.html',
   './autumn_book.html',
   './every_season.html',

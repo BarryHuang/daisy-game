@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- habitat.svg — 倉鼠的家：地平線以下的場景
+       上緣留透明，天空交給 .hamster-cage 的 CSS 漸層（那裡有日／夕陽／夜的切換），
+       所以這張圖只畫遠山以下。原本天空和草地是同一條 linear-gradient 的兩個色停，
+       中間會出現一條筆直的硬邊；改成起伏的山稜線就接得自然了。 -->
+  <defs>
+    <linearGradient id="hFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdeccd"/><stop offset="1" stop-color="#a9dcaa"/>
+    </linearGradient>
+    <linearGradient id="hMid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a3dba8"/><stop offset="1" stop-color="#7ec98a"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8ed398"/><stop offset=".55" stop-color="#6fc07e"/>
+      <stop offset="1" stop-color="#57ab68"/>
+    </linearGradient>
+    <radialGradient id="clearing" cx=".5" cy=".5">
+      <stop offset="0" stop-color="#d8c79a" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#d8c79a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 遠山：兩層起伏，愈遠愈淡 -->
+  <path d="M0 74 Q52 44 108 70 T214 62 T300 74 T360 66 L360 200 L0 200 Z" fill="url(#hFar)" opacity=".9"/>
+  <path d="M0 98 Q74 70 150 96 T268 88 T360 100 L360 200 L0 200 Z" fill="url(#hMid)"/>
+
+  <!-- 遠處樹叢：疊圓形，比畫葉子輕量也比較卡通 -->
+  <g opacity=".85">
+    <g fill="#79c187">
+      <circle cx="40" cy="88" r="17"/><circle cx="58" cy="94" r="13"/><circle cx="24" cy="96" r="11"/>
+      <circle cx="286" cy="84" r="15"/><circle cx="303" cy="92" r="12"/><circle cx="270" cy="93" r="10"/>
+    </g>
+    <g fill="#8ed09a">
+      <circle cx="168" cy="92" r="12"/><circle cx="183" cy="97" r="9"/>
+    </g>
+  </g>
+
+  <!-- 木柵欄：橫桿 + 立柱，給畫面一個「這是一個家」的邊界 -->
+  <g>
+    <rect x="0" y="112" width="360" height="7" rx="3" fill="#c79a6b"/>
+    <rect x="0" y="126" width="360" height="7" rx="3" fill="#b8874f"/>
+    <g fill="#d9ab7c">
+      <rect x="18"  y="104" width="11" height="38" rx="4"/>
+      <rect x="96"  y="104" width="11" height="38" rx="4"/>
+      <rect x="174" y="104" width="11" height="38" rx="4"/>
+      <rect x="252" y="104" width="11" height="38" rx="4"/>
+      <rect x="330" y="104" width="11" height="38" rx="4"/>
+    </g>
+    <!-- 柱頂的小斜面，看起來像削過的木頭 -->
+    <g fill="#e8c096">
+      <path d="M18 104 l5.5 -5 5.5 5 z"/><path d="M96 104 l5.5 -5 5.5 5 z"/>
+      <path d="M174 104 l5.5 -5 5.5 5 z"/><path d="M252 104 l5.5 -5 5.5 5 z"/>
+      <path d="M330 104 l5.5 -5 5.5 5 z"/>
+    </g>
+  </g>
+
+  <!-- 地面 -->
+  <path d="M0 138 Q90 128 180 138 T360 136 L360 200 L0 200 Z" fill="url(#ground)"/>
+  <!-- 倉鼠站的那塊空地，讓主角不會糊在草裡 -->
+  <ellipse cx="180" cy="186" rx="118" ry="26" fill="url(#clearing)"/>
+
+  <!-- 草叢：三叉的小草，沿地面散開 -->
+  <g stroke="#4f9c60" stroke-width="3" stroke-linecap="round" fill="none" opacity=".75">
+    <path d="M14 168 q2 -11 5 -15 M20 168 q0 -9 1 -13 M26 168 q-2 -11 -4 -15"/>
+    <path d="M78 176 q2 -11 5 -15 M84 176 q0 -9 1 -13"/>
+    <path d="M232 174 q-2 -11 -5 -15 M226 174 q0 -9 -1 -13"/>
+    <path d="M318 166 q2 -11 5 -15 M324 166 q0 -9 1 -13 M330 166 q-2 -11 -4 -15"/>
+  </g>
+
+  <!-- 小花：花瓣四片 + 花心，比 emoji 一致，也不會隨系統換樣子 -->
+  <g>
+    <g transform="translate(52 160)">
+      <g fill="#ffd0e4"><circle cx="0" cy="-4" r="3.4"/><circle cx="0" cy="4" r="3.4"/>
+        <circle cx="-4" cy="0" r="3.4"/><circle cx="4" cy="0" r="3.4"/></g>
+      <circle r="2.4" fill="#ffe680"/>
+      <path d="M0 4 q1 8 0 12" stroke="#4f9c60" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(140 172) scale(.9)">
+      <g fill="#fff0b3"><circle cx="0" cy="-4" r="3.4"/><circle cx="0" cy="4" r="3.4"/>
+        <circle cx="-4" cy="0" r="3.4"/><circle cx="4" cy="0" r="3.4"/></g>
+      <circle r="2.4" fill="#ffb347"/>
+      <path d="M0 4 q-1 8 0 12" stroke="#4f9c60" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(288 164) scale(.95)">
+      <g fill="#e0d4ff"><circle cx="0" cy="-4" r="3.4"/><circle cx="0" cy="4" r="3.4"/>
+        <circle cx="-4" cy="0" r="3.4"/><circle cx="4" cy="0" r="3.4"/></g>
+      <circle r="2.4" fill="#ffe680"/>
+      <path d="M0 4 q1 8 0 12" stroke="#4f9c60" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- 小石頭，補一點地面的變化 -->
+  <g fill="#b9b0a4" opacity=".55">
+    <ellipse cx="108" cy="190" rx="7" ry="4"/>
+    <ellipse cx="262" cy="194" rx="5.5" ry="3.2"/>
+    <ellipse cx="198" cy="196" rx="4.5" ry="2.6"/>
+  </g>
+</svg>
