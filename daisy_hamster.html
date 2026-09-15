@@ -13,6 +13,13 @@
     
     <!-- 引入 Canvas Confetti 套件來實現全螢幕灑彩紙效果 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+      // 這是離線優先的 PWA，但 confetti 是外連 CDN。第一次就離線開（或 CDN 被擋）
+      // 的時候它不會存在，而頁面裡有 9 個呼叫點，其中「整週通關」那個沒有做
+      // typeof 判斷 —— 一拋錯就把通關流程整個中斷，金幣也不會入帳。
+      // 與其逐一補判斷（容易漏、以後新增又會再犯），不如在這裡補一個空的。
+      if (typeof window.confetti !== 'function') window.confetti = function () {};
+    </script>
     <!-- 引入 Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
@@ -208,6 +215,12 @@
                             <!-- 頂端平台 -->
                             <rect x="19" y="6" width="24" height="5.5" rx="2.7" fill="#e0654a"/>
                             <rect x="19" y="6" width="24" height="2.2" rx="1.1" fill="#ff9f85" stroke="none"/>
+                            <!-- 偶爾從上面滑下來的葵花子 -->
+                            <g class="seed">
+                                <ellipse cx="30" cy="16" rx="3" ry="4.2" fill="#6b4a2f"
+                                         stroke="#4a3220" stroke-width="1" transform="rotate(18 30 16)"/>
+                                <path d="M29 13.5q1.4 2 .6 4.6" stroke="#cdb08c" stroke-width="1" fill="none"/>
+                            </g>
                         </g>
                     </svg>
                 </div>
@@ -269,6 +282,9 @@
                             <path d="M12 37h4l-1.2 10h-1.6z" fill="#c3d2de"/>
                             <circle cx="14" cy="49" r="3" fill="#9fb3c6"/>
                             <circle cx="13" cy="48" r="1" fill="#e8f1f7" stroke="none"/>
+                            <!-- 會週期性落下的水滴 -->
+                            <ellipse class="drip" cx="14" cy="52.5" rx="1.8" ry="2.4"
+                                     fill="#7ec8ec" stroke="none"/>
                             <!-- 固定環 -->
                             <rect x="2" y="13" width="24" height="4.5" rx="2.2" fill="#b8c7d4" opacity=".9"/>
                         </g>
@@ -283,6 +299,17 @@
                     <div id="visitor-emoji">🐸</div>
                     <div id="visitor-bubble" class="visitor-bubble" style="display:none;">Hello!</div>
                 </div>
+
+                <!-- 天氣（雨／雪）。內容由 applyWeather() 依季節和日期產生 -->
+                <div class="weather" id="weather" aria-hidden="true"></div>
+
+                <!-- 柵欄後偶爾探頭的小動物，位置由 JS 隨機挑 -->
+                <div class="peeker" id="peeker-a" aria-hidden="true">🐦</div>
+                <div class="peeker" id="peeker-b" aria-hidden="true">🐿️</div>
+
+                <!-- 佈置模式開關 -->
+                <button class="arrange-btn" id="btn-arrange" type="button"
+                        title="佈置倉鼠的家" onclick="toggleArrange()">🎨</button>
 
                 <!-- 每日任務按鈕 -->
                 <div class="quest-btn bounce" id="btn-daily-quest" onclick="openQuests()">📜</div>
@@ -323,10 +350,14 @@
 
                         <!-- 耳朵（在頭後面） -->
                         <g stroke-width="2">
-                            <circle cx="33" cy="24" r="11" fill="#e8a765"/>
-                            <circle cx="67" cy="24" r="11" fill="#e8a765"/>
-                            <circle cx="33" cy="25" r="6" fill="url(#hmEar)" stroke="none"/>
-                            <circle cx="67" cy="25" r="6" fill="url(#hmEar)" stroke="none"/>
+                            <g class="ear l">
+                                <circle cx="33" cy="24" r="11" fill="#e8a765"/>
+                                <circle cx="33" cy="25" r="6" fill="url(#hmEar)" stroke="none"/>
+                            </g>
+                            <g class="ear r">
+                                <circle cx="67" cy="24" r="11" fill="#e8a765"/>
+                                <circle cx="67" cy="25" r="6" fill="url(#hmEar)" stroke="none"/>
+                            </g>
                         </g>
 
                         <!-- 身體。毛絨邊緣：用一圈小圓弧代替平滑的橢圓輪廓 -->
@@ -550,7 +581,10 @@
             equipped: { scene: 'default', hat: 'none', bow: 'none' },
             unlocks: { scenes: ['default'], hats: ['none'], bows: ['none'] },
             stats: { maxCombo: 0 },
-            achievements: { combo30: false, richer: false, level10: false }
+            achievements: { combo30: false, richer: false, level10: false },
+            // 她自己擺的道具位置。{ house:{x,y}, ... }，單位是籠子寬高的百分比，
+            // 存百分比而不是 px，換裝置或轉螢幕方向才不會跑掉。空的就用預設位置。
+            layout: {}
         };
 
         let comboCount = 0; // 連續全對次數
@@ -574,6 +608,7 @@
             if(!data.stats) data.stats = { maxCombo: 0, mistakeWords: [] };
             if(!data.stats.mistakeWords) data.stats.mistakeWords = [];
             if(!data.achievements) data.achievements = { combo30: false, richer: false, level10: false };
+            if(!data.layout) data.layout = {};
             return data;
         }
 
@@ -776,6 +811,194 @@
             // 這個函數改成由 Firebase 的 on('value') 負責，不再使用
         }
 
+        // ================================================================
+        // 天氣
+        // ================================================================
+        // 依「季節 + 當天日期」決定，所以同一天進來看到的天氣一樣，隔天才會換 ——
+        // 每次重整都變一次的話會很吵，而且她會一直重整想看下雪。
+        function todaySeed() {
+            const d = new Date();
+            let h = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+            h = (h * 2654435761) % 4294967296;      // Knuth 乘法雜湊，夠散就好
+            return h / 4294967296;
+        }
+
+        function pickWeather() {
+            const m = new Date().getMonth() + 1, r = todaySeed();
+            if (m === 12 || m <= 2) return r < 0.22 ? 'snow' : (r < 0.42 ? 'rain' : 'clear');
+            if (m >= 6 && m <= 8)   return r < 0.34 ? 'rain' : 'clear';   // 夏天午後雷陣雨
+            return r < 0.24 ? 'rain' : 'clear';
+        }
+
+        function applyWeather(force) {
+            const cage = document.getElementById('cage');
+            const layer = document.getElementById('weather');
+            if (!cage || !layer) return;
+            const wx = force || pickWeather();
+
+            cage.classList.remove('wx-rain', 'wx-snow');
+            layer.className = 'weather';
+            layer.innerHTML = '';
+            if (wx === 'clear') return;
+            // 系統要求減少動態效果就不要下雨下雪
+            try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}
+
+            cage.classList.add('wx-' + wx);
+            layer.classList.add(wx);
+            const n = wx === 'snow' ? 26 : 38;
+            let html = '';
+            for (let i = 0; i < n; i++) {
+                const dur = wx === 'snow' ? (5 + Math.random() * 5) : (0.8 + Math.random() * 0.6);
+                html += '<i class="bit" style="left:' + (Math.random() * 104 - 2).toFixed(1) + '%;'
+                      + 'animation-duration:' + dur.toFixed(2) + 's;'
+                      + 'animation-delay:-' + (Math.random() * dur).toFixed(2) + 's;'
+                      // 大小要用 width/height，不能用 transform:scale —— keyframes 裡
+                      // 也在動 transform（左右飄），寫在 style 上會被蓋掉
+                      + (wx === 'snow' ? (() => { const d = (4 + Math.random() * 6).toFixed(1);
+                          return 'width:' + d + 'px;height:' + d + 'px;'; })() : '')
+                      + '"></i>';
+            }
+            layer.innerHTML = html;
+        }
+
+        // 柵欄的立柱在 18/96/174/252/330（habitat.svg 的座標，總寬 360），
+        // 探頭的小動物要站在空隙中間，不然會卡在柱子後面看不到。
+        //
+        // 還要避開已經擺出來的道具 —— 固定寫死位置的話，小松鼠會出現在跑輪
+        // 正中間，看起來像壞掉。而且她可以自己搬家具，寫死一定會撞到，
+        // 所以改成每次執行時拿道具實際的位置來算。
+        function placePeekers() {
+            const cage = document.getElementById('cage');
+            if (!cage) return;
+            const cb = cage.getBoundingClientRect();
+            const blocked = ARRANGE_PROPS
+                .map((k) => document.getElementById('prop-' + k))
+                .filter((el) => el && el.classList.contains('show'))
+                .map((el) => { const r = el.getBoundingClientRect();
+                    return [(r.left - cb.left) / cb.width * 100, (r.right - cb.left) / cb.width * 100]; });
+
+            // 候選位置取細一點（每 6%）。只用四個柵欄空隙的話，四個道具都擺出來時
+            // 常常只剩一個位置，兩隻小動物會疊在同一格。
+            const cand = [];
+            for (let g = 8; g <= 92; g += 6) cand.push(g);
+            let free = cand.filter((g) => !blocked.some(([a, b]) => g > a - 4 && g < b + 4));
+            if (!free.length) free = cand;          // 真的全被擋住就還是讓牠出現
+
+            const used = [];
+            ['peeker-a', 'peeker-b'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                // 兩隻至少隔開 14%，不然會肩並肩看起來像同一組
+                const ok = free.filter((g) => used.every((u) => Math.abs(g - u) >= 14));
+                if (!ok.length) { el.style.display = 'none'; return; }   // 擠不下就只出現一隻
+                el.style.display = '';
+                const g = ok[Math.floor(Math.random() * ok.length)];
+                used.push(g);
+                el.style.left = g + '%';
+                el.style.bottom = '30%';
+                el.style.animationDelay = '-' + (Math.random() * 17).toFixed(1) + 's';
+            });
+        }
+
+        // ================================================================
+        // 佈置模式：拖曳道具擺位置
+        // ================================================================
+        const ARRANGE_PROPS = ['house', 'slide', 'wheel', 'water'];
+        let arranging = false;
+        let habitatReady = false;
+
+        // 存百分比。道具原本是用 left/right/bottom 混著定位（跑輪是 right），
+        // 一旦她拖過就統一改成 left/bottom，不然兩套定位會打架。
+        function applyLayout() {
+            const cage = document.getElementById('cage');
+            if (!cage) return;
+            ARRANGE_PROPS.forEach((k) => {
+                const pos = petData.layout && petData.layout[k];
+                const el = document.getElementById('prop-' + k);
+                if (!el || !pos) return;
+                el.style.left = pos.x + '%';
+                el.style.right = 'auto';
+                el.style.bottom = pos.y + '%';
+            });
+        }
+
+        function toggleArrange() {
+            const cage = document.getElementById('cage');
+            const btn = document.getElementById('btn-arrange');
+            arranging = !arranging;
+            cage.classList.toggle('arranging', arranging);
+            btn.classList.toggle('on', arranging);
+            btn.textContent = arranging ? '✓' : '🎨';
+
+            let hint = document.getElementById('arrange-hint');
+            if (arranging) {
+                const owned = ARRANGE_PROPS.filter((k) => petData.items[k]).length;
+                if (!hint) {
+                    hint = document.createElement('div');
+                    hint.className = 'arrange-hint';
+                    hint.id = 'arrange-hint';
+                    cage.appendChild(hint);
+                }
+                hint.textContent = owned
+                    ? '拖曳搬動家具，好了按 ✓'
+                    : '還沒有家具喔！買了小木屋、跑輪就能自己擺位置';
+            } else {
+                if (hint) hint.remove();
+                placePeekers();     // 家具搬過了，探頭的位置要重新避讓
+                savePetData();
+            }
+        }
+
+        function startPropDrag(e) {
+            if (!arranging) return;
+            const el = e.currentTarget;
+            const cage = document.getElementById('cage');
+            const key = el.id.replace('prop-', '');
+            const cb = cage.getBoundingClientRect();
+            const pb = el.getBoundingClientRect();
+            // 抓住的點相對於道具左上角的位移，拖的時候道具才不會跳到手指底下
+            const grabX = e.clientX - pb.left, grabY = e.clientY - pb.top;
+
+            el.setPointerCapture(e.pointerId);
+            el.classList.add('prop-dragging');
+            e.preventDefault();
+
+            const move = (ev) => {
+                let x = ev.clientX - grabX - cb.left;
+                let y = ev.clientY - grabY - cb.top;
+                // 夾在籠子裡，不然可以拖到看不見的地方
+                x = Math.max(0, Math.min(cb.width - pb.width, x));
+                y = Math.max(0, Math.min(cb.height - pb.height, y));
+                el.style.left = (x / cb.width * 100).toFixed(2) + '%';
+                el.style.right = 'auto';
+                el.style.bottom = ((cb.height - y - pb.height) / cb.height * 100).toFixed(2) + '%';
+            };
+            const end = () => {
+                el.classList.remove('prop-dragging');
+                el.removeEventListener('pointermove', move);
+                el.removeEventListener('pointerup', end);
+                el.removeEventListener('pointercancel', end);
+                petData.layout[key] = {
+                    x: parseFloat(el.style.left),
+                    y: parseFloat(el.style.bottom)
+                };
+                savePetData();
+            };
+            el.addEventListener('pointermove', move);
+            el.addEventListener('pointerup', end);
+            el.addEventListener('pointercancel', end);
+        }
+
+        function initHabitat() {
+            applyWeather();
+            placePeekers();
+            applyLayout();
+            ARRANGE_PROPS.forEach((k) => {
+                const el = document.getElementById('prop-' + k);
+                if (el) el.addEventListener('pointerdown', startPropDrag);
+            });
+        }
+
         function savePetData() {
             if(secretCode) {
                 db.ref('users/' + secretCode + '/petData').set(petData);
@@ -898,6 +1121,12 @@
             refreshShopItem('water', 30, '水瓶💧', '喝水 💧');
             refreshShopItem('house', 100, '小木屋🏡', '進屋子 🏡');
             refreshShopItem('slide', 150, '溜滑梯🎢', '玩滑梯 🎢');
+
+            // 天氣和探頭的小動物只需要跑一次；她擺過的家具位置則每次資料同步
+            // 回來都要重貼（換裝置時才吃得到雲端的擺設）。
+            // 正在拖的時候不要重貼 —— 會跟手指搶著設定同一個 style。
+            if (!habitatReady) { habitatReady = true; initHabitat(); }
+            else if (!arranging) applyLayout();
         }
 
         function refreshShopItem(itemId, cost, buyLabel, ownedLabel) {

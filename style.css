@@ -522,3 +522,140 @@
 /* 訪客系統 */
 .visitor-sprite { position: absolute; font-size: 2.5rem; cursor: pointer; z-index: 5; transition: all 0.5s ease; }
 .visitor-bubble { position: absolute; top: -30px; left: -20px; background: white; padding: 5px 10px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; color: #333; pointer-events: none; border: 2px solid #ddd; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+/* ==================================================================
+   倉鼠的家：待機動畫、天氣、佈置模式
+   ================================================================== */
+
+/* ---- ① 待機動畫 ---------------------------------------------- */
+/* 靜止的畫面再精緻也像貼紙，會動才有活著的感覺。
+   全部用 CSS 動畫跑，不佔 JS 的迴圈。 */
+
+/* 呼吸：只有醒著時做，睡覺有自己的 breatheDeep */
+.hamster-svg:not(.sleep):not(.happy):not(.eat):not(.run) {
+    animation: hmIdle 3.6s ease-in-out infinite;
+    transform-origin: 50% 90%;
+}
+@keyframes hmIdle {
+    0%, 100% { transform: scale(1, 1); }
+    50%      { transform: scale(1.02, 0.985); }
+}
+
+/* 耳朵偶爾抖一下。8 秒一次，抖動只佔其中 0.5 秒 */
+/* transform-box: fill-box 不能省 —— SVG 元素的 transform-origin 預設是以整張
+   viewBox 為基準，不指定的話耳朵會繞著倉鼠的身體轉，而不是繞著耳根。 */
+.hamster-svg .ear { transform-box: fill-box; transform-origin: 50% 90%;
+                    animation: earTwitch 8s ease-in-out infinite; }
+.hamster-svg .ear.r { animation-delay: -4.2s; }
+@keyframes earTwitch {
+    0%, 92%, 100% { transform: rotate(0); }
+    94%  { transform: rotate(-9deg); }
+    96%  { transform: rotate(6deg); }
+    98%  { transform: rotate(-3deg); }
+}
+
+/* 水瓶滴水 */
+.prop-water .drip { animation: dripFall 4.2s ease-in infinite; transform-origin: center; }
+@keyframes dripFall {
+    0%, 62%  { opacity: 0; transform: translateY(0) scaleY(.6); }
+    68%      { opacity: 1; transform: translateY(0) scaleY(1); }
+    100%     { opacity: 0; transform: translateY(9px) scaleY(1.5); }
+}
+
+/* 溜滑梯偶爾滑下一顆種子 */
+.prop-slide .seed { offset-rotate: 0deg; animation: seedSlide 7s ease-in infinite; }
+@keyframes seedSlide {
+    0%, 55%  { opacity: 0; transform: translate(0, 0); }
+    58%      { opacity: 1; transform: translate(0, 0); }
+    82%      { opacity: 1; transform: translate(26px, 22px); }
+    92%      { opacity: 1; transform: translate(34px, 30px); }
+    100%     { opacity: 0; transform: translate(38px, 34px); }
+}
+
+/* 柵欄後探頭的小動物。位置由 JS 隨機挑柵欄的空隙 */
+.peeker {
+    position: absolute; z-index: 1; font-size: 1.15rem; line-height: 1;
+    pointer-events: none; opacity: 0;
+    animation: peek 17s ease-in-out infinite;
+}
+@keyframes peek {
+    0%, 86%, 100% { opacity: 0; transform: translateY(10px); }
+    89%, 96%      { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- ② 天氣 -------------------------------------------------- */
+.weather { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.weather .bit { position: absolute; top: -12%; }
+
+/* 雨滴：細長的半透明線，落下時略微傾斜 */
+.weather.rain .bit {
+    width: 2px; height: 14px; border-radius: 1px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(190,225,245,.85));
+    animation: rainFall linear infinite;
+}
+/* 掉落距離要動 top，不能用 transform: translateY(%)。
+   translate 的百分比是相對「元素自己」的尺寸 —— 雪花只有 7px 高，
+   translateY(125%) 等於只掉 9px，整片雪都卡在畫面上緣外面。
+   top 的百分比才是相對容器高度。左右飄移仍用 transform（不觸發重排）。 */
+@keyframes rainFall {
+    0%   { top: -12%; transform: translateX(0); opacity: 0; }
+    10%  { opacity: 1; }
+    100% { top: 108%; transform: translateX(-14px); opacity: .9; }
+}
+/* 下雨時整個籠子壓暗一點，不然看起來只是有東西在掉 */
+.hamster-cage.wx-rain { --tint: brightness(.86) saturate(.9); }
+
+/* 雪花：慢、會左右飄 */
+.weather.snow .bit {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff, #dceaf5);
+    /* 內圈的藍灰邊：純白雪花落在淺色天空上會整片看不見 */
+    box-shadow: 0 0 4px rgba(255,255,255,.85), inset 0 0 0 1px rgba(130,165,195,.45);
+    animation: snowFall linear infinite;
+}
+@keyframes snowFall {
+    0%   { top: -12%; transform: translateX(0); opacity: 0; }
+    10%  { opacity: 1; }
+    50%  { top: 48%; transform: translateX(14px); }
+    100% { top: 108%; transform: translateX(-10px); opacity: .9; }
+}
+.hamster-cage.wx-snow { --tint: brightness(.97) saturate(.82); }
+
+/* ---- ③ 佈置模式 ---------------------------------------------- */
+/* 平常道具是 pointer-events:none（才不會擋到點倉鼠），
+   進佈置模式才打開，拖完再關掉。 */
+.hamster-cage.arranging .prop-house,
+.hamster-cage.arranging .prop-slide,
+.hamster-cage.arranging .prop-wheel,
+.hamster-cage.arranging .prop-water {
+    pointer-events: auto; cursor: grab; touch-action: none;
+}
+.hamster-cage.arranging .prop-house.show,
+.hamster-cage.arranging .prop-slide.show,
+.hamster-cage.arranging .prop-wheel.show,
+.hamster-cage.arranging .prop-water.show {
+    outline: 3px dashed rgba(255, 255, 255, .85);
+    outline-offset: 4px; border-radius: 8px;
+}
+.prop-dragging { cursor: grabbing !important; z-index: 6 !important; transform: scale(1.08); }
+
+.arrange-btn {
+    position: absolute; top: 10px; left: 10px; z-index: 11;
+    width: 42px; height: 42px; border-radius: 50%; border: 2px solid #b07cd6;
+    background: #fff; color: #7b1fa2; font-size: 1.25rem; cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,.2); display: flex;
+    align-items: center; justify-content: center; padding: 0;
+}
+.arrange-btn.on { background: #7b1fa2; color: #fff; }
+.arrange-hint {
+    position: absolute; top: 58px; left: 10px; z-index: 11;
+    background: rgba(40, 20, 60, .82); color: #fff; font-size: .74rem;
+    padding: 5px 10px; border-radius: 10px; pointer-events: none;
+    max-width: 62%; line-height: 1.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hamster-svg, .hamster-svg .ear, .prop-water .drip,
+    .prop-slide .seed, .peeker, .weather .bit { animation: none !important; }
+    .weather { display: none; }
+}
