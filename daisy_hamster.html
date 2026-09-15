@@ -1779,10 +1779,145 @@
             createFloatingEmoji('🦋 +10 💰', 2000, -40);
         }
 
-        function playWheel() {
+        // ================================================================
+        // 互動演出用的小工具
+        // ================================================================
+        const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+        function actReduced() {
+            try { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
+            catch (e) { return false; }
+        }
+
+        /** 在籠子座標 (x,y) 生一團灰塵 */
+        function spawnDust(x, y, n) {
+            if (actReduced()) return;
+            const cage = document.getElementById('cage');
+            for (let i = 0; i < (n || 1); i++) {
+                const d = document.createElement('div');
+                d.className = 'dust';
+                d.style.left = (x + (Math.random() - .5) * 18) + 'px';
+                d.style.top = (y + (Math.random() - .5) * 8) + 'px';
+                d.style.animationDelay = (Math.random() * .08) + 's';
+                cage.appendChild(d);
+                setTimeout(() => d.remove(), 780);
+            }
+        }
+
+        /** 速度線：從倉鼠身後往後飛 */
+        function spawnSpeedLines(x, y, n) {
+            if (actReduced()) return;
+            const cage = document.getElementById('cage');
+            for (let i = 0; i < (n || 3); i++) {
+                const l = document.createElement('div');
+                l.className = 'speedline';
+                l.style.left = x + 'px';
+                l.style.top = (y + (Math.random() - .5) * 46) + 'px';
+                l.style.width = (18 + Math.random() * 26) + 'px';
+                l.style.animationDelay = (Math.random() * .1) + 's';
+                cage.appendChild(l);
+                setTimeout(() => l.remove(), 560);
+            }
+        }
+
+        function spawnSweat(x, y) {
+            if (actReduced()) return;
+            const cage = document.getElementById('cage');
+            const e = document.createElement('div');
+            e.className = 'sweat';
+            e.textContent = '💦';
+            e.style.left = x + 'px';
+            e.style.top = y + 'px';
+            cage.appendChild(e);
+            setTimeout(() => e.remove(), 1000);
+        }
+
+        /**
+         * 把倉鼠移到籠子裡的某個 x（單位 px，籠子座標），並播跑步循環。
+         * 用 #hamster-wrapper 的 transform 位移，倉鼠本體的 transform 留給
+         * 跑步動畫用 —— 兩個都寫在同一個元素上會互相蓋掉。
+         */
+        function hamsterDashTo(targetX, ms) {
+            const wrap = document.getElementById('hamster-wrapper');
+            const ham = document.getElementById('hamster');
+            const cage = document.getElementById('cage');
+            const cb = cage.getBoundingClientRect();
+            const hb = ham.getBoundingClientRect();
+            const homeX = parseFloat(wrap.dataset.homeX || '0');
+            // 目前中心（扣掉已經套用的位移）就是原點，算出還要移動多少
+            const centerNow = hb.left - cb.left + hb.width / 2;
+            const current = parseFloat(wrap.dataset.x || '0');
+            const dx = targetX - (centerNow - current);
+            const facing = dx < current ? -1 : 1;
+
+            wrap.dataset.x = dx;
+            wrap.style.transition = 'transform ' + ms + 'ms cubic-bezier(.36,.06,.2,1)';
+            wrap.style.transform = 'translate(' + dx + 'px,0px) scaleX(' + facing + ')';
+
+            if (!actReduced()) { ham.classList.add('acting', 'dash'); }
+            // 跑的過程中每 110ms 踢一團灰塵
+            const t0 = performance.now();
+            const puff = setInterval(() => {
+                // 每次重新量籠子，頁面捲動時基準才不會錯
+                const cb2 = cage.getBoundingClientRect(), hb2 = ham.getBoundingClientRect();
+                const cx = hb2.left - cb2.left + hb2.width / 2;
+                spawnDust(cx, hb2.bottom - cb2.top - 14, 1);
+                spawnSpeedLines(cx - facing * 30, hb2.top - cb2.top + 46, 2);
+                if (performance.now() - t0 > ms) clearInterval(puff);
+            }, 110);
+
+            return wait(ms).then(() => {
+                clearInterval(puff);
+                ham.classList.remove('dash');
+                return { facing: facing };
+            });
+        }
+
+        /** 回到正中央 */
+        function hamsterGoHome(ms) {
+            const wrap = document.getElementById('hamster-wrapper');
+            const ham = document.getElementById('hamster');
+            wrap.dataset.x = 0;
+            wrap.style.transition = 'transform ' + ms + 'ms cubic-bezier(.36,.06,.2,1)';
+            wrap.style.transform = 'translate(0px,0px) scaleX(1)';
+            if (!actReduced()) ham.classList.add('dash');
+            return wait(ms).then(() => { ham.classList.remove('dash', 'acting'); ham.style.transform = ''; });
+        }
+
+        /**
+         * 跑輪轉動。用 requestAnimationFrame 自己算角度，不用 CSS animation ——
+         * CSS 的 animation-duration 中途換值會跳，做不出平順的加速和減速。
+         * 速度曲線：0 →（加速）→ 尖峰 →（減速）→ 0
+         */
+        function spinWheelRamp(wheelEl, totalMs, peakDegPerSec, onPeak) {
+            return new Promise((resolve) => {
+                if (actReduced()) { setTimeout(resolve, Math.min(400, totalMs)); return; }
+                let angle = 0, last = performance.now(), peaked = false;
+                const t0 = last;
+                const step = (now) => {
+                    const t = Math.min(1, (now - t0) / totalMs);
+                    const dt = (now - last) / 1000; last = now;
+                    // 前 30% 加速、中間維持、後 35% 減速
+                    let k;
+                    if (t < .3) k = t / .3;
+                    else if (t < .65) k = 1;
+                    else k = 1 - (t - .65) / .35;
+                    k = Math.max(0, Math.min(1, k));
+                    const speed = peakDegPerSec * (k * k * (3 - 2 * k));   // smoothstep
+                    angle += speed * dt;
+                    wheelEl.style.transform = 'rotate(' + angle.toFixed(1) + 'deg)';
+                    if (!peaked && t >= .3) { peaked = true; if (onPeak) onPeak(); }
+                    if (t < 1) requestAnimationFrame(step);
+                    else { wheelEl.style.transform = ''; resolve(); }
+                };
+                requestAnimationFrame(step);
+            });
+        }
+
+        async function playWheel() {
             if (isSleeping) return wakeUp(); // 先叫醒
             if (isRunning) return;
-            
+
             // 處理購買邏輯
             if (!petData.items.wheel) {
                 if (petData.coins >= 50) {
@@ -1799,20 +1934,122 @@
             }
 
             isRunning = true;
-            const hamster = document.getElementById('hamster');
+            const ham = document.getElementById('hamster');
+            const wrap = document.getElementById('hamster-wrapper');
             const wheel = document.getElementById('prop-wheel');
-            
-            hamster.classList.add('run');
-            wheel.classList.add('spin');
-            playTone(300, 'triangle', 0.1);
-            addHappiness(10);
-            
-            setTimeout(() => {
-                hamster.classList.remove('run');
-                wheel.classList.remove('spin');
+            const cage = document.getElementById('cage');
+
+            // 每次都重新量，不要把座標快取在開頭：整段演出有 5 秒多，中間她可能
+            // 捲動頁面，一捲動 getBoundingClientRect() 的基準就變了，
+            // 拿舊的籠子座標配新的倉鼠座標會算出天文數字（實測倉鼠被移到畫面外）。
+            const rectIn = (el) => {
+                const cb = cage.getBoundingClientRect(), r = el.getBoundingClientRect();
+                return { x: r.left - cb.left + r.width / 2, y: r.top - cb.top + r.height / 2,
+                         bottom: r.bottom - cb.top, w: r.width, h: r.height };
+            };
+
+            try {
+
+                // ── 1. 蓄力：往下壓一下，看向跑輪
+                ham.classList.add('acting', 'crouch');
+                playTone(220, 'triangle', .08);
+                await wait(230);
+                ham.classList.remove('crouch');
+
+                // ── 2. 衝刺過去，腳下踢灰塵
+                const hb0 = rectIn(ham);
+                spawnDust(hb0.x, hb0.bottom - 14, 4);
+                if (typeof fxHaptic === 'function') fxHaptic(12);
+                const run = await hamsterDashTo(rectIn(wheel).x, 620);
+
+                // ── 3. 跳進輪子：縮小並對齊輪心
+                //
+                // 縮放交給倉鼠、位移交給外層 wrapper，兩件事不要寫在同一個
+                // transform 裡：<svg> 的 transform-origin 不一定是幾何中心，
+                // 把 translate 和 scale 串在一起算出來會偏（實測低了 23px）。
+                // 而且縮放後的實際位置只有量了才知道，所以先關掉 transition
+                // 量一次、還原、再打開 transition 播動畫（同一個 frame 內做完，
+                // 不會閃）。
+                const wheelNow = rectIn(wheel);
+                ham.style.transition = 'none';
+                ham.style.transform = 'scale(.56)';
+                void ham.offsetWidth;
+                const dy = wheelNow.y - rectIn(ham).y;
+                ham.style.transform = '';
+                void ham.offsetWidth;
+
+                const ease = 'transform .32s cubic-bezier(.34,1.56,.64,1)';
+                ham.style.transition = ease;
+                ham.style.transform = 'scale(.56)';
+                wrap.style.transition = ease;
+                wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,' + dy + 'px) scaleX('
+                                     + (run.facing) + ')';
+                playTone(520, 'sine', .1);
+                await wait(320);
+
+                // ── 4. 在輪子裡跑：輪子加速 → 尖峰 → 減速
+                ham.classList.add('inwheel');
+                let sweatTimer = null;
+                await spinWheelRamp(wheel, 2600, 900, () => {
+                    // 到尖峰速度才開始震動和冒汗，前面是加速期
+                    cage.classList.add('shaking');
+                    playTone(340, 'triangle', .12);
+                    sweatTimer = setInterval(() => {
+                        const hb = rectIn(ham), wn = rectIn(wheel);
+                        spawnSweat(hb.x + hb.w * .22, hb.y - hb.h * .5 + 8);
+                        spawnSpeedLines(wn.x - 46, wn.y, 3);
+                    }, 420);
+                });
+                if (sweatTimer) clearInterval(sweatTimer);
+                cage.classList.remove('shaking');
+                ham.classList.remove('inwheel');
+
+                // ── 5. 跳出來落地，濺起灰塵
+                ham.style.transition = 'transform .34s cubic-bezier(.34,1.56,.64,1)';
+                ham.style.transform = 'scale(.8) rotate(14deg)';
+                wrap.style.transition = 'transform .34s cubic-bezier(.34,1.56,.64,1)';
+                wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,-26px) scaleX('
+                                     + run.facing + ')';
+                playTone(660, 'sine', .1);
+                await wait(200);
+                ham.style.transform = '';
+                wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,0px) scaleX('
+                                     + run.facing + ')';
+                await wait(180);
+                const hb2r = rectIn(ham);
+                const hb2 = ham.getBoundingClientRect();
+                spawnDust(hb2r.x, hb2r.bottom - 14, 6);
+                playTone(300, 'sine', .12);
+                if (typeof fxHaptic === 'function') fxHaptic([16, 40, 16]);
+
+                // ── 6. 領獎：快樂度 +10，數字往上飄
+                addHappiness(10);
+                if (typeof fxFloat === 'function') {
+                    fxFloat('+10 快樂 💖', hb2, '#ff8fb0');
+                    fxBurst(hb2, 14);
+                }
+                setTimeout(() => playTone(880, 'sine', .12), 90);
+                await wait(620);
+
+                // ── 7. 走回畫面中央，開心跳一下
+                await hamsterGoHome(520);
+                ham.classList.add('happy');
+                setTimeout(() => ham.classList.remove('happy'), 1000);
+            } catch (e) {
+                // 演出中途出錯也要把狀態收乾淨，不然倉鼠會卡在輪子裡
+                if (typeof console !== 'undefined') console.warn('跑輪演出中斷', e);
+            } finally {
+                cage.classList.remove('shaking');
+                ham.classList.remove('acting', 'dash', 'inwheel', 'crouch');
+                ham.style.transition = '';
+                ham.style.transform = '';
+                wheel.style.transform = '';
+                wrap.style.transition = 'transform .4s ease-in-out';
+                wrap.style.transform = 'translate(0px,0px) scaleX(1)';
+                wrap.dataset.x = 0;
                 isRunning = false;
                 petHamster();
-            }, 3000);
+            }
         }
 
         // (使用新的通用 buyItem)
