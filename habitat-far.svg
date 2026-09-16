@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 遠景視差層（捲動速度 0.25）。360 寬為一個磚，用 background-repeat: repeat-x 平鋪，
+       所以左右邊緣的高度必須相同（都是 y=74），不然接縫會有一個台階。 -->
+  <defs>
+    <linearGradient id="far1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9f1d6"/><stop offset="1" stop-color="#abdbad"/>
+    </linearGradient>
+    <linearGradient id="far2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c2e7c4"/><stop offset="1" stop-color="#93cf9c"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 74 Q60 44 120 74 T240 74 T360 74 L360 200 L0 200 Z" fill="url(#far1)"/>
+  <path d="M0 74 Q60 44 120 74 T240 74 T360 74" fill="none" stroke="#eafae6" stroke-width="2.5" opacity=".5"/>
+  <path d="M0 104 Q90 78 180 104 T360 104 L360 200 L0 200 Z" fill="url(#far2)"/>
+  <path d="M0 104 Q90 78 180 104 T360 104" fill="none" stroke="#dcf3d8" stroke-width="2" opacity=".45"/>
+</svg>

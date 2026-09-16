@@ -204,7 +204,7 @@
         /* 動態時段背景 */
         /* 只畫天空。以前天空和草地是同一條漸層的兩個色停（40% 那裡），
            所以中間會出現一條筆直的硬邊，看起來像兩個長方形疊著。
-           地平線以下改由 habitat.svg 處理，稜線是起伏的。 */
+           地平線以下改由 habitat-far/mid/near.svg 三個視差層處理，稜線是起伏的。 */
         .hamster-cage.time-day {
             background: linear-gradient(to bottom, #8fd3f4 0%, #bde7ff 55%, #e3f5ea 100%);
         }
@@ -242,15 +242,40 @@
             background: linear-gradient(to bottom, rgba(40,60,140,.44), rgba(60,80,150,.30));
         }
 
-        .habitat {
-            position: absolute; left: 0; right: 0; bottom: 0;
-            width: 100%; height: 88%; z-index: 0; pointer-events: none;
+        /* ---------------------------------------------------------------
+           橫向捲軸的世界
+           籠子從「一個框」變成「一台攝影機」：世界有三個螢幕寬，鏡頭跟著倉鼠
+           移動。遠景和中景用比較慢的速度捲（視差），才有景深。
+           三張 SVG 都是 360 寬的磚，用 repeat-x 平鋪出無限寬的背景，
+           所以左右邊緣的高度要一致，不然接縫會有台階。
+           --------------------------------------------------------------- */
+        .layer {
+            position: absolute; left: 0; bottom: 0;
+            width: 400%; height: 88%;
+            background-repeat: repeat-x; background-position: left bottom;
+            background-size: 360px 100%;
+            z-index: 0; pointer-events: none;
             transition: filter 2s ease-in-out;
             filter: var(--tint);
+            will-change: transform;
         }
+        .layer.far { background-image: url('habitat-far.svg');  height: 86%; }
+        .layer.mid { background-image: url('habitat-mid.svg');  height: 88%; }
+        .layer.near{ background-image: url('habitat-near.svg'); height: 88%; }
+
+        /* 世界本體：道具、倉鼠、近景都放在這裡，一起 1:1 捲動 */
+        .world {
+            position: absolute; left: 0; top: 0; height: 100%;
+            width: 300%;
+            display: flex; justify-content: center; align-items: flex-end;
+            z-index: 1;
+            will-change: transform;
+        }
+        /* 拖曳看風景時不要順手選到文字 */
+        .hamster-cage.panning { cursor: grabbing; user-select: none; }
         /* 原本這裡有一塊 perspective(600px) rotateX(60deg) 的木地板，
            跟上面的藍天綠地兜不起來（室外天空配室內木地板）。
-           地面統一畫進 habitat.svg 了。 */
+           地面統一畫進 habitat-near.svg 了。 */
         /* 動畫雲朵和太陽 */
         /* 蓬鬆雲朵 */
         .cloud {
@@ -324,14 +349,14 @@
             100% { opacity: 1; }
         }
 
-        /* 小花改畫在 habitat.svg 裡：emoji 在不同系統長得不一樣（Android 的 🌸
+        /* 小花改畫在 habitat-near.svg 裡：emoji 在不同系統長得不一樣（Android 的 🌸
            和 iOS 的差很多），而且會蓋到道具。SVG 的版本位置固定、風格一致。 */
         @keyframes sway { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
         
         /* 道具：跑輪。形狀畫在 HTML 的 inline SVG 裡。
            .spin 是轉整個 div，所以 SVG 裡刻意不畫支架 —— 有支架的話會跟著轉。 */
         .prop-wheel {
-            position: absolute; right: 4%; bottom: 17%; width: 72px; height: 72px;
+            position: absolute; left: 74%; bottom: 17%; width: 72px; height: 72px;
             opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 1;
             filter: drop-shadow(3px 6px 5px rgba(0,0,0,0.28)) var(--tint);
         }
@@ -341,7 +366,7 @@
         
         /* 道具：水瓶 */
         .prop-water {
-            position: absolute; left: 65%; bottom: 20%; width: 27px; height: 52px;
+            position: absolute; left: 53%; bottom: 20%; width: 27px; height: 52px;
             opacity: 0; z-index: 2; transition: opacity 0.5s; pointer-events: none;
             filter: drop-shadow(3px 5px 4px rgba(0,0,0,0.25)) var(--tint);
         }
@@ -349,7 +374,7 @@
 
         /* 道具：小木屋 */
         .prop-house {
-            position: absolute; left: 1%; bottom: 15%; width: 76px; height: 64px;
+            position: absolute; left: 6%; bottom: 15%; width: 76px; height: 64px;
             opacity: 0; z-index: 1; transition: opacity 0.5s; pointer-events: none;
             filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.3)) var(--tint);
         }
@@ -357,7 +382,7 @@
 
         /* 道具：溜滑梯 */
         .prop-slide {
-            position: absolute; left: 24%; bottom: 14%; width: 62px; height: 50px;
+            position: absolute; left: 20%; bottom: 14%; width: 62px; height: 50px;
             opacity: 0; z-index: 1; transition: opacity 0.5s; pointer-events: none;
             filter: drop-shadow(4px 7px 5px rgba(0,0,0,0.26)) var(--tint);
         }

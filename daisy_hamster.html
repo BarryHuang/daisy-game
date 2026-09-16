@@ -127,16 +127,22 @@
                 </div>
             </div>
             <div class="hamster-cage" id="cage">
-                <!-- 場景：地平線以下畫在 habitat.svg 裡，天空留給 .time-* 的 CSS 漸層。
-                     原本天空和草地是同一條漸層的兩個色停，中間有一條筆直的硬邊。 -->
-                <img class="habitat" src="habitat.svg" alt="" aria-hidden="true">
-                <!-- 天空裝飾 -->
+                <!-- 天空：固定不捲，時段換色交給 .time-* 的 CSS 漸層 -->
                 <div class="habitat-sun"></div>
                 <div class="cloud cloud1"></div>
                 <div class="cloud cloud2"></div>
                 <div class="cloud cloud3"></div>
-                <!-- Combo 顯示 -->
+
+                <!-- 視差：遠景和中景捲得比較慢，才有景深 -->
+                <div class="layer far" id="layer-far"></div>
+                <div class="layer mid" id="layer-mid"></div>
+
+                <!-- Combo 顯示（固定在畫面上，不跟著世界捲） -->
                 <div class="combo-display" id="combo-display"></div>
+
+                <!-- ▼▼ 世界：近景、道具、倉鼠都在裡面，鏡頭移動時一起捲 ▼▼ -->
+                <div class="world" id="world">
+                <div class="layer near" id="layer-near"></div>
 
                 <!-- 解鎖道具。改成 SVG（原本是 CSS 方塊 + ::before/::after 拼的，
                      溜滑梯看起來像一根紅棍子、水瓶像冰棒）。
@@ -292,7 +298,6 @@
                 </div>
                 
                 <!-- 抓黃金蝴蝶 -->
-                <div id="golden-butterfly" onclick="catchButterfly()" style="display:none; position:absolute; font-size:2rem; cursor:pointer; z-index:20; transition: left 15s linear, top 15s linear;">🦋</div>
 
                 <!-- 訪客系統 -->
                 <div id="visitor" class="visitor-sprite" style="display:none; bottom:10px; left:10px;" onclick="tapVisitor()">
@@ -300,19 +305,12 @@
                     <div id="visitor-bubble" class="visitor-bubble" style="display:none;">Hello!</div>
                 </div>
 
-                <!-- 天氣（雨／雪）。內容由 applyWeather() 依季節和日期產生 -->
-                <div class="weather" id="weather" aria-hidden="true"></div>
 
                 <!-- 柵欄後偶爾探頭的小動物，位置由 JS 隨機挑 -->
                 <div class="peeker" id="peeker-a" aria-hidden="true">🐦</div>
                 <div class="peeker" id="peeker-b" aria-hidden="true">🐿️</div>
 
-                <!-- 佈置模式開關 -->
-                <button class="arrange-btn" id="btn-arrange" type="button"
-                        title="佈置倉鼠的家" onclick="toggleArrange()">🎨</button>
 
-                <!-- 每日任務按鈕 -->
-                <div class="quest-btn bounce" id="btn-daily-quest" onclick="openQuests()">📜</div>
 
                 <!-- SVG Hamster -->
                 <div id="hamster-wrapper" style="transition: transform 3s ease-in-out; transform: translateX(0px) scaleX(1);">
@@ -440,6 +438,18 @@
                     <g id="hamster-hat"></g>
                 </svg>
                 </div>
+                </div><!-- /.world -->
+
+                <!-- ▲▲ 以下是固定在畫面上的東西，不跟著世界捲動 ▲▲ -->
+                <!-- 天氣（雨／雪）。內容由 applyWeather() 依季節和日期產生 -->
+                <div class="weather" id="weather" aria-hidden="true"></div>
+                <div id="golden-butterfly" onclick="catchButterfly()" style="display:none; position:absolute; font-size:2rem; cursor:pointer; z-index:20; transition: left 15s linear, top 15s linear;">🦋</div>
+                <!-- 佈置模式開關 -->
+                <button class="arrange-btn" id="btn-arrange" type="button"
+                        title="佈置倉鼠的家" onclick="toggleArrange()">🎨</button>
+                <!-- 每日任務按鈕 -->
+                <div class="quest-btn bounce" id="btn-daily-quest" onclick="openQuests()">📜</div>
+
             </div>
             
             <div class="pet-actions">
@@ -812,6 +822,138 @@
         }
 
         // ================================================================
+        // 橫向捲軸的世界：鏡頭、視差、走路
+        // ================================================================
+        // 籠子從「一個框」變成「一台攝影機」：世界有三個螢幕寬（.world 的
+        // width:300%），鏡頭跟著倉鼠左右移動，遠景和中景捲得比較慢做出景深。
+        //
+        // 座標系統：世界座標的原點在 .world 的左邊。倉鼠用 flex 置中在世界正中間，
+        // 所以 wrapper 的 translateX(d) 就是「離世界中心多遠」，
+        // 世界座標 = 世界寬/2 + d。沿用原本的 transform 語意，跑輪演出不用改。
+        const PARALLAX = { far: 0.25, mid: 0.55 };
+        let camX = 0, camTarget = 0, camRaf = 0, hamTargetX = null;
+
+        function worldEl()  { return document.getElementById('world'); }
+        function cageEl()   { return document.getElementById('cage'); }
+
+        /** 元素中心在世界座標的 x（不受鏡頭位置影響，兩邊都量同一個基準） */
+        function worldXOf(el) {
+            const w = worldEl().getBoundingClientRect(), r = el.getBoundingClientRect();
+            return r.left - w.left + r.width / 2;
+        }
+        function worldWidth() { return worldEl().offsetWidth; }
+        function viewWidth()  { return cageEl().clientWidth; }
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+        function paintCamera() {
+            worldEl().style.transform = 'translateX(' + (-camX).toFixed(1) + 'px)';
+            const f = document.getElementById('layer-far'), m = document.getElementById('layer-mid');
+            if (f) f.style.transform = 'translateX(' + (-camX * PARALLAX.far).toFixed(1) + 'px)';
+            if (m) m.style.transform = 'translateX(' + (-camX * PARALLAX.mid).toFixed(1) + 'px)';
+        }
+
+        /** 讓鏡頭往目標平滑靠過去。停下來就結束迴圈，不要一直空轉吃電 */
+        function cameraWake() {
+            if (camRaf) return;
+            const step = () => {
+                const d = camTarget - camX;
+                if (Math.abs(d) < 0.4) { camX = camTarget; paintCamera(); camRaf = 0; return; }
+                camX += d * 0.11;
+                paintCamera();
+                camRaf = requestAnimationFrame(step);
+            };
+            camRaf = requestAnimationFrame(step);
+        }
+
+        /** 鏡頭對準世界座標 x（會夾在世界邊界內，不會拍到世界外面） */
+        function cameraLookAt(worldX, instant) {
+            camTarget = clamp(worldX - viewWidth() / 2, 0, Math.max(0, worldWidth() - viewWidth()));
+            if (instant) { camX = camTarget; paintCamera(); return; }
+            cameraWake();
+        }
+
+        /** 倉鼠目前的世界座標 */
+        function hamsterWorldX() {
+            const wrap = document.getElementById('hamster-wrapper');
+            return worldWidth() / 2 + (parseFloat(wrap.dataset.x || '0') || 0);
+        }
+
+        /**
+         * 走到世界座標 x。速度固定（px/秒），所以走遠一點就花久一點，
+         * 用固定時間的話短距離會慢得不自然、長距離會像瞬移。
+         */
+        function hamsterWalkTo(worldX, speed) {
+            const wrap = document.getElementById('hamster-wrapper');
+            const ham = document.getElementById('hamster');
+            const half = ham.getBoundingClientRect().width / 2;
+            const target = clamp(worldX, half + 6, worldWidth() - half - 6);
+            const from = hamsterWorldX();
+            const dist = Math.abs(target - from);
+            if (dist < 6) return Promise.resolve();
+
+            // 走路速度 px/秒。點一下叫牠過來要俐落（130），
+            // 自己閒晃就慢慢散步（呼叫端傳 75）。
+            const ms = clamp(dist / (speed || 130) * 1000, 260, 3200);
+            const facing = target < from ? -1 : 1;
+            const d = target - worldWidth() / 2;
+            wrap.dataset.x = d;
+            wrap.style.transition = 'transform ' + ms + 'ms ease-in-out';
+            wrap.style.transform = 'translate(' + d + 'px,0px) scaleX(' + facing + ')';
+            if (!actReduced()) ham.classList.add('dash');
+            hamTargetX = target;
+            cameraLookAt(target);
+            return wait(ms).then(() => {
+                ham.classList.remove('dash');
+                hamTargetX = null;
+            });
+        }
+
+        /** 她點畫面上某處 -> 倉鼠走過去。點在世界的哪裡要把鏡頭位置加回去 */
+        function walkToClientX(clientX) {
+            if (arranging || isRunning || isSleeping) return;
+            const w = worldEl().getBoundingClientRect();
+            hamsterWalkTo(clientX - w.left);
+        }
+
+        /** 拖曳看風景。拖的距離很短就當成「點一下叫牠過來」 */
+        function initWorldGestures() {
+            const cage = cageEl();
+            let startX = 0, startCam = 0, dragging = false, moved = 0, pid = null;
+
+            cage.addEventListener('pointerdown', (e) => {
+                if (arranging) return;                       // 佈置模式讓道具自己處理
+                if (e.target.closest('button, .quest-btn, .visitor-sprite, #golden-butterfly')) return;
+                pid = e.pointerId; startX = e.clientX; startCam = camX;
+                dragging = true; moved = 0;
+            });
+            cage.addEventListener('pointermove', (e) => {
+                if (!dragging || e.pointerId !== pid) return;
+                const dx = e.clientX - startX;
+                moved = Math.max(moved, Math.abs(dx));
+                if (moved > 8) {
+                    cage.classList.add('panning');
+                    camTarget = camX = clamp(startCam - dx, 0,
+                                             Math.max(0, worldWidth() - viewWidth()));
+                    paintCamera();
+                }
+            });
+            const end = (e) => {
+                if (!dragging) return;
+                dragging = false; cage.classList.remove('panning');
+                if (moved <= 8) walkToClientX(e.clientX);    // 幾乎沒動 = 點一下
+            };
+            cage.addEventListener('pointerup', end);
+            cage.addEventListener('pointercancel', () => { dragging = false; cage.classList.remove('panning'); });
+        }
+
+        function initWorld() {
+            // 一開始鏡頭對準倉鼠（牠在世界正中間）
+            cameraLookAt(worldWidth() / 2, true);
+            initWorldGestures();
+            addEventListener('resize', () => cameraLookAt(hamsterWorldX(), true));
+        }
+
+        // ================================================================
         // 天氣
         // ================================================================
         // 依「季節 + 當天日期」決定，所以同一天進來看到的天氣一樣，隔天才會換 ——
@@ -861,14 +1003,14 @@
             layer.innerHTML = html;
         }
 
-        // 柵欄的立柱在 18/96/174/252/330（habitat.svg 的座標，總寬 360），
+        // 柵欄的立柱在 45/135/225/315（habitat-near.svg 的座標，一個磚寬 360），
         // 探頭的小動物要站在空隙中間，不然會卡在柱子後面看不到。
         //
         // 還要避開已經擺出來的道具 —— 固定寫死位置的話，小松鼠會出現在跑輪
         // 正中間，看起來像壞掉。而且她可以自己搬家具，寫死一定會撞到，
         // 所以改成每次執行時拿道具實際的位置來算。
         function placePeekers() {
-            const cage = document.getElementById('cage');
+            const cage = worldEl();
             if (!cage) return;
             const cb = cage.getBoundingClientRect();
             const blocked = ARRANGE_PROPS
@@ -879,8 +1021,9 @@
 
             // 候選位置取細一點（每 6%）。只用四個柵欄空隙的話，四個道具都擺出來時
             // 常常只剩一個位置，兩隻小動物會疊在同一格。
+            // 世界有三個螢幕寬，候選點也要鋪滿整個世界
             const cand = [];
-            for (let g = 8; g <= 92; g += 6) cand.push(g);
+            for (let g = 4; g <= 96; g += 4) cand.push(g);
             let free = cand.filter((g) => !blocked.some(([a, b]) => g > a - 4 && g < b + 4));
             if (!free.length) free = cand;          // 真的全被擋住就還是讓牠出現
 
@@ -916,7 +1059,7 @@
                 const pos = petData.layout && petData.layout[k];
                 const el = document.getElementById('prop-' + k);
                 if (!el || !pos) return;
-                el.style.left = pos.x + '%';
+                el.style.left = pos.x + '%';      // 百分比是相對 .world（三個螢幕寬）
                 el.style.right = 'auto';
                 el.style.bottom = pos.y + '%';
             });
@@ -952,7 +1095,8 @@
         function startPropDrag(e) {
             if (!arranging) return;
             const el = e.currentTarget;
-            const cage = document.getElementById('cage');
+            // 道具住在 .world 裡，百分比要相對世界算，不是相對籠子
+            const cage = worldEl();
             const key = el.id.replace('prop-', '');
             const cb = cage.getBoundingClientRect();
             const pb = el.getBoundingClientRect();
@@ -990,6 +1134,7 @@
         }
 
         function initHabitat() {
+            initWorld();
             applyWeather();
             placePeekers();
             applyLayout();
@@ -1718,25 +1863,20 @@
             updatePetUI();
         }, 60000); // 每分鐘計算一次
         
-        // 倉鼠隨機散步 AI
+        // 倉鼠隨機散步 AI。以前只在籠子中央 ±80px 抖來抖去，
+        // 現在世界有三個螢幕寬，牠會真的走到別的地方去（鏡頭跟著）。
         setInterval(() => {
-            if (!secretCode || isSleeping || isRunning) return;
-            const hamsterSvg = document.getElementById('hamster');
-            // 如果正在進行其他動畫，不移動
-            if (hamsterSvg.classList.contains('eat') || hamsterSvg.classList.contains('happy') || hamsterSvg.classList.contains('hide-in-house') || hamsterSvg.classList.contains('slide-down')) return;
-            
-            const wrapper = document.getElementById('hamster-wrapper');
-            if(Math.random() < 0.5) { // 50% 機率決定走動
-                // 移動: -80px 到 80px 之間
-                const targetX = Math.floor(Math.random() * 160) - 80;
-                // 判斷面相：如果要往右走(目標變大)，不翻轉屬 1；往左走(目標變小) 翻轉屬 -1
-                const currentTransform = wrapper.style.transform || "";
-                let currentX = 0;
-                const match = currentTransform.match(/translateX\(([-0-9.]+)px\)/);
-                if(match) currentX = parseFloat(match[1]);
-                const direction = targetX > currentX ? 1 : -1;
-                
-                wrapper.style.transform = `translateX(${targetX}px) scaleX(${direction})`;
+            if (!secretCode || isSleeping || isRunning || arranging) return;
+            const ham = document.getElementById('hamster');
+            if (ham.classList.contains('eat') || ham.classList.contains('happy') ||
+                ham.classList.contains('hide-in-house') || ham.classList.contains('slide-down')) return;
+
+            if (Math.random() < 0.55) {
+                const ww = worldWidth();
+                // 偏好往附近走（±35% 世界寬），偶爾才跑遠，才不會一直橫越整個世界
+                const here = hamsterWorldX();
+                const span = ww * 0.35;
+                hamsterWalkTo(clamp(here + (Math.random() * 2 - 1) * span, ww * 0.05, ww * 0.95), 75);
             }
         }, 6000); // 每 6 秒判斷一次
 
@@ -1789,10 +1929,10 @@
             catch (e) { return false; }
         }
 
-        /** 在籠子座標 (x,y) 生一團灰塵 */
+        /** 在世界座標 (x,y) 生一團灰塵。貼在 .world 裡面，鏡頭移動時才會跟著景走 */
         function spawnDust(x, y, n) {
             if (actReduced()) return;
-            const cage = document.getElementById('cage');
+            const cage = document.getElementById('world');
             for (let i = 0; i < (n || 1); i++) {
                 const d = document.createElement('div');
                 d.className = 'dust';
@@ -1804,10 +1944,10 @@
             }
         }
 
-        /** 速度線：從倉鼠身後往後飛 */
+        /** 速度線：從倉鼠身後往後飛（同樣用世界座標） */
         function spawnSpeedLines(x, y, n) {
             if (actReduced()) return;
-            const cage = document.getElementById('cage');
+            const cage = document.getElementById('world');
             for (let i = 0; i < (n || 3); i++) {
                 const l = document.createElement('div');
                 l.className = 'speedline';
@@ -1822,7 +1962,7 @@
 
         function spawnSweat(x, y) {
             if (actReduced()) return;
-            const cage = document.getElementById('cage');
+            const cage = document.getElementById('world');
             const e = document.createElement('div');
             e.className = 'sweat';
             e.textContent = '💦';
@@ -1833,36 +1973,31 @@
         }
 
         /**
-         * 把倉鼠移到籠子裡的某個 x（單位 px，籠子座標），並播跑步循環。
-         * 用 #hamster-wrapper 的 transform 位移，倉鼠本體的 transform 留給
-         * 跑步動畫用 —— 兩個都寫在同一個元素上會互相蓋掉。
+         * 衝刺到世界座標 targetX，並播跑步循環、踢灰塵、拉速度線。
+         * 鏡頭跟著跑 —— 不然倉鼠會跑出畫面。
          */
         function hamsterDashTo(targetX, ms) {
             const wrap = document.getElementById('hamster-wrapper');
             const ham = document.getElementById('hamster');
-            const cage = document.getElementById('cage');
-            const cb = cage.getBoundingClientRect();
-            const hb = ham.getBoundingClientRect();
-            const homeX = parseFloat(wrap.dataset.homeX || '0');
-            // 目前中心（扣掉已經套用的位移）就是原點，算出還要移動多少
-            const centerNow = hb.left - cb.left + hb.width / 2;
-            const current = parseFloat(wrap.dataset.x || '0');
-            const dx = targetX - (centerNow - current);
-            const facing = dx < current ? -1 : 1;
+            const half = ham.getBoundingClientRect().width / 2;
+            const target = clamp(targetX, half + 6, worldWidth() - half - 6);
+            const facing = target < hamsterWorldX() ? -1 : 1;
+            const d = target - worldWidth() / 2;
 
-            wrap.dataset.x = dx;
+            wrap.dataset.x = d;
             wrap.style.transition = 'transform ' + ms + 'ms cubic-bezier(.36,.06,.2,1)';
-            wrap.style.transform = 'translate(' + dx + 'px,0px) scaleX(' + facing + ')';
+            wrap.style.transform = 'translate(' + d + 'px,0px) scaleX(' + facing + ')';
+            cameraLookAt(target);
 
-            if (!actReduced()) { ham.classList.add('acting', 'dash'); }
-            // 跑的過程中每 110ms 踢一團灰塵
+            if (!actReduced()) ham.classList.add('dash');
             const t0 = performance.now();
             const puff = setInterval(() => {
-                // 每次重新量籠子，頁面捲動時基準才不會錯
-                const cb2 = cage.getBoundingClientRect(), hb2 = ham.getBoundingClientRect();
-                const cx = hb2.left - cb2.left + hb2.width / 2;
-                spawnDust(cx, hb2.bottom - cb2.top - 14, 1);
-                spawnSpeedLines(cx - facing * 30, hb2.top - cb2.top + 46, 2);
+                // 每次重新量，頁面捲動或鏡頭移動時基準才不會錯
+                const cx = worldXOf(ham);
+                const wr = worldEl().getBoundingClientRect(), hr = ham.getBoundingClientRect();
+                const by = hr.bottom - wr.top;
+                spawnDust(cx, by - 14, 1);
+                spawnSpeedLines(cx - facing * 30, hr.top - wr.top + 46, 2);
                 if (performance.now() - t0 > ms) clearInterval(puff);
             }, 110);
 
@@ -1873,13 +2008,14 @@
             });
         }
 
-        /** 回到正中央 */
+        /** 回到世界正中央 */
         function hamsterGoHome(ms) {
             const wrap = document.getElementById('hamster-wrapper');
             const ham = document.getElementById('hamster');
             wrap.dataset.x = 0;
             wrap.style.transition = 'transform ' + ms + 'ms cubic-bezier(.36,.06,.2,1)';
             wrap.style.transform = 'translate(0px,0px) scaleX(1)';
+            cameraLookAt(worldWidth() / 2);
             if (!actReduced()) ham.classList.add('dash');
             return wait(ms).then(() => { ham.classList.remove('dash', 'acting'); ham.style.transform = ''; });
         }
@@ -1943,9 +2079,9 @@
             // 捲動頁面，一捲動 getBoundingClientRect() 的基準就變了，
             // 拿舊的籠子座標配新的倉鼠座標會算出天文數字（實測倉鼠被移到畫面外）。
             const rectIn = (el) => {
-                const cb = cage.getBoundingClientRect(), r = el.getBoundingClientRect();
-                return { x: r.left - cb.left + r.width / 2, y: r.top - cb.top + r.height / 2,
-                         bottom: r.bottom - cb.top, w: r.width, h: r.height };
+                const wb = worldEl().getBoundingClientRect(), r = el.getBoundingClientRect();
+                return { x: r.left - wb.left + r.width / 2, y: r.top - wb.top + r.height / 2,
+                         bottom: r.bottom - wb.top, w: r.width, h: r.height };
             };
 
             try {
@@ -1960,7 +2096,7 @@
                 const hb0 = rectIn(ham);
                 spawnDust(hb0.x, hb0.bottom - 14, 4);
                 if (typeof fxHaptic === 'function') fxHaptic(12);
-                const run = await hamsterDashTo(rectIn(wheel).x, 620);
+                const run = await hamsterDashTo(worldXOf(wheel), 620);
 
                 // ── 3. 跳進輪子：縮小並對齊輪心
                 //
