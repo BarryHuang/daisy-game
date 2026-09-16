@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 近景（跟著世界 1:1 捲動）：柵欄、地面、草花石頭。
+       柵欄立柱間距 90（45/135/225/315），跨越接縫時 315→405 也是 90，所以看起來連續。
+       地面左右邊緣同高（y=136）才不會有接縫。 -->
+  <defs>
+    <linearGradient id="gnd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#95d99d"/><stop offset=".45" stop-color="#72c482"/>
+      <stop offset="1" stop-color="#4f9f62"/>
+    </linearGradient>
+    <linearGradient id="wd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2b382"/><stop offset=".5" stop-color="#c79358"/>
+      <stop offset="1" stop-color="#a16f3c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 柵欄 -->
+  <!-- 橫桿要伸出磚的左右邊界（-8 ~ 368），圓角才會被 viewBox 切掉。
+       原本 x=0 寬 360 + rx=3.5，兩端的圓角在平鋪時會湊成一個缺口，
+       捲動起來整條柵欄每隔一個螢幕就斷一次。 -->
+  <rect x="-8" y="110" width="376" height="8" rx="3.5" fill="url(#wd)"/>
+  <rect x="-8" y="125" width="376" height="8" rx="3.5" fill="url(#wd)"/>
+  <g stroke="#a16f3c" stroke-width="1" opacity=".4">
+    <path d="M0 114h360M0 129h360"/>
+    <path d="M70 111v6M160 111v6M250 111v6M340 111v6M110 126v6M200 126v6M290 126v6"/>
+  </g>
+  <g>
+    <g fill="url(#wd)">
+      <rect x="39" y="102" width="12" height="42" rx="4"/>
+      <rect x="129" y="102" width="12" height="42" rx="4"/>
+      <rect x="219" y="102" width="12" height="42" rx="4"/>
+      <rect x="309" y="102" width="12" height="42" rx="4"/>
+    </g>
+    <g fill="#8d5f31" opacity=".32">
+      <rect x="47" y="102" width="4" height="42" rx="2"/>
+      <rect x="137" y="102" width="4" height="42" rx="2"/>
+      <rect x="227" y="102" width="4" height="42" rx="2"/>
+      <rect x="317" y="102" width="4" height="42" rx="2"/>
+    </g>
+    <g fill="#e8c096">
+      <path d="M39 103 l6 -6 6 6 z"/><path d="M129 103 l6 -6 6 6 z"/>
+      <path d="M219 103 l6 -6 6 6 z"/><path d="M309 103 l6 -6 6 6 z"/>
+    </g>
+  </g>
+
+  <!-- 地面 -->
+  <path d="M0 136 Q90 128 180 136 T360 136 L360 200 L0 200 Z" fill="url(#gnd)"/>
+  <path d="M0 136 Q90 128 180 136 T360 136" fill="none" stroke="#b6e8bb" stroke-width="2" opacity=".45"/>
+  <g fill="#5fae70" opacity=".2">
+    <ellipse cx="70" cy="158" rx="48" ry="11"/><ellipse cx="250" cy="152" rx="52" ry="10"/>
+    <ellipse cx="160" cy="182" rx="58" ry="12"/>
+  </g>
+
+  <!-- 草叢 -->
+  <g stroke="#468f58" stroke-width="3" stroke-linecap="round" fill="none" opacity=".8">
+    <path d="M24 168q2-12 5-16M30 168q0-10 1-14M36 168q-2-12-4-16"/>
+    <path d="M104 178q2-12 5-16M110 178q0-10 1-14"/>
+    <path d="M198 172q-2-12-5-16M192 172q0-10-1-14"/>
+    <path d="M286 166q2-12 5-16M292 166q0-10 1-14M298 166q-2-12-4-16"/>
+    <path d="M148 192q2-10 4-13M154 192q0-9 1-12"/>
+  </g>
+
+  <!-- 小花 -->
+  <g>
+    <g transform="translate(66 160)">
+      <path d="M0 4q1 9 0 13" stroke="#468f58" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g fill="#ffd0e4"><circle cx="0" cy="-4" r="3.6"/><circle cx="0" cy="4" r="3.6"/>
+        <circle cx="-4" cy="0" r="3.6"/><circle cx="4" cy="0" r="3.6"/></g>
+      <circle r="2.4" fill="#ffe680"/>
+    </g>
+    <g transform="translate(230 174) scale(.9)">
+      <path d="M0 4q-1 9 0 13" stroke="#468f58" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g fill="#fff0b3"><circle cx="0" cy="-4" r="3.6"/><circle cx="0" cy="4" r="3.6"/>
+        <circle cx="-4" cy="0" r="3.6"/><circle cx="4" cy="0" r="3.6"/></g>
+      <circle r="2.4" fill="#ffb347"/>
+    </g>
+    <g transform="translate(330 166) scale(.95)">
+      <path d="M0 4q1 9 0 13" stroke="#468f58" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g fill="#e0d4ff"><circle cx="0" cy="-4" r="3.6"/><circle cx="0" cy="4" r="3.6"/>
+        <circle cx="-4" cy="0" r="3.6"/><circle cx="4" cy="0" r="3.6"/></g>
+      <circle r="2.4" fill="#ffe680"/>
+    </g>
+  </g>
+
+  <!-- 蘑菇與石頭 -->
+  <g transform="translate(176 186)">
+    <rect x="-2.2" y="-4" width="4.4" height="7" rx="2" fill="#f4e6d2"/>
+    <path d="M-7 -3a7 5.5 0 0 1 14 0z" fill="#e8737f"/>
+    <g fill="#fff" opacity=".85"><circle cx="-3" cy="-5" r="1.4"/><circle cx="2.5" cy="-4.4" r="1.1"/></g>
+  </g>
+  <g>
+    <ellipse cx="128" cy="190" rx="8" ry="4.5" fill="#b3aa9e"/>
+    <path d="M122 189a8 4.5 0 0 1 9-3.5" fill="none" stroke="#d6cec2" stroke-width="1.6" stroke-linecap="round"/>
+    <ellipse cx="292" cy="194" rx="6" ry="3.4" fill="#b3aa9e"/>
+    <path d="M287 193a6 3.4 0 0 1 7-2.6" fill="none" stroke="#d6cec2" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 中景視差層（捲動速度 0.55）：樹叢。
+       樹的位置都離左右邊緣夠遠，平鋪時不會被接縫切一半。 -->
+  <g>
+    <g transform="translate(58 96)">
+      <circle cx="0" cy="0" r="18" fill="#7cc48a"/><circle cx="19" cy="8" r="14" fill="#6cb67c"/>
+      <circle cx="-18" cy="9" r="12" fill="#6cb67c"/>
+      <circle cx="-5" cy="-6" r="12" fill="#a0dcaa" opacity=".85"/>
+      <path d="M-26 15 a26 15 0 0 0 47 2" fill="#4f9c60" opacity=".4"/>
+    </g>
+    <g transform="translate(196 90) scale(.86)">
+      <circle cx="0" cy="0" r="18" fill="#7cc48a"/><circle cx="19" cy="8" r="14" fill="#6cb67c"/>
+      <circle cx="-18" cy="9" r="12" fill="#6cb67c"/>
+      <circle cx="-5" cy="-6" r="12" fill="#a0dcaa" opacity=".85"/>
+      <path d="M-26 15 a26 15 0 0 0 47 2" fill="#4f9c60" opacity=".4"/>
+    </g>
+    <g transform="translate(300 98) scale(.7)">
+      <circle cx="0" cy="0" r="18" fill="#8ed09a"/><circle cx="19" cy="8" r="14" fill="#7cc48a"/>
+      <circle cx="-5" cy="-6" r="11" fill="#a9e0b0" opacity=".8"/>
+    </g>
+  </g>
+</svg>
