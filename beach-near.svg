@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 沙灘·近景（跟著世界 1:1 捲動）：沙地、椰子樹、遮陽傘、躺椅、沙堡。
+       沙地左右邊緣同高（y=126）。高的東西都離左右邊緣夠遠。 -->
+  <defs>
+    <linearGradient id="bnSand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8e6c0"/><stop offset=".45" stop-color="#eed49b"/>
+      <stop offset="1" stop-color="#dcbb7c"/>
+    </linearGradient>
+    <linearGradient id="bnTrunk" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c49a63"/><stop offset=".5" stop-color="#a4783f"/>
+      <stop offset="1" stop-color="#815a29"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 椰子樹 -->
+  <g>
+    <path d="M52 132 q-10 -46 8 -66 q4 2 6 4 q-16 22 -6 62 z" fill="url(#bnTrunk)"/>
+    <g stroke="#9b7440" stroke-width="1.2" opacity=".5">
+      <path d="M50 118h12M51 106h12M54 94h11M58 82h10"/>
+    </g>
+    <g fill="#4aa568">
+      <path d="M62 68 q-30 -14 -46 -2 q20 -4 44 8 z"/>
+      <path d="M62 68 q30 -16 48 -4 q-22 -4 -46 10 z"/>
+      <path d="M62 66 q-14 -26 -34 -30 q16 12 30 34 z"/>
+      <path d="M62 66 q16 -26 38 -28 q-20 10 -34 32 z"/>
+      <path d="M62 68 q-4 -28 4 -38 q4 14 0 38 z"/>
+    </g>
+    <g fill="#8a5f36"><circle cx="58" cy="72" r="4"/><circle cx="67" cy="74" r="4"/><circle cx="62" cy="79" r="4"/></g>
+  </g>
+
+  <!-- 遮陽傘 -->
+  <g transform="translate(212 62)">
+    <rect x="-2" y="8" width="4" height="64" rx="2" fill="#d8c4a0"/>
+    <path d="M-44 10 a44 30 0 0 1 88 0 z" fill="#ff8f6b"/>
+    <g fill="#fff3e6">
+      <path d="M-44 10 a44 30 0 0 1 14 -22 l2 22 z"/>
+      <path d="M-8 -12 a44 30 0 0 1 16 0 l2 22 h-20 z"/>
+      <path d="M30 -12 a44 30 0 0 1 14 22 h-16 z"/>
+    </g>
+    <circle cx="0" cy="-20" r="3" fill="#e0714c"/>
+  </g>
+
+  <!-- 沙地 -->
+  <path d="M0 126 Q90 120 180 126 Q270 132 360 126 L360 200 L0 200 Z" fill="url(#bnSand)"/>
+  <path d="M0 126 Q90 120 180 126 Q270 132 360 126" fill="none" stroke="#fdf3dc" stroke-width="2" opacity=".7"/>
+  <g fill="#d3ad6d" opacity=".35">
+    <ellipse cx="100" cy="152" rx="46" ry="9"/><ellipse cx="258" cy="146" rx="50" ry="8"/>
+    <ellipse cx="180" cy="180" rx="56" ry="10"/>
+  </g>
+
+  <!-- 躺椅 -->
+  <g transform="translate(240 116)">
+    <g fill="#e8e2d6"><rect x="0" y="14" width="46" height="5" rx="2.5"/></g>
+    <path d="M0 14 L-4 -6 L12 -10 L16 12 Z" fill="#6fc3dd"/>
+    <rect x="2" y="16" width="42" height="4" rx="2" fill="#6fc3dd"/>
+    <g fill="#c9bfae"><rect x="4" y="19" width="3" height="10" rx="1.5"/><rect x="38" y="19" width="3" height="10" rx="1.5"/></g>
+  </g>
+
+  <!-- 沙堡 -->
+  <g transform="translate(120 112)">
+    <g fill="#e6c78a" stroke="#c9a566" stroke-width="1.4">
+      <rect x="0" y="10" width="40" height="18" rx="2"/>
+      <rect x="2" y="0" width="10" height="12" rx="1.5"/>
+      <rect x="15" y="-4" width="11" height="16" rx="1.5"/>
+      <rect x="29" y="0" width="10" height="12" rx="1.5"/>
+    </g>
+    <path d="M20.5 -4 L20.5 -14 L29 -11 L20.5 -8" fill="#ff8f6b"/>
+    <rect x="16" y="18" width="8" height="10" rx="1.5" fill="#c9a566"/>
+  </g>
+
+  <!-- 貝殼與海星 -->
+  <g>
+    <g transform="translate(306 146)" fill="#ffd9c2" stroke="#e0a98c" stroke-width="1">
+      <path d="M0 8 a9 9 0 0 1 18 0 z"/><path d="M4 8 L9 0 M9 0 L14 8" fill="none"/>
+    </g>
+    <g transform="translate(74 150)" fill="#ff9d7a">
+      <path d="M8 0 l2.6 5.4 6 .8 -4.4 4.2 1 5.9 -5.2 -2.8 -5.2 2.8 1 -5.9 -4.4 -4.2 6 -.8 z"/>
+    </g>
+  </g>
+</svg>

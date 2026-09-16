@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 公園·遠景（捲動 0.25）：對岸的丘陵、樹林、湖、涼亭。
+       360 寬為一個磚，左右邊緣的稜線高度都是 y=74，平鋪才不會有台階。 -->
+  <defs>
+    <linearGradient id="pkHill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c6ead0"/><stop offset="1" stop-color="#9ad3a6"/>
+    </linearGradient>
+    <linearGradient id="pkLake" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a6dcf0"/><stop offset=".5" stop-color="#7cc3e2"/>
+      <stop offset="1" stop-color="#5fa9cf"/>
+    </linearGradient>
+    <linearGradient id="pkBank" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8dcb1"/><stop offset="1" stop-color="#7cc189"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 對岸的丘陵 -->
+  <path d="M0 74 Q60 50 120 72 Q180 90 240 64 Q300 46 360 74 L360 200 L0 200 Z" fill="url(#pkHill)"/>
+
+  <!-- 對岸的樹林：只畫剪影，遠景不需要細節 -->
+  <g fill="#8cc79a" opacity=".85">
+    <ellipse cx="34" cy="70" rx="17" ry="14"/><ellipse cx="52" cy="74" rx="13" ry="11"/>
+    <ellipse cx="96" cy="68" rx="15" ry="13"/><ellipse cx="146" cy="78" rx="18" ry="14"/>
+    <ellipse cx="198" cy="72" rx="14" ry="12"/><ellipse cx="214" cy="76" rx="11" ry="9"/>
+    <ellipse cx="268" cy="62" rx="16" ry="13"/><ellipse cx="322" cy="70" rx="18" ry="14"/>
+  </g>
+
+  <!-- 涼亭 -->
+  <g transform="translate(246 52)">
+    <path d="M0 16 L15 2 L30 16 Z" fill="#d78f6b"/>
+    <rect x="2" y="16" width="26" height="3" rx="1.5" fill="#c07a56"/>
+    <g fill="#e8d3bb"><rect x="4" y="19" width="3.5" height="16"/><rect x="22.5" y="19" width="3.5" height="16"/></g>
+    <rect x="2" y="34" width="26" height="3" rx="1.5" fill="#cbb79c"/>
+  </g>
+
+  <!-- 湖 -->
+  <path d="M0 96 Q90 88 180 96 Q270 104 360 96 L360 132 Q270 140 180 132 Q90 124 0 132 Z" fill="url(#pkLake)"/>
+  <g stroke="#e8f8ff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".6">
+    <path d="M28 108h26M72 116h18M148 106h30M210 118h22M272 108h26M312 120h20"/>
+  </g>
+
+  <!-- 這一側的岸 -->
+  <path d="M0 130 Q90 122 180 130 Q270 138 360 130 L360 200 L0 200 Z" fill="url(#pkBank)"/>
+</svg>

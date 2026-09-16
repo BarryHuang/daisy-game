@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 44" preserveAspectRatio="none">
+  <!-- 木板平台的中段，水平平鋪（街道和沙灘用）。兩端的圓角由 CSS 處理。 -->
+  <defs>
+    <linearGradient id="plank" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d8a870"/><stop offset=".4" stop-color="#bd8a53"/>
+      <stop offset="1" stop-color="#8f6336"/>
+    </linearGradient>
+  </defs>
+  <rect y="6" width="120" height="38" fill="url(#plank)"/>
+  <rect y="6" width="120" height="5" fill="#e8c396"/>
+  <!-- 板縫 -->
+  <g stroke="#8f6336" stroke-width="1.6" opacity=".7">
+    <path d="M30 6v38M60 6v38M90 6v38"/>
+  </g>
+  <!-- 木紋 -->
+  <g stroke="#a8763f" stroke-width="1.1" opacity=".45" fill="none">
+    <path d="M6 20q10 -3 18 0M40 28q8 -3 14 0M68 18q10 -3 16 0M96 30q9 -3 16 0"/>
+  </g>
+  <!-- 釘子 -->
+  <g fill="#6f4c26" opacity=".7">
+    <circle cx="12" cy="14" r="1.6"/><circle cx="48" cy="14" r="1.6"/>
+    <circle cx="78" cy="14" r="1.6"/><circle cx="108" cy="14" r="1.6"/>
+  </g>
+</svg>

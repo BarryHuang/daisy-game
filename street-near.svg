@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 街道·近景（跟著世界 1:1 捲動）：店面、遮陽棚、路燈、郵筒、人行道。
+       人行道和磚縫橫貫整張圖，所以要伸出左右邊界讓圓角被 viewBox 切掉。
+       店面都離左右邊緣 8px 以上，平鋪時不會被接縫切一半。 -->
+  <defs>
+    <linearGradient id="snWall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbe8d2"/><stop offset="1" stop-color="#e8cfae"/>
+    </linearGradient>
+    <linearGradient id="snWall2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e3eef7"/><stop offset="1" stop-color="#c5d8e8"/>
+    </linearGradient>
+    <linearGradient id="snWalk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9d2c6"/><stop offset="1" stop-color="#b8afa0"/>
+    </linearGradient>
+    <linearGradient id="snGlass" x1="0" y1="0" x2=".6" y2="1">
+      <stop offset="0" stop-color="#d8f2ff"/><stop offset="1" stop-color="#8fc8e4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 店面 A：麵包店 -->
+  <g>
+    <rect x="12" y="52" width="104" height="84" rx="4" fill="url(#snWall)" stroke="#c9a87e" stroke-width="1.6"/>
+    <rect x="18" y="82" width="42" height="42" rx="3" fill="url(#snGlass)" stroke="#b8946a" stroke-width="2"/>
+    <path d="M18 82 L46 82 L18 110 Z" fill="#fff" opacity=".35"/>
+    <rect x="72" y="86" width="30" height="50" rx="3" fill="#a8703f" stroke="#7d5129" stroke-width="2"/>
+    <circle cx="96" cy="112" r="2.4" fill="#ffd166"/>
+    <!-- 招牌 -->
+    <rect x="16" y="56" width="96" height="16" rx="4" fill="#e8734a"/>
+    <g fill="#fff8e7"><circle cx="34" cy="64" r="4"/><circle cx="46" cy="64" r="4"/><circle cx="58" cy="64" r="4"/></g>
+    <!-- 遮陽棚（第一層平台會疊在這附近） -->
+    <path d="M14 76 h100 l-6 12 h-88 z" fill="#e8734a"/>
+    <g fill="#fff3e2"><path d="M26 76 h12 l-6 12 h-12 z"/><path d="M50 76 h12 l-6 12 h-12 z"/><path d="M74 76 h12 l-6 12 h-12 z"/><path d="M98 76 h12 l-6 12 h-12 z"/></g>
+  </g>
+
+  <!-- 店面 B：花店 -->
+  <g>
+    <rect x="212" y="60" width="96" height="76" rx="4" fill="url(#snWall2)" stroke="#9db6c9" stroke-width="1.6"/>
+    <rect x="220" y="90" width="38" height="46" rx="3" fill="url(#snGlass)" stroke="#8fa8bb" stroke-width="2"/>
+    <path d="M220 90 L246 90 L220 116 Z" fill="#fff" opacity=".35"/>
+    <rect x="270" y="94" width="28" height="42" rx="3" fill="#6f9ac0" stroke="#4e7595" stroke-width="2"/>
+    <circle cx="292" cy="116" r="2.4" fill="#ffd166"/>
+    <rect x="216" y="64" width="88" height="15" rx="4" fill="#5fb373"/>
+    <g fill="#fff8e7"><circle cx="234" cy="71.5" r="3.6"/><circle cx="246" cy="71.5" r="3.6"/><circle cx="258" cy="71.5" r="3.6"/></g>
+    <path d="M214 82 h92 l-6 11 h-80 z" fill="#5fb373"/>
+    <g fill="#eafbee"><path d="M226 82 h11 l-6 11 h-11 z"/><path d="M248 82 h11 l-6 11 h-11 z"/><path d="M270 82 h11 l-6 11 h-11 z"/></g>
+    <!-- 門口的花桶 -->
+    <g transform="translate(300 118)">
+      <path d="M0 0 h14 l-2 16 h-10 z" fill="#c98c52"/>
+      <g><circle cx="3" cy="-4" r="4" fill="#ff8fb0"/><circle cx="11" cy="-5" r="4" fill="#ffd166"/><circle cx="7" cy="-10" r="4" fill="#c792ea"/></g>
+    </g>
+  </g>
+
+  <!-- 路燈 -->
+  <g transform="translate(168 58)">
+    <rect x="-2.5" y="0" width="5" height="82" rx="2.5" fill="#55606e"/>
+    <rect x="-9" y="78" width="18" height="5" rx="2.5" fill="#434d59"/>
+    <path d="M-10 2 L10 2 L6 -12 L-6 -12 Z" fill="#6f7b8a"/>
+    <path d="M-7.5 1 L7.5 1 L4.5 -10 L-4.5 -10 Z" fill="#fff3bf"/>
+    <circle cx="0" cy="-16" r="3" fill="#8b98a8"/>
+  </g>
+
+  <!-- 人行道：橫貫整張，伸出左右邊界 -->
+  <rect x="-10" y="130" width="380" height="8" rx="3" fill="#c3bbac"/>
+  <rect x="-10" y="136" width="380" height="64" fill="url(#snWalk)"/>
+  <g stroke="#a89f90" stroke-width="1.6" opacity=".8">
+    <path d="M8 138v62M52 138v62M96 138v62M140 138v62M184 138v62M228 138v62M272 138v62M316 138v62"/>
+    <path d="M-10 162h380"/>
+  </g>
+
+  <!-- 郵筒 -->
+  <g transform="translate(140 104)">
+    <rect x="0" y="6" width="18" height="28" rx="3" fill="#e05252"/>
+    <path d="M0 10 a9 9 0 0 1 18 0 z" fill="#c33f3f"/>
+    <rect x="3" y="16" width="12" height="3" rx="1.5" fill="#7d2727"/>
+    <rect x="6" y="34" width="6" height="6" rx="1" fill="#8a8a8a"/>
+  </g>
+
+  <!-- 木箱（第二層平台的視覺依託） -->
+  <g transform="translate(330 112)">
+    <rect x="0" y="0" width="24" height="24" rx="2" fill="#c98c52" stroke="#8a5f36" stroke-width="1.6"/>
+    <path d="M0 8h24M0 16h24" stroke="#a8703f" stroke-width="1.2"/>
+  </g>
+</svg>

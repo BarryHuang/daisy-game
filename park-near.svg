@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 公園·近景（跟著世界 1:1 捲動）：石板步道、花圃、長椅、路燈、大樹。
+       跨越接縫的東西（步道）左右要伸出 viewBox，圓角才不會在接縫湊成缺口。
+       地面左右邊緣同高（y=136）。 -->
+  <defs>
+    <linearGradient id="pnGnd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9adfa3"/><stop offset=".45" stop-color="#75c885"/>
+      <stop offset="1" stop-color="#52a366"/>
+    </linearGradient>
+    <linearGradient id="pnPath" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6d7bd"/><stop offset="1" stop-color="#c8b493"/>
+    </linearGradient>
+    <linearGradient id="pnTrunk" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a87848"/><stop offset=".5" stop-color="#8a5f36"/>
+      <stop offset="1" stop-color="#6b4726"/>
+    </linearGradient>
+    <radialGradient id="pnLeaf" cx=".35" cy=".3" r=".8">
+      <stop offset="0" stop-color="#8ed49a"/><stop offset=".6" stop-color="#5fb373"/>
+      <stop offset="1" stop-color="#3f8c55"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 大樹（樹幹在 x=62，樹冠不碰左右邊緣） -->
+  <g>
+    <path d="M56 126 q-4 -42 6 -62 q10 20 6 62 z" fill="url(#pnTrunk)"/>
+    <path d="M62 104 q-14 -8 -20 -20" stroke="#8a5f36" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M62 100 q14 -10 22 -22" stroke="#8a5f36" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <g fill="url(#pnLeaf)">
+      <ellipse cx="62" cy="62" rx="40" ry="28"/>
+      <ellipse cx="36" cy="74" rx="24" ry="18"/>
+      <ellipse cx="90" cy="72" rx="26" ry="19"/>
+      <ellipse cx="62" cy="44" rx="26" ry="18"/>
+    </g>
+    <g fill="#fff" opacity=".16"><ellipse cx="50" cy="48" rx="18" ry="11"/></g>
+  </g>
+
+  <!-- 路燈 -->
+  <g transform="translate(288 78)">
+    <rect x="-2" y="0" width="4" height="46" rx="2" fill="#5d6b7a"/>
+    <rect x="-7" y="44" width="14" height="4" rx="2" fill="#4a5764"/>
+    <path d="M-8 0 L8 0 L5 -12 L-5 -12 Z" fill="#7b8b9c"/>
+    <path d="M-6 -1 L6 -1 L4 -10 L-4 -10 Z" fill="#fff4c2"/>
+  </g>
+
+  <!-- 地面。注意：前景層（habitat-front）會蓋住畫面最下面約 26%，換算到這張
+       圖大約是 y>141 的部分，所以步道和重點物件都要畫在 y=141 以上，
+       不然會整條被前景的草叢遮掉（第一版就是這樣，步道完全看不到）。 -->
+  <path d="M0 118 Q90 112 180 118 Q270 124 360 118 L360 200 L0 200 Z" fill="url(#pnGnd)"/>
+  <path d="M0 118 Q90 112 180 118 Q270 124 360 118" fill="none" stroke="#b9ecc0" stroke-width="2" opacity=".45"/>
+
+  <!-- 石板步道：整條橫向貫穿，所以要伸出左右邊界 -->
+  <rect x="-10" y="124" width="380" height="17" rx="6" fill="url(#pnPath)"/>
+  <g stroke="#b9a482" stroke-width="1.6" opacity=".7">
+    <path d="M22 124v17M74 124v17M126 124v17M178 124v17M230 124v17M282 124v17M334 124v17"/>
+  </g>
+
+  <!-- 長椅 -->
+  <g transform="translate(168 86)">
+    <g fill="#c98c52">
+      <rect x="0" y="16" width="52" height="5" rx="2.5"/>
+      <rect x="0" y="6" width="52" height="4" rx="2"/>
+      <rect x="0" y="0" width="52" height="4" rx="2"/>
+    </g>
+    <g fill="#8a5f36">
+      <rect x="4" y="21" width="4" height="14" rx="1.5"/>
+      <rect x="44" y="21" width="4" height="14" rx="1.5"/>
+      <rect x="4" y="0" width="4" height="18" rx="1.5"/>
+      <rect x="44" y="0" width="4" height="18" rx="1.5"/>
+    </g>
+  </g>
+
+  <!-- 花圃 -->
+  <g>
+    <ellipse cx="128" cy="152" rx="30" ry="9" fill="#6b4f2e" opacity=".55"/>
+    <g stroke="#3f8c55" stroke-width="2" fill="none" stroke-linecap="round">
+      <path d="M112 152v-12M122 154v-15M134 152v-13M144 154v-11"/>
+    </g>
+    <g><circle cx="112" cy="138" r="4.5" fill="#ff8fb0"/><circle cx="122" cy="137" r="4.5" fill="#ffd166"/>
+       <circle cx="134" cy="137" r="4.5" fill="#c792ea"/><circle cx="144" cy="141" r="4" fill="#ff8fb0"/>
+       <g fill="#fff8d8"><circle cx="112" cy="138" r="1.6"/><circle cx="122" cy="137" r="1.6"/>
+       <circle cx="134" cy="137" r="1.6"/><circle cx="144" cy="141" r="1.4"/></g></g>
+  </g>
+  <g>
+    <ellipse cx="308" cy="156" rx="26" ry="8" fill="#6b4f2e" opacity=".5"/>
+    <g stroke="#3f8c55" stroke-width="2" fill="none" stroke-linecap="round">
+      <path d="M296 156v-11M306 158v-13M318 156v-10"/>
+    </g>
+    <g><circle cx="296" cy="143" r="4" fill="#ffd166"/><circle cx="306" cy="143" r="4" fill="#ff8fb0"/>
+       <circle cx="318" cy="144" r="4" fill="#8ecae6"/></g>
+  </g>
+
+  <!-- 草叢與小石頭 -->
+  <g stroke="#468f58" stroke-width="3" stroke-linecap="round" fill="none" opacity=".75">
+    <path d="M198 194q2-11 5-15M204 194q0-9 1-13M210 194q-2-11-4-15"/>
+    <path d="M252 190q2-10 4-13M258 190q0-8 1-11"/>
+  </g>
+  <g fill="#b7c4b0" opacity=".85">
+    <ellipse cx="88" cy="190" rx="7" ry="4"/><ellipse cx="342" cy="192" rx="6" ry="3.5"/>
+  </g>
+</svg>

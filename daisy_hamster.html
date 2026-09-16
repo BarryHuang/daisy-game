@@ -132,6 +132,8 @@
                 <div class="cloud cloud1"></div>
                 <div class="cloud cloud2"></div>
                 <div class="cloud cloud3"></div>
+                <div class="cloud cloud4"></div>
+                <div class="cloud cloud5"></div>
 
                 <!-- 視差：遠景和中景捲得比較慢，才有景深 -->
                 <div class="layer far" id="layer-far"></div>
@@ -458,6 +460,41 @@
                 <!-- 每日任務按鈕 -->
                 <div class="quest-btn bounce" id="btn-daily-quest" onclick="openQuests()">📜</div>
 
+                <!-- 場景右下角的小工具列 -->
+                <div class="cage-tools">
+                    <button class="cage-tool" id="btn-map" type="button"
+                            title="去別的地方" onclick="openMapPicker()">🗺️</button>
+                    <button class="cage-tool" id="btn-fullscreen" type="button"
+                            title="全螢幕" onclick="toggleImmersive()">⛶</button>
+                    <button class="cage-tool" id="btn-feel" type="button"
+                            title="設定" onclick="openFeel()">⚙️</button>
+                </div>
+
+                <!-- 沉浸（全螢幕）模式才會出現的上方狀態列與下方快捷列。
+                     全螢幕時原本的數值卡和按鈕牆都看不到了，這兩條把最常用的
+                     東西補回來，不然全螢幕只能看不能玩。 -->
+                <div class="imm-hud" id="imm-hud" aria-hidden="true">
+                    <span class="imm-chip">⭐ <b id="imm-lvl">1</b></span>
+                    <span class="imm-chip">💰 <b id="imm-coins">0</b></span>
+                    <span class="imm-chip" id="imm-mood">😊</span>
+                    <span class="imm-chip map-chip" id="imm-map">🏡 倉鼠的家</span>
+                </div>
+                <div class="imm-dock" id="imm-dock" aria-hidden="true">
+                    <button class="imm-act" type="button" onclick="petHamster()"><i>🖐️</i>摸摸</button>
+                    <button class="imm-act" type="button" onclick="feedHamster('seed', 1, 10, '🌻')"><i>🌻</i>餵食</button>
+                    <button class="imm-act" type="button" onclick="playWheel()"><i>🎡</i>跑輪</button>
+                    <button class="imm-act" type="button" onclick="bathHamster()"><i>🧽</i>洗澡</button>
+                    <button class="imm-act" type="button" onclick="sleepHamster()"><i>💤</i>睡覺</button>
+                </div>
+
+                <!-- 換地圖時的轉場布幕 -->
+                <div class="curtain" id="curtain" aria-hidden="true">
+                    <div class="curtain-card">
+                        <span class="c-emoji" id="curtain-emoji">🏡</span>
+                        <span class="c-name" id="curtain-name">倉鼠的家</span>
+                    </div>
+                </div>
+
             </div>
             
             <div class="pet-actions">
@@ -602,7 +639,9 @@
             achievements: { combo30: false, richer: false, level10: false },
             // 她自己擺的道具位置。{ house:{x,y}, ... }，單位是籠子寬高的百分比，
             // 存百分比而不是 px，換裝置或轉螢幕方向才不會跑掉。空的就用預設位置。
-            layout: {}
+            layout: {},
+            // 上次離開時待在哪張地圖，下次進來從同一個地方繼續
+            map: 'home'
         };
 
         let comboCount = 0; // 連續全對次數
@@ -627,6 +666,7 @@
             if(!data.stats.mistakeWords) data.stats.mistakeWords = [];
             if(!data.achievements) data.achievements = { combo30: false, richer: false, level10: false };
             if(!data.layout) data.layout = {};
+            if(!data.map || !MAPS[data.map]) data.map = 'home';
             return data;
         }
 
@@ -830,6 +870,107 @@
         }
 
         // ================================================================
+        // 沉浸（全螢幕）模式
+        // ================================================================
+        // 兩件事一起做：①把 body 加上 .immersive，籠子用 position:fixed 鋪滿視窗
+        // ②有支援的話順便叫瀏覽器真的全螢幕（Android Chrome 可以，iOS Safari
+        //   不支援 Element.requestFullscreen，所以①一定要能單獨成立）。
+        function immersiveOn() { return document.body.classList.contains('immersive'); }
+
+        function toggleImmersive(force) {
+            const on = (force === undefined) ? !immersiveOn() : !!force;
+            document.body.classList.toggle('immersive', on);
+            const btn = document.getElementById('btn-fullscreen');
+            if (btn) { btn.textContent = on ? '⤡' : '⛶'; btn.classList.toggle('on', on); }
+            const sw = document.getElementById('sw-immersive');
+            if (sw) sw.classList.toggle('on', on);
+
+            try {
+                const el = document.documentElement;
+                if (on && !document.fullscreenElement && el.requestFullscreen) {
+                    el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+                } else if (!on && document.fullscreenElement && document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                }
+            } catch (e) { /* 不支援就只用 CSS 的沉浸模式 */ }
+
+            // 籠子尺寸整個變了：平台高度、倉鼠站的那一層、鏡頭、探頭的小動物
+            // 都是依尺寸算出來的，要全部重算。等兩幀讓版面先套用完。
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                if (typeof buildPlatforms === 'function') {
+                    buildPlatforms();
+                    hamY = surfaceAt(hamX, hamY);
+                    paintHamster();
+                    cameraLookAt(hamX, true);
+                }
+                if (typeof placePeekers === 'function') placePeekers();
+            }));
+        }
+
+        // 使用者按 Esc 或系統手勢離開全螢幕時，把沉浸模式一起關掉，
+        // 不然畫面會卡在「假全螢幕」但瀏覽器 UI 已經回來的狀態
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && immersiveOn()) toggleImmersive(false);
+        });
+
+        function openFeel() {
+            syncFeelUI();
+            document.getElementById('feel-modal').style.display = 'flex';
+        }
+        function closeFeel() { document.getElementById('feel-modal').style.display = 'none'; }
+
+        function toggleFeel(key) {
+            FEEL[key] = !FEEL[key];
+            saveFeel();
+            syncFeelUI();
+            if (key === 'shake' && FEEL.shake) screenShake();      // 打開時示範一下
+            if (key === 'haptic' && FEEL.haptic) feelHaptic(20);
+        }
+
+        function syncFeelUI() {
+            const set = (id, on) => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('on', !!on);
+            };
+            set('sw-shake', FEEL.shake);
+            set('sw-haptic', FEEL.haptic);
+            set('sw-immersive', immersiveOn());
+        }
+
+        // ================================================================
+        // 手感設定（震動）
+        // ================================================================
+        // 畫面震動預設「關」。原本高速跑輪時整個籠子會連續抖 1.5 秒，
+        // 看久了很煩也容易暈；現在改成撞擊那一下抖一次就收，而且要自己打開。
+        // 存 localStorage 不存雲端 —— 這是「這台裝置舒不舒服」的偏好，
+        // 平板和手機本來就可能想要不一樣的設定。
+        const FEEL_KEY = 'daisy_feel';
+        const FEEL = Object.assign({ shake: false, haptic: true }, (() => {
+            try { return JSON.parse(localStorage.getItem(FEEL_KEY) || '{}'); }
+            catch (e) { return {}; }
+        })());
+        function saveFeel() {
+            try { localStorage.setItem(FEEL_KEY, JSON.stringify(FEEL)); } catch (e) {}
+        }
+
+        /** 撞擊感：抖一下就收。關掉或系統要求減少動態時什麼都不做 */
+        function screenShake(el) {
+            if (!FEEL.shake || actReduced()) return;
+            const t = el || document.getElementById('cage');
+            if (!t) return;
+            t.classList.remove('shaking');
+            void t.offsetWidth;                 // 強制重排，動畫才會從頭播
+            t.classList.add('shaking');
+            setTimeout(() => t.classList.remove('shaking'), 460);
+        }
+
+        /** 手機震動。跟畫面震動分開控制 —— 有人喜歡手震但討厭畫面晃 */
+        function feelHaptic(ms) {
+            if (!FEEL.haptic) return;
+            if (typeof fxHaptic === 'function') fxHaptic(ms);
+        }
+
+        // ================================================================
         // 橫向捲軸的世界：鏡頭、視差、走路
         // ================================================================
         // 籠子從「一個框」變成「一台攝影機」：世界有三個螢幕寬（.world 的
@@ -895,20 +1036,99 @@
         //   第一層 [.58,.70] ← → 第二層 [.63,.73]  （重疊 .63~.70）
         // x 範圍也避開四個道具（小木屋 6%、溜滑梯 20%、水瓶 53%、跑輪 74%），
         // 平台才不會壓在道具頭上。
-        // y 是「可用高度」的比例，不是籠子高度的比例 —— 籠子扣掉倉鼠身高才是
-        // 真正能疊平台的空間，直接用籠子高度算的話，矮螢幕上第二層的倉鼠會有
-        // 半個身體被切在畫面外（實測籠子只有 250px 時就是這樣）。
-        const PLATFORMS = [
-            { x1: .300, x2: .420, y: .48 },
-            { x1: .380, x2: .480, y: .95 },
-            { x1: .580, x2: .700, y: .48 },
-            { x1: .630, x2: .730, y: .95 },
-            { x1: .855, x2: .955, y: .50 },
-        ];
+        // ================================================================
+        // 地圖
+        // ================================================================
+        // 每張地圖 = 四層視差貼圖 + 一組平台 + 一組出入口。
+        // 平台的 x1/x2 是世界寬的比例；y 是「可用高度」（籠子高扣掉倉鼠身高）
+        // 的比例，不是籠子高度的比例 —— 用籠子高度算的話，矮螢幕上第二層的
+        // 倉鼠會有半個身體被切在畫面外（實測籠子只有 250px 時就是這樣）。
+        // 上層一定要和下層在 x 上重疊，倉鼠才爬得上去。
+        //
+        // 出入口放在世界的兩端（3% / 97%），所以平台的 x 要避開 0~12% 和 88~100%，
+        // 不然門牌會被平台壓住。
+        const MAPS = {
+            home: {
+                name: '倉鼠的家', emoji: '🏡',
+                layers: { far: 'habitat-far.svg', mid: 'habitat-mid.svg',
+                          near: 'habitat-near.svg', front: 'habitat-front.svg' },
+                platformImg: 'platform.svg',
+                props: true,                      // 四個道具只在家裡
+                peekers: ['🐦', '🐿️'],
+                platforms: [
+                    { x1: .300, x2: .420, y: .48 },
+                    { x1: .380, x2: .480, y: .95 },
+                    { x1: .580, x2: .700, y: .48 },
+                    { x1: .630, x2: .730, y: .95 },
+                    { x1: .790, x2: .880, y: .50 },
+                ],
+                exits: { right: 'park' }
+            },
+            park: {
+                name: '大公園', emoji: '🌳',
+                layers: { far: 'park-far.svg', mid: 'habitat-mid.svg',
+                          near: 'park-near.svg', front: 'habitat-front.svg' },
+                platformImg: 'platform.svg',
+                peekers: ['🦆', '🐢'],
+                platforms: [
+                    { x1: .150, x2: .270, y: .48 },
+                    { x1: .220, x2: .320, y: .95 },
+                    { x1: .430, x2: .560, y: .48 },
+                    { x1: .500, x2: .600, y: .95 },
+                    { x1: .700, x2: .830, y: .48 },
+                ],
+                exits: { left: 'home', right: 'street' }
+            },
+            street: {
+                name: '熱鬧街道', emoji: '🏘️',
+                layers: { far: 'street-far.svg', mid: '',
+                          near: 'street-near.svg', front: 'street-front.svg' },
+                platformImg: 'platform-wood.svg',
+                peekers: ['🐈', '🕊️'],
+                platforms: [
+                    { x1: .140, x2: .250, y: .48 },
+                    { x1: .210, x2: .310, y: .95 },
+                    { x1: .420, x2: .540, y: .48 },
+                    { x1: .490, x2: .590, y: .95 },
+                    { x1: .690, x2: .820, y: .48 },
+                ],
+                exits: { left: 'park', right: 'beach' }
+            },
+            beach: {
+                name: '陽光沙灘', emoji: '🏖️', cost: 500,
+                layers: { far: 'beach-far.svg', mid: '',
+                          near: 'beach-near.svg', front: 'beach-front.svg' },
+                platformImg: 'platform-wood.svg',
+                peekers: ['🦀', '🐠'],
+                platforms: [
+                    { x1: .160, x2: .280, y: .45 },
+                    { x1: .240, x2: .340, y: .92 },
+                    { x1: .450, x2: .570, y: .45 },
+                    { x1: .680, x2: .800, y: .45 },
+                    { x1: .740, x2: .840, y: .92 },
+                ],
+                exits: { left: 'street' }
+            }
+        };
+        const MAP_ORDER = ['home', 'park', 'street', 'beach'];
+        let currentMap = 'home';
+        let traveling = false;
+
+        function curMap() { return MAPS[currentMap] || MAPS.home; }
+        function ownsMap(id) {
+            const m = MAPS[id];
+            if (!m) return false;
+            if (!m.cost) return true;
+            // 沿用舊的 unlocks.scenes（以前商店賣的「沙灘渡假」就是同一個 id）
+            return !!(petData.unlocks && petData.unlocks.scenes &&
+                      petData.unlocks.scenes.includes(id));
+        }
         const GRAVITY   = 2100;   // px/秒²
         const WALK_V    = 130;    // px/秒
-        const FOOT_INSET = 20;    // 倉鼠的腳離 wrapper 底邊還有一段空白（120px 的 SVG 裡）
-        const PLAT_H    = 28;     // 和 CSS 的 .platform height 一致
+        const FOOT_INSET_BASE = 20;   // 倉鼠的腳離 wrapper 底邊還有一段空白（120px 的 SVG 裡）
+        function footInset() { return FOOT_INSET_BASE * objK(); }
+        /** 平台厚度跟著場景放大。固定 28px 的話，全螢幕時平台會變成一條細線 */
+        function platH() { return Math.round(sceneH() * 0.085); }
 
         // 倉鼠的狀態。hamX = 世界座標；hamY = 腳離地高度（往上為正）
         let hamX = 0, hamY = 0, hamVY = 0, hamFacing = 1;
@@ -916,8 +1136,49 @@
         let hamGoal = null;          // { x, y, speed, resolve, deadline }
         let physRaf = 0, physLast = 0, physOff = false;
 
-        /** 能拿來疊平台的高度：籠子高度扣掉倉鼠身高，最高那層才不會頂出畫面 */
-        function usableH() { return Math.max(90, cageHeight() - 150); }
+        /**
+         * 場景（地面那一帶）的高度。磚是 360x200 被拉成 360 x 場景高，
+         * 所以場景越高，店面和柵欄就被縱向拉得越細長。360 是這批美術畫的時候
+         * 預設的比例（1.5 倍縱向拉伸），超過就會走樣 —— 全螢幕時籠子有 900 多 px，
+         * 不封頂的話整條街會變成麵條。多出來的高度留給天空（雲、太陽、天氣）。
+         */
+        // 籠子矮的時候場景就等於籠子（現在的樣子）；籠子變高（全螢幕）之後
+        // 場景只跟著長一部分，剩下的留給天空 —— 場景 100% 跟著長的話，
+        // 平台會浮在一片空蕩蕩的天空中間，看起來不像場景像測試畫面。
+        const SCENE_BASE = 330;       // 這批美術原本畫的高度
+        const SCENE_KNEE = 420, SCENE_RATE = .62, SCENE_MAX = 760;
+        function sceneH() {
+            const h = cageHeight();
+            if (h <= SCENE_KNEE) return h;
+            return Math.min(SCENE_MAX, SCENE_KNEE + (h - SCENE_KNEE) * SCENE_RATE);
+        }
+        /** 場景相對於原始設計高度的縮放（背景圖用） */
+        function sceneK() { return sceneH() / SCENE_BASE; }
+        /**
+         * 倉鼠和道具的縮放。刻意比背景保守（上限 1.15）——
+         * 場景長高了，籠子的「寬度」卻沒變，倉鼠照背景的倍率放大的話
+         * 會佔掉三分之二個螢幕寬（實測 k=2.2 時整隻蓋住小木屋）。
+         */
+        const OBJ_K_MAX = 1.15;
+        function objK() { return Math.min(sceneK(), OBJ_K_MAX); }
+
+        /** 把場景的三個尺寸寫回 CSS。視差層、雲、太陽、倉鼠、道具都吃這些值 */
+        function syncSceneH() {
+            const c = cageEl();
+            if (!c) return;
+            const h = sceneH();
+            c.style.setProperty('--scene-h', h + 'px');
+            c.style.setProperty('--k', objK().toFixed(3));
+            // 天空 = 籠子高度扣掉遠景層（場景的 86%）。雲和太陽照這個高度散開，
+            // 全螢幕時才不會三朵雲全擠在畫面最上緣、下面空一大片。
+            c.style.setProperty('--sky-h', Math.max(30, cageHeight() - h * 0.86) + 'px');
+            // 全螢幕時下面有一排快捷鍵，整個世界往上抬一點，倉鼠才不會被按鈕蓋住
+            c.style.setProperty('--world-lift', immersiveOn() ? '78px' : '0px');
+            syncImmSky();
+        }
+
+        /** 能拿來疊平台的高度：場景高度扣掉倉鼠身高，最高那層才不會頂出場景 */
+        function usableH() { return Math.max(90, sceneH() - 150); }
 
         /** 跳躍初速：要保證一定跳得上第一層（不同手機籠子高度不一樣） */
         function jumpVelocity() {
@@ -928,7 +1189,7 @@
         /** 每個平台換算成像素：surface = 站上去時的 hamY */
         function surfaces() {
             const W = worldWidth(), U = usableH();
-            return PLATFORMS.map(p => ({
+            return curMap().platforms.map(p => ({
                 x1: p.x1 * W, x2: p.x2 * W, surface: p.y * U
             }));
         }
@@ -938,14 +1199,18 @@
             const host = document.getElementById('platforms');
             if (!host) return;
             host.innerHTML = '';
+            syncSceneH();
             const U = usableH();
-            PLATFORMS.forEach(p => {
+            curMap().platforms.forEach(p => {
                 const el = document.createElement('div');
                 el.className = 'platform';
                 el.style.left  = (p.x1 * 100) + '%';
                 el.style.width = ((p.x2 - p.x1) * 100) + '%';
                 // 平台的草皮頂端要對齊倉鼠站上去的位置，所以往下扣掉腳的內縮
-                el.style.bottom = (p.y * U + FOOT_INSET - PLAT_H) + 'px';
+                const ph = platH();
+                el.style.height = ph + 'px';
+                el.style.borderRadius = Math.round(ph * .32) + 'px';
+                el.style.bottom = (p.y * U + footInset() - ph) + 'px';
                 host.appendChild(el);
             });
         }
@@ -1031,7 +1296,7 @@
             if (physOff) return;
 
             const W = worldWidth();
-            const half = 60;
+            const half = 60 * objK();       // 倉鼠半個身寬，牠會跟著場景一起放大
             const prevY = hamY;
             let busy = false;
 
@@ -1142,7 +1407,8 @@
          */
         function hamsterWalkTo(worldX, speed, y) {
             if (physOff) return Promise.resolve();
-            const target = clamp(worldX, 60, worldWidth() - 60);
+            const half = 60 * objK();
+            const target = clamp(worldX, half, worldWidth() - half);
             const ty = (typeof y === 'number') ? y : surfaceAt(target, hamY);
             if (Math.abs(target - hamX) < 6 && Math.abs(ty - hamY) < 10) return Promise.resolve();
             if (hamGoal) { const g = hamGoal; hamGoal = null; g.resolve(); }
@@ -1214,6 +1480,7 @@
             // 物理迴圈每一幀都會重寫 transform，留著 CSS transition 會互相打架
             if (wrap) wrap.style.transition = 'none';
             hamX = worldWidth() / 2; hamY = 0; hamVY = 0;
+            syncSceneH();
             buildPlatforms();
             paintHamster();
             cameraLookAt(hamX, true);
@@ -1224,6 +1491,225 @@
                 paintHamster();
                 cameraLookAt(hamX, true);
             });
+        }
+
+        // ================================================================
+        // 換地圖
+        // ================================================================
+
+        /** 把視差層換成這張地圖的貼圖。空字串代表這張地圖沒有這一層 */
+        function setLayerImg(id, file) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.backgroundImage = file ? "url('" + file + "')" : 'none';
+            el.style.display = file ? '' : 'none';
+        }
+
+        /** 依 currentMap 重建整個場景。換地圖、開全螢幕、轉向都會叫到 */
+        function applyMap(id) {
+            currentMap = MAPS[id] ? id : 'home';
+            const m = curMap();
+            const cage = cageEl();
+
+            MAP_ORDER.forEach(k => cage.classList.toggle('map-' + k, k === currentMap));
+            setLayerImg('layer-far',   m.layers.far);
+            setLayerImg('layer-mid',   m.layers.mid);
+            setLayerImg('layer-near',  m.layers.near);
+            setLayerImg('layer-front', m.layers.front);
+            cage.style.setProperty('--platform-img', "url('" + m.platformImg + "')");
+
+            // 道具是「她家裡的東西」，出門在外就收起來
+            ARRANGE_PROPS.forEach(k => {
+                const el = document.getElementById('prop-' + k);
+                if (el) el.style.display = m.props ? '' : 'none';
+            });
+            const arrangeBtn = document.getElementById('btn-arrange');
+            if (arrangeBtn) arrangeBtn.style.display = m.props ? '' : 'none';
+
+            // 每張地圖有自己會探頭的小動物
+            const pk = m.peekers || ['🐦', '🐿️'];
+            const pa = document.getElementById('peeker-a'), pb = document.getElementById('peeker-b');
+            if (pa) pa.textContent = pk[0];
+            if (pb) pb.textContent = pk[1] || pk[0];
+
+            buildPlatforms();
+            buildGates();
+            placePeekers();
+            updateMapChip();
+        }
+
+        function updateMapChip() {
+            const el = document.getElementById('imm-map');
+            if (el) el.textContent = curMap().emoji + ' ' + curMap().name;
+        }
+
+        /** 世界兩端的門牌。點一下就出發 */
+        function buildGates() {
+            const world = worldEl();
+            if (!world) return;
+            world.querySelectorAll('.gate').forEach(g => g.remove());
+            const ex = curMap().exits || {};
+            [['left', 10, '◀'], ['right', 90, '▶']].forEach(([side, pct, arrow]) => {
+                const to = ex[side];
+                if (!to || !MAPS[to]) return;
+                const locked = !ownsMap(to);
+                const g = document.createElement('button');
+                g.type = 'button';
+                g.className = 'gate' + (locked ? ' locked' : '');
+                g.style.left = pct + '%';
+                g.innerHTML =
+                    '<span class="gate-sign">' +
+                    (side === 'left' ? '<span>' + arrow + '</span>' : '') +
+                    '<span>' + (locked ? '🔒' : MAPS[to].emoji) + '</span>' +
+                    '<span>' + MAPS[to].name + '</span>' +
+                    (side === 'right' ? '<span>' + arrow + '</span>' : '') +
+                    '</span><span class="gate-post"></span>';
+                g.addEventListener('click', (e) => { e.stopPropagation(); travelTo(to); });
+                world.appendChild(g);
+            });
+        }
+
+        function curtain(on, map) {
+            const c = document.getElementById('curtain');
+            if (!c) return;
+            if (map) {
+                document.getElementById('curtain-emoji').textContent = map.emoji;
+                document.getElementById('curtain-name').textContent = map.name;
+            }
+            c.classList.toggle('on', !!on);
+        }
+
+        /**
+         * 走到出口 → 拉幕 → 換場景 → 開幕 → 從另一邊走進來。
+         * 演出期間 traveling = true，擋掉重複觸發（她一定會連點）。
+         */
+        async function travelTo(id, instant) {
+            if (traveling || !MAPS[id] || id === currentMap) return;
+            if (isRunning || arranging) return;
+            if (!ownsMap(id)) { askBuyMap(id); return; }
+
+            traveling = true;
+            try {
+                const ex = curMap().exits || {};
+                // 從哪一側離開：右邊的門往右走，左邊的門往左走
+                const side = (ex.right === id) ? 'right' : (ex.left === id ? 'left' : null);
+                const W = worldWidth();
+
+                if (!instant && side) {
+                    await hamsterWalkTo(side === 'right' ? W * 0.94 : W * 0.06, 190, 0);
+                }
+
+                curtain(true, MAPS[id]);
+                playTone(520, 'sine', .1);
+                await wait(actReduced() ? 60 : 380);
+
+                petData.map = id;
+                savePetData();
+                applyMap(id);
+                applyTimeOfDay();
+
+                // 從對面那一側進場
+                const enterLeft = (side !== 'left');
+                hamX = enterLeft ? worldWidth() * 0.12 : worldWidth() * 0.88;
+                hamY = 0; hamVY = 0; hamMode = 'idle'; hamGoal = null;
+                hamFacing = enterLeft ? 1 : -1;
+                paintHamster();
+                cameraLookAt(hamX, true);
+
+                await wait(actReduced() ? 60 : 420);
+                curtain(false);
+                playTone(660, 'sine', .1);
+                // 往世界裡面走幾步，才不會卡在門邊
+                hamsterWalkTo(hamX + (enterLeft ? 1 : -1) * worldWidth() * 0.08, 130, 0);
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('換地圖中斷', e);
+                curtain(false);
+            } finally {
+                traveling = false;
+            }
+        }
+
+        /** 跑輪和木屋這些道具只有家裡有，在外面按就先自己走回家 */
+        async function ensureHome() {
+            if (currentMap === 'home') return true;
+            await travelTo('home', true);
+            await wait(120);
+            return currentMap === 'home';
+        }
+
+        function askBuyMap(id) {
+            const m = MAPS[id];
+            if (!m) return;
+            if (petData.coins < m.cost) {
+                alert('金幣還不夠去' + m.name + '喔！(需要 ' + m.cost + ' 💰)');
+                return;
+            }
+            if (!confirm('要花 ' + m.cost + ' 金幣解鎖「' + m.name + ' ' + m.emoji + '」嗎？\n解鎖之後隨時都可以去玩。')) return;
+            petData.coins -= m.cost;
+            if (!petData.unlocks.scenes) petData.unlocks.scenes = ['default'];
+            petData.unlocks.scenes.push(id);
+            savePetData();
+            updatePetUI();
+            buildGates();
+            if (typeof fxBurst === 'function') {
+                const c = cageEl();
+                if (c) fxBurst(c.getBoundingClientRect(), 22);
+            }
+            travelTo(id);
+        }
+
+        /** 🗺️ 地圖選單：直接跳過去，不用一站一站走 */
+        function openMapPicker() {
+            const list = document.getElementById('map-list');
+            if (!list) return;
+            list.innerHTML = '';
+            MAP_ORDER.forEach(id => {
+                const m = MAPS[id], here = id === currentMap, owned = ownsMap(id);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'map-card' + (here ? ' here' : '') + (owned ? '' : ' locked');
+                btn.innerHTML =
+                    '<span class="m-emoji">' + (owned ? m.emoji : '🔒') + '</span>' +
+                    '<span class="m-name">' + m.name + '</span>' +
+                    '<span class="m-note">' + (here ? '現在在這裡' : (owned ? '出發 →' : m.cost + ' 💰 解鎖')) + '</span>';
+                btn.onclick = () => {
+                    if (here) { closeMapPicker(); return; }
+                    if (!owned) { askBuyMap(id); closeMapPicker(); return; }
+                    closeMapPicker();
+                    travelTo(id, true);
+                };
+                list.appendChild(btn);
+            });
+            document.getElementById('map-modal').style.display = 'flex';
+        }
+        function closeMapPicker() { document.getElementById('map-modal').style.display = 'none'; }
+
+        // ================================================================
+        // 時段（早上／黃昏／晚上）
+        // ================================================================
+        // CSS 早就寫好 .time-day / .time-sunset / .time-night 的天空、太陽變月亮、
+        // 夜間色罩，但一直沒有人幫籠子加上這些 class，所以整套從來沒生效過。
+        function timeSlot() {
+            const h = new Date().getHours();
+            if (h >= 6 && h < 16) return 'day';
+            if (h >= 16 && h < 19) return 'sunset';
+            return 'night';
+        }
+        function applyTimeOfDay() {
+            const cage = cageEl();
+            if (!cage) return;
+            const want = 'time-' + timeSlot();
+            ['time-day', 'time-sunset', 'time-night']
+                .forEach(c => cage.classList.toggle(c, c === want));
+            syncImmSky();
+        }
+
+        /** 全螢幕時籠子上面那塊要跟天空同色，接縫才看不出來 */
+        function syncImmSky() {
+            const cage = cageEl();
+            if (!cage) return;
+            const sky = getComputedStyle(cage).getPropertyValue('--sky1').trim();
+            if (sky) document.body.style.setProperty('--imm-sky', sky);
         }
 
         // ================================================================
@@ -1408,6 +1894,10 @@
 
         function initHabitat() {
             initWorld();
+            applyMap(petData.map || 'home');
+            applyTimeOfDay();
+            // 每 5 分鐘檢查一次時段。跨過 16:00 / 19:00 時天空會自己慢慢變色
+            setInterval(applyTimeOfDay, 5 * 60 * 1000);
             applyWeather();
             placePeekers();
             applyLayout();
@@ -1448,6 +1938,12 @@
             document.getElementById('happiness-fill').style.width = hap + '%';
             const moodEmoji = hap >= 80 ? '😄' : (hap >= 50 ? '😊' : (hap >= 20 ? '😕' : '😢'));
             document.getElementById('mood-emoji').textContent = moodEmoji;
+
+            // 沉浸模式的狀態列（全螢幕時原本的數值卡看不到）
+            const immSet = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            immSet('imm-lvl', petData.level);
+            immSet('imm-coins', petData.coins);
+            immSet('imm-mood', moodEmoji);
             
             const hun = Math.max(0, Math.min(100, petData.hunger || 100));
             document.getElementById('hunger-fill').style.width = hun + '%';
@@ -1486,11 +1982,9 @@
                 else bowGroup.innerHTML = '';
             }
             
-            // 場景替換
-            const cage = document.getElementById('cage');
-            cage.className = 'hamster-cage'; // Reset
-            if(petData.equipped.scene === 'beach') cage.classList.add('bg-beach');
-            else if(petData.equipped.scene === 'space') cage.classList.add('bg-space');
+            // 以前這裡會 cage.className = 'hamster-cage' 整個洗掉再加場景 class，
+            // 但那樣會連 time-*（時段）、map-*（地圖）、arranging（佈置模式）
+            // 一起清掉。場景現在由地圖系統負責，這裡不用做事。
             
             // 等級外觀：高等級戴皇冠 (覆蓋其他帽子)
             let crown = document.getElementById('hamster-crown');
@@ -1568,12 +2062,13 @@
         }
 
         // 通用的購買功能
-        function buyItem(itemId, cost, itemName) {
+        async function buyItem(itemId, cost, itemName) {
             if (isSleeping) return wakeUp();
-            if (isRunning) return;
-            
+            if (isRunning || traveling) return;
+
             if(petData.items[itemId]) {
-                // 已購買，觸發專屬互動
+                // 已購買，觸發專屬互動。道具都在家裡，所以先確定人回到家了
+                if (!(await ensureHome())) return;
                 if(itemId === 'water') {
                     const hamster = document.getElementById('hamster');
                     hamster.classList.add('happy');
@@ -1901,7 +2396,7 @@
                 if (typeof fxPop === 'function') {
                     fxPop(slots[currentIndex]);
                     fxBurst(document.getElementById('key-' + letter), 7);
-                    fxHaptic(12);
+                    feelHaptic(12);
                 }
 
                 currentIndex++;
@@ -2005,7 +2500,7 @@
                 const slotsEl = document.getElementById('target-slots');
                 fxBurst(slotsEl, mistakeCount === 0 ? 20 : 12);
                 fxFloat('+' + totalReward + ' 💰', slotsEl);
-                fxHaptic(mistakeCount === 0 ? [18, 40, 18] : 18);
+                feelHaptic(mistakeCount === 0 ? [18, 40, 18] : 18);
             }
 
             petData.coins += totalReward;
@@ -2259,7 +2754,8 @@
          */
         function hamsterDashTo(targetX, ms) {
             const ham = document.getElementById('hamster');
-            const target = clamp(targetX, 60, worldWidth() - 60);
+            const half = 60 * objK();
+            const target = clamp(targetX, half, worldWidth() - half);
             const facing = target < hamX ? -1 : 1;
             const dist = Math.abs(target - hamX);
             // 走路交給物理迴圈跑（跟平常散步同一套），這裡只負責加特效。
@@ -2329,7 +2825,9 @@
 
         async function playWheel() {
             if (isSleeping) return wakeUp(); // 先叫醒
-            if (isRunning) return;
+            if (isRunning || traveling) return;
+            // 跑輪在家裡，人在外面就先回家（不然按了會沒反應，她會以為壞掉）
+            if (!(await ensureHome())) return;
 
             // 處理購買邏輯
             if (!petData.items.wheel) {
@@ -2372,7 +2870,7 @@
                 // ── 2. 衝刺過去，腳下踢灰塵
                 const hb0 = rectIn(ham);
                 spawnDust(hb0.x, hb0.bottom - 14, 4);
-                if (typeof fxHaptic === 'function') fxHaptic(12);
+                feelHaptic(12);
                 const run = await hamsterDashTo(worldXOf(wheel), 620);
 
                 // 從這裡到演出結束，wrapper 的 transform 由分鏡自己寫，
@@ -2410,7 +2908,7 @@
                 let sweatTimer = null;
                 await spinWheelRamp(wheel, 2600, 900, () => {
                     // 到尖峰速度才開始震動和冒汗，前面是加速期
-                    cage.classList.add('shaking');
+                    screenShake(cage);
                     playTone(340, 'triangle', .12);
                     sweatTimer = setInterval(() => {
                         const hb = rectIn(ham), wn = rectIn(wheel);
@@ -2438,7 +2936,7 @@
                 const hb2 = ham.getBoundingClientRect();
                 spawnDust(hb2r.x, hb2r.bottom - 14, 6);
                 playTone(300, 'sine', .12);
-                if (typeof fxHaptic === 'function') fxHaptic([16, 40, 16]);
+                feelHaptic([16, 40, 16]);
 
                 // ── 6. 領獎：快樂度 +10，數字往上飄
                 addHappiness(10);
@@ -2870,9 +3368,9 @@
             const list = document.getElementById('shop-list');
             list.innerHTML = '';
             
+            // 場景已經不在這裡賣了：世界改成可以走來走去的地圖之後，
+            // 「換背景色」沒有意義（背景會被視差層蓋住）。新地圖改在 🗺️ 選單解鎖。
             const items = [
-                { id: 'beach', type: 'scenes', name: '沙灘渡假 🏖️', cost: 500, category: '場景' },
-                { id: 'space', type: 'scenes', name: '太空探險 🚀', cost: 800, category: '場景' },
                 { id: 'party', type: 'hats', name: '派對帽 🎉', cost: 150, category: '帽子' },
                 { id: 'tophat', type: 'hats', name: '紳士高帽 🎩', cost: 250, category: '帽子' },
                 { id: 'red', type: 'bows', name: '紅領結 🎀', cost: 100, category: '領結' },
@@ -3495,6 +3993,47 @@
         </div>
     </div>
     
+    <!-- 地圖選單 -->
+    <div id="map-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:90%; max-width:400px; padding:20px;">
+            <button onclick="closeMapPicker()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 style="color:#7b1fa2; margin-top:10px;">要去哪裡呢？ 🗺️</h3>
+            <p style="color:#666; font-size:0.9rem;">也可以走到場景最左邊或最右邊的門牌自己走過去</p>
+            <div id="map-list" style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+        </div>
+    </div>
+
+    <!-- 設定：震動與全螢幕 -->
+    <div id="feel-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:90%; max-width:400px; padding:20px;">
+            <button onclick="closeFeel()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 style="color:#7b1fa2; margin-top:10px;">設定 ⚙️</h3>
+            <div style="margin-top:14px; text-align:left;">
+                <div class="feel-row">
+                    <span class="feel-label">全螢幕
+                        <span class="feel-note">把倉鼠的家放到最大，上下的按鈕會收起來</span>
+                    </span>
+                    <button class="feel-sw" id="sw-immersive" type="button"
+                            onclick="toggleImmersive()" aria-label="全螢幕"></button>
+                </div>
+                <div class="feel-row">
+                    <span class="feel-label">畫面震動
+                        <span class="feel-note">跑輪衝到最快時畫面會晃一下。會不舒服就關掉</span>
+                    </span>
+                    <button class="feel-sw" id="sw-shake" type="button"
+                            onclick="toggleFeel('shake')" aria-label="畫面震動"></button>
+                </div>
+                <div class="feel-row">
+                    <span class="feel-label">手機震動
+                        <span class="feel-note">答對答錯時手機震一下（iPhone 不支援）</span>
+                    </span>
+                    <button class="feel-sw" id="sw-haptic" type="button"
+                            onclick="toggleFeel('haptic')" aria-label="手機震動"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="trophy-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
         <div class="login-box" style="position:relative; width:90%; max-width:400px; max-height:80vh; overflow-y:auto; padding: 20px;">
             <button onclick="closeTrophies()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
