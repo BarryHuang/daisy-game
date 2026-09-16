@@ -196,7 +196,7 @@
             border: 3px solid #e8c4e0;
             border-radius: 22px;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            position: relative; overflow: hidden; min-height: 250px;
+            position: relative; overflow: hidden; min-height: 330px;   /* 要疊得下兩層平台 + 倉鼠身高 */
             box-shadow: inset 0 0 30px rgba(0,0,0,0.08), 0 4px 16px rgba(180,100,200,0.1);
             transition: background 2s ease-in-out; /* 切換時段的漸變 */
         }
@@ -262,6 +262,34 @@
         .layer.far { background-image: url('habitat-far.svg');  height: 86%; }
         .layer.mid { background-image: url('habitat-mid.svg');  height: 88%; }
         .layer.near{ background-image: url('habitat-near.svg'); height: 88%; }
+        /* 前景：捲得比世界快（1.35），草叢會擋在倉鼠前面。
+           因為捲得比較快，要跑的距離也比較長，寬度得給到 600% 才不會提早見底。
+           z-index 2 = 蓋在世界(1)之上、色罩(3)之下。 */
+        .layer.front {
+            background-image: url('habitat-front.svg');
+            width: 600%; height: 26%; z-index: 2;
+        }
+
+        /* ---------------------------------------------------------------
+           多層平台（楓之谷式）
+           倉鼠可以跳上去、也會從邊緣掉下來。位置是 JS 依籠子高度換算出來的
+           像素值，所以這裡只定形狀，不定位置。
+           --------------------------------------------------------------- */
+        .platforms { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+        .platform {
+            position: absolute; height: 28px;
+            background-image: url('platform.svg');
+            background-repeat: repeat-x;
+            background-size: auto 100%;          /* 依高度等比縮放後水平平鋪 */
+            border-radius: 9px;                  /* 兩端稍微收一下，太圓會變成香腸 */
+            filter: var(--tint) drop-shadow(0 7px 7px rgba(60,40,18,.3));
+            transition: filter 2s ease-in-out;
+        }
+        /* 倉鼠要站在平台「前面」。#hamster-wrapper 有 transform 會自成一個堆疊
+           脈絡，裡面的 .hamster-svg{z-index:2} 只在脈絡內部有效，對外仍算
+           z-index:auto，會被 .platforms(z-index:1) 蓋過去 —— 實測平台會橫過
+           倉鼠的臉。所以層級要提到 wrapper 這一層來設。 */
+        #hamster-wrapper { position: relative; z-index: 2; }
 
         /* 世界本體：道具、倉鼠、近景都放在這裡，一起 1:1 捲動 */
         .world {
@@ -559,7 +587,7 @@
 /* 呼吸：只有醒著、而且沒有在演出時才做（睡覺有自己的 breatheDeep）。
    排除 .acting/.dash/.inwheel —— 以前是用 .acting { animation: none !important }
    一律關掉，結果連衝刺和輪子裡的跑步循環都被關掉，倉鼠在輪子裡是靜止的。 */
-.hamster-svg:not(.sleep):not(.happy):not(.eat):not(.run):not(.acting):not(.dash):not(.inwheel) {
+.hamster-svg:not(.sleep):not(.happy):not(.eat):not(.run):not(.acting):not(.dash):not(.inwheel):not(.air) {
     animation: hmIdle 3.6s ease-in-out infinite;
     transform-origin: 50% 90%;
 }
@@ -702,6 +730,20 @@
     75%  { transform: translateY(-4px) rotate(-10deg) scale(1, 1); }
     100% { transform: translateY(0)    rotate(-7deg) scale(1.02, .98); }
 }
+/* 跳躍姿勢。上升時身體拉長、下墜時壓扁，是 2D 平台遊戲最省力也最有效的
+   「有重量」表現（squash & stretch）。用兩個 class 分開，因為上升和下墜
+   是兩個不同的造型，不是同一段動畫的前後半。 */
+.hamster-svg.air        { animation: none; }
+.hamster-svg.air.rising { transform: scale(.93, 1.09) rotate(-4deg); }
+.hamster-svg.air.falling{ transform: scale(1.08, .93) rotate(4deg); }
+/* 落地的那一下壓一下再彈回來 */
+.hamster-svg.landing { animation: hmLand .22s ease-out; }
+@keyframes hmLand {
+    0%   { transform: scale(1.18, .8); }
+    60%  { transform: scale(.96, 1.05); }
+    100% { transform: scale(1, 1); }
+}
+
 /* 在輪子裡跑：幅度小、頻率高，身體幾乎直立。
    scale(.56) 必須寫進 keyframes —— CSS animation 的 transform 會蓋掉
    inline style，只寫 translateY 的話倉鼠會在進輪子的瞬間彈回原尺寸。 */
@@ -762,6 +804,7 @@
    .acting 本身不再設 animation: none —— 那會把 .dash / .inwheel 一起關掉。 */
 
 @media (prefers-reduced-motion: reduce) {
-    .hamster-svg.dash, .hamster-svg.inwheel, .hamster-cage.shaking,
+    .hamster-svg.dash, .hamster-svg.inwheel, .hamster-svg.landing,
+    .hamster-cage.shaking,
     .dust, .speedline, .sweat { animation: none !important; }
 }

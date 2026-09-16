@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 44" preserveAspectRatio="none">
+  <!-- 平台的中段，水平平鋪。兩端的圓角用 CSS 的 border-radius 處理。 -->
+  <defs>
+    <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a9793f"/><stop offset=".45" stop-color="#8d5f31"/>
+      <stop offset="1" stop-color="#6d4622"/>
+    </linearGradient>
+    <linearGradient id="turf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fd89a"/><stop offset="1" stop-color="#5fb373"/>
+    </linearGradient>
+  </defs>
+  <rect y="10" width="120" height="34" fill="url(#soil)"/>
+  <!-- 土裡的小石子 -->
+  <g fill="#6d4622" opacity=".55">
+    <ellipse cx="22" cy="26" rx="5" ry="3"/><ellipse cx="66" cy="34" rx="4" ry="2.4"/>
+    <ellipse cx="98" cy="24" rx="4.5" ry="2.6"/>
+  </g>
+  <!-- 草皮，下緣做成波浪垂到土裡 -->
+  <path d="M0 0h120v13q-10 7 -20 0t-20 0 -20 0 -20 0 -20 0 -20 0z" fill="url(#turf)"/>
+  <path d="M0 3h120" stroke="#b6e8bb" stroke-width="2.5" opacity=".55"/>
+</svg>

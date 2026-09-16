@@ -14,8 +14,11 @@
   </defs>
 
   <!-- 柵欄 -->
-  <rect x="0" y="110" width="360" height="8" rx="3.5" fill="url(#wd)"/>
-  <rect x="0" y="125" width="360" height="8" rx="3.5" fill="url(#wd)"/>
+  <!-- 橫桿要伸出磚的左右邊界（-8 ~ 368），圓角才會被 viewBox 切掉。
+       原本 x=0 寬 360 + rx=3.5，兩端的圓角在平鋪時會湊成一個缺口，
+       捲動起來整條柵欄每隔一個螢幕就斷一次。 -->
+  <rect x="-8" y="110" width="376" height="8" rx="3.5" fill="url(#wd)"/>
+  <rect x="-8" y="125" width="376" height="8" rx="3.5" fill="url(#wd)"/>
   <g stroke="#a16f3c" stroke-width="1" opacity=".4">
     <path d="M0 114h360M0 129h360"/>
     <path d="M70 111v6M160 111v6M250 111v6M340 111v6M110 126v6M200 126v6M290 126v6"/>

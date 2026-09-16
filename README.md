@@ -78,6 +78,35 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 `getWeakWords()` 不帶 pool 時會把整份資料倒給弱字怪獸戰當題庫，
 `"7x8"` 混進去，遊戲會叫她拼一個不存在的單字。
 
+### 倉鼠的家（`daisy_hamster.html` 的場景）
+
+不是一張靜態背景圖，是一個橫向捲軸的小世界，做法接近 2D 平台遊戲：
+
+| 東西 | 在哪 | 說明 |
+|---|---|---|
+| 天空 · 太陽 · 雲 | `.hamster-cage` 直屬 | 不捲動 |
+| `.layer.far` / `.mid` | 籠子裡、世界外 | 視差 0.25 / 0.55，用 `translateX(-camX * k)` |
+| `.world` | 寬 300%（三個螢幕） | 近景、平台、道具、倉鼠都在裡面，1:1 捲動 |
+| `.layer.front` | 世界之後 | 視差 **1.35**，草叢會從倉鼠**前面**掠過，景深主要靠這層 |
+| `.hamster-cage::after` | 最上層 | 時段色罩，`mix-blend-mode: multiply` |
+
+四張背景 SVG（`habitat-far/mid/near/front.svg`）都是 **360 寬的磚**，用
+`background-repeat: repeat-x` 平鋪。所以左右邊緣的高度必須一致，而且橫跨接縫的
+東西（柵欄橫桿）要伸出 viewBox 之外讓它被切掉 —— 不然每隔一個螢幕就會看到一條縫。
+
+平台與跳躍寫在 `PLATFORMS` 和 `physTick()`：
+
+- `PLATFORMS` 的 `x1/x2` 是世界寬的比例，`y` 是**可用高度**（籠子高 − 倉鼠身高）
+  的比例。用籠子高度算的話，矮螢幕上第二層的倉鼠會有半個身體被切在畫面外。
+- 上層一定要和下層在 x 上重疊，倉鼠才爬得上去（`nextStepUp()` 只找「腳下這個 x
+  跳得到的下一層」，沒有重疊就會在原地一直跳）。
+- `physTick()` 是唯一會寫 `#hamster-wrapper` transform 的地方，所以 wrapper 的
+  CSS transition 必須關掉。跑輪那段分鏡要自己控制 transform，開演前呼叫
+  `physSuspend()`、結束後 `physResume()` 把倉鼠交還給重力。
+- 迴圈沒事做會自己停（`physWake()` 才會再啟動），不會每秒 60 次空轉吃電。
+- 倉鼠要畫在平台前面，層級得設在 `#hamster-wrapper` 上：wrapper 有 transform，
+  自成一個堆疊脈絡，裡面 `.hamster-svg{z-index:2}` 對外不算數。
+
 ---
 
 ## 已知的坑（動手前先讀）

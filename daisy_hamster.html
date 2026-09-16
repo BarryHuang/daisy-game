@@ -144,6 +144,10 @@
                 <div class="world" id="world">
                 <div class="layer near" id="layer-near"></div>
 
+                <!-- 多層平台。位置由 JS 依 PLATFORMS 產生（要跟著籠子高度換算像素），
+                     所以這裡只留一個空殼。 -->
+                <div class="platforms" id="platforms"></div>
+
                 <!-- 解鎖道具。改成 SVG（原本是 CSS 方塊 + ::before/::after 拼的，
                      溜滑梯看起來像一根紅棍子、水瓶像冰棒）。
                      id 和 .show / .spin 的行為都沒變，遊戲邏輯不用動。 -->
@@ -313,7 +317,7 @@
 
 
                 <!-- SVG Hamster -->
-                <div id="hamster-wrapper" style="transition: transform 3s ease-in-out; transform: translateX(0px) scaleX(1);">
+                <div id="hamster-wrapper" style="transition: none; transform: translate(0px,0px) scaleX(1);">
                 <svg class="hamster-svg" id="hamster" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <!-- 倉鼠。座標刻意沿用舊版（頭心 50,45／身體 50,65／胸口 y70／頭頂 y20），
                          因為帽子和蝴蝶結是 JS 用固定座標塞進 #hamster-hat / #hamster-bow 的。
@@ -439,6 +443,10 @@
                 </svg>
                 </div>
                 </div><!-- /.world -->
+
+                <!-- 前景層。捲得比世界還快，會從倉鼠前面掠過 ——
+                     橫向捲軸的景深主要就是靠這一層撐出來的。 -->
+                <div class="layer front" id="layer-front"></div>
 
                 <!-- ▲▲ 以下是固定在畫面上的東西，不跟著世界捲動 ▲▲ -->
                 <!-- 天氣（雨／雪）。內容由 applyWeather() 依季節和日期產生 -->
@@ -830,8 +838,8 @@
         // 座標系統：世界座標的原點在 .world 的左邊。倉鼠用 flex 置中在世界正中間，
         // 所以 wrapper 的 translateX(d) 就是「離世界中心多遠」，
         // 世界座標 = 世界寬/2 + d。沿用原本的 transform 語意，跑輪演出不用改。
-        const PARALLAX = { far: 0.25, mid: 0.55 };
-        let camX = 0, camTarget = 0, camRaf = 0, hamTargetX = null;
+        const PARALLAX = { far: 0.25, mid: 0.55, front: 1.35 };
+        let camX = 0, camTarget = 0, camRaf = 0;
 
         function worldEl()  { return document.getElementById('world'); }
         function cageEl()   { return document.getElementById('cage'); }
@@ -843,13 +851,18 @@
         }
         function worldWidth() { return worldEl().offsetWidth; }
         function viewWidth()  { return cageEl().clientWidth; }
+        function cageHeight() { return cageEl().clientHeight; }
         function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
         function paintCamera() {
             worldEl().style.transform = 'translateX(' + (-camX).toFixed(1) + 'px)';
-            const f = document.getElementById('layer-far'), m = document.getElementById('layer-mid');
-            if (f) f.style.transform = 'translateX(' + (-camX * PARALLAX.far).toFixed(1) + 'px)';
-            if (m) m.style.transform = 'translateX(' + (-camX * PARALLAX.mid).toFixed(1) + 'px)';
+            const L = (id, k) => {
+                const el = document.getElementById(id);
+                if (el) el.style.transform = 'translateX(' + (-camX * k).toFixed(1) + 'px)';
+            };
+            L('layer-far', PARALLAX.far);
+            L('layer-mid', PARALLAX.mid);
+            L('layer-front', PARALLAX.front);   // > 1 = 比世界快，會往反方向掠過
         }
 
         /** 讓鏡頭往目標平滑靠過去。停下來就結束迴圈，不要一直空轉吃電 */
@@ -872,47 +885,288 @@
             cameraWake();
         }
 
-        /** 倉鼠目前的世界座標 */
-        function hamsterWorldX() {
-            const wrap = document.getElementById('hamster-wrapper');
-            return worldWidth() / 2 + (parseFloat(wrap.dataset.x || '0') || 0);
+        // ================================================================
+        // 多層平台 + 重力跳躍（楓之谷式橫捲）
+        // ================================================================
+        // x1/x2 是世界寬的比例，y 是籠子高的比例（0 = 地面）。
+        // 排法是刻意的階梯：上層一定和下層在 x 上有重疊，倉鼠才爬得上去
+        // ——沒有重疊的話牠會一直在下層底下亂跳，永遠上不去。
+        //   第一層 [.30,.42] ← → 第二層 [.38,.48]  （重疊 .38~.42）
+        //   第一層 [.58,.70] ← → 第二層 [.63,.73]  （重疊 .63~.70）
+        // x 範圍也避開四個道具（小木屋 6%、溜滑梯 20%、水瓶 53%、跑輪 74%），
+        // 平台才不會壓在道具頭上。
+        // y 是「可用高度」的比例，不是籠子高度的比例 —— 籠子扣掉倉鼠身高才是
+        // 真正能疊平台的空間，直接用籠子高度算的話，矮螢幕上第二層的倉鼠會有
+        // 半個身體被切在畫面外（實測籠子只有 250px 時就是這樣）。
+        const PLATFORMS = [
+            { x1: .300, x2: .420, y: .48 },
+            { x1: .380, x2: .480, y: .95 },
+            { x1: .580, x2: .700, y: .48 },
+            { x1: .630, x2: .730, y: .95 },
+            { x1: .855, x2: .955, y: .50 },
+        ];
+        const GRAVITY   = 2100;   // px/秒²
+        const WALK_V    = 130;    // px/秒
+        const FOOT_INSET = 20;    // 倉鼠的腳離 wrapper 底邊還有一段空白（120px 的 SVG 裡）
+        const PLAT_H    = 28;     // 和 CSS 的 .platform height 一致
+
+        // 倉鼠的狀態。hamX = 世界座標；hamY = 腳離地高度（往上為正）
+        let hamX = 0, hamY = 0, hamVY = 0, hamFacing = 1;
+        let hamMode = 'idle';        // idle | walk | air
+        let hamGoal = null;          // { x, y, speed, resolve, deadline }
+        let physRaf = 0, physLast = 0, physOff = false;
+
+        /** 能拿來疊平台的高度：籠子高度扣掉倉鼠身高，最高那層才不會頂出畫面 */
+        function usableH() { return Math.max(90, cageHeight() - 150); }
+
+        /** 跳躍初速：要保證一定跳得上第一層（不同手機籠子高度不一樣） */
+        function jumpVelocity() {
+            const need = usableH() * 0.52 + 26;         // 最大的一階 + 餘裕
+            return Math.sqrt(2 * GRAVITY * need);
         }
 
-        /**
-         * 走到世界座標 x。速度固定（px/秒），所以走遠一點就花久一點，
-         * 用固定時間的話短距離會慢得不自然、長距離會像瞬移。
-         */
-        function hamsterWalkTo(worldX, speed) {
-            const wrap = document.getElementById('hamster-wrapper');
-            const ham = document.getElementById('hamster');
-            const half = ham.getBoundingClientRect().width / 2;
-            const target = clamp(worldX, half + 6, worldWidth() - half - 6);
-            const from = hamsterWorldX();
-            const dist = Math.abs(target - from);
-            if (dist < 6) return Promise.resolve();
+        /** 每個平台換算成像素：surface = 站上去時的 hamY */
+        function surfaces() {
+            const W = worldWidth(), U = usableH();
+            return PLATFORMS.map(p => ({
+                x1: p.x1 * W, x2: p.x2 * W, surface: p.y * U
+            }));
+        }
 
-            // 走路速度 px/秒。點一下叫牠過來要俐落（130），
-            // 自己閒晃就慢慢散步（呼叫端傳 75）。
-            const ms = clamp(dist / (speed || 130) * 1000, 260, 3200);
-            const facing = target < from ? -1 : 1;
-            const d = target - worldWidth() / 2;
-            wrap.dataset.x = d;
-            wrap.style.transition = 'transform ' + ms + 'ms ease-in-out';
-            wrap.style.transform = 'translate(' + d + 'px,0px) scaleX(' + facing + ')';
-            if (!actReduced()) ham.classList.add('dash');
-            hamTargetX = target;
-            cameraLookAt(target);
-            return wait(ms).then(() => {
-                ham.classList.remove('dash');
-                hamTargetX = null;
+        /** 把平台畫出來。籠子高度會變（轉向、鍵盤彈出），所以要能重畫 */
+        function buildPlatforms() {
+            const host = document.getElementById('platforms');
+            if (!host) return;
+            host.innerHTML = '';
+            const U = usableH();
+            PLATFORMS.forEach(p => {
+                const el = document.createElement('div');
+                el.className = 'platform';
+                el.style.left  = (p.x1 * 100) + '%';
+                el.style.width = ((p.x2 - p.x1) * 100) + '%';
+                // 平台的草皮頂端要對齊倉鼠站上去的位置，所以往下扣掉腳的內縮
+                el.style.bottom = (p.y * U + FOOT_INSET - PLAT_H) + 'px';
+                host.appendChild(el);
             });
         }
 
-        /** 她點畫面上某處 -> 倉鼠走過去。點在世界的哪裡要把鏡頭位置加回去 */
-        function walkToClientX(clientX) {
+        /** 站在 (x, y) 時，往上最近、而且跳得到的下一層。跳不到就回 null */
+        function nextStepUp(x, y) {
+            const reach = jumpVelocity() * jumpVelocity() / (2 * GRAVITY) - 12;
+            let best = null;
+            surfaces().forEach(s => {
+                if (x < s.x1 - 6 || x > s.x2 + 6) return;
+                if (s.surface <= y + 8 || s.surface > y + reach) return;
+                if (!best || s.surface < best.surface) best = s;
+            });
+            return best;
+        }
+
+        /** 世界座標 (x, 離地高 y) 附近該站哪一層。點畫面時用這個決定目的地高度 */
+        function surfaceAt(x, y) {
+            let best = 0;
+            surfaces().forEach(s => {
+                if (x < s.x1 || x > s.x2) return;
+                if (s.surface <= y + 34 && s.surface > best) best = s.surface;
+            });
+            return best;
+        }
+
+        function paintHamster() {
+            const wrap = document.getElementById('hamster-wrapper');
+            if (!wrap) return;
+            const d = hamX - worldWidth() / 2;
+            wrap.dataset.x = d;                       // 跑輪演出還是讀這個值
+            wrap.style.transform = 'translate(' + d.toFixed(1) + 'px,'
+                                 + (-hamY).toFixed(1) + 'px) scaleX(' + hamFacing + ')';
+        }
+
+        function hamsterWorldX() { return hamX; }
+
+        function setPose(cls) {
+            const ham = document.getElementById('hamster');
+            if (!ham) return;
+            ['dash', 'air', 'rising', 'falling'].forEach(c => ham.classList.remove(c));
+            if (actReduced()) return;
+            if (cls === 'dash') ham.classList.add('dash');
+            else if (cls === 'rising')  ham.classList.add('air', 'rising');
+            else if (cls === 'falling') ham.classList.add('air', 'falling');
+        }
+
+        function hamsterJump(power) {
+            if (physOff || hamMode === 'air' || isSleeping) return false;
+            hamVY = jumpVelocity() * (power || 1);
+            hamMode = 'air';
+            setPose('rising');
+            playTone(520, 'sine', .07);
+            physWake();
+            return true;
+        }
+
+        /** 落地：壓一下再彈回來，並踢起灰塵 */
+        function onLand(hard) {
+            const ham = document.getElementById('hamster');
+            if (ham && !actReduced()) {
+                ham.classList.add('landing');
+                setTimeout(() => ham.classList.remove('landing'), 240);
+            }
+            if (hard && typeof spawnDust === 'function') {
+                try {
+                    const wr = worldEl().getBoundingClientRect(),
+                          hr = ham.getBoundingClientRect();
+                    spawnDust(hamX, hr.bottom - wr.top - 14, 3);
+                } catch (e) { /* 量不到就算了，別擋住落地 */ }
+            }
+            playTone(300, 'sine', .06);
+        }
+
+        /**
+         * 物理主迴圈。沒事做就自己停下來（不要每秒 60 次空轉吃電池），
+         * 有人叫 physWake() 再醒過來。
+         */
+        function physTick(now) {
+            physRaf = 0;
+            const dt = Math.min(0.05, (now - physLast) / 1000 || 0.016);
+            physLast = now;
+            if (physOff) return;
+
+            const W = worldWidth();
+            const half = 60;
+            const prevY = hamY;
+            let busy = false;
+
+            // ── 水平移動
+            if (hamGoal) {
+                const dx = hamGoal.x - hamX;
+                // 空中也能微調方向（air control）。沒有的話跳起來就等於定身，
+                // 跨過平台之間的空隙一定落空。
+                const v = hamGoal.speed * (hamMode === 'air' ? 0.85 : 1);
+                if (Math.abs(dx) > 2) {
+                    hamFacing = dx < 0 ? -1 : 1;
+                    hamX += (dx < 0 ? -1 : 1) * Math.min(Math.abs(dx), v * dt);
+                    busy = true;
+                }
+                // 要往上就趁腳下這格能跳的時候跳
+                if (hamMode !== 'air' && hamGoal.y > hamY + 8) {
+                    if (nextStepUp(hamX, hamY)) hamsterJump();
+                }
+                // 要往下而且已經走到定點，就往最近的邊緣挪一步走下去
+                if (hamMode !== 'air' && hamGoal.y < hamY - 8 && Math.abs(dx) <= 2) {
+                    const here = surfaces().find(s => hamY > s.surface - 4 && hamY < s.surface + 4
+                                                   && hamX >= s.x1 && hamX <= s.x2);
+                    if (here) {
+                        hamGoal.x = (hamX - here.x1 < here.x2 - hamX) ? here.x1 - 16 : here.x2 + 16;
+                        busy = true;
+                    }
+                }
+            }
+            hamX = clamp(hamX, half, W - half);
+
+            // ── 垂直：重力
+            if (hamMode === 'air') {
+                hamVY -= GRAVITY * dt;
+                hamY += hamVY * dt;
+                busy = true;
+                setPose(hamVY > 0 ? 'rising' : 'falling');
+                if (hamVY < 0) {
+                    // 下墜時檢查有沒有從上方穿過某個平台的表面
+                    let landed = null;
+                    surfaces().forEach(s => {
+                        if (hamX < s.x1 - 4 || hamX > s.x2 + 4) return;
+                        if (prevY >= s.surface - 1 && hamY <= s.surface) {
+                            if (!landed || s.surface > landed.surface) landed = s;
+                        }
+                    });
+                    if (landed) {
+                        hamY = landed.surface; hamVY = 0; hamMode = 'idle'; onLand(true);
+                    } else if (hamY <= 0) {
+                        hamY = 0; hamVY = 0; hamMode = 'idle'; onLand(true);
+                    }
+                }
+            } else {
+                // 站在平台上走出邊緣 -> 開始往下掉
+                if (hamY > 0) {
+                    const under = surfaces().some(s =>
+                        Math.abs(hamY - s.surface) < 4 && hamX >= s.x1 - 4 && hamX <= s.x2 + 4);
+                    if (!under) { hamMode = 'air'; hamVY = 0; busy = true; }
+                }
+            }
+
+            // ── 姿勢與到站判定
+            if (hamMode !== 'air') {
+                const moving = hamGoal && Math.abs(hamGoal.x - hamX) > 2;
+                hamMode = moving ? 'walk' : 'idle';
+                setPose(moving ? 'dash' : null);
+            }
+            if (hamGoal) {
+                const done = hamMode === 'idle' && Math.abs(hamGoal.x - hamX) <= 3
+                           && Math.abs(hamY - hamGoal.y) < 10;
+                if (done || now > hamGoal.deadline) {
+                    const g = hamGoal; hamGoal = null; setPose(null);
+                    g.resolve();
+                } else { busy = true; }
+            }
+
+            paintHamster();
+            if (hamMode === 'walk' || hamMode === 'air') cameraLookAt(hamX);
+            if (busy) physWake();
+        }
+
+        function physWake() {
+            if (physRaf || physOff) return;
+            physLast = performance.now();
+            physRaf = requestAnimationFrame(physTick);
+        }
+
+        /** 把控制權交還給演出程式碼（跑輪分鏡會自己寫 wrapper 的 transform） */
+        function physSuspend() {
+            physOff = true;
+            if (physRaf) { cancelAnimationFrame(physRaf); physRaf = 0; }
+            if (hamGoal) { const g = hamGoal; hamGoal = null; g.resolve(); }
+        }
+        /** 演出結束，回到地面繼續受重力管 */
+        function physResume(worldX) {
+            const wrap = document.getElementById('hamster-wrapper');
+            physOff = false;
+            hamX = (typeof worldX === 'number') ? worldX : hamX;
+            hamY = 0; hamVY = 0; hamMode = 'idle'; hamGoal = null;
+            if (wrap) wrap.style.transition = 'none';
+            paintHamster();
+            physWake();
+        }
+
+        /**
+         * 走到世界座標 x（可指定要站在哪一層的高度 y）。
+         * 速度固定 px/秒，所以走遠一點就花久一點 —— 用固定時間的話短距離會慢得
+         * 不自然、長距離會像瞬移。
+         */
+        function hamsterWalkTo(worldX, speed, y) {
+            if (physOff) return Promise.resolve();
+            const target = clamp(worldX, 60, worldWidth() - 60);
+            const ty = (typeof y === 'number') ? y : surfaceAt(target, hamY);
+            if (Math.abs(target - hamX) < 6 && Math.abs(ty - hamY) < 10) return Promise.resolve();
+            if (hamGoal) { const g = hamGoal; hamGoal = null; g.resolve(); }
+            const sp = speed || WALK_V;
+            return new Promise(resolve => {
+                hamGoal = {
+                    x: target, y: ty, speed: sp, resolve: resolve,
+                    // 保險絲：萬一地形讓牠走不到（跳不上去、掉不下來），
+                    // 也要在合理時間內把 Promise 解掉，不然呼叫端會永遠卡住
+                    deadline: performance.now() + clamp(Math.abs(target - hamX) / sp * 1000, 400, 4000) + 3500
+                };
+                cameraLookAt(target);
+                physWake();
+            });
+        }
+
+        /** 她點畫面上某處 -> 倉鼠走過去。點在高處就跳上去 */
+        function walkToClientX(clientX, clientY) {
             if (arranging || isRunning || isSleeping) return;
             const w = worldEl().getBoundingClientRect();
-            hamsterWalkTo(clientX - w.left);
+            const c = cageEl().getBoundingClientRect();
+            const x = clientX - w.left;
+            const up = (typeof clientY === 'number') ? (c.bottom - clientY) : 0;
+            hamsterWalkTo(x, WALK_V, surfaceAt(x, up));
         }
 
         /** 拖曳看風景。拖的距離很短就當成「點一下叫牠過來」 */
@@ -940,17 +1194,36 @@
             const end = (e) => {
                 if (!dragging) return;
                 dragging = false; cage.classList.remove('panning');
-                if (moved <= 8) walkToClientX(e.clientX);    // 幾乎沒動 = 點一下
+                if (moved > 8) return;
+                // 點在倉鼠身上 = 叫牠跳；點別的地方 = 走過去
+                const ham = document.getElementById('hamster');
+                const hr = ham ? ham.getBoundingClientRect() : null;
+                if (hr && e.clientX > hr.left && e.clientX < hr.right &&
+                          e.clientY > hr.top  && e.clientY < hr.bottom) {
+                    if (!arranging && !isRunning && !isSleeping) hamsterJump();
+                } else {
+                    walkToClientX(e.clientX, e.clientY);
+                }
             };
             cage.addEventListener('pointerup', end);
             cage.addEventListener('pointercancel', () => { dragging = false; cage.classList.remove('panning'); });
         }
 
         function initWorld() {
-            // 一開始鏡頭對準倉鼠（牠在世界正中間）
-            cameraLookAt(worldWidth() / 2, true);
+            const wrap = document.getElementById('hamster-wrapper');
+            // 物理迴圈每一幀都會重寫 transform，留著 CSS transition 會互相打架
+            if (wrap) wrap.style.transition = 'none';
+            hamX = worldWidth() / 2; hamY = 0; hamVY = 0;
+            buildPlatforms();
+            paintHamster();
+            cameraLookAt(hamX, true);
             initWorldGestures();
-            addEventListener('resize', () => cameraLookAt(hamsterWorldX(), true));
+            addEventListener('resize', () => {
+                buildPlatforms();
+                hamY = surfaceAt(hamX, hamY);       // 籠子高度變了，重新貼回腳下那層
+                paintHamster();
+                cameraLookAt(hamX, true);
+            });
         }
 
         // ================================================================
@@ -1867,12 +2140,20 @@
         // 現在世界有三個螢幕寬，牠會真的走到別的地方去（鏡頭跟著）。
         setInterval(() => {
             if (!secretCode || isSleeping || isRunning || arranging) return;
+            if (hamGoal || hamMode === 'air') return;   // 她已經下了指令就不要插隊
             const ham = document.getElementById('hamster');
             if (ham.classList.contains('eat') || ham.classList.contains('happy') ||
                 ham.classList.contains('hide-in-house') || ham.classList.contains('slide-down')) return;
 
             if (Math.random() < 0.55) {
                 const ww = worldWidth();
+                // 三成機率挑一座平台爬上去，其他時候在原地附近散步 ——
+                // 偶爾看到牠自己跳上高處，世界才像活的
+                if (Math.random() < 0.3) {
+                    const ss = surfaces();
+                    const t = ss[Math.floor(Math.random() * ss.length)];
+                    if (t) { hamsterWalkTo((t.x1 + t.x2) / 2, 95, t.surface); return; }
+                }
                 // 偏好往附近走（±35% 世界寬），偶爾才跑遠，才不會一直橫越整個世界
                 const here = hamsterWorldX();
                 const span = ww * 0.35;
@@ -1977,47 +2258,43 @@
          * 鏡頭跟著跑 —— 不然倉鼠會跑出畫面。
          */
         function hamsterDashTo(targetX, ms) {
-            const wrap = document.getElementById('hamster-wrapper');
             const ham = document.getElementById('hamster');
-            const half = ham.getBoundingClientRect().width / 2;
-            const target = clamp(targetX, half + 6, worldWidth() - half - 6);
-            const facing = target < hamsterWorldX() ? -1 : 1;
-            const d = target - worldWidth() / 2;
+            const target = clamp(targetX, 60, worldWidth() - 60);
+            const facing = target < hamX ? -1 : 1;
+            const dist = Math.abs(target - hamX);
+            // 走路交給物理迴圈跑（跟平常散步同一套），這裡只負責加特效。
+            // 速度反推自想要的秒數，長距離才不會拖太久。
+            const speed = Math.max(90, dist / Math.max(120, ms) * 1000);
 
-            wrap.dataset.x = d;
-            wrap.style.transition = 'transform ' + ms + 'ms cubic-bezier(.36,.06,.2,1)';
-            wrap.style.transform = 'translate(' + d + 'px,0px) scaleX(' + facing + ')';
-            cameraLookAt(target);
-
-            if (!actReduced()) ham.classList.add('dash');
+            const walk = hamsterWalkTo(target, speed, 0);
             const t0 = performance.now();
             const puff = setInterval(() => {
                 // 每次重新量，頁面捲動或鏡頭移動時基準才不會錯
-                const cx = worldXOf(ham);
                 const wr = worldEl().getBoundingClientRect(), hr = ham.getBoundingClientRect();
-                const by = hr.bottom - wr.top;
-                spawnDust(cx, by - 14, 1);
-                spawnSpeedLines(cx - facing * 30, hr.top - wr.top + 46, 2);
-                if (performance.now() - t0 > ms) clearInterval(puff);
+                spawnDust(hamX, hr.bottom - wr.top - 14, 1);
+                spawnSpeedLines(hamX - facing * 30, hr.top - wr.top + 46, 2);
+                if (performance.now() - t0 > ms + 1200) clearInterval(puff);
             }, 110);
 
-            return wait(ms).then(() => {
+            return walk.then(() => {
                 clearInterval(puff);
-                ham.classList.remove('dash');
+                hamFacing = facing;
+                paintHamster();
                 return { facing: facing };
             });
         }
 
         /** 回到世界正中央 */
         function hamsterGoHome(ms) {
-            const wrap = document.getElementById('hamster-wrapper');
             const ham = document.getElementById('hamster');
-            wrap.dataset.x = 0;
-            wrap.style.transition = 'transform ' + ms + 'ms cubic-bezier(.36,.06,.2,1)';
-            wrap.style.transform = 'translate(0px,0px) scaleX(1)';
-            cameraLookAt(worldWidth() / 2);
-            if (!actReduced()) ham.classList.add('dash');
-            return wait(ms).then(() => { ham.classList.remove('dash', 'acting'); ham.style.transform = ''; });
+            ham.classList.remove('acting');
+            ham.style.transition = '';
+            ham.style.transform = '';
+            // 演出結束，把倉鼠交還給物理迴圈（牠現在還吊在跑輪的高度上，
+            // physResume 會讓牠回到地面），再用一般的走路走回世界中間。
+            physResume(hamX);
+            const dist = Math.abs(worldWidth() / 2 - hamX);
+            return hamsterWalkTo(worldWidth() / 2, Math.max(90, dist / Math.max(120, ms) * 1000), 0);
         }
 
         /**
@@ -2098,6 +2375,11 @@
                 if (typeof fxHaptic === 'function') fxHaptic(12);
                 const run = await hamsterDashTo(worldXOf(wheel), 620);
 
+                // 從這裡到演出結束，wrapper 的 transform 由分鏡自己寫，
+                // 物理迴圈先停手，不然兩邊會每一幀互相蓋掉對方。
+                physSuspend();
+                wrap.style.transition = '';
+
                 // ── 3. 跳進輪子：縮小並對齊輪心
                 //
                 // 縮放交給倉鼠、位移交給外層 wrapper，兩件事不要寫在同一個
@@ -2176,13 +2458,13 @@
                 if (typeof console !== 'undefined') console.warn('跑輪演出中斷', e);
             } finally {
                 cage.classList.remove('shaking');
-                ham.classList.remove('acting', 'dash', 'inwheel', 'crouch');
+                ham.classList.remove('acting', 'dash', 'inwheel', 'crouch', 'air', 'rising', 'falling');
                 ham.style.transition = '';
                 ham.style.transform = '';
                 wheel.style.transform = '';
-                wrap.style.transition = 'transform .4s ease-in-out';
-                wrap.style.transform = 'translate(0px,0px) scaleX(1)';
-                wrap.dataset.x = 0;
+                // 不管中途有沒有出錯，都要把控制權還給物理迴圈，
+                // 不然倉鼠會卡在跑輪的高度上動不了
+                physResume(worldWidth() / 2);
                 isRunning = false;
                 petHamster();
             }

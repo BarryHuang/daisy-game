@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="none">
+  <!-- 前景層：草叢會擋在倉鼠前面，捲動速度比世界快（1.35）。
+       這是楓之谷式橫捲的招牌手法 —— 有東西從角色前面掠過，景深才吃得出來。
+       一樣是 360 寬的磚，左右邊緣不放東西，平鋪才不會被接縫切一半。 -->
+  <g>
+    <g stroke="#2f7344" stroke-width="7" stroke-linecap="round" fill="none" opacity=".92">
+      <path d="M40 120 q3 -34 9 -46M52 120 q0 -28 2 -38M64 120 q-4 -34 -8 -45"/>
+      <path d="M150 120 q4 -30 10 -41M162 120 q0 -25 2 -34"/>
+      <path d="M262 120 q-4 -32 -9 -43M250 120 q0 -26 -2 -36M274 120 q5 -30 11 -40"/>
+    </g>
+    <g fill="#3d8a52" opacity=".9">
+      <ellipse cx="108" cy="116" rx="30" ry="14"/>
+      <ellipse cx="208" cy="118" rx="24" ry="11"/>
+      <ellipse cx="318" cy="115" rx="28" ry="13"/>
+    </g>
+    <g stroke="#2f7344" stroke-width="6" stroke-linecap="round" fill="none" opacity=".85">
+      <path d="M100 120 q2 -22 6 -30M114 120 q-2 -20 -5 -28"/>
+      <path d="M312 120 q3 -20 7 -27M324 120 q-2 -18 -5 -25"/>
+    </g>
+  </g>
+</svg>
