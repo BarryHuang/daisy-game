@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 44" preserveAspectRatio="none">
+  <!-- 室內用的層板平台，水平平鋪。兩端的圓角由 CSS 處理。 -->
+  <defs>
+    <linearGradient id="shelf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6bd8c"/><stop offset=".35" stop-color="#cfa06a"/>
+      <stop offset="1" stop-color="#a5754a"/>
+    </linearGradient>
+  </defs>
+  <rect y="4" width="120" height="40" fill="url(#shelf)"/>
+  <rect y="4" width="120" height="6" fill="#f2d6ae"/>
+  <rect y="30" width="120" height="14" fill="#8a5f37" opacity=".35"/>
+  <!-- 木紋 -->
+  <g stroke="#b8865a" stroke-width="1.2" opacity=".5" fill="none">
+    <path d="M8 18q14 -4 26 0M46 24q12 -4 22 0M76 17q14 -4 26 0"/>
+  </g>
+  <!-- 支撐的托架 -->
+  <g fill="#8a5f37" opacity=".85">
+    <path d="M20 30 h10 l-10 12 z"/><path d="M100 30 h10 l-10 12 z"/>
+  </g>
+</svg>

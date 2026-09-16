@@ -641,7 +641,9 @@
             // 存百分比而不是 px，換裝置或轉螢幕方向才不會跑掉。空的就用預設位置。
             layout: {},
             // 上次離開時待在哪張地圖，下次進來從同一個地方繼續
-            map: 'home'
+            map: 'home',
+            // 互動點的冷卻：{ "park:1": 秒數時間戳 }
+            spots: {}
         };
 
         let comboCount = 0; // 連續全對次數
@@ -667,6 +669,7 @@
             if(!data.achievements) data.achievements = { combo30: false, richer: false, level10: false };
             if(!data.layout) data.layout = {};
             if(!data.map || !MAPS[data.map]) data.map = 'home';
+            if(!data.spots) data.spots = {};        // 互動點的冷卻時間
             return data;
         }
 
@@ -899,6 +902,8 @@
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 if (typeof buildPlatforms === 'function') {
                     buildPlatforms();
+                    buildSpots();          // 位置是依磚寬算的，場景縮放變了要重放
+                    buildGates();
                     hamY = surfaceAt(hamX, hamY);
                     paintHamster();
                     cameraLookAt(hamX, true);
@@ -1049,11 +1054,32 @@
         // 不然門牌會被平台壓住。
         const MAPS = {
             home: {
-                name: '倉鼠的家', emoji: '🏡',
+                name: '倉鼠的家', emoji: '🏡', indoor: true,
+                layers: { far: 'room-far.svg', mid: '',
+                          near: 'room-near.svg', front: 'room-front.svg' },
+                platformImg: 'platform-shelf.svg',
+                props: true,                      // 四個道具只在家裡
+                peekers: ['🐞', '🕷️'],
+                platforms: [
+                    { x1: .300, x2: .420, y: .48 },
+                    { x1: .380, x2: .480, y: .95 },
+                    { x1: .580, x2: .700, y: .48 },
+                    { x1: .630, x2: .730, y: .95 },
+                    { x1: .790, x2: .880, y: .50 },
+                ],
+                // tile/tx = 對齊背景磚裡的家具（見 spotWorldX）
+                spots: [
+                    { tile: 1, tx: 55,  ty: 130, icon: '🛏️', name: '睡窩',   act: 'nap'  },
+                    { tile: 0, tx: 221, ty: 134, icon: '🥣', name: '飼料碗', act: 'eat'  },
+                    { tile: 1, tx: 308, ty: 122, icon: '📖', name: '書櫃',   act: 'book' },
+                ],
+                exits: { right: 'garden' }
+            },
+            garden: {
+                name: '後院草地', emoji: '🌻',
                 layers: { far: 'habitat-far.svg', mid: 'habitat-mid.svg',
                           near: 'habitat-near.svg', front: 'habitat-front.svg' },
                 platformImg: 'platform.svg',
-                props: true,                      // 四個道具只在家裡
                 peekers: ['🐦', '🐿️'],
                 platforms: [
                     { x1: .300, x2: .420, y: .48 },
@@ -1062,7 +1088,11 @@
                     { x1: .630, x2: .730, y: .95 },
                     { x1: .790, x2: .880, y: .50 },
                 ],
-                exits: { right: 'park' }
+                spots: [
+                    { tile: 0, tx: 120, ty: 168, icon: '🌼', name: '小花叢', act: 'flower' },
+                    { tile: 1, tx: 250, ty: 168, icon: '🪣', name: '鬆土區', act: 'dig'    },
+                ],
+                exits: { left: 'home', right: 'park' }
             },
             park: {
                 name: '大公園', emoji: '🌳',
@@ -1071,13 +1101,18 @@
                 platformImg: 'platform.svg',
                 peekers: ['🦆', '🐢'],
                 platforms: [
-                    { x1: .150, x2: .270, y: .48 },
-                    { x1: .220, x2: .320, y: .95 },
+                    { x1: .165, x2: .285, y: .48 },
+                    { x1: .230, x2: .330, y: .95 },
                     { x1: .430, x2: .560, y: .48 },
                     { x1: .500, x2: .600, y: .95 },
                     { x1: .700, x2: .830, y: .48 },
                 ],
-                exits: { left: 'home', right: 'street' }
+                spots: [
+                    { tile: 0, tx: 296, ty: 156, icon: '🌼', name: '花圃',   act: 'flower' },
+                    { tile: 1, tx: 194, ty: 121, icon: '☀️', name: '長椅',   act: 'bench'  },
+                    { tile: 1, tx: 60,  ty: 150, icon: '🦆', name: '餵鴨子', act: 'duck'   },
+                ],
+                exits: { left: 'garden', right: 'street' }
             },
             street: {
                 name: '熱鬧街道', emoji: '🏘️',
@@ -1086,11 +1121,15 @@
                 platformImg: 'platform-wood.svg',
                 peekers: ['🐈', '🕊️'],
                 platforms: [
-                    { x1: .140, x2: .250, y: .48 },
-                    { x1: .210, x2: .310, y: .95 },
+                    { x1: .165, x2: .275, y: .48 },
+                    { x1: .230, x2: .330, y: .95 },
                     { x1: .420, x2: .540, y: .48 },
                     { x1: .490, x2: .590, y: .95 },
                     { x1: .690, x2: .820, y: .48 },
+                ],
+                spots: [
+                    { tile: 0, tx: 149, ty: 144, icon: '📮', name: '郵筒',     act: 'mail'     },
+                    { tile: 1, tx: 302, ty: 136, icon: '🍦', name: '冰淇淋攤', act: 'icecream' },
                 ],
                 exits: { left: 'park', right: 'beach' }
             },
@@ -1101,16 +1140,20 @@
                 platformImg: 'platform-wood.svg',
                 peekers: ['🦀', '🐠'],
                 platforms: [
-                    { x1: .160, x2: .280, y: .45 },
-                    { x1: .240, x2: .340, y: .92 },
+                    { x1: .170, x2: .290, y: .45 },
+                    { x1: .245, x2: .345, y: .92 },
                     { x1: .450, x2: .570, y: .45 },
                     { x1: .680, x2: .800, y: .45 },
                     { x1: .740, x2: .840, y: .92 },
                 ],
+                spots: [
+                    { tile: 1, tx: 140, ty: 140, icon: '🏰', name: '堆沙堡',   act: 'sand'  },
+                    { tile: 0, tx: 314, ty: 156, icon: '🐚', name: '撿貝殼',   act: 'shell' },
+                ],
                 exits: { left: 'street' }
             }
         };
-        const MAP_ORDER = ['home', 'park', 'street', 'beach'];
+        const MAP_ORDER = ['home', 'garden', 'park', 'street', 'beach'];
         let currentMap = 'home';
         let traveling = false;
 
@@ -1438,29 +1481,75 @@
         /** 拖曳看風景。拖的距離很短就當成「點一下叫牠過來」 */
         function initWorldGestures() {
             const cage = cageEl();
-            let startX = 0, startCam = 0, dragging = false, moved = 0, pid = null;
+            let startX = 0, startY = 0, startCam = 0, moved = 0, pid = null;
+            let dragging = false, horiz = false;
+            let lastX = 0, lastT = 0, vel = 0, flingRaf = 0;
+
+            /** 甩一下之後鏡頭自己滑一段再停（慣性）。沒有的話拖曳會有點「死」 */
+            function fling() {
+                cancelAnimationFrame(flingRaf);
+                const maxCam = Math.max(0, worldWidth() - viewWidth());
+                const step = () => {
+                    vel *= 0.94;
+                    if (Math.abs(vel) < 0.4) { flingRaf = 0; return; }
+                    const next = clamp(camX - vel, 0, maxCam);
+                    if (next === camX) { flingRaf = 0; return; }   // 撞到世界邊界就停
+                    camX = camTarget = next;
+                    paintCamera();
+                    flingRaf = requestAnimationFrame(step);
+                };
+                flingRaf = requestAnimationFrame(step);
+            }
 
             cage.addEventListener('pointerdown', (e) => {
                 if (arranging) return;                       // 佈置模式讓道具自己處理
-                if (e.target.closest('button, .quest-btn, .visitor-sprite, #golden-butterfly')) return;
-                pid = e.pointerId; startX = e.clientX; startCam = camX;
-                dragging = true; moved = 0;
+                if (e.target.closest('button, .quest-btn, .visitor-sprite, #golden-butterfly, .gate, .spot')) return;
+                cancelAnimationFrame(flingRaf); flingRaf = 0; vel = 0;
+                pid = e.pointerId;
+                startX = lastX = e.clientX; startY = e.clientY; startCam = camX;
+                lastT = performance.now();
+                dragging = true; horiz = false; moved = 0;
             });
+
             cage.addEventListener('pointermove', (e) => {
                 if (!dragging || e.pointerId !== pid) return;
-                const dx = e.clientX - startX;
+                const dx = e.clientX - startX, dy = e.clientY - startY;
                 moved = Math.max(moved, Math.abs(dx));
-                if (moved > 8) {
-                    cage.classList.add('panning');
-                    camTarget = camX = clamp(startCam - dx, 0,
-                                             Math.max(0, worldWidth() - viewWidth()));
-                    paintCamera();
+
+                // 還沒決定方向前先看哪一軸比較明顯：橫的算拖景，
+                // 直的就放手讓瀏覽器捲頁面（籠子的 touch-action 是 pan-y）
+                if (!horiz) {
+                    if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+                        horiz = true;
+                        cage.classList.add('panning');
+                        // 抓住指標，手指滑出籠子外面也不會斷掉
+                        try { cage.setPointerCapture(pid); } catch (err) {}
+                    } else if (Math.abs(dy) > 10) {
+                        dragging = false; return;
+                    }
                 }
+                if (!horiz) return;
+
+                const now = performance.now(), dt = now - lastT;
+                if (dt > 0) vel = 0.7 * vel + 0.3 * ((e.clientX - lastX) / dt * 16);
+                lastX = e.clientX; lastT = now;
+
+                camTarget = camX = clamp(startCam - dx, 0,
+                                         Math.max(0, worldWidth() - viewWidth()));
+                paintCamera();
+                e.preventDefault();
             });
+
             const end = (e) => {
                 if (!dragging) return;
-                dragging = false; cage.classList.remove('panning');
-                if (moved > 8) return;
+                dragging = false;
+                cage.classList.remove('panning');
+                try { cage.releasePointerCapture(pid); } catch (err) {}
+                if (horiz || moved > 8) {
+                    // 放開時還有速度就滑一下
+                    if (Math.abs(vel) > 2) fling();
+                    return;
+                }
                 // 點在倉鼠身上 = 叫牠跳；點別的地方 = 走過去
                 const ham = document.getElementById('hamster');
                 const hr = ham ? ham.getBoundingClientRect() : null;
@@ -1472,7 +1561,9 @@
                 }
             };
             cage.addEventListener('pointerup', end);
-            cage.addEventListener('pointercancel', () => { dragging = false; cage.classList.remove('panning'); });
+            cage.addEventListener('pointercancel', () => {
+                dragging = false; horiz = false; cage.classList.remove('panning');
+            });
         }
 
         function initWorld() {
@@ -1487,10 +1578,14 @@
             initWorldGestures();
             addEventListener('resize', () => {
                 buildPlatforms();
+                buildSpots();
+                buildGates();
                 hamY = surfaceAt(hamX, hamY);       // 籠子高度變了，重新貼回腳下那層
                 paintHamster();
                 cameraLookAt(hamX, true);
             });
+            // 冷卻中的互動點每 5 秒刷新一次顏色
+            setInterval(refreshSpots, 5000);
         }
 
         // ================================================================
@@ -1532,8 +1627,10 @@
             if (pa) pa.textContent = pk[0];
             if (pb) pb.textContent = pk[1] || pk[0];
 
+            cage.classList.toggle('indoor', !!m.indoor);
             buildPlatforms();
             buildGates();
+            buildSpots();
             placePeekers();
             updateMapChip();
         }
@@ -1567,6 +1664,204 @@
                 g.addEventListener('click', (e) => { e.stopPropagation(); travelTo(to); });
                 world.appendChild(g);
             });
+        }
+
+        // ================================================================
+        // 每張地圖的互動點
+        // ================================================================
+        // 點一下 -> 倉鼠走過去 -> 演一小段 -> 給獎勵 -> 進冷卻。
+        // 冷卻存在 petData.spots（跟著雲端同步），不然她會站在冰淇淋攤前面
+        // 連點到飽食度爆表。
+        const SPOT_ACTS = {
+            nap:      { emoji: '💤', say: '呼～好舒服',     happy: 8,  cd: 120, pose: 'sleepy' },
+            eat:      { emoji: '🌰', say: '唔姆唔姆',       happy: 3,  hunger: 10, cd: 120, pose: 'eat' },
+            book:     { emoji: '📖', say: '',               happy: 5,  cd: 60,  special: 'word' },
+            flower:   { emoji: '🌼', say: '好香～',         happy: 6,  cd: 120 },
+            dig:      { emoji: '🪱', say: '挖挖挖！',       happy: 3,  coins: [0, 3], cd: 240 },
+            duck:     { emoji: '🦆', say: '嘎嘎！',         happy: 7,  cd: 150 },
+            bench:    { emoji: '☀️', say: '曬太陽最舒服了', happy: 5,  cd: 150 },
+            mail:     { emoji: '💌', say: '',               happy: 4,  coins: [2, 6], cd: 300, special: 'mail' },
+            icecream: { emoji: '🍦', say: '冰冰甜甜！',     happy: 8,  hunger: 12, cost: 5, cd: 90 },
+            sand:     { emoji: '🏰', say: '蓋好城堡了！',   happy: 7,  clean: -6, cd: 150 },
+            shell:    { emoji: '🐚', say: '撿到漂亮的！',   happy: 4,  coins: [0, 2], cd: 180 },
+        };
+
+        /** 一塊背景磚現在有多寬（CSS 的 background-size 是 --scene-h * 1.0909） */
+        function tileW() { return sceneH() * 1.0909; }
+
+        /**
+         * 互動點的世界座標。
+         * 給 x 就是世界寬的比例；給 tile/tx 則是「第幾塊背景磚裡的第幾像素」——
+         * 家具是畫在背景磚裡的，磚寬會跟著場景縮放變，用固定比例的話
+         * 一進全螢幕圖示就會離開家具。
+         */
+        function spotWorldX(p) {
+            if (typeof p.x === 'number') return p.x * worldWidth();
+            const tw = tileW();
+            return (p.tile || 0) * tw + (p.tx / 360) * tw;
+        }
+
+        /**
+         * 互動點離地多高。
+         * ty = 那件家具在背景磚裡的底邊 y（磚高 200），換算成畫面上的高度，
+         * 圖示才會停在家具旁邊而不是掉在地板上。
+         * 下限是前景層的高度 + 10：前景層蓋在世界前面，比它矮的圖示會整個被草叢
+         * 或抱枕遮掉（實測貝殼和花圃的圖示直接消失）。
+         */
+        function spotBottom(p, U) {
+            const nearH = sceneH() * 0.88, frontH = sceneH() * 0.26;
+            const raw = (typeof p.ty === 'number')
+                ? (200 - p.ty) / 200 * nearH
+                : (p.y || 0) * U + footInset() - 6;
+            return Math.round(Math.max(frontH + 10, raw));
+        }
+
+        function spotKey(i) { return currentMap + ':' + i; }
+        function spotLeft(i) {
+            const cd = (SPOT_ACTS[(curMap().spots || [])[i].act] || {}).cd || 60;
+            const at = (petData.spots && petData.spots[spotKey(i)]) || 0;
+            return Math.max(0, cd - (Date.now() / 1000 - at));
+        }
+
+        /** 把這張地圖的互動點畫出來。場景縮放變了要重畫（位置是算出來的） */
+        function buildSpots() {
+            const world = worldEl();
+            if (!world) return;
+            world.querySelectorAll('.spot').forEach(el => el.remove());
+            const list = curMap().spots || [];
+            const U = usableH(), W = worldWidth();
+            list.forEach((p, i) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'spot';
+                b.dataset.i = i;
+                b.style.left = (spotWorldX(p) / W * 100) + '%';
+                b.style.bottom = spotBottom(p, U) + 'px';
+                b.innerHTML = '<span class="spot-ring"></span><span class="spot-icon">' +
+                              p.icon + '</span>';
+                b.title = p.name;
+                b.addEventListener('click', (e) => { e.stopPropagation(); useSpot(i); });
+                world.appendChild(b);
+            });
+            refreshSpots();
+        }
+
+        /** 冷卻中的互動點畫成灰的，她才知道現在點不出東西 */
+        function refreshSpots() {
+            document.querySelectorAll('.spot').forEach(el => {
+                el.classList.toggle('cooling', spotLeft(+el.dataset.i) > 0);
+            });
+        }
+
+        let usingSpot = false;
+
+        async function useSpot(i) {
+            const p = (curMap().spots || [])[i];
+            if (!p || usingSpot || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+            const act = SPOT_ACTS[p.act];
+            if (!act) return;
+
+            const el = document.querySelector('.spot[data-i="' + i + '"]');
+            const left = spotLeft(i);
+            if (left > 0) {
+                floatAtSpot(el, '再等 ' + Math.ceil(left) + ' 秒 ⏳', '#8a7b98');
+                return;
+            }
+            if (act.cost && petData.coins < act.cost) {
+                floatAtSpot(el, '要 ' + act.cost + ' 💰 喔', '#e0714c');
+                return;
+            }
+
+            usingSpot = true;
+            try {
+                const ham = document.getElementById('hamster');
+                await hamsterWalkTo(spotWorldX(p), 150, (p.y || 0) * usableH());
+                if (el) el.classList.add('used');
+
+                // 演一小段。沒有專屬動作就用 happy（跳兩下）
+                const pose = act.pose === 'eat' ? 'eat' : 'happy';
+                ham.classList.add(pose);
+                playTone(520, 'sine', .09);
+                setTimeout(() => playTone(660, 'sine', .09), 130);
+                createFloatingEmoji(act.emoji, 1400, -40);
+                if (typeof fxBurst === 'function' && !actReduced()) {
+                    fxBurst(ham.getBoundingClientRect(), 10);
+                }
+                await wait(700);
+                ham.classList.remove(pose);
+
+                // 結算
+                if (act.cost) petData.coins -= act.cost;
+                if (act.happy) addHappiness(act.happy);
+                if (act.hunger) petData.hunger = Math.min(100, (petData.hunger || 100) + act.hunger);
+                if (act.clean) petData.cleanliness = Math.max(0, (petData.cleanliness || 100) + act.clean);
+                let gained = 0;
+                if (act.coins) {
+                    gained = act.coins[0] + Math.floor(Math.random() * (act.coins[1] - act.coins[0] + 1));
+                    petData.coins += gained;
+                }
+
+                let msg = act.say;
+                if (act.special === 'word') msg = drawWordCard();
+                if (act.special === 'mail') msg = gained ? '信裡有 ' + gained + ' 金幣！' : '今天沒有信 📭';
+                else if (gained) msg = (msg ? msg + ' ' : '') + '+' + gained + ' 💰';
+                if (msg) floatAtSpot(el, msg, '#7b1fa2');
+
+                if (!petData.spots) petData.spots = {};
+                petData.spots[spotKey(i)] = Math.round(Date.now() / 1000);
+                savePetData();
+                updatePetUI();
+                refreshSpots();
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('互動中斷', e);
+            } finally {
+                usingSpot = false;
+                const e2 = document.querySelector('.spot[data-i="' + i + '"]');
+                if (e2) e2.classList.remove('used');
+            }
+        }
+
+        /**
+         * 書櫃：抽一個單字唸出來。養成和學習連在一起才有意義。
+         * 一半機率抽她「還沒學會」的字（mastery 的弱字），等於偷渡一次複習。
+         * 注意 words 是 { 清單名: { 週: [字…] } } 的巢狀物件，不是陣列 ——
+         * 第一版直接當陣列用，結果每次都掉到 catch 裡顯示「書好好看！」。
+         */
+        function drawWordCard() {
+            try {
+                const pool = [];
+                Object.values(words).forEach(weeks =>
+                    Object.values(weeks || {}).forEach(arr => {
+                        if (Array.isArray(arr)) pool.push.apply(pool, arr);
+                    }));
+                if (!pool.length) return '書好好看！';
+
+                let w = null;
+                if (Math.random() < 0.5 && typeof getWeakWords === 'function') {
+                    const weak = getWeakWords(12, pool) || [];
+                    if (weak.length) w = weak[Math.floor(Math.random() * weak.length)];
+                }
+                if (!w) w = pool[Math.floor(Math.random() * pool.length)];
+
+                // 中文翻譯後面帶注音，泡泡放不下，只留中文
+                const zh = ((typeof wordTranslations !== 'undefined' &&
+                             wordTranslations[String(w).toLowerCase()]) || '')
+                            .replace(/\s*[（(][ㄅ-ㄩˊˇˋ˙\s].*$/, '').trim();
+                setTimeout(() => { try { speakWord(w); } catch (e) {} }, 260);
+                return w + (zh ? '（' + zh + '）' : '');
+            } catch (e) { return '書好好看！'; }
+        }
+
+        /** 在互動點上方飄一行字 */
+        function floatAtSpot(el, text, color) {
+            if (!el) return;
+            const bubble = document.createElement('div');
+            bubble.className = 'spot-say';
+            bubble.textContent = text;
+            if (color) bubble.style.color = color;
+            el.appendChild(bubble);
+            setTimeout(() => bubble.remove(), 2200);
         }
 
         function curtain(on, map) {
@@ -1607,6 +1902,7 @@
                 savePetData();
                 applyMap(id);
                 applyTimeOfDay();
+                applyWeather();
 
                 // 從對面那一側進場
                 const enterLeft = (side !== 'left');
@@ -1741,6 +2037,8 @@
             layer.className = 'weather';
             layer.innerHTML = '';
             if (wx === 'clear') return;
+            // 室內不會下雨下雪
+            if (curMap().indoor) return;
             // 系統要求減少動態效果就不要下雨下雪
             try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}
 

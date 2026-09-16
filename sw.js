@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20260916-0912';
+const CACHE_NAME = 'daisy-20260916-1954';
 
 const LOCAL_ASSETS = [
   './',
@@ -57,6 +57,10 @@ const LOCAL_ASSETS = [
   './habitat-front.svg',
   './platform.svg',
   './platform-wood.svg',
+  './platform-shelf.svg',
+  './room-far.svg',
+  './room-near.svg',
+  './room-front.svg',
   './park-far.svg',
   './park-near.svg',
   './street-far.svg',
