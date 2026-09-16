@@ -78,9 +78,18 @@ function fxReplay(el, cls, ms) {
 function fxPop(el)   { fxReplay(el, 'fx-pop', 400); }
 function fxShake(el) { fxReplay(el, 'fx-shake', 480); fxHaptic(30); }
 
-/** 手機震動。Android 支援，iOS Safari 不支援 —— 不支援就安靜跳過 */
+/**
+ * 手機震動。Android 支援，iOS Safari 不支援 —— 不支援就安靜跳過。
+ * 倉鼠頁的設定面板會寫 localStorage["daisy_feel"].haptic，這裡一起讀，
+ * 才不會「關掉了但按鈕答錯還是會震」。
+ */
 function fxHaptic(ms) {
-  try { if (navigator.vibrate && !fxReduced()) navigator.vibrate(ms || 15); } catch (e) {}
+  try {
+    if (!navigator.vibrate || fxReduced()) return;
+    const f = JSON.parse(localStorage.getItem('daisy_feel') || '{}');
+    if (f.haptic === false) return;
+    navigator.vibrate(ms || 15);
+  } catch (e) {}
 }
 
 /** 進場交錯落下：一次全部出現很平，錯開 60ms 就有「發牌」的感覺 */

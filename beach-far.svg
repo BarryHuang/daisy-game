@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 沙灘·遠景（捲動 0.25）：海平線、海、浪、帆船。
+       海平線是一條直線（y=70），左右邊緣自然等高。 -->
+  <defs>
+    <linearGradient id="bfSea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3f9fd0"/><stop offset=".45" stop-color="#4fb6dd"/>
+      <stop offset="1" stop-color="#7fd6e8"/>
+    </linearGradient>
+    <linearGradient id="bfSand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6e2b8"/><stop offset="1" stop-color="#e5c992"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="70" width="360" height="72" fill="url(#bfSea)"/>
+  <!-- 浪紋：橫向的短線，越近越粗 -->
+  <g stroke="#eafaff" stroke-linecap="round" fill="none" opacity=".7">
+    <g stroke-width="1.6"><path d="M24 80h22M96 84h18M182 78h26M262 84h20M320 80h24"/></g>
+    <g stroke-width="2.2"><path d="M44 98h28M138 104h24M228 98h30M304 104h26"/></g>
+    <g stroke-width="3"><path d="M16 122h34M110 128h30M206 122h36M290 128h34"/></g>
+  </g>
+  <!-- 帆船 -->
+  <g transform="translate(252 46)">
+    <path d="M10 24 L10 2 L26 24 Z" fill="#fff6e8"/>
+    <path d="M8 24 L8 8 L-4 24 Z" fill="#ffd9c2"/>
+    <path d="M-8 24 h40 l-6 8 h-28 z" fill="#c9714f"/>
+  </g>
+  <!-- 浪花打上沙灘 -->
+  <path d="M0 138 Q90 130 180 138 Q270 146 360 138 L360 200 L0 200 Z" fill="url(#bfSand)"/>
+  <path d="M0 138 Q90 130 180 138 Q270 146 360 138" fill="none" stroke="#fdfaf0" stroke-width="3" opacity=".85"/>
+</svg>

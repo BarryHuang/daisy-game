@@ -205,15 +205,19 @@
         /* 只畫天空。以前天空和草地是同一條漸層的兩個色停（40% 那裡），
            所以中間會出現一條筆直的硬邊，看起來像兩個長方形疊著。
            地平線以下改由 habitat-far/mid/near.svg 三個視差層處理，稜線是起伏的。 */
-        .hamster-cage.time-day {
-            background: linear-gradient(to bottom, #8fd3f4 0%, #bde7ff 55%, #e3f5ea 100%);
+        /* 天空：時段決定主色，地圖再微調（沙灘更藍、街道帶灰）。
+           用 CSS 變數而不是每個組合寫一條 background，
+           4 個地圖 × 3 個時段 = 12 條的話很難維護。 */
+        .hamster-cage {
+            --sky1: #8fd3f4; --sky2: #bde7ff; --sky3: #e3f5ea;
+            background: linear-gradient(to bottom, var(--sky1) 0%, var(--sky2) 55%, var(--sky3) 100%);
         }
-        .hamster-cage.time-sunset {
-            background: linear-gradient(to bottom, #ff9a6b 0%, #ffc48c 45%, #ffe9cf 100%);
-        }
-        .hamster-cage.time-night {
-            background: linear-gradient(to bottom, #16213e 0%, #253a5e 55%, #3a5680 100%);
-        }
+        .hamster-cage.time-sunset { --sky1: #ff9a6b; --sky2: #ffc48c; --sky3: #ffe9cf; }
+        .hamster-cage.time-night  { --sky1: #16213e; --sky2: #253a5e; --sky3: #3a5680; }
+        .hamster-cage.map-beach.time-day     { --sky1: #3fb8ef; --sky2: #9fe2fa; --sky3: #e8f8ff; }
+        .hamster-cage.map-beach.time-sunset  { --sky1: #ff7f5c; --sky2: #ffb27e; --sky3: #ffe3c4; }
+        .hamster-cage.map-street.time-day    { --sky1: #a9c9e6; --sky2: #d3e4f3; --sky3: #eef3f7; }
+        .hamster-cage.map-street.time-night  { --sky1: #121a30; --sky2: #1e2b47; --sky3: #33456b; }
         /* 場景和道具都要跟著時段變色，不然晚上會出現一片白天的草地、
            或是天黑了木屋還亮得像正午。
            用一個變數統一：brightness(1) 是白天的「不改變」，
@@ -249,25 +253,34 @@
            三張 SVG 都是 360 寬的磚，用 repeat-x 平鋪出無限寬的背景，
            所以左右邊緣的高度要一致，不然接縫會有台階。
            --------------------------------------------------------------- */
+        /* --scene-h：場景（地面那一帶）的高度。不是籠子高度 ——
+           磚是 360x200 被拉成 360 x 場景高，場景越高就被縱向拉得越扁長。
+           籠子全螢幕時有 900 多 px，直接用 88% 的話店面會變成細長條（實測很醜）。
+           所以場景高度封頂（見 JS 的 sceneH()），多出來的高度留給天空。 */
         .layer {
-            position: absolute; left: 0; bottom: 0;
-            width: 400%; height: 88%;
+            position: absolute; left: 0; bottom: var(--world-lift, 0px);
+            width: 400%; height: calc(var(--scene-h, 300px) * .88);
             background-repeat: repeat-x; background-position: left bottom;
-            background-size: 360px 100%;
+            /* 磚寬跟著場景高度等比放大（330px 高時剛好是 360px 寬，
+               也就是這批美術原本畫的比例）。固定 360 的話，場景一變高
+               就會被縱向拉長，店面會變麵條。 */
+            background-size: calc(var(--scene-h, 300px) * 1.0909) 100%;
             z-index: 0; pointer-events: none;
             transition: filter 2s ease-in-out;
             filter: var(--tint);
             will-change: transform;
         }
-        .layer.far { background-image: url('habitat-far.svg');  height: 86%; }
-        .layer.mid { background-image: url('habitat-mid.svg');  height: 88%; }
-        .layer.near{ background-image: url('habitat-near.svg'); height: 88%; }
+        /* .near 在 .world 裡面，而 .world 已經被抬高了，這裡再抬一次會抬兩倍 */
+        .world .layer { bottom: 0; }
+        .layer.far { background-image: url('habitat-far.svg');  height: calc(var(--scene-h, 300px) * .86); }
+        .layer.mid { background-image: url('habitat-mid.svg');  }
+        .layer.near{ background-image: url('habitat-near.svg'); }
         /* 前景：捲得比世界快（1.35），草叢會擋在倉鼠前面。
            因為捲得比較快，要跑的距離也比較長，寬度得給到 600% 才不會提早見底。
            z-index 2 = 蓋在世界(1)之上、色罩(3)之下。 */
         .layer.front {
             background-image: url('habitat-front.svg');
-            width: 600%; height: 26%; z-index: 2;
+            width: 600%; height: calc(var(--scene-h, 300px) * .26); z-index: 2;
         }
 
         /* ---------------------------------------------------------------
@@ -278,7 +291,7 @@
         .platforms { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
         .platform {
             position: absolute; height: 28px;
-            background-image: url('platform.svg');
+            background-image: var(--platform-img, url('platform.svg'));
             background-repeat: repeat-x;
             background-size: auto 100%;          /* 依高度等比縮放後水平平鋪 */
             border-radius: 9px;                  /* 兩端稍微收一下，太圓會變成香腸 */
@@ -293,7 +306,8 @@
 
         /* 世界本體：道具、倉鼠、近景都放在這裡，一起 1:1 捲動 */
         .world {
-            position: absolute; left: 0; top: 0; height: 100%;
+            position: absolute; left: 0; top: 0;
+            height: calc(100% - var(--world-lift, 0px));
             width: 300%;
             display: flex; justify-content: center; align-items: flex-end;
             z-index: 1;
@@ -319,23 +333,36 @@
             background: rgba(255,255,255,0.97);
             border-radius: 50%;
         }
-        .cloud1 { width: 88px; height: 26px; top: 14px; animation: drift 14s linear infinite; }
+        /* --sky-h 是天空（場景以上）的高度，由 JS 算好寫進來。
+           雲用它的比例定位：小螢幕時擠在上面一點，全螢幕時自然散開，
+           不會出現「一大片空天空 + 三朵擠在頂端的雲」。 */
+        .cloud1 { width: 88px; height: 26px; top: calc(var(--sky-h, 46px) * .28); animation: drift 14s linear infinite; }
         .cloud1::before { width: 44px; height: 38px; top: -20px; left: 10px; }
         .cloud1::after  { width: 30px; height: 26px; top: -12px; left: 46px; }
 
-        .cloud2 { width: 54px; height: 18px; top: 42px; animation: drift 20s linear infinite; animation-delay: -7s; }
+        .cloud2 { width: 54px; height: 18px; top: calc(var(--sky-h, 46px) * .70); animation: drift 20s linear infinite; animation-delay: -7s; }
         .cloud2::before { width: 26px; height: 26px; top: -14px; left: 8px; }
         .cloud2::after  { width: 20px; height: 20px; top: -10px; left: 26px; }
 
-        .cloud3 { width: 68px; height: 21px; top: 7px; animation: drift 17s linear infinite; animation-delay: -11s; }
+        .cloud3 { width: 68px; height: 21px; top: calc(var(--sky-h, 46px) * .10); animation: drift 17s linear infinite; animation-delay: -11s; }
         .cloud3::before { width: 34px; height: 32px; top: -18px; left: 10px; }
         .cloud3::after  { width: 24px; height: 22px; top: -12px; left: 36px; }
+
+        .cloud4 { width: 74px; height: 22px; top: calc(var(--sky-h, 46px) * .48); animation: drift 24s linear infinite; animation-delay: -15s; }
+        .cloud4::before { width: 36px; height: 32px; top: -17px; left: 9px; }
+        .cloud4::after  { width: 26px; height: 24px; top: -11px; left: 40px; }
+
+        .cloud5 { width: 46px; height: 15px; top: calc(var(--sky-h, 46px) * .86); animation: drift 30s linear infinite; animation-delay: -22s; }
+        .cloud5::before { width: 22px; height: 22px; top: -12px; left: 7px; }
+        .cloud5::after  { width: 17px; height: 17px; top: -8px; left: 23px; }
 
         @keyframes drift { 0% { left: -130px; } 100% { left: calc(100% + 130px); } }
 
         /* 太陽 / 滿月光暈 */
         .habitat-sun {
-            position: absolute; top: 10px; right: 14px; width: 42px; height: 42px;
+            /* right 要避開右上角的任務按鈕（50px + 邊距），不然太陽永遠被蓋住 */
+            position: absolute; top: calc(var(--sky-h, 46px) * .16 + 8px); right: 72px;
+            width: 42px; height: 42px;
             border-radius: 50%; z-index: 1;
             transition: all 2s ease-in-out;
         }
@@ -384,7 +411,7 @@
         /* 道具：跑輪。形狀畫在 HTML 的 inline SVG 裡。
            .spin 是轉整個 div，所以 SVG 裡刻意不畫支架 —— 有支架的話會跟著轉。 */
         .prop-wheel {
-            position: absolute; left: 74%; bottom: 17%; width: 72px; height: 72px;
+            position: absolute; left: 74%; bottom: 17%; width: calc(72px * var(--k, 1)); height: calc(72px * var(--k, 1));
             opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 1;
             filter: drop-shadow(3px 6px 5px rgba(0,0,0,0.28)) var(--tint);
         }
@@ -394,7 +421,7 @@
         
         /* 道具：水瓶 */
         .prop-water {
-            position: absolute; left: 53%; bottom: 20%; width: 27px; height: 52px;
+            position: absolute; left: 53%; bottom: 20%; width: calc(27px * var(--k, 1)); height: calc(52px * var(--k, 1));
             opacity: 0; z-index: 2; transition: opacity 0.5s; pointer-events: none;
             filter: drop-shadow(3px 5px 4px rgba(0,0,0,0.25)) var(--tint);
         }
@@ -402,7 +429,7 @@
 
         /* 道具：小木屋 */
         .prop-house {
-            position: absolute; left: 6%; bottom: 15%; width: 76px; height: 64px;
+            position: absolute; left: 6%; bottom: 15%; width: calc(76px * var(--k, 1)); height: calc(64px * var(--k, 1));
             opacity: 0; z-index: 1; transition: opacity 0.5s; pointer-events: none;
             filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.3)) var(--tint);
         }
@@ -410,7 +437,7 @@
 
         /* 道具：溜滑梯 */
         .prop-slide {
-            position: absolute; left: 20%; bottom: 14%; width: 62px; height: 50px;
+            position: absolute; left: 20%; bottom: 14%; width: calc(62px * var(--k, 1)); height: calc(50px * var(--k, 1));
             opacity: 0; z-index: 1; transition: opacity 0.5s; pointer-events: none;
             filter: drop-shadow(4px 7px 5px rgba(0,0,0,0.26)) var(--tint);
         }
@@ -423,11 +450,15 @@
         /* 倉鼠根據等級變大 */
         /* drop-shadow 往下偏，看起來像踩在地上的接地陰影；沒有的話牠是浮著的。
            後面接 var(--tint) 讓牠晚上也會暗下來。 */
-        .hamster-svg { width: 120px; height: 120px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2; position: relative;
+        /* --k 是場景的縮放倍率（見 JS 的 sceneK）。倉鼠、道具、平台厚度都乘上它，
+           全螢幕把場景放大時整組一起變大，比例才不會跑掉 ——
+           只放大背景的話，倉鼠會變成一隻站在巨人國的小螞蟻。 */
+        .hamster-svg { width: calc(120px * var(--k, 1)); height: calc(120px * var(--k, 1));
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2; position: relative;
             filter: drop-shadow(0 10px 5px rgba(60, 40, 18, 0.38)) var(--tint); }
-        .hamster-svg.lvl-3 { width: 130px; height: 130px; }
-        .hamster-svg.lvl-5 { width: 140px; height: 140px; }
-        .hamster-svg.lvl-8 { width: 150px; height: 150px; }
+        .hamster-svg.lvl-3 { width: calc(130px * var(--k, 1)); height: calc(130px * var(--k, 1)); }
+        .hamster-svg.lvl-5 { width: calc(140px * var(--k, 1)); height: calc(140px * var(--k, 1)); }
+        .hamster-svg.lvl-8 { width: calc(150px * var(--k, 1)); height: calc(150px * var(--k, 1)); }
         .hamster-svg.happy { animation: jump 0.5s 2; }
         .hamster-svg.eat { animation: chew 0.3s 3; }
         .hamster-svg.run { animation: runFast 0.2s infinite alternate; bottom: 50px; left: -30px; }
@@ -550,11 +581,9 @@
 .hamster-svg.dirty { filter: drop-shadow(0 10px 5px rgba(60,40,18,.38)) var(--tint) sepia(.55) brightness(.92) contrast(1.08); }
 .hamster-svg.dirty::after { content: '泥土'; position: absolute; }
 
-/* 場景替換 */
-.hamster-cage.bg-beach { background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 50%, #f6d365 50%, #fda085 100%); }
-.hamster-cage.bg-space { background: linear-gradient(to bottom, #0f2027 0%, #203a43 50%, #2c5364 100%); }
-.hamster-cage.bg-space .cloud { opacity: 0.2; filter: brightness(2); }
-.hamster-cage.bg-space .habitat-sun { background: radial-gradient(circle, #e0e0e0 40%, #ffffff80 70%, transparent 71%); box-shadow: 0 0 20px #fff; }
+/* 舊的 .bg-beach / .bg-space 場景色塊已移除：世界改成視差層之後，
+   籠子的 background 會整個被 .layer 蓋住，換色塊等於沒換。
+   「換場景」現在由地圖系統負責（見 MAPS / applyMap）。 */
 
 /* 成就彈出動畫 */
 @keyframes slideDownFade { 0% { top: -50px; opacity: 0; } 100% { top: 20px; opacity: 1; } }
@@ -792,12 +821,20 @@
     100% { opacity: 0;  transform: translate(20px, -20px) scale(.8); }
 }
 
-/* 高速時整個籠子輕微震動。幅度刻意很小 —— 大了會讓人不舒服 */
-.hamster-cage.shaking { animation: cageShake .09s linear infinite; }
+/* 畫面震動。以前是 .09s 無限迴圈，整段高速期間（1.5 秒）一直抖，看久了很煩，
+   而且會讓人有點暈。改成「撞擊的那一下抖一次、馬上衰減收斂」—— 0.42 秒內
+   幅度從 3px 遞減到 0，這是遊戲裡 screen shake 的標準做法。
+   預設是關的，要在設定裡打開（見 daisy_hamster.html 的 FEEL）。 */
+.hamster-cage.shaking { animation: cageShake .42s cubic-bezier(.2,.8,.3,1); }
 @keyframes cageShake {
-    0%, 100% { transform: translate(0, 0); }
-    25%      { transform: translate(-1.5px, .8px); }
-    75%      { transform: translate(1.5px, -.8px); }
+    0%   { transform: translate(0, 0); }
+    12%  { transform: translate(-3px, 1.6px); }
+    26%  { transform: translate(2.6px, -1.4px); }
+    42%  { transform: translate(-2px, 1px); }
+    58%  { transform: translate(1.4px, -.8px); }
+    74%  { transform: translate(-.9px, .5px); }
+    88%  { transform: translate(.4px, -.2px); }
+    100% { transform: translate(0, 0); }
 }
 
 /* 演出期間把待機動畫排除在外（見上面的 :not(.acting)）。
@@ -808,3 +845,196 @@
     .hamster-cage.shaking,
     .dust, .speedline, .sweat { animation: none !important; }
 }
+
+/* ===================================================================
+   場景工具列 + 沉浸（全螢幕）模式
+   =================================================================== */
+.cage-tools {
+    position: absolute; right: 10px; bottom: 10px; z-index: 11;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.cage-tool {
+    width: 40px; height: 40px; border-radius: 50%; padding: 0;
+    border: 2px solid rgba(255,255,255,.85);
+    background: rgba(40, 25, 60, .42); color: #fff; font-size: 1.1rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 8px rgba(0,0,0,.22);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    transition: transform .18s, background .18s;
+}
+.cage-tool:active { transform: scale(.9); }
+.cage-tool.on { background: #7b1fa2; }
+
+/* 沉浸模式：籠子直接鋪滿整個視窗。
+   用 position:fixed 而不是改父層的 flex —— 父層有一堆卡片和 padding，
+   一個一個關掉容易漏，直接讓籠子脫離版面最乾淨。 */
+/* 直向的手機做全螢幕，籠子不能直接拉到 100dvh：這是橫向捲軸，場景是畫面
+   下半部的一條帶子，籠子一高就變成「一大片空天空 + 底下一條小小的草地」。
+   所以籠子貼著底部、高度封頂，上面空出來的地方用同一個天空色填滿
+   （--imm-sky 由 JS 依時段和地圖寫進來），接縫就看不出來。 */
+body.immersive { overflow: hidden; background: var(--imm-sky, #8fd3f4) !important; }
+body.immersive .hamster-cage {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 900;
+    width: 100vw; height: min(100dvh, 620px);
+    max-width: none; border: 0; border-radius: 0; min-height: 0;
+    /* 內陰影會在上緣壓出一條暗邊，跟上面那塊天空色接不起來 */
+    box-shadow: none;
+}
+/* 狀態列改貼螢幕最上緣（籠子是靠底部的，不然它會浮在畫面中間） */
+body.immersive .imm-hud { position: fixed; top: 0; z-index: 910; }
+/* 快捷列底下鋪一層漸層，按鈕才有依託，不會像浮在草地上 */
+body.immersive .imm-dock {
+    padding-top: 26px;
+    background: linear-gradient(to top, rgba(28, 18, 44, .46), rgba(28, 18, 44, 0));
+}
+body.immersive .imm-hud,
+body.immersive .imm-dock { display: flex; }
+/* backdrop-filter 會建立「包含區塊」，裡面的 position:fixed 會以卡片為基準
+   而不是視窗 —— 實測籠子只鋪滿卡片，上面的頁首和 ☰ 還露在外面。
+   沉浸模式下要把它關掉，籠子才真的貼齊整個螢幕。 */
+body.immersive .app-container .card {
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    /* 進場的 fx-drop 用 animation-fill-mode: both，結束後 computed transform
+       會停在 matrix(1,0,0,1,0,0) 而不是 none —— 那也算一個包含區塊，
+       所以光關 backdrop-filter 還不夠（實測籠子偏移了 10px 還露出頁首）。 */
+    animation: none !important; transform: none !important;
+}
+/* 其他東西全部收起來，只留籠子 */
+body.immersive .fx-header,
+body.immersive .fx-scene,
+body.immersive .game-section,
+body.immersive .hamster-stats,
+body.immersive .pet-actions,
+body.immersive .dm-btn,
+body.immersive .app-container > *:not(.hamster-section),
+body.immersive .hamster-section > *:not(.hamster-cage) { display: none !important; }
+body.immersive .app-container { padding: 0 !important; }
+body.immersive .app-container .card.hamster-section {
+    padding: 0 !important; border: 0 !important; box-shadow: none !important;
+    background: transparent !important;
+}
+
+.imm-hud, .imm-dock { display: none; }
+
+.imm-hud {
+    position: absolute; left: 0; right: 0; top: 0; z-index: 12;
+    justify-content: center; gap: 8px; pointer-events: none;
+    padding: calc(8px + env(safe-area-inset-top, 0px)) 64px 8px;
+}
+.imm-chip {
+    background: rgba(40, 25, 60, .44); color: #fff;
+    border: 2px solid rgba(255,255,255,.8); border-radius: 999px;
+    padding: 4px 12px; font-size: .92rem; font-weight: 700;
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    white-space: nowrap;
+}
+
+.imm-dock {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 12;
+    justify-content: center; gap: 5px; flex-wrap: nowrap;
+    padding: 8px 52px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+.imm-act {
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    flex: 0 1 auto; min-width: 0; padding: 6px 7px;
+    border: 2px solid rgba(255,255,255,.82); border-radius: 16px;
+    background: rgba(40, 25, 60, .44); color: #fff;
+    font-family: inherit; font-size: .68rem; font-weight: 700;
+    cursor: pointer; line-height: 1.2;
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    transition: transform .16s;
+}
+.imm-act i { font-style: normal; font-size: 1.3rem; }
+.imm-act:active { transform: scale(.92); }
+
+/* 沉浸模式下把工具列往上挪，不要壓在快捷列上面 */
+body.immersive .cage-tools { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+body.immersive .quest-btn  { top: calc(46px + env(safe-area-inset-top, 0px)); }
+body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
+
+/* 設定面板 */
+.feel-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 4px; border-bottom: 1px solid #eee; gap: 12px;
+}
+.feel-row:last-child { border-bottom: 0; }
+.feel-row .feel-label { font-weight: 700; }
+.feel-row .feel-note { display: block; font-weight: 400; font-size: .78rem; color: #888; }
+.feel-sw {
+    flex: 0 0 auto; width: 58px; height: 32px; border-radius: 999px; border: 0;
+    background: #ccc; position: relative; cursor: pointer; transition: background .2s;
+}
+.feel-sw::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 26px; height: 26px; border-radius: 50%; background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,.25); transition: transform .2s;
+}
+.feel-sw.on { background: #2ed573; }
+.feel-sw.on::after { transform: translateX(26px); }
+
+/* ===================================================================
+   地圖：出入口的門牌 + 轉場布幕
+   =================================================================== */
+.gate {
+    position: absolute; bottom: calc(var(--scene-h, 300px) * .13); z-index: 4;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 8px 12px 10px; border: 0; cursor: pointer;
+    background: none; font-family: inherit; color: #fff;
+    animation: gateBob 2.6s ease-in-out infinite;
+}
+.gate .gate-sign {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(40, 25, 60, .5); border: 2px solid rgba(255,255,255,.88);
+    border-radius: 14px; padding: 6px 12px;
+    font-size: .86rem; font-weight: 800; white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0,0,0,.25);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.gate .gate-post { width: 5px; height: 26px; background: #a8703f; border-radius: 3px;
+                   box-shadow: 0 2px 4px rgba(0,0,0,.25); }
+.gate.locked .gate-sign { background: rgba(60, 60, 70, .55); }
+.gate:active { transform: translateX(-50%) scale(.94); }
+@keyframes gateBob { 0%,100% { transform: translateX(-50%) translateY(0); }
+                     50%     { transform: translateX(-50%) translateY(-4px); } }
+
+/* 轉場布幕。z-index 要在色罩(3)、訪客(5)、任務鈕(10) 之上，
+   不然換地圖的瞬間會看到按鈕浮在黑幕外面。 */
+.curtain {
+    position: absolute; inset: 0; z-index: 40;
+    background: #1b1230; opacity: 0; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .34s ease;
+}
+.curtain.on { opacity: 1; pointer-events: auto; }
+.curtain-card {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: #fff; transform: scale(.9); opacity: 0; transition: all .34s ease .06s;
+}
+.curtain.on .curtain-card { transform: scale(1); opacity: 1; }
+.curtain-card .c-emoji { font-size: 3rem; }
+.curtain-card .c-name  { font-size: 1.2rem; font-weight: 800; letter-spacing: .05em; }
+
+/* 地圖名稱：沉浸模式的狀態列裡顯示現在在哪 */
+.imm-chip.map-chip { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
+
+@media (prefers-reduced-motion: reduce) {
+    .gate { animation: none; }
+    .curtain, .curtain-card { transition-duration: .01s; }
+}
+
+/* 地圖選單的卡片 */
+.map-card {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 14px 8px; border-radius: 16px; cursor: pointer;
+    border: 2px solid #e6d9f2; background: #fbf7ff; color: #4a2d63;
+    font-family: inherit; transition: transform .16s, border-color .16s;
+}
+.map-card:active { transform: scale(.95); }
+.map-card .m-emoji { font-size: 2rem; }
+.map-card .m-name  { font-weight: 800; font-size: .98rem; }
+.map-card .m-note  { font-size: .74rem; color: #8a7b98; }
+.map-card.here { border-color: #7b1fa2; background: #f1e6fa; }
+.map-card.here .m-note { color: #7b1fa2; font-weight: 700; }
+.map-card.locked { background: #f4f4f6; border-color: #e0e0e4; color: #8a8a95; }
+.map-card.locked .m-note { color: #c48a2f; font-weight: 700; }
