@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 倉鼠的家·遠景（牆面，捲動 0.25）。
+       背景刻意留透明：籠子本身的 CSS 就是壁紙，這一層只畫掛在牆上的東西，
+       上面接不到的部分自然被壁紙補滿，不會有一條「牆的上緣」。
+       橫貫整面牆的護牆板要伸出左右邊界，圓角才不會在接縫湊成缺口。 -->
+  <defs>
+    <linearGradient id="rfWain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3e3cd"/><stop offset="1" stop-color="#e2ccb0"/>
+    </linearGradient>
+    <linearGradient id="rfSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fd3f4"/><stop offset=".6" stop-color="#c8ecff"/>
+      <stop offset="1" stop-color="#dff3e4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 窗戶 -->
+  <g>
+    <rect x="44" y="20" width="76" height="64" rx="3" fill="url(#rfSky)"/>
+    <g fill="#a9dcb4" opacity=".9">
+      <ellipse cx="62" cy="80" rx="26" ry="14"/><ellipse cx="102" cy="82" rx="24" ry="13"/>
+    </g>
+    <g fill="#fff" opacity=".9">
+      <ellipse cx="70" cy="36" rx="13" ry="7"/><ellipse cx="100" cy="46" rx="10" ry="5"/>
+    </g>
+    <circle cx="106" cy="32" r="7" fill="#ffe27a"/>
+    <g fill="none" stroke="#c49a6c" stroke-width="5">
+      <rect x="44" y="20" width="76" height="64" rx="3"/>
+      <path d="M82 20v64M44 52h76"/>
+    </g>
+    <rect x="38" y="84" width="88" height="6" rx="3" fill="#b9885c"/>
+    <!-- 窗簾 -->
+    <path d="M36 16 q10 30 2 62 q12 -6 14 -30 t-2 -32 z" fill="#f2a6a0"/>
+    <path d="M128 16 q-10 30 -2 62 q-12 -6 -14 -30 t2 -32 z" fill="#f2a6a0"/>
+    <rect x="30" y="12" width="104" height="5" rx="2.5" fill="#a2734a"/>
+  </g>
+
+  <!-- 相框 -->
+  <g>
+    <g transform="translate(168 26)">
+      <rect x="0" y="0" width="36" height="28" rx="2" fill="#f7efe2" stroke="#c49a6c" stroke-width="3"/>
+      <path d="M4 24 L14 12 L21 20 L27 15 L32 24 Z" fill="#8fd0a0"/>
+      <circle cx="27" cy="9" r="3.4" fill="#ffd166"/>
+    </g>
+    <g transform="translate(212 40)">
+      <rect x="0" y="0" width="28" height="24" rx="2" fill="#f7efe2" stroke="#b07cd6" stroke-width="3"/>
+      <circle cx="14" cy="11" r="6" fill="#f7c98f"/>
+      <path d="M6 22 q8 -8 16 0 z" fill="#f7c98f"/>
+    </g>
+  </g>
+
+  <!-- 掛鐘 -->
+  <g transform="translate(300 28)">
+    <circle cx="0" cy="0" r="17" fill="#f7efe2" stroke="#c49a6c" stroke-width="3.4"/>
+    <g stroke="#8a5f37" stroke-width="2.4" stroke-linecap="round">
+      <path d="M0 0v-9M0 0l6 4"/>
+    </g>
+    <circle cx="0" cy="0" r="2" fill="#8a5f37"/>
+  </g>
+
+  <!-- 三角旗。一塊磚就是一段旗串，兩端都掛在 y=10 的釘子上，
+       平鋪時剛好接成「一串一串垂下來」的樣子。第一版用了一條不對稱的曲線，
+       接縫處會有明顯的台階。 -->
+  <path d="M0 10 Q180 30 360 10" fill="none" stroke="#c9a06a" stroke-width="2"/>
+  <g fill="#a2734a"><circle cx="0" cy="10" r="3"/><circle cx="360" cy="10" r="3"/></g>
+  <g>
+    <path d="M44 15 l16 2 -7 13 z" fill="#f2a6a0"/>
+    <path d="M100 21 l16 2 -7 13 z" fill="#ffd166"/>
+    <path d="M172 24 l16 0 -7 13 z" fill="#8fd0a0"/>
+    <path d="M244 21 l16 -2 -6 13 z" fill="#9fc8f0"/>
+    <path d="M300 15 l16 -2 -6 13 z" fill="#c9a0e8"/>
+  </g>
+
+  <!-- 護牆板（牆的下半段）+ 腰線 -->
+  <rect x="-10" y="102" width="380" height="98" fill="url(#rfWain)"/>
+  <rect x="-10" y="96" width="380" height="9" rx="3" fill="#d8bb98"/>
+  <g stroke="#d3b894" stroke-width="2" fill="none" opacity=".75">
+    <rect x="16" y="114" width="52" height="42" rx="3"/>
+    <rect x="96" y="114" width="52" height="42" rx="3"/>
+    <rect x="176" y="114" width="52" height="42" rx="3"/>
+    <rect x="256" y="114" width="52" height="42" rx="3"/>
+  </g>
+</svg>
