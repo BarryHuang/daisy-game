@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="none">
+  <!-- 遊戲中心·前景（捲動 1.35）：獎品箱和椅凳會從倉鼠前面掠過 -->
+  <g>
+    <g transform="translate(44 70)">
+      <rect x="0" y="10" width="52" height="40" rx="4" fill="#3a2e63" stroke="#6be7ff" stroke-width="2.4"/>
+      <rect x="-4" y="4" width="60" height="10" rx="4" fill="#4a3b7d" stroke="#6be7ff" stroke-width="2"/>
+      <g><circle cx="16" cy="0" r="7" fill="#ff8fb0"/><circle cx="34" cy="-2" r="7" fill="#ffd166"/></g>
+    </g>
+    <g transform="translate(186 82)">
+      <rect x="0" y="6" width="46" height="9" rx="4" fill="#ff6bd6"/>
+      <g fill="#4a3b7d"><rect x="5" y="14" width="5" height="26" rx="2"/><rect x="36" y="14" width="5" height="26" rx="2"/></g>
+    </g>
+    <g transform="translate(290 74)">
+      <rect x="0" y="8" width="44" height="40" rx="4" fill="#3a2e63" stroke="#ff6bd6" stroke-width="2.4"/>
+      <path d="M0 24h44M22 8v40" stroke="#ffd166" stroke-width="3" opacity=".8"/>
+      <circle cx="22" cy="24" r="6" fill="#ffd166"/>
+    </g>
+  </g>
+</svg>
