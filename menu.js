@@ -86,6 +86,27 @@ function injectMenuStyles() {
   background:rgba(123,31,162,.92);color:#fff;font-size:19px;line-height:1;
   box-shadow:0 3px 10px rgba(0,0,0,.32)}
 .dm-btn:active{transform:scale(.94)}
+/* 從遊戲中心的機台進來的時候，長一顆「回倉鼠的家」。
+   她是小孩，不會想到要去翻漢堡選單才找得到出口。
+
+   放右上角而不是 ☰ 旁邊：每一頁的標題都置中靠上，放左邊會把標題壓掉
+   （實測「翻翻樂 Memory Match」的中文整個被蓋住）。
+   而且出現 4 秒之後會縮成一顆圓的，長時間佔著畫面右上角也很吵。 */
+.dm-back{position:fixed;right:10px;top:calc(8px + env(safe-area-inset-top));z-index:10000;
+  display:flex;align-items:center;justify-content:flex-start;gap:6px;
+  height:40px;max-width:180px;padding:0 13px 0 11px;overflow:hidden;
+  border:0;border-radius:999px;cursor:pointer;
+  background:rgba(123,31,162,.92);color:#fff;
+  font-family:"Noto Sans TC","PingFang TC",-apple-system,sans-serif;
+  font-size:.82rem;font-weight:800;line-height:1;white-space:nowrap;
+  box-shadow:0 3px 10px rgba(0,0,0,.32);
+  transition:max-width .35s ease,padding .35s ease}
+.dm-back:active{transform:scale(.95)}
+.dm-back .dm-back-emoji{font-size:1.05rem;flex:0 0 auto}
+.dm-back .dm-back-text{transition:opacity .25s ease}
+.dm-back.dm-mini{max-width:40px;padding:0 0 0 9px}
+.dm-back.dm-mini .dm-back-text{opacity:0}
+@media (prefers-reduced-motion: reduce){ .dm-back,.dm-back .dm-back-text{transition:none} }
 .dm-backdrop{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.35);
   opacity:0;pointer-events:none;transition:opacity .18s}
 .dm-backdrop.dm-open{opacity:1;pointer-events:auto}
@@ -166,6 +187,37 @@ function checkForUpdate() {
     .catch(() => { /* 離線就算了，本來就沒得更新 */ });
 }
 
+/**
+ * 「⬅ 回倉鼠的家」：只有從遊戲中心的機台走進來才會出現。
+ *
+ * daisy_hamster.html 在跳進機台前會寫 sessionStorage["daisy_from_game"]，
+ * 回到倉鼠頁時 welcomeBackFromGame() 會把它讀掉。所以只要這個旗標還在，
+ * 就代表「她是從機台進來的、還沒回去」，這時候才顯示按鈕。
+ * 直接從選單點進遊戲的不顯示，免得在每一頁都多一顆按鈕擋住畫面。
+ */
+function addBackToHamster() {
+  if (document.getElementById("dm-back")) return;
+  if (currentPageName() === "daisy_hamster.html") return;
+  let from = null;
+  try { from = sessionStorage.getItem("daisy_from_game"); } catch (e) { return; }
+  if (!from) return;
+
+  const b = document.createElement("button");
+  b.id = "dm-back";
+  b.className = "dm-back";
+  b.type = "button";
+  b.title = "回倉鼠的家";
+  b.setAttribute("aria-label", "回倉鼠的家");
+  b.innerHTML = '<span class="dm-back-emoji">🐹</span>' +
+                '<span class="dm-back-text">回倉鼠的家</span>';
+  b.addEventListener("click", () => { location.href = "daisy_hamster.html"; });
+  // 再點一下會展開，忘記它是什麼的時候可以確認
+  b.addEventListener("pointerenter", () => b.classList.remove("dm-mini"));
+  document.body.appendChild(b);
+  // 先讓她看到完整的字，4 秒後縮成一顆圓的，不要一直擋著右上角
+  setTimeout(() => b.classList.add("dm-mini"), 4000);
+}
+
 function initMenu() {
   if (document.getElementById("dm-btn")) return;
   injectMenuStyles();
@@ -176,6 +228,8 @@ function initMenu() {
   const btn = document.getElementById("dm-btn");
   const panel = document.getElementById("dm-panel");
   const back = document.getElementById("dm-backdrop");
+
+  addBackToHamster();
 
   const setOpen = (open) => {
     panel.classList.toggle("dm-open", open);
