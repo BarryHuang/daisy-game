@@ -903,6 +903,7 @@
                 if (typeof buildPlatforms === 'function') {
                     buildPlatforms();
                     buildSpots();          // 位置是依磚寬算的，場景縮放變了要重放
+                    buildCabinets();
                     buildGates();
                     hamY = surfaceAt(hamX, hamY);
                     paintHamster();
@@ -1072,6 +1073,7 @@
                     { tile: 1, tx: 55,  ty: 130, icon: '🛏️', name: '睡窩',   act: 'nap'  },
                     { tile: 0, tx: 221, ty: 134, icon: '🥣', name: '飼料碗', act: 'eat'  },
                     { tile: 1, tx: 308, ty: 122, icon: '📖', name: '書櫃',   act: 'book' },
+                    { tile: 0, tx: 143, ty: 132, icon: '🧺', name: '收玩具', act: 'tidy' },
                 ],
                 exits: { right: 'garden' }
             },
@@ -1091,6 +1093,7 @@
                 spots: [
                     { tile: 0, tx: 120, ty: 168, icon: '🌼', name: '小花叢', act: 'flower' },
                     { tile: 1, tx: 250, ty: 168, icon: '🪣', name: '鬆土區', act: 'dig'    },
+                    { x: .640, ty: 168, icon: '🍀', name: '找幸運草', act: 'clover' },
                 ],
                 exits: { left: 'home', right: 'park' }
             },
@@ -1111,6 +1114,7 @@
                     { tile: 0, tx: 296, ty: 156, icon: '🌼', name: '花圃',   act: 'flower' },
                     { tile: 1, tx: 194, ty: 121, icon: '☀️', name: '長椅',   act: 'bench'  },
                     { tile: 1, tx: 60,  ty: 150, icon: '🦆', name: '餵鴨子', act: 'duck'   },
+                    { x: .745, ty: 150, icon: '🎣', name: '釣魚',   act: 'fish'   },
                 ],
                 exits: { left: 'garden', right: 'street' }
             },
@@ -1130,8 +1134,40 @@
                 spots: [
                     { tile: 0, tx: 149, ty: 144, icon: '📮', name: '郵筒',     act: 'mail'     },
                     { tile: 1, tx: 302, ty: 136, icon: '🍦', name: '冰淇淋攤', act: 'icecream' },
+                    { x: .430, ty: 150, icon: '📰', name: '送報紙',   act: 'paper'    },
+                    { x: .830, ty: 150, icon: '🧁', name: '蛋糕店',   act: 'cake'     },
                 ],
-                exits: { left: 'park', right: 'beach' }
+                exits: { left: 'park', right: 'arcade' }
+            },
+            arcade: {
+                name: '遊戲中心', emoji: '🎮', indoor: true,
+                layers: { far: 'arcade-far.svg', mid: '',
+                          near: 'arcade-near.svg', front: 'arcade-front.svg' },
+                platformImg: 'platform-neon.svg',
+                peekers: ['🐭', '👾'],
+                platforms: [
+                    { x1: .560, x2: .700, y: .26 },   // 上二樓的台階
+                    { x1: .660, x2: .900, y: .55 },   // 二樓走道（和台階在 x 上重疊才爬得上去）
+                ],
+                // 每一台機台連到一個遊戲頁。倉鼠會走過去、跳進螢幕裡。
+                cabinets: [
+                    { x: .130, y: 0,   href: 'daisy_memory.html',     emoji: '🎴', name: '翻翻樂' },
+                    { x: .200, y: 0,   href: 'daisy_whack.html',      emoji: '🔨', name: '打地鼠' },
+                    { x: .270, y: 0,   href: 'daisy_boss.html',       emoji: '⚔️', name: '怪獸戰' },
+                    { x: .340, y: 0,   href: 'daisy_runner.html',     emoji: '🏃', name: '跑酷' },
+                    { x: .410, y: 0,   href: 'daisy_restaurant.html', emoji: '🍳', name: '餐廳' },
+                    { x: .480, y: 0,   href: 'daisy_pusher.html',     emoji: '💰', name: '推幣機' },
+                    { x: .620, y: .26, href: 'daisy_claw.html',       emoji: '🕹️', name: '夾娃娃' },
+                    { x: .675, y: .26, href: 'daisy_hangman.html',    emoji: '🎯', name: '猜單字' },
+                    { x: .705, y: .55, href: 'daisy_scramble.html',   emoji: '🫧', name: '字母重組' },
+                    { x: .760, y: .55, href: 'daisy_snake.html',      emoji: '🐛', name: '彩虹小蟲' },
+                    { x: .815, y: .55, href: 'daisy_hex.html',        emoji: '🐱', name: '圍貓貓' },
+                    { x: .870, y: .55, href: 'daisy_multiply.html',   emoji: '✖️', name: '九九乘法' },
+                ],
+                spots: [
+                    { x: .545, ty: 150, icon: '🎰', name: '扭蛋機', act: 'gacha' },
+                ],
+                exits: { left: 'street', right: 'beach' }
             },
             beach: {
                 name: '陽光沙灘', emoji: '🏖️', cost: 500,
@@ -1149,11 +1185,12 @@
                 spots: [
                     { tile: 1, tx: 140, ty: 140, icon: '🏰', name: '堆沙堡',   act: 'sand'  },
                     { tile: 0, tx: 314, ty: 156, icon: '🐚', name: '撿貝殼',   act: 'shell' },
+                    { x: .640, ty: 150, icon: '🏄', name: '衝浪',     act: 'surf'  },
                 ],
-                exits: { left: 'street' }
+                exits: { left: 'arcade' }
             }
         };
-        const MAP_ORDER = ['home', 'garden', 'park', 'street', 'beach'];
+        const MAP_ORDER = ['home', 'garden', 'park', 'street', 'arcade', 'beach'];
         let currentMap = 'home';
         let traveling = false;
 
@@ -1503,7 +1540,7 @@
 
             cage.addEventListener('pointerdown', (e) => {
                 if (arranging) return;                       // 佈置模式讓道具自己處理
-                if (e.target.closest('button, .quest-btn, .visitor-sprite, #golden-butterfly, .gate, .spot')) return;
+                if (e.target.closest('button, .quest-btn, .visitor-sprite, #golden-butterfly, .gate, .spot, .cabinet')) return;
                 cancelAnimationFrame(flingRaf); flingRaf = 0; vel = 0;
                 pid = e.pointerId;
                 startX = lastX = e.clientX; startY = e.clientY; startCam = camX;
@@ -1579,6 +1616,7 @@
             addEventListener('resize', () => {
                 buildPlatforms();
                 buildSpots();
+                buildCabinets();
                 buildGates();
                 hamY = surfaceAt(hamX, hamY);       // 籠子高度變了，重新貼回腳下那層
                 paintHamster();
@@ -1631,6 +1669,7 @@
             buildPlatforms();
             buildGates();
             buildSpots();
+            buildCabinets();
             placePeekers();
             updateMapChip();
         }
@@ -1684,6 +1723,13 @@
             icecream: { emoji: '🍦', say: '冰冰甜甜！',     happy: 8,  hunger: 12, cost: 5, cd: 90 },
             sand:     { emoji: '🏰', say: '蓋好城堡了！',   happy: 7,  clean: -6, cd: 150 },
             shell:    { emoji: '🐚', say: '撿到漂亮的！',   happy: 4,  coins: [0, 2], cd: 180 },
+            tidy:     { emoji: '🧸', say: '收得好整齊！',   happy: 3,  coins: [1, 2], cd: 300 },
+            clover:   { emoji: '🍀', say: '幸運草！',       happy: 4,  coins: [0, 4], cd: 300 },
+            fish:     { emoji: '🐟', say: '釣到魚了！',     happy: 5,  coins: [0, 6], cd: 300 },
+            paper:    { emoji: '📰', say: '打工辛苦了',     happy: 2,  coins: [8, 14], cd: 1200 },
+            cake:     { emoji: '🧁', say: '好好吃！',       happy: 6,  hunger: 25, cost: 12, cd: 120 },
+            surf:     { emoji: '🌊', say: '衝浪超好玩！',   happy: 14, clean: -8, cost: 15, cd: 180 },
+            gacha:    { emoji: '🎁', say: '',               happy: 0,  cost: 0, cd: 0, special: 'gacha' },
         };
 
         /** 一塊背景磚現在有多寬（CSS 的 background-size 是 --scene-h * 1.0909） */
@@ -1737,8 +1783,13 @@
                 b.dataset.i = i;
                 b.style.left = (spotWorldX(p) / W * 100) + '%';
                 b.style.bottom = spotBottom(p, U) + 'px';
+                // 賺錢的標綠色 +💰、花錢的標橘色和價錢，她一眼就知道哪個要付費
+                const a = SPOT_ACTS[p.act] || {};
+                let badge = '';
+                if (a.cost) badge = '<span class="spot-tag pay">-' + a.cost + '</span>';
+                else if (a.coins) badge = '<span class="spot-tag earn">+💰</span>';
                 b.innerHTML = '<span class="spot-ring"></span><span class="spot-icon">' +
-                              p.icon + '</span>';
+                              p.icon + '</span>' + badge;
                 b.title = p.name;
                 b.addEventListener('click', (e) => { e.stopPropagation(); useSpot(i); });
                 world.appendChild(b);
@@ -1778,6 +1829,9 @@
                 const ham = document.getElementById('hamster');
                 await hamsterWalkTo(spotWorldX(p), 150, (p.y || 0) * usableH());
                 if (el) el.classList.add('used');
+
+                // 扭蛋機直接交給既有的盲盒流程（它有自己的動畫和獎品表）
+                if (act.special === 'gacha') { buyGacha(); return; }
 
                 // 演一小段。沒有專屬動作就用 happy（跳兩下）
                 const pose = act.pose === 'eat' ? 'eat' : 'happy';
@@ -1862,6 +1916,104 @@
             if (color) bubble.style.color = color;
             el.appendChild(bubble);
             setTimeout(() => bubble.remove(), 2200);
+        }
+
+        // ================================================================
+        // 遊戲中心的機台
+        // ================================================================
+        // 機台不畫進背景磚，而是獨立的 DOM ——
+        // 背景磚只有三片，畫進去的話最多只能擺三台，而且位置會跟著磚寬跑。
+        function buildCabinets() {
+            const world = worldEl();
+            if (!world) return;
+            world.querySelectorAll('.cabinet').forEach(el => el.remove());
+            const list = curMap().cabinets || [];
+            const U = usableH();
+            list.forEach((c, i) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'cabinet';
+                b.style.left = (c.x * 100) + '%';
+                b.style.bottom = ((c.y || 0) * U + footInset() - 4) + 'px';
+                b.style.setProperty('--hue', (i * 41) % 360);
+                b.innerHTML =
+                    '<span class="cab-name">' + c.name + '</span>' +
+                    '<span class="cab-body">' +
+                      '<span class="cab-screen">' + c.emoji + '</span>' +
+                      '<span class="cab-panel"><i class="cab-stick"></i>' +
+                        '<i class="cab-btn"></i><i class="cab-btn b2"></i></span>' +
+                    '</span>';
+                b.title = c.name;
+                b.addEventListener('click', (e) => { e.stopPropagation(); playCabinet(i); });
+                world.appendChild(b);
+            });
+        }
+
+        /**
+         * 倉鼠走到機台前 -> 螢幕亮起來 -> 牠跳進去 -> 換頁到那個遊戲。
+         * 離開前先把地圖存起來，玩完回來才會站在同一台機台旁邊。
+         */
+        async function playCabinet(i) {
+            const c = (curMap().cabinets || [])[i];
+            if (!c || usingSpot || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+
+            usingSpot = true;
+            try {
+                const el = document.querySelectorAll('.cabinet')[i];
+                const wrap = document.getElementById('hamster-wrapper');
+                const ham = document.getElementById('hamster');
+                await hamsterWalkTo(c.x * worldWidth(), 160, (c.y || 0) * usableH());
+
+                if (el) el.classList.add('on');
+                playTone(660, 'square', .07);
+                setTimeout(() => playTone(880, 'square', .07), 110);
+                await wait(320);
+
+                // 跳進螢幕：縮小 + 往機台的高度靠過去
+                if (!actReduced()) {
+                    ham.style.transition = 'transform .42s cubic-bezier(.4,0,.6,1)';
+                    ham.style.transform = 'scale(.12) rotate(18deg)';
+                    ham.style.opacity = '0';
+                }
+                feelHaptic(14);
+                await wait(actReduced() ? 80 : 420);
+
+                petData.map = currentMap;
+                savePetData();
+                try { sessionStorage.setItem('daisy_from_game', c.name); } catch (e) {}
+                curtain(true, { emoji: c.emoji, name: c.name });
+                await wait(actReduced() ? 60 : 340);
+                location.href = c.href;
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('進機台中斷', e);
+                curtain(false);
+                const ham = document.getElementById('hamster');
+                ham.style.transition = ''; ham.style.transform = ''; ham.style.opacity = '';
+                usingSpot = false;
+            }
+        }
+
+        /** 從遊戲回來：倉鼠從機台裡彈出來，順便給一點快樂 */
+        function welcomeBackFromGame() {
+            let from = null;
+            try {
+                from = sessionStorage.getItem('daisy_from_game');
+                sessionStorage.removeItem('daisy_from_game');
+            } catch (e) {}
+            if (!from) return;
+            setTimeout(() => {
+                const ham = document.getElementById('hamster');
+                if (!ham) return;
+                ham.classList.add('happy');
+                setTimeout(() => ham.classList.remove('happy'), 1000);
+                createFloatingEmoji('🎉', 1500, -40);
+                addHappiness(3);
+                savePetData();
+                updatePetUI();
+                const el = document.querySelector('.cabinet');
+                if (el) floatAtSpot(el, from + ' 玩得開心！+3 快樂', '#7b1fa2');
+            }, 900);
         }
 
         function curtain(on, map) {
@@ -2199,6 +2351,7 @@
             applyWeather();
             placePeekers();
             applyLayout();
+            welcomeBackFromGame();
             ARRANGE_PROPS.forEach((k) => {
                 const el = document.getElementById('prop-' + k);
                 if (el) el.addEventListener('pointerdown', startPropDrag);

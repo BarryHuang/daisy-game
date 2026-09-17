@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 44" preserveAspectRatio="none">
+  <!-- 遊戲中心的二樓走道，水平平鋪。兩端的圓角由 CSS 處理。 -->
+  <defs>
+    <linearGradient id="deck" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#57488f"/><stop offset=".4" stop-color="#3f3373"/>
+      <stop offset="1" stop-color="#2a2149"/>
+    </linearGradient>
+  </defs>
+  <rect y="4" width="120" height="40" fill="url(#deck)"/>
+  <rect y="4" width="120" height="5" fill="#6be7ff"/>
+  <rect y="5.5" width="120" height="2" fill="#d8f7ff" opacity=".8"/>
+  <!-- 走道上的止滑條 -->
+  <g stroke="#6b58ab" stroke-width="2" opacity=".7">
+    <path d="M14 14v26M44 14v26M74 14v26M104 14v26"/>
+  </g>
+  <rect y="38" width="120" height="6" fill="#ff6bd6" opacity=".55"/>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 遊戲中心·遠景（牆面，捲動 0.25）。
+       背景留透明：籠子本身的 CSS 就是牆，這一層只畫掛在牆上的東西。
+       橫貫整面牆的霓虹燈條要伸出左右邊界，接縫才不會出現一截空白。 -->
+  <defs>
+    <linearGradient id="acWain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b2f63"/><stop offset="1" stop-color="#2a2149"/>
+    </linearGradient>
+    <linearGradient id="acSign" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff6bd6"/><stop offset=".5" stop-color="#ffd166"/>
+      <stop offset="1" stop-color="#6be7ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 天花板的燈條 -->
+  <rect x="-10" y="6" width="380" height="7" rx="3.5" fill="#6be7ff" opacity=".85"/>
+  <rect x="-10" y="6" width="380" height="3" rx="1.5" fill="#d8f7ff" opacity=".9"/>
+
+  <!-- 大招牌 GAME -->
+  <g transform="translate(112 26)">
+    <rect x="0" y="0" width="136" height="38" rx="8" fill="#1d1738" stroke="url(#acSign)" stroke-width="3"/>
+    <g fill="#ffd166">
+      <!-- G A M E：用簡單的幾何塊拼，不用字型才不會在不同機器上跑掉 -->
+      <path d="M18 10 h18 v5 h-13 v11 h8 v-4 h-5 v-5 h10 v14 h-18 z"/>
+      <path d="M44 31 l7 -21 h7 l7 21 h-6 l-1.4 -5 h-6.2 l-1.4 5 z M55 21 l-1.4 -6 -1.4 6 z"/>
+      <path d="M72 31 v-21 h6 l4.5 10 4.5 -10 h6 v21 h-5 v-11 l-3.5 8 h-4 l-3.5 -8 v11 z"/>
+      <path d="M100 31 v-21 h17 v5 h-11 v3 h9 v5 h-9 v3 h11 v5 z"/>
+    </g>
+    <g fill="#6be7ff" opacity=".9">
+      <circle cx="8" cy="8" r="2.4"/><circle cx="128" cy="8" r="2.4"/>
+      <circle cx="8" cy="30" r="2.4"/><circle cx="128" cy="30" r="2.4"/>
+    </g>
+  </g>
+
+  <!-- 海報 -->
+  <g transform="translate(28 34)">
+    <rect x="0" y="0" width="42" height="52" rx="3" fill="#1f1a3d" stroke="#ff6bd6" stroke-width="2.4"/>
+    <circle cx="21" cy="20" r="11" fill="#ff6bd6" opacity=".6"/>
+    <g fill="#ffd166"><rect x="8" y="38" width="26" height="4" rx="2"/><rect x="12" y="45" width="18" height="3" rx="1.5"/></g>
+  </g>
+  <g transform="translate(288 40)">
+    <rect x="0" y="0" width="42" height="46" rx="3" fill="#1f1a3d" stroke="#6be7ff" stroke-width="2.4"/>
+    <path d="M10 30 L18 14 L24 24 L30 18 L34 30 Z" fill="#6be7ff" opacity=".7"/>
+    <g fill="#ffd166"><rect x="9" y="35" width="24" height="4" rx="2"/></g>
+  </g>
+
+  <!-- 牆面的霓虹斜紋 -->
+  <g stroke="#5b4a94" stroke-width="5" opacity=".5">
+    <path d="M0 96 L20 76M40 96 L60 76M80 96 L100 76M120 96 L140 76M160 96 L180 76
+             M200 96 L220 76M240 96 L260 76M280 96 L300 76M320 96 L340 76"/>
+  </g>
+
+  <!-- 護牆（牆的下半段）+ 腰線霓虹 -->
+  <rect x="-10" y="102" width="380" height="98" fill="url(#acWain)"/>
+  <rect x="-10" y="96" width="380" height="7" rx="3" fill="#ff6bd6" opacity=".85"/>
+  <rect x="-10" y="97" width="380" height="2.5" rx="1.2" fill="#ffd8f3" opacity=".9"/>
+</svg>
