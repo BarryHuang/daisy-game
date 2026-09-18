@@ -1223,3 +1223,67 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
 .hamster-cage.map-arcade.time-night  { --sky1: #2e2550; --sky2: #1c1636; }
 /* 遊戲中心本來就是暗的，不用再壓一層夜色 */
 .hamster-cage.map-arcade.time-night::after { opacity: .35; }
+
+/* ===================================================================
+   遊樂設施（摩天輪 / 碰碰車）
+   =================================================================== */
+.ride {
+    position: absolute; z-index: 1; transform: translateX(-50%);
+    padding: 0; border: 0; background: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center;
+    font-family: inherit;
+}
+.ride svg { display: block; overflow: visible; }
+/* 摩天輪畫大一點（1.45 倍），倉鼠坐進吊艙才不會比整座輪子還大 */
+.ride .fw { width: calc(261px * var(--k, 1)); height: calc(305px * var(--k, 1)); }
+.ride .bp { width: calc(260px * var(--k, 1)); height: calc(120px * var(--k, 1)); }
+/* 價錢牌。摩天輪很高，牌子掛在底座旁邊才點得到也看得到 */
+.ride .ride-tag {
+    /* 抬到前景層（場景高的 26%）以上，不然會被前面的氣球和爆米花車蓋住；
+       再高一點到 42%，才不會壓到坐在最低那個吊艙／車上的倉鼠。 */
+    position: absolute; bottom: calc(var(--scene-h, 300px) * .42); left: 50%;
+    transform: translateX(-50%);
+    background: rgba(40, 25, 60, .62); color: #fff;
+    border: 2px solid rgba(255,255,255,.85); border-radius: 999px;
+    padding: 3px 10px; font-size: .68rem; font-weight: 800; white-space: nowrap;
+    box-shadow: 0 3px 8px rgba(0,0,0,.28);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.ride .ride-tag b { color: #ffd166; }
+.ride:active { transform: translateX(-50%) scale(.97); }
+.ride.cooling .fw, .ride.cooling .bp { filter: grayscale(.7) brightness(.85); }
+.ride.cooling .ride-tag { opacity: .6; }
+
+/* 摩天輪：--a 由 JS 每幀更新。輪框正轉、吊艙反轉回來維持水平，
+   所以吊艙看起來永遠是正的（真的摩天輪就是這樣吊著的）。 */
+.ride .fw-wheel {
+    transform: rotate(calc(var(--a, 0) * -1deg));
+    transform-box: view-box; transform-origin: 90px 84px;
+}
+.ride .fw-car {
+    transform: rotate(calc(var(--a, 0) * 1deg));
+    transform-box: fill-box; transform-origin: 50% 0%;
+}
+/* 沒人坐的時候也慢慢轉，場景才像活的 */
+.ride-ferris:not(.on):not(.cooling) .fw-wheel { animation: fwIdle 26s linear infinite; }
+.ride-ferris:not(.on):not(.cooling) .fw-car   { animation: fwIdleCar 26s linear infinite; }
+@keyframes fwIdle    { to { transform: rotate(-360deg); } }
+@keyframes fwIdleCar { to { transform: rotate(360deg); } }
+
+/* 碰碰車 */
+.rcar {
+    position: absolute; z-index: 2; transform: translateX(-50%);
+    pointer-events: none;
+}
+.rcar svg { display: block; width: 100%; height: auto; }
+.rcar.mine { z-index: 3; }
+.rcar.hit { animation: rcarHit .22s ease-out; }
+@keyframes rcarHit {
+    0%   { transform: translateX(-50%) scale(1.14, .88); }
+    60%  { transform: translateX(-50%) scale(.95, 1.06); }
+    100% { transform: translateX(-50%) scale(1, 1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ride-ferris .fw-wheel, .ride-ferris .fw-car, .rcar.hit { animation: none; }
+}

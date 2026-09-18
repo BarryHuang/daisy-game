@@ -904,6 +904,7 @@
                     buildPlatforms();
                     buildSpots();          // 位置是依磚寬算的，場景縮放變了要重放
                     buildCabinets();
+                    buildRides();
                     buildGates();
                     hamY = surfaceAt(hamX, hamY);
                     paintHamster();
@@ -1167,7 +1168,28 @@
                 spots: [
                     { x: .545, ty: 150, icon: '🎰', name: '扭蛋機', act: 'gacha' },
                 ],
-                exits: { left: 'street', right: 'beach' }
+                exits: { left: 'street', right: 'fair' }
+            },
+            fair: {
+                name: '遊樂園', emoji: '🎠',
+                layers: { far: 'fair-far.svg', mid: '',
+                          near: 'fair-near.svg', front: 'fair-front.svg' },
+                platformImg: 'platform-wood.svg',
+                peekers: ['🐰', '🎈'],
+                platforms: [
+                    { x1: .160, x2: .265, y: .48 },
+                    { x1: .225, x2: .320, y: .95 },
+                    { x1: .830, x2: .930, y: .48 },
+                ],
+                // 遊樂設施：要付錢，但快樂度給得很多
+                rides: [
+                    { type: 'ferris', x: .450, cost: 20, happy: 18, cd: 180, name: '摩天輪' },
+                    { type: 'bumper', x: .700, cost: 15, happy: 14, cd: 180, name: '碰碰車' },
+                ],
+                spots: [
+                    { x: .120, ty: 150, icon: '🍿', name: '爆米花', act: 'popcorn' },
+                ],
+                exits: { left: 'arcade', right: 'beach' }
             },
             beach: {
                 name: '陽光沙灘', emoji: '🏖️', cost: 500,
@@ -1187,10 +1209,10 @@
                     { tile: 0, tx: 314, ty: 156, icon: '🐚', name: '撿貝殼',   act: 'shell' },
                     { x: .640, ty: 150, icon: '🏄', name: '衝浪',     act: 'surf'  },
                 ],
-                exits: { left: 'arcade' }
+                exits: { left: 'fair' }
             }
         };
-        const MAP_ORDER = ['home', 'garden', 'park', 'street', 'arcade', 'beach'];
+        const MAP_ORDER = ['home', 'garden', 'park', 'street', 'arcade', 'fair', 'beach'];
         let currentMap = 'home';
         let traveling = false;
 
@@ -1540,7 +1562,7 @@
 
             cage.addEventListener('pointerdown', (e) => {
                 if (arranging) return;                       // 佈置模式讓道具自己處理
-                if (e.target.closest('button, .quest-btn, .visitor-sprite, #golden-butterfly, .gate, .spot, .cabinet')) return;
+                if (e.target.closest('button, .quest-btn, .visitor-sprite, #golden-butterfly, .gate, .spot, .cabinet, .ride')) return;
                 cancelAnimationFrame(flingRaf); flingRaf = 0; vel = 0;
                 pid = e.pointerId;
                 startX = lastX = e.clientX; startY = e.clientY; startCam = camX;
@@ -1617,13 +1639,14 @@
                 buildPlatforms();
                 buildSpots();
                 buildCabinets();
+                buildRides();
                 buildGates();
                 hamY = surfaceAt(hamX, hamY);       // 籠子高度變了，重新貼回腳下那層
                 paintHamster();
                 cameraLookAt(hamX, true);
             });
             // 冷卻中的互動點每 5 秒刷新一次顏色
-            setInterval(refreshSpots, 5000);
+            setInterval(() => { refreshSpots(); refreshRides(); }, 5000);
         }
 
         // ================================================================
@@ -1670,6 +1693,7 @@
             buildGates();
             buildSpots();
             buildCabinets();
+            buildRides();
             placePeekers();
             updateMapChip();
         }
@@ -1729,6 +1753,7 @@
             paper:    { emoji: '📰', say: '打工辛苦了',     happy: 2,  coins: [8, 14], cd: 1200 },
             cake:     { emoji: '🧁', say: '好好吃！',       happy: 6,  hunger: 25, cost: 12, cd: 120 },
             surf:     { emoji: '🌊', say: '衝浪超好玩！',   happy: 14, clean: -8, cost: 15, cd: 180 },
+            popcorn:  { emoji: '🍿', say: '卡滋卡滋！',     happy: 5,  hunger: 14, cost: 6, cd: 120 },
             gacha:    { emoji: '🎁', say: '',               happy: 0,  cost: 0, cd: 0, special: 'gacha' },
         };
 
@@ -1916,6 +1941,327 @@
             if (color) bubble.style.color = color;
             el.appendChild(bubble);
             setTimeout(() => bubble.remove(), 2200);
+        }
+
+        // ================================================================
+        // 遊樂設施（摩天輪 / 碰碰車）
+        // ================================================================
+        // 和互動點的差別：設施是「一段演出」，倉鼠會真的坐上去繞一圈。
+        // 演出期間 physSuspend()，wrapper 的 transform 由這裡逐幀寫。
+
+        const FERRIS_VB = { w: 180, h: 210, hubY: 84, R: 66, hang: 24 };
+
+        function buildRides() {
+            const world = worldEl();
+            if (!world) return;
+            world.querySelectorAll('.ride').forEach(el => el.remove());
+            (curMap().rides || []).forEach((r, i) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'ride ride-' + r.type;
+                b.dataset.i = i;
+                b.style.left = (r.x * 100) + '%';
+                b.style.bottom = (footInset() - 4) + 'px';
+                b.title = r.name;
+                b.innerHTML = (r.type === 'ferris' ? ferrisMarkup() : bumperMarkup()) +
+                    '<span class="ride-tag">' + r.name + ' <b>-' + r.cost + '💰</b></span>';
+                b.addEventListener('click', (e) => { e.stopPropagation(); useRide(i); });
+                world.appendChild(b);
+            });
+            refreshRides();
+        }
+
+        function refreshRides() {
+            document.querySelectorAll('.ride').forEach(el => {
+                el.classList.toggle('cooling', rideLeft(+el.dataset.i) > 0);
+            });
+        }
+        function rideKey(i) { return currentMap + ':ride:' + i; }
+        function rideLeft(i) {
+            const r = (curMap().rides || [])[i];
+            if (!r) return 0;
+            const at = (petData.spots && petData.spots[rideKey(i)]) || 0;
+            return Math.max(0, r.cd - (Date.now() / 1000 - at));
+        }
+
+        /** 摩天輪：輪框、輻條、六個吊艙。吊艙靠 CSS 反向轉，才會一直是正的 */
+        function ferrisMarkup() {
+            const V = FERRIS_VB, cols = ['#ff8fb0', '#ffd166', '#8fd0a0', '#9fc8f0', '#c792ea', '#ffa07a'];
+            let spokes = '', cars = '';
+            for (let k = 0; k < 6; k++) {
+                const th = k * Math.PI / 3;
+                const x = 90 + V.R * Math.sin(th), y = V.hubY + V.R * Math.cos(th);
+                spokes += '<path d="M90 ' + V.hubY + ' L' + x.toFixed(1) + ' ' + y.toFixed(1) + '"/>';
+                cars += '<g transform="translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ')">'
+                      + '<g class="fw-car">'
+                      +   '<path d="M0 0v9" stroke="#8a5f37" stroke-width="2.4"/>'
+                      +   '<rect x="-11" y="9" width="22" height="16" rx="4" fill="' + cols[k] + '"'
+                      +   ' stroke="#8a5f37" stroke-width="1.8"/>'
+                      +   '<rect x="-11" y="9" width="22" height="5" rx="2.5" fill="#fff" opacity=".45"/>'
+                      + '</g></g>';
+            }
+            return '<svg class="fw" viewBox="0 0 180 210" aria-hidden="true">'
+                 + '<g stroke="#b08a5c" stroke-width="7" stroke-linecap="round" fill="none">'
+                 +   '<path d="M90 ' + V.hubY + ' L36 196M90 ' + V.hubY + ' L144 196"/></g>'
+                 + '<rect x="22" y="192" width="136" height="11" rx="5" fill="#c9a06a" stroke="#8a5f37" stroke-width="2"/>'
+                 + '<g class="fw-wheel">'
+                 +   '<circle cx="90" cy="' + V.hubY + '" r="' + V.R + '" fill="none" stroke="#e0714c" stroke-width="6"/>'
+                 +   '<circle cx="90" cy="' + V.hubY + '" r="' + (V.R - 9) + '" fill="none" stroke="#f2a68c" stroke-width="3"/>'
+                 +   '<g stroke="#f2a68c" stroke-width="3">' + spokes + '</g>'
+                 +   cars
+                 + '</g>'
+                 + '<circle cx="90" cy="' + V.hubY + '" r="10" fill="#ffd166" stroke="#c9564c" stroke-width="3"/>'
+                 + '</svg>';
+        }
+
+        /** 碰碰車場地：地板、矮圍欄、三台停著的車 */
+        function bumperMarkup() {
+            const car = (x, col, dark) =>
+                '<g transform="translate(' + x + ' 64)">'
+                + '<ellipse cx="22" cy="30" rx="22" ry="6" fill="#000" opacity=".16"/>'
+                + '<path d="M2 24 q0 -12 20 -12 q20 0 20 12 l-2 8 h-36 z" fill="' + col + '"'
+                + ' stroke="' + dark + '" stroke-width="2"/>'
+                + '<rect x="0" y="24" width="44" height="9" rx="4.5" fill="' + dark + '"/>'
+                + '<rect x="12" y="6" width="20" height="8" rx="3" fill="' + dark + '" opacity=".85"/>'
+                + '<path d="M22 6 v-10" stroke="#8a8f9c" stroke-width="2"/>'
+                + '<circle cx="22" cy="-6" r="3" fill="#ffd166"/>'
+                + '</g>';
+            return '<svg class="bp" viewBox="0 0 260 120" aria-hidden="true">'
+                 + '<ellipse cx="130" cy="92" rx="124" ry="26" fill="#6f7c96"/>'
+                 + '<ellipse cx="130" cy="88" rx="118" ry="23" fill="#8d9ab4"/>'
+                 + '<ellipse cx="130" cy="88" rx="96" ry="17" fill="none" stroke="#a7b3c9" stroke-width="3"/>'
+                 + '<g stroke="#e0e6ef" stroke-width="5" stroke-linecap="round">'
+                 +   '<path d="M8 84 L8 70M60 96 L60 82M130 100 L130 86M200 96 L200 82M252 84 L252 70"/></g>'
+                 + '<path d="M8 70 Q130 86 252 70" fill="none" stroke="#c6cedb" stroke-width="5"/>'
+                 + car(26, '#f2857a', '#c9564c') + car(108, '#7fb6df', '#4e7fa8')
+                 + car(190, '#8fd0a0', '#4f9f6a')
+                 + '</svg>';
+        }
+
+        let riding = false;
+
+        async function useRide(i) {
+            const r = (curMap().rides || [])[i];
+            if (!r || riding || usingSpot || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+            const el = document.querySelector('.ride[data-i="' + i + '"]');
+            const left = rideLeft(i);
+            if (left > 0) { floatAtSpot(el, '再等 ' + Math.ceil(left) + ' 秒 ⏳', '#8a7b98'); return; }
+            if (petData.coins < r.cost) { floatAtSpot(el, '要 ' + r.cost + ' 💰 喔', '#e0714c'); return; }
+
+            riding = true;
+            try {
+                // 走到設施前面（摩天輪從正下方上車，碰碰車從左邊進場）
+                const board = r.type === 'ferris' ? r.x * worldWidth()
+                                                  : r.x * worldWidth() - rideRect(el).w * 0.34;
+                await hamsterWalkTo(board, 150, 0);
+
+                petData.coins -= r.cost;
+                updatePetUI();
+                floatAtSpot(el, '-' + r.cost + ' 💰', '#e0714c');
+                await wait(260);
+
+                physSuspend();
+                if (r.type === 'ferris') await rideFerris(el);
+                else await rideBumper(el);
+
+                addHappiness(r.happy);
+                const ham = document.getElementById('hamster');
+                if (typeof fxFloat === 'function') {
+                    fxFloat('+' + r.happy + ' 快樂 💖', ham.getBoundingClientRect(), '#ff8fb0');
+                    fxBurst(ham.getBoundingClientRect(), 16);
+                }
+                createFloatingEmoji('🥳', 1400, -40);
+                if (!petData.spots) petData.spots = {};
+                petData.spots[rideKey(i)] = Math.round(Date.now() / 1000);
+                savePetData();
+                updatePetUI();
+                refreshRides();
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('遊樂設施中斷', e);
+            } finally {
+                cleanupRide();
+                riding = false;
+            }
+        }
+
+        /** 設施在世界座標裡的位置與大小 */
+        function rideRect(el) {
+            const wb = worldEl().getBoundingClientRect(), r = el.getBoundingClientRect();
+            return { cx: r.left - wb.left + r.width / 2, baseH: wb.bottom - r.bottom,
+                     w: r.width, h: r.height };
+        }
+
+        function cleanupRide() {
+            const ham = document.getElementById('hamster');
+            if (ham) {
+                ham.style.transition = ''; ham.style.transform = '';
+                ham.style.transformOrigin = ''; ham.style.opacity = '';
+                ham.classList.remove('acting');
+            }
+            document.querySelectorAll('.ride').forEach(e => e.classList.remove('on'));
+            document.querySelectorAll('.rcar').forEach(e => e.remove());
+            const c = cageEl(); if (c) c.classList.remove('shaking');
+            physResume(hamX);
+        }
+
+        /**
+         * 摩天輪：倉鼠坐進最低的吊艙，跟著轉一圈半。
+         * 每一幀自己算圓周上的位置（hamX / hamY），CSS 只負責把輪框轉到同一個角度、
+         * 吊艙再反向轉回來維持水平。
+         */
+        function rideFerris(el) {
+            const g = (() => {
+                const R = rideRect(el), V = FERRIS_VB, k = R.h / V.h;
+                return { cx: R.cx, hubH: R.baseH + (V.h - V.hubY) * k, R: V.R * k, hang: V.hang * k };
+            })();
+            const ham = document.getElementById('hamster');
+            el.classList.add('on');
+            cameraLookAt(g.cx);
+
+            // 吊艙只有三十幾 px 寬，原尺寸的倉鼠會整個蓋住摩天輪。
+            // transform-origin 設在腳底，縮小之後「腳的位置」還是 hamY，
+            // 不用再去量縮放後的偏移（跑輪那段就是為了這個量了三次）。
+            // .acting 是為了讓待機的呼吸動畫（hmIdle）讓開 —— CSS animation 的
+            // transform 會蓋掉 inline style，不加的話這行縮放根本不會生效
+            // （實測倉鼠還是原尺寸，整個蓋住摩天輪）。
+            ham.classList.add('acting');
+            ham.style.transformOrigin = '50% 100%';
+            ham.style.transform = 'scale(.46)';
+
+            const seat = (a) => {
+                hamX = g.cx + g.R * Math.sin(a);
+                hamY = Math.max(0, g.hubH - g.R * Math.cos(a) - g.hang);
+                hamFacing = 1;
+                paintHamster();
+            };
+            seat(0);
+
+            const TURNS = 1.75, MS = 7200;
+            return new Promise((resolve) => {
+                if (actReduced()) { setTimeout(resolve, 500); return; }
+                playTone(440, 'sine', .12);
+                let topShown = false;
+                const t0 = performance.now();
+                const step = (now) => {
+                    const t = Math.min(1, (now - t0) / MS);
+                    // 起步慢、中間穩、收尾慢
+                    const e = t * t * (3 - 2 * t);
+                    const a = e * TURNS * Math.PI * 2;
+                    el.style.setProperty('--a', (a * 180 / Math.PI).toFixed(2));
+                    seat(a);
+                    if (!topShown && e > 0.28) {           // 第一次到最高點
+                        topShown = true;
+                        playTone(880, 'sine', .12);
+                        if (typeof fxBurst === 'function') fxBurst(ham.getBoundingClientRect(), 12);
+                        createFloatingEmoji('✨', 1200, -30);
+                    }
+                    if (t < 1) requestAnimationFrame(step);
+                    else { el.style.setProperty('--a', '0'); seat(0); playTone(330, 'sine', .12); resolve(); }
+                };
+                requestAnimationFrame(step);
+            });
+        }
+
+        /**
+         * 碰碰車：倉鼠坐上一台車，在場地裡左右衝，撞到對手就一起彈開。
+         * 車子是獨立的 .rcar 元素，和倉鼠一起逐幀移動。
+         */
+        function rideBumper(el) {
+            const R = rideRect(el);
+            const world = worldEl();
+            const ham = document.getElementById('hamster');
+            el.classList.add('on');
+            cameraLookAt(R.cx);
+
+            const scale = R.w / 260;                       // 場地的縮放
+            const half = R.w * 0.40;                       // 可以跑的範圍
+            const carW = 74 * scale;                       // 車子的寬（viewBox 是正方形，高相同）
+            // 座位＝車身上緣。車子的 viewBox 44 高，車身頂在 y=26，
+            // 所以離車底 (44-26)/44 ≈ 0.41 個車高。
+            const seatH = R.baseH + carW * 0.41;
+
+            const mk = (cls, col, dark) => {
+                const d = document.createElement('div');
+                d.className = 'rcar ' + cls;
+                d.style.width = carW + 'px';
+                d.innerHTML =
+                  '<svg viewBox="0 0 44 44" aria-hidden="true">'
+                + '<ellipse cx="22" cy="40" rx="21" ry="4" fill="#000" opacity=".18"/>'
+                + '<path d="M2 26 q0 -13 20 -13 q20 0 20 13 l-2 9 h-36 z" fill="' + col + '" stroke="' + dark + '" stroke-width="2"/>'
+                + '<rect x="0" y="26" width="44" height="10" rx="5" fill="' + dark + '"/>'
+                + '<path d="M22 12 v-9" stroke="#8a8f9c" stroke-width="2"/>'
+                + '<circle cx="22" cy="2" r="3" fill="#ffd166"/></svg>';
+                world.appendChild(d);
+                return d;
+            };
+            ham.classList.add('acting');
+            ham.style.transformOrigin = '50% 100%';
+            ham.style.transform = 'scale(.62)';
+            const mine = mk('mine', '#ffd166', '#c9954c');
+            const foes = [ mk('ai', '#f2857a', '#c9564c'), mk('ai', '#7fb6df', '#4e7fa8'),
+                           mk('ai', '#8fd0a0', '#4f9f6a') ];
+
+            const place = (d, x) => {
+                d.style.left = (x / worldWidth() * 100) + '%';
+                d.style.bottom = R.baseH + 'px';
+            };
+            let mx = R.cx - half * 0.7, mv = 150;
+            const fs = foes.map((d, i) => ({ el: d, x: R.cx + half * (i - 1) * 0.55,
+                                             v: (i % 2 ? -1 : 1) * (110 + i * 25) }));
+
+            const MS = 7000;
+            return new Promise((resolve) => {
+                if (actReduced()) {
+                    foes.forEach(f => f.remove()); mine.remove(); setTimeout(resolve, 500); return;
+                }
+                playTone(300, 'square', .1);
+                let last = performance.now();
+                const t0 = last;
+                const step = (now) => {
+                    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+                    const t = (now - t0) / MS;
+
+                    mx += mv * dt;
+                    if (mx < R.cx - half) { mx = R.cx - half; mv = Math.abs(mv); }
+                    if (mx > R.cx + half) { mx = R.cx + half; mv = -Math.abs(mv); }
+                    fs.forEach(f => {
+                        f.x += f.v * dt;
+                        if (f.x < R.cx - half) { f.x = R.cx - half; f.v = Math.abs(f.v); }
+                        if (f.x > R.cx + half) { f.x = R.cx + half; f.v = -Math.abs(f.v); }
+                        // 撞到了：兩台互相彈開，冒火花、震一下
+                        if (Math.abs(f.x - mx) < carW * 0.82) {
+                            const dir = mx < f.x ? -1 : 1;
+                            mv = dir * Math.abs(mv) * 1.05;
+                            f.v = -dir * Math.abs(f.v);
+                            mx += dir * 4; f.x -= dir * 4;
+                            mine.classList.remove('hit'); void mine.offsetWidth;
+                            mine.classList.add('hit');
+                            f.el.classList.remove('hit'); void f.el.offsetWidth;
+                            f.el.classList.add('hit');
+                            playTone(180, 'square', .07);
+                            feelHaptic(10);
+                            screenShake();
+                            if (typeof fxBurst === 'function') fxBurst(mine.getBoundingClientRect(), 8);
+                        }
+                        place(f.el, f.x);
+                    });
+
+                    place(mine, mx);
+                    hamX = mx; hamY = seatH;
+                    hamFacing = mv < 0 ? -1 : 1;
+                    paintHamster();
+
+                    if (t < 1) requestAnimationFrame(step);
+                    else {
+                        mine.remove(); foes.forEach(f => f.remove());
+                        hamY = 0; paintHamster();
+                        playTone(520, 'sine', .12);
+                        resolve();
+                    }
+                };
+                requestAnimationFrame(step);
+            });
         }
 
         // ================================================================

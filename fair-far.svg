@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 遊樂園·遠景（捲動 0.25）：遠處的丘陵、馬戲團帳篷、旗子、雲霄飛車剪影。
+       360 寬為一個磚，左右邊緣的稜線高度都是 y=96，平鋪才不會有台階。 -->
+  <defs>
+    <linearGradient id="frHill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdeacf"/><stop offset="1" stop-color="#a3d6ac"/>
+    </linearGradient>
+    <linearGradient id="frGnd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b6e2bb"/><stop offset="1" stop-color="#8ec897"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 雲霄飛車的剪影 -->
+  <g fill="none" stroke="#a9b6d8" stroke-width="3" opacity=".75">
+    <path d="M196 96 q18 -46 38 -22 t30 -14 q16 -8 28 14"/>
+    <path d="M200 96v-18M214 96v-30M230 96v-26M248 96v-24M264 96v-20M280 96v-16"/>
+  </g>
+
+  <!-- 丘陵 -->
+  <path d="M0 96 Q60 74 120 92 Q180 108 240 88 Q300 72 360 96 L360 200 L0 200 Z" fill="url(#frHill)"/>
+
+  <!-- 馬戲團帳篷 -->
+  <g transform="translate(34 56)">
+    <path d="M0 40 L24 0 L48 40 Z" fill="#f2857a"/>
+    <g fill="#fff5ef"><path d="M24 0 L32 40 h-8 z"/><path d="M8 40 L18 8 l3 -5 -6 37 z"/>
+       <path d="M40 40 L30 8 l-3 -5 6 37 z"/></g>
+    <rect x="0" y="38" width="48" height="26" rx="2" fill="#f7ded4"/>
+    <path d="M16 64 v-16 a8 8 0 0 1 16 0 v16 z" fill="#d06a60"/>
+    <path d="M24 0 v-8" stroke="#c9a06a" stroke-width="2"/>
+    <path d="M24 -8 l10 3 -10 3 z" fill="#ffd166"/>
+  </g>
+  <g transform="translate(298 66)">
+    <path d="M0 30 L18 0 L36 30 Z" fill="#7fb6df"/>
+    <g fill="#eaf5ff"><path d="M18 0 L24 30 h-6 z"/><path d="M6 30 L14 6 l2 -4 -5 28 z"/></g>
+    <rect x="0" y="28" width="36" height="20" rx="2" fill="#e4f1fb"/>
+    <path d="M18 0 v-7" stroke="#c9a06a" stroke-width="2"/>
+    <path d="M18 -7 l8 2.5 -8 2.5 z" fill="#ff8fb0"/>
+  </g>
+
+  <!-- 遠處的小旗串（整條橫貫，兩端等高才接得起來） -->
+  <path d="M0 116 Q180 132 360 116" fill="none" stroke="#c9a06a" stroke-width="1.6"/>
+  <g>
+    <path d="M56 121 l10 1.4 -4.5 8 z" fill="#ff8fb0"/>
+    <path d="M118 126 l10 1.4 -4.5 8 z" fill="#ffd166"/>
+    <path d="M180 128 l10 0 -4.5 8 z" fill="#8fd0a0"/>
+    <path d="M242 126 l10 -1.4 -4 8 z" fill="#9fc8f0"/>
+    <path d="M304 121 l10 -1.4 -4 8 z" fill="#c792ea"/>
+  </g>
+
+  <!-- 這一側的地 -->
+  <path d="M0 138 Q90 132 180 138 Q270 144 360 138 L360 200 L0 200 Z" fill="url(#frGnd)"/>
+</svg>

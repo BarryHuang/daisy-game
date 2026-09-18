@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" preserveAspectRatio="none">
+  <!-- 遊樂園·近景（1:1 捲動）：園區地面、售票亭、氣球攤、圍欄、燈串。
+       前景層會蓋掉畫面最下面約 26%（磚上大約 y>141），重點都畫在那條線以上。
+       地面和燈串橫貫整張圖，要伸出左右邊界。 -->
+  <defs>
+    <linearGradient id="fnGnd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8dcc4"/><stop offset=".4" stop-color="#d7c7a8"/>
+      <stop offset="1" stop-color="#bfab88"/>
+    </linearGradient>
+    <linearGradient id="fnBooth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff1e0"/><stop offset="1" stop-color="#f0dcc2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 燈串：整條橫貫，兩端等高 -->
+  <path d="M0 14 Q180 40 360 14" fill="none" stroke="#a2734a" stroke-width="2"/>
+  <g>
+    <circle cx="40" cy="22" r="4" fill="#ffe27a"/><circle cx="90" cy="29" r="4" fill="#ff9ec4"/>
+    <circle cx="140" cy="34" r="4" fill="#9fe0ff"/><circle cx="190" cy="35" r="4" fill="#b5f0b8"/>
+    <circle cx="240" cy="32" r="4" fill="#ffe27a"/><circle cx="290" cy="26" r="4" fill="#ff9ec4"/>
+    <circle cx="330" cy="19" r="4" fill="#9fe0ff"/>
+  </g>
+
+  <!-- 售票亭 -->
+  <g transform="translate(24 56)">
+    <rect x="0" y="14" width="66" height="50" rx="4" fill="url(#fnBooth)" stroke="#c9a06a" stroke-width="2"/>
+    <path d="M-6 16 h78 l-5 -12 h-68 z" fill="#f2857a"/>
+    <g fill="#fff5ef">
+      <path d="M6 16 l3 -12 h11 l-3 12 z"/><path d="M30 16 l3 -12 h11 l-3 12 z"/>
+      <path d="M54 16 l3 -12 h11 l-3 12 z"/>
+    </g>
+    <rect x="10" y="26" width="30" height="20" rx="2" fill="#bfe4f7" stroke="#a2734a" stroke-width="1.8"/>
+    <rect x="46" y="26" width="14" height="30" rx="2" fill="#c98c52" stroke="#a2734a" stroke-width="1.8"/>
+    <g fill="#d06a60"><rect x="8" y="50" width="34" height="4" rx="2"/></g>
+    <text x="14" y="24" font-size="0" >ticket</text>
+    <g fill="#ffd166"><circle cx="25" cy="21" r="0"/></g>
+  </g>
+
+  <!-- 氣球攤 -->
+  <g transform="translate(196 42)">
+    <rect x="-2" y="40" width="4" height="34" rx="2" fill="#a2734a"/>
+    <g stroke="#c9a06a" stroke-width="1" fill="none">
+      <path d="M0 40 q-14 -10 -20 -18M0 40 q-4 -14 -4 -24M0 40 q10 -12 16 -20M0 40 q16 -6 24 -12"/>
+    </g>
+    <g>
+      <ellipse cx="-22" cy="18" rx="10" ry="12" fill="#ff8fb0"/>
+      <ellipse cx="-5" cy="12" rx="10" ry="12" fill="#ffd166"/>
+      <ellipse cx="17" cy="16" rx="10" ry="12" fill="#8fd0a0"/>
+      <ellipse cx="26" cy="26" rx="9" ry="11" fill="#9fc8f0"/>
+      <g fill="#fff" opacity=".4">
+        <ellipse cx="-25" cy="13" rx="3" ry="4"/><ellipse cx="-8" cy="7" rx="3" ry="4"/>
+        <ellipse cx="14" cy="11" rx="3" ry="4"/>
+      </g>
+    </g>
+    <ellipse cx="0" cy="74" rx="11" ry="4" fill="#a2734a"/>
+  </g>
+
+  <!-- 地面 -->
+  <path d="M0 118 Q90 112 180 118 Q270 124 360 118 L360 200 L0 200 Z" fill="url(#fnGnd)"/>
+  <path d="M0 118 Q90 112 180 118 Q270 124 360 118" fill="none" stroke="#f3ead6" stroke-width="2" opacity=".6"/>
+  <!-- 地磚 -->
+  <g stroke="#b9a583" stroke-width="1.4" opacity=".6">
+    <path d="M-10 130h380M-10 144h380"/>
+    <path d="M20 122v22M76 122v22M132 122v22M188 122v22M244 122v22M300 122v22M348 122v22"/>
+  </g>
+
+  <!-- 圍欄 -->
+  <g transform="translate(276 92)">
+    <rect x="0" y="6" width="70" height="4" rx="2" fill="#e0e6ef"/>
+    <rect x="0" y="16" width="70" height="4" rx="2" fill="#e0e6ef"/>
+    <g fill="#c6cedb">
+      <rect x="2" y="0" width="5" height="26" rx="2"/><rect x="32" y="0" width="5" height="26" rx="2"/>
+      <rect x="62" y="0" width="5" height="26" rx="2"/>
+    </g>
+  </g>
+</svg>
