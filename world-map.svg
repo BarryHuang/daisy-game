@@ -1,0 +1,227 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 700" width="420" height="700">
+  <!-- 倉鼠世界地圖。七個地方沿著一條小路由上往下排，順序和遊戲裡走的一樣：
+       家 → 後院 → 公園 → 街道 → 遊戲中心 → 遊樂園 → 沙灘。
+       每個景點的中心座標寫在下面，daisy_hamster.html 的 WORLD_MAP_PINS 要跟著對齊：
+         家 (76,86) 後院 (268,156) 公園 (112,268) 街道 (300,372)
+         遊戲中心 (120,470) 遊樂園 (302,566) 沙灘 (208,612) -->
+  <defs>
+    <linearGradient id="wmGrass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bfe8c2"/><stop offset=".55" stop-color="#9edaa6"/>
+      <stop offset="1" stop-color="#84c98f"/>
+    </linearGradient>
+    <linearGradient id="wmSea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fd0e8"/><stop offset="1" stop-color="#43a8ce"/>
+    </linearGradient>
+    <linearGradient id="wmSand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7e5bd"/><stop offset="1" stop-color="#e8cf9a"/>
+    </linearGradient>
+    <linearGradient id="wmRoad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e3cfa4"/><stop offset="1" stop-color="#d6bd8c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 海 + 陸地 -->
+  <rect width="420" height="700" fill="url(#wmSea)"/>
+  <g stroke="#cdeefb" stroke-width="3" stroke-linecap="round" opacity=".55" fill="none">
+    <path d="M18 612h30M62 640h22M330 600h30M356 634h26M250 672h26M40 678h24"/>
+  </g>
+  <!-- 島 -->
+  <path d="M28 40 Q10 200 34 330 Q50 470 96 560 Q150 648 250 636 Q340 626 384 540
+           Q414 460 398 330 Q384 190 392 60 Q300 22 210 34 Q110 46 28 40 Z"
+        fill="url(#wmGrass)" stroke="#f2e7c9" stroke-width="7"/>
+  <!-- 沙灘（島的南端） -->
+  <path d="M96 560 Q150 648 250 636 Q340 626 384 540 Q330 592 244 600 Q160 608 96 560 Z"
+        fill="url(#wmSand)"/>
+
+  <!-- 湖（公園旁邊） -->
+  <ellipse cx="178" cy="300" rx="52" ry="26" fill="#8fd6ef" stroke="#cdeefb" stroke-width="4"/>
+  <g stroke="#e6f8ff" stroke-width="2.4" stroke-linecap="round" opacity=".8">
+    <path d="M152 294h18M186 306h16"/>
+  </g>
+
+  <!-- 小路 -->
+  <path d="M76 86 C140 116 206 122 268 156 C326 188 200 210 112 268
+           C56 306 254 316 300 372 C334 414 186 414 120 470
+           C74 510 254 512 302 566 C286 594 250 602 208 612"
+        fill="none" stroke="#c4a877" stroke-width="16" stroke-linecap="round"/>
+  <path d="M76 86 C140 116 206 122 268 156 C326 188 200 210 112 268
+           C56 306 254 316 300 372 C334 414 186 414 120 470
+           C74 510 254 512 302 566 C286 594 250 602 208 612"
+        fill="none" stroke="url(#wmRoad)" stroke-width="11" stroke-linecap="round"/>
+  <path d="M76 86 C140 116 206 122 268 156 C326 188 200 210 112 268
+           C56 306 254 316 300 372 C334 414 186 414 120 470
+           C74 510 254 512 302 566 C286 594 250 602 208 612"
+        fill="none" stroke="#fff6e2" stroke-width="2.4" stroke-linecap="round"
+        stroke-dasharray="7 11" opacity=".8"/>
+
+  <!-- 散落的樹叢和小丘 -->
+  <g>
+    <g fill="#8ec994" opacity=".55">
+      <ellipse cx="330" cy="96" rx="46" ry="20"/><ellipse cx="70" cy="200" rx="40" ry="17"/>
+      <ellipse cx="350" cy="280" rx="42" ry="18"/><ellipse cx="66" cy="404" rx="38" ry="16"/>
+      <ellipse cx="330" cy="470" rx="40" ry="17"/>
+    </g>
+    <g fill="#5fb373" stroke="#4a9c60" stroke-width="2">
+      <circle cx="178" cy="66" r="13"/><circle cx="196" cy="78" r="10"/>
+      <circle cx="350" cy="214" r="13"/><circle cx="366" cy="226" r="10"/>
+      <circle cx="60" cy="294" r="12"/><circle cx="44" cy="306" r="9"/>
+      <circle cx="222" cy="452" r="12"/><circle cx="238" cy="462" r="9"/>
+      <circle cx="368" cy="380" r="12"/><circle cx="352" cy="392" r="9"/>
+      <circle cx="74" cy="522" r="11"/><circle cx="206" cy="536" r="10"/>
+    </g>
+    <g fill="#7ec48a" opacity=".85">
+      <path d="M232 112 l16 26 h-32 z"/><path d="M104 152 l14 22 h-28 z"/>
+      <path d="M262 274 l15 24 h-30 z"/><path d="M148 392 l14 22 h-28 z"/>
+      <path d="M366 496 l14 22 h-28 z"/>
+    </g>
+  </g>
+
+  <!-- ① 倉鼠的家 (76,86) -->
+  <g transform="translate(76 86)">
+    <ellipse cx="0" cy="20" rx="30" ry="9" fill="#000" opacity=".1"/>
+    <rect x="-22" y="-8" width="44" height="28" rx="3" fill="#f2ddbc" stroke="#c9a06a" stroke-width="2.4"/>
+    <path d="M-28 -8 L0 -30 L28 -8 Z" fill="#e07a5f" stroke="#b85c45" stroke-width="2.4" stroke-linejoin="round"/>
+    <rect x="-6" y="4" width="12" height="16" rx="1.5" fill="#a8703f" stroke="#8a5f37" stroke-width="1.6"/>
+    <rect x="-18" y="0" width="9" height="9" rx="1.5" fill="#bfe4f7" stroke="#8a5f37" stroke-width="1.6"/>
+    <rect x="9" y="0" width="9" height="9" rx="1.5" fill="#bfe4f7" stroke="#8a5f37" stroke-width="1.6"/>
+    <rect x="12" y="-26" width="7" height="12" rx="1.5" fill="#c9a06a"/>
+  </g>
+
+  <!-- ② 後院草地 (268,156) -->
+  <g transform="translate(268 156)">
+    <ellipse cx="0" cy="20" rx="32" ry="9" fill="#000" opacity=".1"/>
+    <g stroke="#c9a06a" stroke-width="3.4" stroke-linecap="round">
+      <path d="M-26 20v-16M-10 20v-18M6 20v-16M22 20v-18"/>
+      <path d="M-30 8h56M-30 16h56"/>
+    </g>
+    <g>
+      <circle cx="-16" cy="-6" r="7" fill="#ffd166" stroke="#e0a83c" stroke-width="1.8"/>
+      <circle cx="-16" cy="-6" r="3" fill="#a5754a"/>
+      <circle cx="4" cy="-12" r="8" fill="#ffd166" stroke="#e0a83c" stroke-width="1.8"/>
+      <circle cx="4" cy="-12" r="3.4" fill="#a5754a"/>
+      <circle cx="22" cy="-4" r="6" fill="#ffd166" stroke="#e0a83c" stroke-width="1.8"/>
+      <circle cx="22" cy="-4" r="2.6" fill="#a5754a"/>
+    </g>
+    <g stroke="#4a9c60" stroke-width="2.4" fill="none">
+      <path d="M-16 2v-8M4 4v-8M22 4v-6"/>
+    </g>
+  </g>
+
+  <!-- ③ 大公園 (112,268) -->
+  <g transform="translate(112 268)">
+    <ellipse cx="0" cy="22" rx="32" ry="9" fill="#000" opacity=".1"/>
+    <path d="M-3 22 q-3 -22 3 -32 q6 10 3 32 z" fill="#a5754a"/>
+    <g fill="#5fb373" stroke="#4a9c60" stroke-width="2">
+      <ellipse cx="0" cy="-16" rx="22" ry="16"/>
+      <ellipse cx="-14" cy="-8" rx="13" ry="10"/><ellipse cx="14" cy="-8" rx="13" ry="10"/>
+    </g>
+    <g transform="translate(-30 6)">
+      <g fill="#c98c52"><rect x="0" y="8" width="24" height="3.4" rx="1.7"/><rect x="0" y="1" width="24" height="3" rx="1.5"/></g>
+      <g fill="#8a5f37"><rect x="2" y="11" width="2.6" height="8" rx="1.3"/><rect x="19" y="11" width="2.6" height="8" rx="1.3"/></g>
+    </g>
+  </g>
+
+  <!-- ④ 熱鬧街道 (300,372) -->
+  <g transform="translate(300 372)">
+    <ellipse cx="0" cy="24" rx="38" ry="9" fill="#000" opacity=".1"/>
+    <g>
+      <rect x="-34" y="-16" width="30" height="40" rx="3" fill="#fbe8d2" stroke="#c9a87e" stroke-width="2.2"/>
+      <path d="M-36 -8 h34 l-4 9 h-30 z" fill="#e8734a"/>
+      <rect x="-32" y="-14" width="26" height="6" rx="2.4" fill="#e8734a"/>
+      <rect x="-30" y="6" width="11" height="18" rx="2" fill="#a8703f"/>
+      <rect x="-15" y="4" width="10" height="11" rx="1.6" fill="#bfe4f7"/>
+    </g>
+    <g>
+      <rect x="2" y="-10" width="30" height="34" rx="3" fill="#e3eef7" stroke="#9db6c9" stroke-width="2.2"/>
+      <path d="M0 -2 h34 l-4 9 h-30 z" fill="#5fb373"/>
+      <rect x="4" y="-8" width="26" height="6" rx="2.4" fill="#5fb373"/>
+      <rect x="6" y="10" width="10" height="14" rx="1.6" fill="#6f9ac0"/>
+      <rect x="20" y="10" width="10" height="10" rx="1.6" fill="#bfe4f7"/>
+    </g>
+    <g transform="translate(-2 -22)">
+      <rect x="-1.4" y="0" width="2.8" height="16" fill="#55606e"/>
+      <path d="M-6 2 L6 2 L4 -7 L-4 -7 Z" fill="#fff3bf" stroke="#7b8b9c" stroke-width="1.6"/>
+    </g>
+  </g>
+
+  <!-- ⑤ 遊戲中心 (120,470) -->
+  <g transform="translate(120 470)">
+    <ellipse cx="0" cy="24" rx="34" ry="9" fill="#000" opacity=".12"/>
+    <rect x="-28" y="-14" width="56" height="38" rx="4" fill="#3b2f63" stroke="#6b58ab" stroke-width="2.4"/>
+    <rect x="-22" y="-24" width="44" height="14" rx="5" fill="#241d40" stroke="#ff6bd6" stroke-width="2.4"/>
+    <g fill="#ffd166">
+      <rect x="-15" y="-21" width="4" height="8"/><rect x="-8" y="-21" width="4" height="8"/>
+      <rect x="-1" y="-21" width="4" height="8"/><rect x="6" y="-21" width="4" height="8"/>
+      <rect x="13" y="-21" width="3" height="8"/>
+    </g>
+    <rect x="-20" y="-6" width="16" height="14" rx="2" fill="#6be7ff" opacity=".9"/>
+    <rect x="4" y="-6" width="16" height="14" rx="2" fill="#ff6bd6" opacity=".9"/>
+    <rect x="-9" y="10" width="18" height="14" rx="2" fill="#241d40" stroke="#6be7ff" stroke-width="1.8"/>
+  </g>
+
+  <!-- ⑥ 遊樂園 (302,566) -->
+  <g transform="translate(302 566)">
+    <ellipse cx="0" cy="26" rx="38" ry="9" fill="#000" opacity=".1"/>
+    <!-- 帳篷 -->
+    <g transform="translate(24 4)">
+      <path d="M-14 22 L0 -6 L14 22 Z" fill="#f2857a"/>
+      <g fill="#fff5ef"><path d="M0 -6 L4 22 h-5 z"/><path d="M-8 22 L-3 4 l2 -3 -3 21 z"/></g>
+      <rect x="-14" y="20" width="28" height="6" rx="2" fill="#f7ded4"/>
+    </g>
+    <!-- 摩天輪 -->
+    <g transform="translate(-14 0)">
+      <path d="M0 -4 L-12 24M0 -4 L12 24" stroke="#b08a5c" stroke-width="3.4" stroke-linecap="round"/>
+      <rect x="-16" y="22" width="32" height="5" rx="2.4" fill="#c9a06a"/>
+      <circle cx="0" cy="-4" r="19" fill="none" stroke="#e0714c" stroke-width="3"/>
+      <g stroke="#f2a68c" stroke-width="2">
+        <path d="M0 -4 L0 15M0 -4 L16 6M0 -4 L16 -14M0 -4 L0 -23M0 -4 L-16 -14M0 -4 L-16 6"/>
+      </g>
+      <g stroke="#8a5f37" stroke-width="1.6">
+        <rect x="-4" y="15" width="8" height="6" rx="2" fill="#ff8fb0"/>
+        <rect x="12" y="6" width="8" height="6" rx="2" fill="#ffd166"/>
+        <rect x="12" y="-14" width="8" height="6" rx="2" fill="#8fd0a0"/>
+        <rect x="-4" y="-23" width="8" height="6" rx="2" fill="#9fc8f0"/>
+        <rect x="-20" y="-14" width="8" height="6" rx="2" fill="#c792ea"/>
+        <rect x="-20" y="6" width="8" height="6" rx="2" fill="#ffa07a"/>
+      </g>
+      <circle cx="0" cy="-4" r="4" fill="#ffd166" stroke="#c9564c" stroke-width="2"/>
+    </g>
+  </g>
+
+  <!-- ⑦ 陽光沙灘 (208,612) -->
+  <g transform="translate(208 612)">
+    <ellipse cx="0" cy="18" rx="34" ry="8" fill="#000" opacity=".08"/>
+    <!-- 椰子樹 -->
+    <g transform="translate(-22 0)">
+      <path d="M0 18 q-4 -16 2 -24 q3 1 4 2 q-6 8 -2 22 z" fill="#a4783f"/>
+      <g fill="#4aa568">
+        <path d="M3 -8 q-14 -6 -21 -1 q9 -2 20 4 z"/><path d="M3 -8 q14 -7 21 -2 q-10 -2 -20 5 z"/>
+        <path d="M3 -9 q-6 -12 -16 -14 q8 6 14 16 z"/><path d="M3 -9 q7 -12 17 -13 q-9 5 -15 15 z"/>
+      </g>
+      <g fill="#8a5f36"><circle cx="0" cy="-6" r="2.6"/><circle cx="5" cy="-5" r="2.6"/></g>
+    </g>
+    <!-- 遮陽傘 + 沙堡 -->
+    <g transform="translate(16 2)">
+      <rect x="-1" y="0" width="2.4" height="16" rx="1.2" fill="#d8c4a0"/>
+      <path d="M-17 2 a17 12 0 0 1 34 0 z" fill="#ff8f6b"/>
+      <g fill="#fff3e6"><path d="M-17 2 a17 12 0 0 1 6 -9 l1 9 z"/><path d="M-3 -9 a17 12 0 0 1 7 0 l1 11 h-9 z"/>
+         <path d="M11 -7 a17 12 0 0 1 6 9 h-7 z"/></g>
+    </g>
+    <g transform="translate(-2 8)" fill="#e6c78a" stroke="#c9a566" stroke-width="1.4">
+      <rect x="-8" y="2" width="16" height="8" rx="1.5"/>
+      <rect x="-7" y="-3" width="5" height="6" rx="1"/><rect x="2" y="-3" width="5" height="6" rx="1"/>
+    </g>
+  </g>
+
+  <!-- 裝飾：太陽、雲、海鷗 -->
+  <circle cx="366" cy="44" r="18" fill="#ffe27a" opacity=".95"/>
+  <circle cx="366" cy="44" r="26" fill="#ffe27a" opacity=".28"/>
+  <g fill="#fff" opacity=".92">
+    <ellipse cx="86" cy="42" rx="22" ry="9"/><ellipse cx="74" cy="36" rx="13" ry="9"/>
+    <ellipse cx="300" cy="628" rx="18" ry="7"/><ellipse cx="291" cy="623" rx="11" ry="7"/>
+  </g>
+  <g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".85">
+    <path d="M236 44 q6 -6 12 0 q6 -6 12 0"/>
+    <path d="M40 596 q5 -5 10 0 q5 -5 10 0"/>
+  </g>
+</svg>
