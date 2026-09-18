@@ -1355,9 +1355,9 @@ body.immersive .imm-dock, body.immersive .cage-tools { transition: opacity .2s; 
 .wmap {
     position: relative; margin-top: 12px;
     max-height: 62vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    border-radius: 18px; border: 3px solid #f2e7c9;
-    box-shadow: inset 0 2px 8px rgba(80, 60, 30, .12);
-    background: #7fd0e8;
+    border-radius: 14px; border: 1px solid #e6dcc4;
+    box-shadow: 0 2px 10px rgba(90, 70, 35, .12);
+    background: #fbfaf2;                 /* 繪本的米白紙 */
 }
 .wmap-bg { display: block; width: 100%; height: auto; user-select: none; }
 
@@ -1376,34 +1376,34 @@ body.immersive .imm-dock, body.immersive .cage-tools { transition: opacity .2s; 
    只留一點點白色的光暈暗示「這裡可以點」，真正的提示是底下的名牌。 */
 .wmap-hit {
     width: 58px; height: 58px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,.34), rgba(255,255,255,0) 70%);
+    background: radial-gradient(circle, rgba(255,246,222,.55), rgba(255,246,222,0) 68%);
     transition: transform .16s;
 }
 .wmap-plate {
-    margin-top: 2px; padding: 3px 8px; border-radius: 10px;
-    background: rgba(255, 253, 248, .95); border: 2px solid #e4d5b8;
-    box-shadow: 0 2px 6px rgba(70, 50, 20, .22);
-    white-space: nowrap; line-height: 1.15;
+    margin-top: 1px; padding: 2px 8px; border-radius: 8px;
+    background: rgba(253, 250, 240, .92); border: 1px solid #d9c9a6;
+    box-shadow: 0 2px 5px rgba(80, 60, 25, .16);
+    white-space: nowrap; line-height: 1.16;
 }
-.wmap-plate b { display: block; font-size: .74rem; font-weight: 900; }
+.wmap-plate b { display: block; font-size: .72rem; font-weight: 800; color: #6b4a2a; }
 .wmap-plate i {
-    display: block; font-style: normal; font-size: .6rem; color: #8a7b98;
+    display: block; font-style: normal; font-size: .58rem; color: #9b8a6d;
     max-width: 96px; overflow: hidden; text-overflow: ellipsis;
 }
 .wmap-pin:active .wmap-hit { transform: scale(.9); }
 
 /* 現在站的地方：圈起來，上面插一隻倉鼠 */
 .wmap-pin.here .wmap-hit {
-    border: 3px solid #9b5de5;
-    background: radial-gradient(circle, rgba(155, 93, 229, .10), rgba(155, 93, 229, .02) 70%);
-    box-shadow: 0 0 0 4px rgba(155, 93, 229, .22);
+    border: 3px solid #e07a3c;
+    background: radial-gradient(circle, rgba(224, 122, 60, .12), rgba(224, 122, 60, .02) 70%);
+    box-shadow: 0 0 0 4px rgba(224, 122, 60, .20);
     animation: wmapPulse 1.8s ease-in-out infinite;
 }
-.wmap-pin.here .wmap-plate { border-color: #9b5de5; background: #fff; }
-.wmap-pin.here .wmap-plate b { color: #7b1fa2; }
+.wmap-pin.here .wmap-plate { border-color: #e07a3c; background: #fffdf6; }
+.wmap-pin.here .wmap-plate b { color: #a8532a; }
 @keyframes wmapPulse {
-    0%,100% { box-shadow: 0 0 0 4px rgba(155, 93, 229, .22); }
-    50%     { box-shadow: 0 0 0 9px rgba(155, 93, 229, .10); }
+    0%,100% { box-shadow: 0 0 0 4px rgba(224, 122, 60, .20); }
+    50%     { box-shadow: 0 0 0 9px rgba(224, 122, 60, .09); }
 }
 .wmap-you {
     position: absolute; top: -24px; left: 50%; transform: translateX(-50%);

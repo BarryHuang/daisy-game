@@ -1,227 +1,864 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 700" width="420" height="700">
-  <!-- 倉鼠世界地圖。七個地方沿著一條小路由上往下排，順序和遊戲裡走的一樣：
-       家 → 後院 → 公園 → 街道 → 遊戲中心 → 遊樂園 → 沙灘。
-       每個景點的中心座標寫在下面，daisy_hamster.html 的 WORLD_MAP_PINS 要跟著對齊：
-         家 (76,86) 後院 (268,156) 公園 (112,268) 街道 (300,372)
-         遊戲中心 (120,470) 遊樂園 (302,566) 沙灘 (208,612) -->
-  <defs>
-    <linearGradient id="wmGrass" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#bfe8c2"/><stop offset=".55" stop-color="#9edaa6"/>
-      <stop offset="1" stop-color="#84c98f"/>
-    </linearGradient>
-    <linearGradient id="wmSea" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#7fd0e8"/><stop offset="1" stop-color="#43a8ce"/>
-    </linearGradient>
-    <linearGradient id="wmSand" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f7e5bd"/><stop offset="1" stop-color="#e8cf9a"/>
-    </linearGradient>
-    <linearGradient id="wmRoad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#e3cfa4"/><stop offset="1" stop-color="#d6bd8c"/>
-    </linearGradient>
-  </defs>
-
-  <!-- 海 + 陸地 -->
-  <rect width="420" height="700" fill="url(#wmSea)"/>
-  <g stroke="#cdeefb" stroke-width="3" stroke-linecap="round" opacity=".55" fill="none">
-    <path d="M18 612h30M62 640h22M330 600h30M356 634h26M250 672h26M40 678h24"/>
-  </g>
-  <!-- 島 -->
-  <path d="M28 40 Q10 200 34 330 Q50 470 96 560 Q150 648 250 636 Q340 626 384 540
-           Q414 460 398 330 Q384 190 392 60 Q300 22 210 34 Q110 46 28 40 Z"
-        fill="url(#wmGrass)" stroke="#f2e7c9" stroke-width="7"/>
-  <!-- 沙灘（島的南端） -->
-  <path d="M96 560 Q150 648 250 636 Q340 626 384 540 Q330 592 244 600 Q160 608 96 560 Z"
-        fill="url(#wmSand)"/>
-
-  <!-- 湖（公園旁邊） -->
-  <ellipse cx="178" cy="300" rx="52" ry="26" fill="#8fd6ef" stroke="#cdeefb" stroke-width="4"/>
-  <g stroke="#e6f8ff" stroke-width="2.4" stroke-linecap="round" opacity=".8">
-    <path d="M152 294h18M186 306h16"/>
-  </g>
-
-  <!-- 小路 -->
-  <path d="M76 86 C140 116 206 122 268 156 C326 188 200 210 112 268
-           C56 306 254 316 300 372 C334 414 186 414 120 470
-           C74 510 254 512 302 566 C286 594 250 602 208 612"
-        fill="none" stroke="#c4a877" stroke-width="16" stroke-linecap="round"/>
-  <path d="M76 86 C140 116 206 122 268 156 C326 188 200 210 112 268
-           C56 306 254 316 300 372 C334 414 186 414 120 470
-           C74 510 254 512 302 566 C286 594 250 602 208 612"
-        fill="none" stroke="url(#wmRoad)" stroke-width="11" stroke-linecap="round"/>
-  <path d="M76 86 C140 116 206 122 268 156 C326 188 200 210 112 268
-           C56 306 254 316 300 372 C334 414 186 414 120 470
-           C74 510 254 512 302 566 C286 594 250 602 208 612"
-        fill="none" stroke="#fff6e2" stroke-width="2.4" stroke-linecap="round"
-        stroke-dasharray="7 11" opacity=".8"/>
-
-  <!-- 散落的樹叢和小丘 -->
-  <g>
-    <g fill="#8ec994" opacity=".55">
-      <ellipse cx="330" cy="96" rx="46" ry="20"/><ellipse cx="70" cy="200" rx="40" ry="17"/>
-      <ellipse cx="350" cy="280" rx="42" ry="18"/><ellipse cx="66" cy="404" rx="38" ry="16"/>
-      <ellipse cx="330" cy="470" rx="40" ry="17"/>
-    </g>
-    <g fill="#5fb373" stroke="#4a9c60" stroke-width="2">
-      <circle cx="178" cy="66" r="13"/><circle cx="196" cy="78" r="10"/>
-      <circle cx="350" cy="214" r="13"/><circle cx="366" cy="226" r="10"/>
-      <circle cx="60" cy="294" r="12"/><circle cx="44" cy="306" r="9"/>
-      <circle cx="222" cy="452" r="12"/><circle cx="238" cy="462" r="9"/>
-      <circle cx="368" cy="380" r="12"/><circle cx="352" cy="392" r="9"/>
-      <circle cx="74" cy="522" r="11"/><circle cx="206" cy="536" r="10"/>
-    </g>
-    <g fill="#7ec48a" opacity=".85">
-      <path d="M232 112 l16 26 h-32 z"/><path d="M104 152 l14 22 h-28 z"/>
-      <path d="M262 274 l15 24 h-30 z"/><path d="M148 392 l14 22 h-28 z"/>
-      <path d="M366 496 l14 22 h-28 z"/>
-    </g>
-  </g>
-
-  <!-- ① 倉鼠的家 (76,86) -->
-  <g transform="translate(76 86)">
-    <ellipse cx="0" cy="20" rx="30" ry="9" fill="#000" opacity=".1"/>
-    <rect x="-22" y="-8" width="44" height="28" rx="3" fill="#f2ddbc" stroke="#c9a06a" stroke-width="2.4"/>
-    <path d="M-28 -8 L0 -30 L28 -8 Z" fill="#e07a5f" stroke="#b85c45" stroke-width="2.4" stroke-linejoin="round"/>
-    <rect x="-6" y="4" width="12" height="16" rx="1.5" fill="#a8703f" stroke="#8a5f37" stroke-width="1.6"/>
-    <rect x="-18" y="0" width="9" height="9" rx="1.5" fill="#bfe4f7" stroke="#8a5f37" stroke-width="1.6"/>
-    <rect x="9" y="0" width="9" height="9" rx="1.5" fill="#bfe4f7" stroke="#8a5f37" stroke-width="1.6"/>
-    <rect x="12" y="-26" width="7" height="12" rx="1.5" fill="#c9a06a"/>
-  </g>
-
-  <!-- ② 後院草地 (268,156) -->
-  <g transform="translate(268 156)">
-    <ellipse cx="0" cy="20" rx="32" ry="9" fill="#000" opacity=".1"/>
-    <g stroke="#c9a06a" stroke-width="3.4" stroke-linecap="round">
-      <path d="M-26 20v-16M-10 20v-18M6 20v-16M22 20v-18"/>
-      <path d="M-30 8h56M-30 16h56"/>
-    </g>
-    <g>
-      <circle cx="-16" cy="-6" r="7" fill="#ffd166" stroke="#e0a83c" stroke-width="1.8"/>
-      <circle cx="-16" cy="-6" r="3" fill="#a5754a"/>
-      <circle cx="4" cy="-12" r="8" fill="#ffd166" stroke="#e0a83c" stroke-width="1.8"/>
-      <circle cx="4" cy="-12" r="3.4" fill="#a5754a"/>
-      <circle cx="22" cy="-4" r="6" fill="#ffd166" stroke="#e0a83c" stroke-width="1.8"/>
-      <circle cx="22" cy="-4" r="2.6" fill="#a5754a"/>
-    </g>
-    <g stroke="#4a9c60" stroke-width="2.4" fill="none">
-      <path d="M-16 2v-8M4 4v-8M22 4v-6"/>
-    </g>
-  </g>
-
-  <!-- ③ 大公園 (112,268) -->
-  <g transform="translate(112 268)">
-    <ellipse cx="0" cy="22" rx="32" ry="9" fill="#000" opacity=".1"/>
-    <path d="M-3 22 q-3 -22 3 -32 q6 10 3 32 z" fill="#a5754a"/>
-    <g fill="#5fb373" stroke="#4a9c60" stroke-width="2">
-      <ellipse cx="0" cy="-16" rx="22" ry="16"/>
-      <ellipse cx="-14" cy="-8" rx="13" ry="10"/><ellipse cx="14" cy="-8" rx="13" ry="10"/>
-    </g>
-    <g transform="translate(-30 6)">
-      <g fill="#c98c52"><rect x="0" y="8" width="24" height="3.4" rx="1.7"/><rect x="0" y="1" width="24" height="3" rx="1.5"/></g>
-      <g fill="#8a5f37"><rect x="2" y="11" width="2.6" height="8" rx="1.3"/><rect x="19" y="11" width="2.6" height="8" rx="1.3"/></g>
-    </g>
-  </g>
-
-  <!-- ④ 熱鬧街道 (300,372) -->
-  <g transform="translate(300 372)">
-    <ellipse cx="0" cy="24" rx="38" ry="9" fill="#000" opacity=".1"/>
-    <g>
-      <rect x="-34" y="-16" width="30" height="40" rx="3" fill="#fbe8d2" stroke="#c9a87e" stroke-width="2.2"/>
-      <path d="M-36 -8 h34 l-4 9 h-30 z" fill="#e8734a"/>
-      <rect x="-32" y="-14" width="26" height="6" rx="2.4" fill="#e8734a"/>
-      <rect x="-30" y="6" width="11" height="18" rx="2" fill="#a8703f"/>
-      <rect x="-15" y="4" width="10" height="11" rx="1.6" fill="#bfe4f7"/>
-    </g>
-    <g>
-      <rect x="2" y="-10" width="30" height="34" rx="3" fill="#e3eef7" stroke="#9db6c9" stroke-width="2.2"/>
-      <path d="M0 -2 h34 l-4 9 h-30 z" fill="#5fb373"/>
-      <rect x="4" y="-8" width="26" height="6" rx="2.4" fill="#5fb373"/>
-      <rect x="6" y="10" width="10" height="14" rx="1.6" fill="#6f9ac0"/>
-      <rect x="20" y="10" width="10" height="10" rx="1.6" fill="#bfe4f7"/>
-    </g>
-    <g transform="translate(-2 -22)">
-      <rect x="-1.4" y="0" width="2.8" height="16" fill="#55606e"/>
-      <path d="M-6 2 L6 2 L4 -7 L-4 -7 Z" fill="#fff3bf" stroke="#7b8b9c" stroke-width="1.6"/>
-    </g>
-  </g>
-
-  <!-- ⑤ 遊戲中心 (120,470) -->
-  <g transform="translate(120 470)">
-    <ellipse cx="0" cy="24" rx="34" ry="9" fill="#000" opacity=".12"/>
-    <rect x="-28" y="-14" width="56" height="38" rx="4" fill="#3b2f63" stroke="#6b58ab" stroke-width="2.4"/>
-    <rect x="-22" y="-24" width="44" height="14" rx="5" fill="#241d40" stroke="#ff6bd6" stroke-width="2.4"/>
-    <g fill="#ffd166">
-      <rect x="-15" y="-21" width="4" height="8"/><rect x="-8" y="-21" width="4" height="8"/>
-      <rect x="-1" y="-21" width="4" height="8"/><rect x="6" y="-21" width="4" height="8"/>
-      <rect x="13" y="-21" width="3" height="8"/>
-    </g>
-    <rect x="-20" y="-6" width="16" height="14" rx="2" fill="#6be7ff" opacity=".9"/>
-    <rect x="4" y="-6" width="16" height="14" rx="2" fill="#ff6bd6" opacity=".9"/>
-    <rect x="-9" y="10" width="18" height="14" rx="2" fill="#241d40" stroke="#6be7ff" stroke-width="1.8"/>
-  </g>
-
-  <!-- ⑥ 遊樂園 (302,566) -->
-  <g transform="translate(302 566)">
-    <ellipse cx="0" cy="26" rx="38" ry="9" fill="#000" opacity=".1"/>
-    <!-- 帳篷 -->
-    <g transform="translate(24 4)">
-      <path d="M-14 22 L0 -6 L14 22 Z" fill="#f2857a"/>
-      <g fill="#fff5ef"><path d="M0 -6 L4 22 h-5 z"/><path d="M-8 22 L-3 4 l2 -3 -3 21 z"/></g>
-      <rect x="-14" y="20" width="28" height="6" rx="2" fill="#f7ded4"/>
-    </g>
-    <!-- 摩天輪 -->
-    <g transform="translate(-14 0)">
-      <path d="M0 -4 L-12 24M0 -4 L12 24" stroke="#b08a5c" stroke-width="3.4" stroke-linecap="round"/>
-      <rect x="-16" y="22" width="32" height="5" rx="2.4" fill="#c9a06a"/>
-      <circle cx="0" cy="-4" r="19" fill="none" stroke="#e0714c" stroke-width="3"/>
-      <g stroke="#f2a68c" stroke-width="2">
-        <path d="M0 -4 L0 15M0 -4 L16 6M0 -4 L16 -14M0 -4 L0 -23M0 -4 L-16 -14M0 -4 L-16 6"/>
-      </g>
-      <g stroke="#8a5f37" stroke-width="1.6">
-        <rect x="-4" y="15" width="8" height="6" rx="2" fill="#ff8fb0"/>
-        <rect x="12" y="6" width="8" height="6" rx="2" fill="#ffd166"/>
-        <rect x="12" y="-14" width="8" height="6" rx="2" fill="#8fd0a0"/>
-        <rect x="-4" y="-23" width="8" height="6" rx="2" fill="#9fc8f0"/>
-        <rect x="-20" y="-14" width="8" height="6" rx="2" fill="#c792ea"/>
-        <rect x="-20" y="6" width="8" height="6" rx="2" fill="#ffa07a"/>
-      </g>
-      <circle cx="0" cy="-4" r="4" fill="#ffd166" stroke="#c9564c" stroke-width="2"/>
-    </g>
-  </g>
-
-  <!-- ⑦ 陽光沙灘 (208,612) -->
-  <g transform="translate(208 612)">
-    <ellipse cx="0" cy="18" rx="34" ry="8" fill="#000" opacity=".08"/>
-    <!-- 椰子樹 -->
-    <g transform="translate(-22 0)">
-      <path d="M0 18 q-4 -16 2 -24 q3 1 4 2 q-6 8 -2 22 z" fill="#a4783f"/>
-      <g fill="#4aa568">
-        <path d="M3 -8 q-14 -6 -21 -1 q9 -2 20 4 z"/><path d="M3 -8 q14 -7 21 -2 q-10 -2 -20 5 z"/>
-        <path d="M3 -9 q-6 -12 -16 -14 q8 6 14 16 z"/><path d="M3 -9 q7 -12 17 -13 q-9 5 -15 15 z"/>
-      </g>
-      <g fill="#8a5f36"><circle cx="0" cy="-6" r="2.6"/><circle cx="5" cy="-5" r="2.6"/></g>
-    </g>
-    <!-- 遮陽傘 + 沙堡 -->
-    <g transform="translate(16 2)">
-      <rect x="-1" y="0" width="2.4" height="16" rx="1.2" fill="#d8c4a0"/>
-      <path d="M-17 2 a17 12 0 0 1 34 0 z" fill="#ff8f6b"/>
-      <g fill="#fff3e6"><path d="M-17 2 a17 12 0 0 1 6 -9 l1 9 z"/><path d="M-3 -9 a17 12 0 0 1 7 0 l1 11 h-9 z"/>
-         <path d="M11 -7 a17 12 0 0 1 6 9 h-7 z"/></g>
-    </g>
-    <g transform="translate(-2 8)" fill="#e6c78a" stroke="#c9a566" stroke-width="1.4">
-      <rect x="-8" y="2" width="16" height="8" rx="1.5"/>
-      <rect x="-7" y="-3" width="5" height="6" rx="1"/><rect x="2" y="-3" width="5" height="6" rx="1"/>
-    </g>
-  </g>
-
-  <!-- 裝飾：太陽、雲、海鷗 -->
-  <circle cx="366" cy="44" r="18" fill="#ffe27a" opacity=".95"/>
-  <circle cx="366" cy="44" r="26" fill="#ffe27a" opacity=".28"/>
-  <g fill="#fff" opacity=".92">
-    <ellipse cx="86" cy="42" rx="22" ry="9"/><ellipse cx="74" cy="36" rx="13" ry="9"/>
-    <ellipse cx="300" cy="628" rx="18" ry="7"/><ellipse cx="291" cy="623" rx="11" ry="7"/>
-  </g>
-  <g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".85">
-    <path d="M236 44 q6 -6 12 0 q6 -6 12 0"/>
-    <path d="M40 596 q5 -5 10 0 q5 -5 10 0"/>
-  </g>
+<!-- 這個檔是 tools/build_world_map.py 產生的，不要手改。 -->
+<!-- 景點中心：home(150,112) garden(244,168) park(166,274) street(300,344) arcade(204,432) fair(314,516) beach(150,606) -->
+<defs>
+<filter id="grain" x="0" y="0" width="100%" height="100%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" seed="7" result="n"/>
+  <feColorMatrix in="n" type="saturate" values="0"/>
+  <feComponentTransfer><feFuncA type="linear" slope="0.42"/></feComponentTransfer>
+</filter>
+<filter id="wob" x="-6%" y="-6%" width="112%" height="112%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.016" numOctaves="3" seed="3" result="t"/>
+  <feDisplacementMap in="SourceGraphic" in2="t" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+</filter>
+<filter id="wob2" x="-6%" y="-6%" width="112%" height="112%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="11" result="t"/>
+  <feDisplacementMap in="SourceGraphic" in2="t" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+</filter>
+<g id="t0"><path d="M0 6v-5" stroke="#9c8a63" stroke-width="1.2"/><ellipse cx="0" cy="-2" rx="6.2" ry="5.4" fill="#aed08f"/><ellipse cx="-3" cy="0" rx="4" ry="3.6" fill="#aed08f"/><ellipse cx="3.2" cy="-0.6" rx="3.8" ry="3.4" fill="#aed08f"/><ellipse cx="1.4" cy="-4.4" rx="2.6" ry="2.2" fill="#7fae63" opacity=".5"/></g>
+<g id="t1"><path d="M0 6v-5" stroke="#9c8a63" stroke-width="1.2"/><ellipse cx="0" cy="-2" rx="6.2" ry="5.4" fill="#9dc680"/><ellipse cx="-3" cy="0" rx="4" ry="3.6" fill="#9dc680"/><ellipse cx="3.2" cy="-0.6" rx="3.8" ry="3.4" fill="#9dc680"/><ellipse cx="1.4" cy="-4.4" rx="2.6" ry="2.2" fill="#6fa257" opacity=".5"/></g>
+<g id="t2"><path d="M0 6v-5" stroke="#9c8a63" stroke-width="1.2"/><ellipse cx="0" cy="-2" rx="6.2" ry="5.4" fill="#8cba72"/><ellipse cx="-3" cy="0" rx="4" ry="3.6" fill="#8cba72"/><ellipse cx="3.2" cy="-0.6" rx="3.8" ry="3.4" fill="#8cba72"/><ellipse cx="1.4" cy="-4.4" rx="2.6" ry="2.2" fill="#63954c" opacity=".5"/></g>
+<g id="tp"><path d="M0 7v-6" stroke="#9c8a63" stroke-width="1.1"/><ellipse cx="0" cy="-5" rx="3.1" ry="9" fill="#a9cf8b"/><ellipse cx="-0.9" cy="-6" rx="1.7" ry="5.4" fill="#93c077" opacity=".55"/></g>
+<g id="tc"><path d="M0 7v-4" stroke="#9c8a63" stroke-width="1.1"/><path d="M0 -11 L5.6 3 H-5.6 Z" fill="#86b573"/><path d="M0 -11 L2.4 3 H-1 Z" fill="#74a562" opacity=".5"/></g>
+<g id="tb"><ellipse cx="0" cy="0" rx="5" ry="3.4" fill="#b2d492"/><ellipse cx="-2.4" cy="-1" rx="3" ry="2.4" fill="#a2c982"/></g>
+<g id="hs"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.4 1 L0 -4.6 L6.4 1 Z" fill="ROOF1"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#d9c8a8"/></g>
+</defs>
+<rect width="420" height="700" fill="#fbfaf2"/>
+<g filter="url(#wob)">
+<path d="M0 0 L188 0 C150 40 120 66 92 96 C60 132 78 168 118 196 C150 218 140 250 96 276 C52 302 40 344 74 380 C106 414 96 452 56 486 C22 514 34 556 84 584 C140 616 236 632 316 622 C368 616 404 600 420 584 L420 700 L0 700 Z" fill="#c9e2ef"/>
+<path d="M0 0 L188 0 C150 40 120 66 92 96 C60 132 78 168 118 196 C150 218 140 250 96 276 C52 302 40 344 74 380 C106 414 96 452 56 486 C22 514 34 556 84 584 C140 616 236 632 316 622 C368 616 404 600 420 584 L420 700 L0 700 Z" fill="#b6d7e8" opacity=".55" transform="translate(-10 -8)"/>
+</g>
+<g stroke="#e6f2f8" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".55">
+<path d="M369.8 607.8q7 -2 14 0"/>
+<path d="M259.5 698.7q7 -2 14 0"/>
+<path d="M65.8 579.2q7 -2 14 0"/>
+<path d="M46 412.9q7 -2 14 0"/>
+<path d="M52.4 152.4q7 -2 14 0"/>
+<path d="M229.4 695q7 -2 14 0"/>
+<path d="M27.2 109.7q7 -2 14 0"/>
+<path d="M54.2 452.1q7 -2 14 0"/>
+<path d="M66.7 264.6q7 -2 14 0"/>
+<path d="M69.1 26.4q7 -2 14 0"/>
+<path d="M11.6 115.4q7 -2 14 0"/>
+<path d="M50.1 304.8q7 -2 14 0"/>
+<path d="M103 697.5q7 -2 14 0"/>
+<path d="M152.7 634.1q7 -2 14 0"/>
+<path d="M41.2 5.9q7 -2 14 0"/>
+<path d="M157.9 691q7 -2 14 0"/>
+</g>
+<path d="M188 0 C150 40 120 66 92 96 C60 132 78 168 118 196 C150 218 140 250 96 276 C52 302 40 344 74 380 C106 414 96 452 56 486 C22 514 34 556 84 584 C140 616 236 632 316 622 C368 616 404 600 420 584" fill="none" stroke="#eee0bd" stroke-width="13" stroke-linecap="round" opacity=".85" filter="url(#wob2)"/>
+<g filter="url(#wob)">
+<ellipse cx="250" cy="120" rx="140" ry="82" fill="#e6eeca" opacity="0.52"/>
+<ellipse cx="334" cy="250" rx="118" ry="100" fill="#dbe8b6" opacity="0.46"/>
+<ellipse cx="198" cy="206" rx="106" ry="72" fill="#dbe8b6" opacity="0.38"/>
+<ellipse cx="148" cy="344" rx="96" ry="82" fill="#e6eeca" opacity="0.44"/>
+<ellipse cx="306" cy="424" rx="126" ry="100" fill="#cee1a4" opacity="0.38"/>
+<ellipse cx="192" cy="502" rx="108" ry="82" fill="#dbe8b6" opacity="0.4"/>
+<ellipse cx="332" cy="600" rx="110" ry="72" fill="#e6eeca" opacity="0.38"/>
+<ellipse cx="118" cy="182" rx="72" ry="62" fill="#cee1a4" opacity="0.26"/>
+<ellipse cx="382" cy="142" rx="82" ry="82" fill="#c1da96" opacity="0.28"/>
+<ellipse cx="252" cy="620" rx="110" ry="64" fill="#dbe8b6" opacity="0.32"/>
+<ellipse cx="196" cy="150" rx="56" ry="34" fill="#fbfaf2" opacity=".55"/>
+<ellipse cx="128" cy="300" rx="46" ry="30" fill="#fbfaf2" opacity=".55"/>
+<ellipse cx="272" cy="392" rx="60" ry="34" fill="#fbfaf2" opacity=".55"/>
+<ellipse cx="160" cy="470" rx="48" ry="30" fill="#fbfaf2" opacity=".55"/>
+<ellipse cx="352" cy="340" rx="44" ry="34" fill="#fbfaf2" opacity=".55"/>
+<ellipse cx="240" cy="556" rx="52" ry="28" fill="#fbfaf2" opacity=".55"/>
+</g>
+<g filter="url(#wob2)">
+<g transform="translate(258 210) rotate(-18)" opacity=".75">
+<rect x="-44" y="-22.5" width="21" height="14" fill="#e8ecb4" opacity=".9"/>
+<rect x="-44" y="-7.5" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+<rect x="-44" y="7.5" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="-22" y="-22.5" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+<rect x="-22" y="-7.5" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="-22" y="7.5" width="21" height="14" fill="#d5e4a6" opacity=".9"/>
+<rect x="0" y="-22.5" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="0" y="-7.5" width="21" height="14" fill="#d5e4a6" opacity=".9"/>
+<rect x="0" y="7.5" width="21" height="14" fill="#e8ecb4" opacity=".9"/>
+<rect x="22" y="-22.5" width="21" height="14" fill="#d5e4a6" opacity=".9"/>
+<rect x="22" y="-7.5" width="21" height="14" fill="#e8ecb4" opacity=".9"/>
+<rect x="22" y="7.5" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+</g>
+<g transform="translate(206 396) rotate(14)" opacity=".75">
+<rect x="-33" y="-22.5" width="21" height="14" fill="#e8ecb4" opacity=".9"/>
+<rect x="-33" y="-7.5" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+<rect x="-33" y="7.5" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="-11" y="-22.5" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+<rect x="-11" y="-7.5" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="-11" y="7.5" width="21" height="14" fill="#d5e4a6" opacity=".9"/>
+<rect x="11" y="-22.5" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="11" y="-7.5" width="21" height="14" fill="#d5e4a6" opacity=".9"/>
+<rect x="11" y="7.5" width="21" height="14" fill="#e8ecb4" opacity=".9"/>
+</g>
+<g transform="translate(346 470) rotate(-12)" opacity=".75">
+<rect x="-33" y="-15" width="21" height="14" fill="#e8ecb4" opacity=".9"/>
+<rect x="-33" y="0" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+<rect x="-11" y="-15" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+<rect x="-11" y="0" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="11" y="-15" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="11" y="0" width="21" height="14" fill="#d5e4a6" opacity=".9"/>
+</g>
+<g transform="translate(300 588) rotate(10)" opacity=".75">
+<rect x="-33" y="-15" width="21" height="14" fill="#e8ecb4" opacity=".9"/>
+<rect x="-33" y="0" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+<rect x="-11" y="-15" width="21" height="14" fill="#dde6a2" opacity=".9"/>
+<rect x="-11" y="0" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="11" y="-15" width="21" height="14" fill="#eae4b0" opacity=".9"/>
+<rect x="11" y="0" width="21" height="14" fill="#d5e4a6" opacity=".9"/>
+</g>
+</g>
+<g filter="url(#wob2)">
+<path d="M150 112 Q183.7 162.3 244 168 Q225.9 236.4 166 274 Q221 332 300 344 Q269.6 407.2 204 432 Q243.2 494.7 314 516 Q244.5 583.8 150 606" fill="none" stroke="#e3d6b8" stroke-width="8" stroke-linecap="round" opacity=".95"/>
+<path d="M150 112 Q183.7 162.3 244 168 Q225.9 236.4 166 274 Q221 332 300 344 Q269.6 407.2 204 432 Q243.2 494.7 314 516 Q244.5 583.8 150 606" fill="none" stroke="#f8f1e0" stroke-width="3.4" stroke-linecap="round" opacity=".9"/>
+</g>
+<g>
+<use href="#t0" transform="translate(395 492.2) scale(1)"/>
+<use href="#t2" transform="translate(409 481.4) scale(0.7)"/>
+<use href="#t2" transform="translate(401.8 479.2) scale(0.8)"/>
+<use href="#t1" transform="translate(410.6 489.8) scale(0.9)"/>
+<use href="#t1" transform="translate(385.9 496.9) scale(0.9)"/>
+<use href="#tb" transform="translate(406.2 499.4) scale(0.9)"/>
+<use href="#t2" transform="translate(400.3 509.6) scale(1.2)"/>
+<use href="#tc" transform="translate(398.5 498.4) scale(1.1)"/>
+<use href="#t0" transform="translate(403.4 488.5) scale(0.8)"/>
+<use href="#t1" transform="translate(413.9 501.4) scale(1.2)"/>
+<use href="#t1" transform="translate(291.9 248.9) scale(0.9)"/>
+<use href="#t1" transform="translate(296.3 235.5) scale(1.1)"/>
+<use href="#tb" transform="translate(323.2 231.4) scale(1.1)"/>
+<use href="#t1" transform="translate(320.3 254.7) scale(0.8)"/>
+<use href="#t2" transform="translate(324.4 243.1) scale(0.7)"/>
+<use href="#t2" transform="translate(306.7 259.7) scale(1.1)"/>
+<use href="#t1" transform="translate(304.4 249.8) scale(1.1)"/>
+<use href="#t0" transform="translate(327.8 257.6) scale(0.9)"/>
+<use href="#tb" transform="translate(304.3 231.4) scale(1)"/>
+<use href="#t2" transform="translate(311.4 243.9) scale(0.8)"/>
+<use href="#t0" transform="translate(318.5 235.9) scale(0.9)"/>
+<use href="#tc" transform="translate(292.7 242.6) scale(0.9)"/>
+<use href="#t1" transform="translate(336.8 245.3) scale(0.8)"/>
+<use href="#t1" transform="translate(312.2 234.3) scale(0.8)"/>
+<use href="#t0" transform="translate(284.6 248.1) scale(0.8)"/>
+<use href="#t0" transform="translate(333.8 253.1) scale(0.8)"/>
+<use href="#t0" transform="translate(297.3 255.9) scale(0.8)"/>
+<use href="#tc" transform="translate(357.4 585.3) scale(1.2)"/>
+<use href="#tb" transform="translate(382.9 594.6) scale(0.8)"/>
+<use href="#t1" transform="translate(376.4 572.3) scale(1.1)"/>
+<use href="#t0" transform="translate(367.8 580.3) scale(1.1)"/>
+<use href="#tc" transform="translate(364.6 590.8) scale(1.1)"/>
+<use href="#t2" transform="translate(385 568.6) scale(1.2)"/>
+<use href="#t1" transform="translate(352.9 589.7) scale(0.8)"/>
+<use href="#t2" transform="translate(357.1 578.2) scale(1.1)"/>
+<use href="#t2" transform="translate(362 566.5)"/>
+<use href="#t2" transform="translate(387.4 583.5) scale(1.1)"/>
+<use href="#t1" transform="translate(377.1 590.6) scale(1)"/>
+<use href="#t2" transform="translate(372.3 560.8) scale(0.7)"/>
+<use href="#tb" transform="translate(371.2 597) scale(0.8)"/>
+<use href="#t2" transform="translate(326.1 49.7) scale(1)"/>
+<use href="#t0" transform="translate(316.2 36.3) scale(1.1)"/>
+<use href="#t1" transform="translate(310.2 47.4)"/>
+<use href="#t0" transform="translate(320.1 66.1) scale(0.8)"/>
+<use href="#t2" transform="translate(311.7 55) scale(1.2)"/>
+<use href="#t2" transform="translate(300.7 61.1) scale(1)"/>
+<use href="#tc" transform="translate(322.3 57.9) scale(1.3)"/>
+<use href="#t2" transform="translate(333.3 51.7) scale(1)"/>
+<use href="#t2" transform="translate(329.6 44.3) scale(1.2)"/>
+<use href="#t0" transform="translate(309.5 68.3) scale(1)"/>
+<use href="#t1" transform="translate(116.1 332.5) scale(1.2)"/>
+<use href="#t2" transform="translate(100.1 336) scale(0.8)"/>
+<use href="#t2" transform="translate(111.9 301.7) scale(0.7)"/>
+<use href="#t0" transform="translate(109.9 309.3) scale(1.2)"/>
+<use href="#t2" transform="translate(104.4 291.2) scale(0.9)"/>
+<use href="#t2" transform="translate(123 303) scale(1.2)"/>
+<use href="#t0" transform="translate(102.9 301.5) scale(0.9)"/>
+<use href="#t1" transform="translate(93.8 327.1) scale(0.9)"/>
+<use href="#t0" transform="translate(97.3 316.9) scale(0.8)"/>
+<use href="#t0" transform="translate(131.8 308.5) scale(0.9)"/>
+<use href="#t2" transform="translate(118 297) scale(0.9)"/>
+<use href="#t0" transform="translate(128.6 318.3) scale(0.7)"/>
+<use href="#t0" transform="translate(110.1 316.9) scale(1.2)"/>
+<use href="#t1" transform="translate(122.8 324.7) scale(1.1)"/>
+<use href="#t0" transform="translate(125.6 311.9) scale(1.2)"/>
+<use href="#t0" transform="translate(116 311.8) scale(0.9)"/>
+<use href="#t1" transform="translate(326 188.9) scale(0.9)"/>
+<use href="#t0" transform="translate(341.1 173.2) scale(1.2)"/>
+<use href="#t1" transform="translate(353.4 168.3) scale(0.9)"/>
+<use href="#t0" transform="translate(362.4 190.6)"/>
+<use href="#t0" transform="translate(361.7 204.8) scale(1.1)"/>
+<use href="#t0" transform="translate(348.5 195.4) scale(1.1)"/>
+<use href="#t2" transform="translate(337.9 204.9) scale(0.9)"/>
+<use href="#tc" transform="translate(334.5 181.1) scale(0.9)"/>
+<use href="#t0" transform="translate(369 179.3) scale(1.1)"/>
+<use href="#tc" transform="translate(352.2 182.4) scale(1.1)"/>
+<use href="#t0" transform="translate(341.8 197.8) scale(0.8)"/>
+<use href="#t1" transform="translate(331 198.5) scale(0.8)"/>
+<use href="#t0" transform="translate(365.4 199.1) scale(0.7)"/>
+<use href="#t0" transform="translate(377.8 183.3) scale(1)"/>
+<use href="#t1" transform="translate(349.9 206.1) scale(0.7)"/>
+<use href="#t1" transform="translate(328.6 177.2) scale(0.8)"/>
+<use href="#t2" transform="translate(146.7 510.4) scale(1.1)"/>
+<use href="#t0" transform="translate(138 475.6) scale(1.2)"/>
+<use href="#t0" transform="translate(159.6 505.5) scale(1.1)"/>
+<use href="#t0" transform="translate(156.7 479.5) scale(1.1)"/>
+<use href="#t2" transform="translate(147.1 495.4) scale(0.8)"/>
+<use href="#t0" transform="translate(137.9 502.5) scale(1)"/>
+<use href="#t0" transform="translate(132.8 506.8) scale(1.1)"/>
+<use href="#t2" transform="translate(134 480.5) scale(0.9)"/>
+<use href="#t0" transform="translate(125.1 484.2) scale(0.8)"/>
+<use href="#t0" transform="translate(149.4 480.5) scale(1.1)"/>
+<use href="#tb" transform="translate(166 490.3) scale(1.2)"/>
+<use href="#t1" transform="translate(139.7 510.1)"/>
+<use href="#t1" transform="translate(123.4 492.4) scale(0.9)"/>
+<use href="#t2" transform="translate(156.3 490.6) scale(0.9)"/>
+<use href="#t1" transform="translate(269.6 214.9) scale(1)"/>
+<use href="#t2" transform="translate(257.2 210.4) scale(0.8)"/>
+<use href="#t2" transform="translate(282.7 226.8) scale(1)"/>
+<use href="#t1" transform="translate(270.9 227.9) scale(0.8)"/>
+<use href="#t0" transform="translate(253.6 217.1) scale(0.9)"/>
+<use href="#t1" transform="translate(262.1 222.8) scale(0.8)"/>
+<use href="#t2" transform="translate(279.4 207.9) scale(1)"/>
+<use href="#t2" transform="translate(254 230) scale(0.9)"/>
+<use href="#t2" transform="translate(287 221.7) scale(1)"/>
+<use href="#tb" transform="translate(274.5 221.6) scale(0.8)"/>
+<use href="#t1" transform="translate(280.8 216.4) scale(1.2)"/>
+<use href="#tc" transform="translate(247.8 220.9) scale(1.3)"/>
+<use href="#tb" transform="translate(266.1 208.5) scale(1)"/>
+<use href="#t2" transform="translate(285.8 211.2) scale(1.1)"/>
+<use href="#t0" transform="translate(379.9 160.2) scale(0.8)"/>
+<use href="#tc" transform="translate(349.5 142.9) scale(1.1)"/>
+<use href="#t1" transform="translate(388 152.4)"/>
+<use href="#tb" transform="translate(375.6 146.1) scale(1)"/>
+<use href="#t2" transform="translate(370.5 139.8) scale(1.1)"/>
+<use href="#t1" transform="translate(353.4 155) scale(0.9)"/>
+<use href="#t2" transform="translate(377.6 140) scale(1)"/>
+<use href="#tc" transform="translate(340.4 147.3) scale(1.1)"/>
+<use href="#tb" transform="translate(365 156.3) scale(0.9)"/>
+<use href="#t0" transform="translate(361.9 150.1) scale(0.7)"/>
+<use href="#tb" transform="translate(330.6 156.2) scale(1.2)"/>
+<use href="#t1" transform="translate(371.9 155.4) scale(1.1)"/>
+<use href="#t1" transform="translate(343.5 137.2) scale(1)"/>
+<use href="#t1" transform="translate(355.2 137.4) scale(0.8)"/>
+<use href="#t2" transform="translate(367.4 163.2) scale(1.1)"/>
+<use href="#t2" transform="translate(342.9 159.4) scale(0.7)"/>
+<use href="#t1" transform="translate(348.8 150.6) scale(1)"/>
+<use href="#tb" transform="translate(358.7 144.5) scale(0.9)"/>
+<use href="#t2" transform="translate(332.4 149.9) scale(0.9)"/>
+<use href="#t2" transform="translate(386.6 142.6) scale(1.1)"/>
+<use href="#t1" transform="translate(337.7 154.3) scale(0.8)"/>
+<use href="#t1" transform="translate(381.6 150.7) scale(1.1)"/>
+<use href="#t1" transform="translate(129.1 361.4) scale(1.1)"/>
+<use href="#t2" transform="translate(136.4 344.4) scale(1.1)"/>
+<use href="#t1" transform="translate(111.5 379.2) scale(0.8)"/>
+<use href="#t1" transform="translate(100.2 361.5) scale(0.9)"/>
+<use href="#t1" transform="translate(133.9 372.7) scale(1.1)"/>
+<use href="#t1" transform="translate(108.4 357.5) scale(1.2)"/>
+<use href="#t2" transform="translate(135.2 357.3)"/>
+<use href="#tc" transform="translate(144.7 359.2) scale(0.8)"/>
+<use href="#t1" transform="translate(130.9 379.7) scale(0.9)"/>
+<use href="#t0" transform="translate(104.4 371.6) scale(1.2)"/>
+<use href="#t1" transform="translate(120.9 341.5) scale(1.1)"/>
+<use href="#t1" transform="translate(110.9 344.3) scale(1)"/>
+<use href="#t0" transform="translate(135 365) scale(1.1)"/>
+<use href="#t0" transform="translate(197.2 66.4) scale(1)"/>
+<use href="#t0" transform="translate(190.9 75.5) scale(1.2)"/>
+<use href="#t0" transform="translate(185.7 93.2) scale(0.9)"/>
+<use href="#t1" transform="translate(196.2 95.4) scale(0.8)"/>
+<use href="#t2" transform="translate(177.6 71.9) scale(1)"/>
+<use href="#t2" transform="translate(182.2 66.9) scale(1.1)"/>
+<use href="#tb" transform="translate(199.8 89.5) scale(1.2)"/>
+<use href="#t1" transform="translate(186.6 84.6) scale(1.1)"/>
+<use href="#t2" transform="translate(203 101)"/>
+<use href="#t2" transform="translate(201.9 77.2) scale(1.1)"/>
+<use href="#t2" transform="translate(193.5 82.2) scale(1.1)"/>
+<use href="#t2" transform="translate(185.3 108.8) scale(1.1)"/>
+<use href="#t1" transform="translate(205.7 83.1) scale(0.9)"/>
+<use href="#tb" transform="translate(172.3 87.3) scale(1.1)"/>
+<use href="#t2" transform="translate(189.4 99.6) scale(1.1)"/>
+<use href="#t2" transform="translate(111.8 416.8) scale(0.9)"/>
+<use href="#tc" transform="translate(109 426.9) scale(0.9)"/>
+<use href="#t2" transform="translate(98.5 404.5) scale(1)"/>
+<use href="#t2" transform="translate(102 427.5) scale(1.1)"/>
+<use href="#t0" transform="translate(95.3 427.8) scale(1.2)"/>
+<use href="#t0" transform="translate(87.8 422.3) scale(1)"/>
+<use href="#t1" transform="translate(92.4 407.5) scale(0.9)"/>
+<use href="#t1" transform="translate(85.7 436.9) scale(1.2)"/>
+<use href="#t2" transform="translate(111.4 406.2) scale(1.2)"/>
+<use href="#tb" transform="translate(90.9 416.6)"/>
+<use href="#t1" transform="translate(97.5 438.5) scale(1)"/>
+<use href="#t2" transform="translate(97.4 420.8) scale(0.8)"/>
+<use href="#t2" transform="translate(86.2 396.4) scale(1.2)"/>
+<use href="#t2" transform="translate(93.3 398.4) scale(1.2)"/>
+<use href="#tb" transform="translate(103.3 415.2) scale(1.2)"/>
+<use href="#t2" transform="translate(398.5 14.7) scale(0.8)"/>
+<use href="#t0" transform="translate(363.6 25.8) scale(0.8)"/>
+<use href="#tb" transform="translate(400.8 29.6) scale(1)"/>
+<use href="#t2" transform="translate(380.1 7.2) scale(0.9)"/>
+<use href="#t2" transform="translate(357.3 14) scale(1.2)"/>
+<use href="#t1" transform="translate(353.4 23.9) scale(0.9)"/>
+<use href="#tb" transform="translate(368.7 6.2) scale(1.1)"/>
+<use href="#t1" transform="translate(363.2 36.9) scale(0.8)"/>
+<use href="#t2" transform="translate(375.1 38.7) scale(0.9)"/>
+<use href="#tc" transform="translate(379.4 26.6) scale(1.2)"/>
+<use href="#t0" transform="translate(397.5 6.3) scale(1.1)"/>
+<use href="#t2" transform="translate(375.1 0.5) scale(1)"/>
+<use href="#t0" transform="translate(376.5 19.5) scale(1)"/>
+<use href="#t0" transform="translate(372 24.6) scale(0.9)"/>
+<use href="#t0" transform="translate(393.9 21.7) scale(0.7)"/>
+<use href="#t2" transform="translate(389.2 38.1) scale(1.2)"/>
+<use href="#t0" transform="translate(364.9 13.4) scale(1.2)"/>
+<use href="#t0" transform="translate(386.9 6.8) scale(1.2)"/>
+<use href="#tb" transform="translate(361.9 3.9) scale(1)"/>
+<use href="#t2" transform="translate(391.6 11.5) scale(0.9)"/>
+<use href="#t1" transform="translate(372 31.7) scale(1.1)"/>
+<use href="#tc" transform="translate(395.3 175.5) scale(1.2)"/>
+<use href="#t0" transform="translate(392.7 164.4) scale(0.8)"/>
+<use href="#t1" transform="translate(357.8 177.6) scale(0.8)"/>
+<use href="#tb" transform="translate(376.1 202.4) scale(0.9)"/>
+<use href="#t2" transform="translate(393.1 188.2) scale(0.9)"/>
+<use href="#t2" transform="translate(390.7 179.9) scale(1.1)"/>
+<use href="#t0" transform="translate(385.6 164.1) scale(0.9)"/>
+<use href="#t2" transform="translate(392.6 203.1) scale(0.9)"/>
+<use href="#t0" transform="translate(364.2 171.7) scale(0.9)"/>
+<use href="#t1" transform="translate(399.5 194.4) scale(1.2)"/>
+<use href="#t2" transform="translate(406.8 187.1) scale(0.8)"/>
+<use href="#tc" transform="translate(404.7 170) scale(1)"/>
+<use href="#t0" transform="translate(371.5 169.4) scale(1.2)"/>
+<use href="#t1" transform="translate(404.6 179.1) scale(0.8)"/>
+<use href="#t1" transform="translate(378 209.1) scale(1.1)"/>
+<use href="#t1" transform="translate(385.7 171.5) scale(0.9)"/>
+<use href="#t2" transform="translate(362.2 182.4) scale(1)"/>
+<use href="#t1" transform="translate(391.9 441.7) scale(0.8)"/>
+<use href="#t2" transform="translate(368 451.9) scale(0.7)"/>
+<use href="#t2" transform="translate(360.8 450.5) scale(1.1)"/>
+<use href="#t0" transform="translate(389.7 435) scale(0.9)"/>
+<use href="#t1" transform="translate(377.2 457.2) scale(1.2)"/>
+<use href="#tb" transform="translate(374.5 429.9) scale(1)"/>
+<use href="#tc" transform="translate(383.8 452.6) scale(1.3)"/>
+<use href="#t2" transform="translate(385.9 445.8) scale(0.8)"/>
+<use href="#t1" transform="translate(376.3 448.1) scale(1.2)"/>
+<use href="#tc" transform="translate(366.3 439.7) scale(1.2)"/>
+<use href="#t1" transform="translate(374.1 440.3) scale(0.9)"/>
+<use href="#t2" transform="translate(368.6 458.9) scale(0.7)"/>
+<use href="#t2" transform="translate(383.2 430.9) scale(0.8)"/>
+<use href="#tc" transform="translate(396.7 100.1) scale(1.1)"/>
+<use href="#tc" transform="translate(413.5 84.2) scale(1.3)"/>
+<use href="#t2" transform="translate(426.5 89.3) scale(1.1)"/>
+<use href="#t0" transform="translate(403.7 84.4) scale(1)"/>
+<use href="#t1" transform="translate(411.5 75.5) scale(1.2)"/>
+<use href="#t2" transform="translate(390.2 90.5) scale(1.1)"/>
+<use href="#tc" transform="translate(407.5 96.9) scale(1.1)"/>
+<use href="#tc" transform="translate(389.5 76.8) scale(0.9)"/>
+<use href="#tc" transform="translate(416.3 94) scale(0.8)"/>
+<use href="#t2" transform="translate(386.2 97.3) scale(1.1)"/>
+<use href="#tb" transform="translate(402 91.4) scale(1.2)"/>
+<use href="#t2" transform="translate(373.5 90.4) scale(0.9)"/>
+<use href="#t1" transform="translate(373.9 82.5) scale(0.7)"/>
+<use href="#t1" transform="translate(144.9 462.6) scale(0.7)"/>
+<use href="#t0" transform="translate(163.1 480.5) scale(1.1)"/>
+<use href="#t2" transform="translate(142.6 469.9) scale(0.8)"/>
+<use href="#tc" transform="translate(136.5 487.8) scale(1.2)"/>
+<use href="#t0" transform="translate(155 472.5) scale(0.9)"/>
+<use href="#t1" transform="translate(129.3 471.6) scale(1.1)"/>
+<use href="#tb" transform="translate(158.4 498.1) scale(0.8)"/>
+<use href="#t0" transform="translate(152.1 500.8) scale(1.1)"/>
+<use href="#t0" transform="translate(158.1 464.4) scale(1)"/>
+<use href="#t0" transform="translate(168.6 483.6) scale(1)"/>
+<use href="#t2" transform="translate(138.4 464.2) scale(0.8)"/>
+<use href="#t0" transform="translate(142.6 485.9) scale(1)"/>
+<use href="#t2" transform="translate(356.6 119.6) scale(1.2)"/>
+<use href="#t1" transform="translate(364.3 110.6) scale(1)"/>
+<use href="#t0" transform="translate(342.8 121.7)"/>
+<use href="#tc" transform="translate(374.1 102.2) scale(1)"/>
+<use href="#tb" transform="translate(346.2 96.7) scale(0.7)"/>
+<use href="#t0" transform="translate(339.5 106.9) scale(1)"/>
+<use href="#t2" transform="translate(353.3 104.6) scale(0.9)"/>
+<use href="#t0" transform="translate(328.8 99.3) scale(0.9)"/>
+<use href="#t0" transform="translate(344 86.9) scale(0.9)"/>
+<use href="#t1" transform="translate(336 95) scale(1.1)"/>
+<use href="#t1" transform="translate(325.1 104.8) scale(0.9)"/>
+<use href="#tc" transform="translate(369.4 96.1) scale(1.3)"/>
+<use href="#t0" transform="translate(363.4 120.9) scale(1)"/>
+<use href="#t2" transform="translate(347.7 110.1) scale(1.2)"/>
+<use href="#tb" transform="translate(357.3 110)"/>
+<use href="#t0" transform="translate(358.6 128) scale(0.7)"/>
+<use href="#tc" transform="translate(373.2 118.4) scale(1.1)"/>
+<use href="#t1" transform="translate(353.8 92.5) scale(0.7)"/>
+<use href="#t1" transform="translate(362.5 95.4) scale(1.1)"/>
+<use href="#t2" transform="translate(374.5 111.4) scale(0.9)"/>
+<use href="#t2" transform="translate(397.5 554.8) scale(1.2)"/>
+<use href="#tc" transform="translate(365 542.7) scale(1.3)"/>
+<use href="#t2" transform="translate(388.2 553.5) scale(0.9)"/>
+<use href="#t2" transform="translate(389.4 541.5) scale(1.2)"/>
+<use href="#t1" transform="translate(359.1 560.3) scale(1.1)"/>
+<use href="#t1" transform="translate(360.4 552.3) scale(0.7)"/>
+<use href="#t1" transform="translate(376.4 540.5) scale(0.9)"/>
+<use href="#t0" transform="translate(349.6 566.1) scale(0.9)"/>
+<use href="#t1" transform="translate(365.6 574.2) scale(0.9)"/>
+<use href="#t1" transform="translate(351.5 572.1) scale(1)"/>
+<use href="#t1" transform="translate(375.2 554.7) scale(0.8)"/>
+<use href="#t2" transform="translate(390.8 576.3) scale(1)"/>
+<use href="#t0" transform="translate(390.6 561.2) scale(0.7)"/>
+<use href="#t0" transform="translate(345.6 559.4) scale(0.7)"/>
+<use href="#t2" transform="translate(367.3 552) scale(0.8)"/>
+<use href="#t1" transform="translate(382.2 43.3) scale(1)"/>
+<use href="#t2" transform="translate(389.6 49.3) scale(0.7)"/>
+<use href="#t0" transform="translate(386.8 25.1) scale(1)"/>
+<use href="#tb" transform="translate(383.3 58.7) scale(0.7)"/>
+<use href="#t2" transform="translate(378.3 50) scale(1.1)"/>
+<use href="#tb" transform="translate(368.8 49.4) scale(0.9)"/>
+<use href="#t2" transform="translate(394.4 28.6) scale(1.1)"/>
+<use href="#t2" transform="translate(278.4 561.9) scale(1)"/>
+<use href="#t1" transform="translate(303.5 574.8) scale(0.8)"/>
+<use href="#t1" transform="translate(321.1 564.1) scale(0.8)"/>
+<use href="#t0" transform="translate(314.6 557.3) scale(1.2)"/>
+<use href="#t1" transform="translate(314.6 565.5) scale(1.1)"/>
+<use href="#t0" transform="translate(306.2 556.1)"/>
+<use href="#t0" transform="translate(292.5 566.4) scale(0.9)"/>
+<use href="#t1" transform="translate(315.9 548.4) scale(0.8)"/>
+<use href="#t1" transform="translate(280.2 553.5) scale(1.2)"/>
+<use href="#t0" transform="translate(297.9 548.5) scale(1)"/>
+<use href="#t1" transform="translate(289.2 552.4) scale(1.1)"/>
+<use href="#t1" transform="translate(284.8 562.5) scale(1.1)"/>
+<use href="#t0" transform="translate(297.3 561.8) scale(0.8)"/>
+<use href="#t2" transform="translate(304.4 548) scale(0.9)"/>
+<use href="#tb" transform="translate(184.1 145) scale(1.2)"/>
+<use href="#tc" transform="translate(211.6 126.3)"/>
+<use href="#tc" transform="translate(208.8 132) scale(0.9)"/>
+<use href="#t2" transform="translate(202.4 124.5) scale(1.2)"/>
+<use href="#t0" transform="translate(167.7 140.4) scale(0.9)"/>
+<use href="#t0" transform="translate(195 125.2) scale(1.1)"/>
+<use href="#t2" transform="translate(188.6 121.2) scale(1.1)"/>
+<use href="#t0" transform="translate(250 534.9) scale(0.8)"/>
+<use href="#t1" transform="translate(271.5 559.5) scale(0.8)"/>
+<use href="#t2" transform="translate(259.2 565.1) scale(0.9)"/>
+<use href="#tc" transform="translate(253.1 541.8) scale(1.3)"/>
+<use href="#tb" transform="translate(250 563.3) scale(0.8)"/>
+<use href="#t1" transform="translate(275.1 549) scale(1.1)"/>
+<use href="#t1" transform="translate(263.7 560.6) scale(0.8)"/>
+<use href="#t0" transform="translate(145.5 210.1) scale(1.2)"/>
+<use href="#t0" transform="translate(165.3 231.4) scale(1)"/>
+<use href="#t0" transform="translate(160.6 210.1) scale(0.9)"/>
+<use href="#t1" transform="translate(160.7 225.3) scale(0.9)"/>
+<use href="#tb" transform="translate(143.9 229.7) scale(0.7)"/>
+<use href="#t2" transform="translate(154.4 239.3) scale(1.1)"/>
+<use href="#t0" transform="translate(169.6 217.8) scale(1.2)"/>
+<use href="#t2" transform="translate(145.8 237) scale(0.7)"/>
+<use href="#t0" transform="translate(156.7 219.3) scale(1.1)"/>
+<use href="#t1" transform="translate(140.3 214.7) scale(0.8)"/>
+<use href="#t0" transform="translate(150.6 217.2) scale(1)"/>
+<use href="#t1" transform="translate(145.3 221.4) scale(1.2)"/>
+<use href="#tb" transform="translate(172.3 226.4) scale(1.1)"/>
+<use href="#tc" transform="translate(95.9 347.8) scale(1.2)"/>
+<use href="#t2" transform="translate(97.3 380.2) scale(1.2)"/>
+<use href="#t0" transform="translate(122 365.1) scale(1.1)"/>
+<use href="#tb" transform="translate(92.1 354.9) scale(0.8)"/>
+<use href="#t2" transform="translate(97.7 373.4) scale(0.7)"/>
+<use href="#t1" transform="translate(117.9 352.5) scale(0.8)"/>
+<use href="#t0" transform="translate(412.1 580.6) scale(0.7)"/>
+<use href="#t0" transform="translate(397.7 585.5) scale(1)"/>
+<use href="#tc" transform="translate(415.5 573.9) scale(0.8)"/>
+<use href="#t0" transform="translate(407.1 561.2) scale(0.8)"/>
+<use href="#tc" transform="translate(413.8 587.6) scale(1)"/>
+<use href="#t2" transform="translate(401.7 571.1) scale(1)"/>
+<use href="#t1" transform="translate(404.3 588.1) scale(0.7)"/>
+<use href="#t0" transform="translate(234.7 211.2) scale(1.1)"/>
+<use href="#t0" transform="translate(222.7 229.7) scale(0.8)"/>
+<use href="#tb" transform="translate(219.3 221) scale(1.1)"/>
+<use href="#t0" transform="translate(225.8 212.6) scale(1.2)"/>
+<use href="#tc" transform="translate(197.9 211.7) scale(1.2)"/>
+<use href="#tc" transform="translate(212.6 229.8) scale(1.3)"/>
+<use href="#t0" transform="translate(230.4 229.1) scale(0.8)"/>
+<use href="#t1" transform="translate(87.2 540) scale(1.1)"/>
+<use href="#t2" transform="translate(109.6 555.1) scale(1.1)"/>
+<use href="#t1" transform="translate(85.6 547.8) scale(1)"/>
+<use href="#t1" transform="translate(108.5 527.3) scale(0.9)"/>
+<use href="#t0" transform="translate(93.7 548.1)"/>
+<use href="#tb" transform="translate(101.5 529.9) scale(0.9)"/>
+<use href="#tb" transform="translate(100.3 540.3) scale(1.2)"/>
+<use href="#t2" transform="translate(97.7 524) scale(1.1)"/>
+<use href="#t2" transform="translate(86.8 523.2) scale(1.1)"/>
+<use href="#t0" transform="translate(379.5 484.8) scale(1.1)"/>
+<use href="#t1" transform="translate(408 469.7) scale(1.2)"/>
+<use href="#tc" transform="translate(419 488.8) scale(0.9)"/>
+<use href="#t1" transform="translate(389.6 466.8) scale(0.9)"/>
+<use href="#t0" transform="translate(371.6 475.2) scale(0.8)"/>
+<use href="#tb" transform="translate(398.7 469.7) scale(0.9)"/>
+<use href="#t1" transform="translate(418.3 480.7) scale(1.2)"/>
+<use href="#t2" transform="translate(392.3 480.8) scale(1.2)"/>
+<use href="#t0" transform="translate(385.3 476.8) scale(0.9)"/>
+<use href="#t0" transform="translate(373.1 482.4) scale(0.7)"/>
+<use href="#tc" transform="translate(386.6 487.2) scale(0.9)"/>
+<use href="#t1" transform="translate(372.8 499.6) scale(1)"/>
+<use href="#t1" transform="translate(369.2 488.3) scale(0.9)"/>
+<use href="#t1" transform="translate(130 205.4) scale(1.2)"/>
+<use href="#t1" transform="translate(134.8 231.6) scale(0.8)"/>
+<use href="#t2" transform="translate(146.2 199.6) scale(0.8)"/>
+<use href="#t1" transform="translate(128.2 230.8) scale(0.9)"/>
+<use href="#t2" transform="translate(123.7 225.2) scale(0.9)"/>
+<use href="#tc" transform="translate(318 153.4) scale(0.8)"/>
+<use href="#t1" transform="translate(284.4 146.6) scale(1.2)"/>
+<use href="#t2" transform="translate(297.8 154.9) scale(1.2)"/>
+<use href="#t0" transform="translate(302.5 126.1) scale(0.9)"/>
+<use href="#t0" transform="translate(323.4 160.6) scale(1.1)"/>
+<use href="#t2" transform="translate(320.4 138.3) scale(1.2)"/>
+<use href="#t0" transform="translate(310.9 132.4) scale(0.8)"/>
+<use href="#t0" transform="translate(324.2 150.8) scale(1.2)"/>
+<use href="#t1" transform="translate(315.7 160.3) scale(0.8)"/>
+<use href="#t1" transform="translate(299.6 146.8) scale(0.8)"/>
+<use href="#t2" transform="translate(314 139.8) scale(0.9)"/>
+<use href="#t0" transform="translate(291.3 136.7) scale(1)"/>
+<use href="#tc" transform="translate(327.8 138.1) scale(1)"/>
+<use href="#t1" transform="translate(301.6 137.8) scale(0.8)"/>
+<use href="#tc" transform="translate(308.4 122.7) scale(0.8)"/>
+<use href="#tc" transform="translate(151.4 336) scale(1.3)"/>
+<use href="#t2" transform="translate(166.9 365.2) scale(1)"/>
+<use href="#t2" transform="translate(158.7 338.3) scale(1.1)"/>
+<use href="#t2" transform="translate(163.2 370.6) scale(1)"/>
+<use href="#t0" transform="translate(115.6 468.1) scale(0.9)"/>
+<use href="#t0" transform="translate(93.9 459.3) scale(0.8)"/>
+<use href="#tb" transform="translate(96.2 451)"/>
+<use href="#t1" transform="translate(81.9 465.9) scale(1.1)"/>
+<use href="#t1" transform="translate(83.9 455.8) scale(0.9)"/>
+<use href="#tc" transform="translate(84 448.9) scale(1.2)"/>
+<use href="#t1" transform="translate(105.7 464.4) scale(0.8)"/>
+<use href="#t0" transform="translate(72.5 462.3) scale(1.2)"/>
+<use href="#tc" transform="translate(122.3 455.1) scale(1.2)"/>
+<use href="#t2" transform="translate(112 459.4) scale(1.1)"/>
+<use href="#t1" transform="translate(365.5 290.5) scale(1.2)"/>
+<use href="#t0" transform="translate(385 274.8)"/>
+<use href="#t1" transform="translate(346.9 285.3) scale(0.9)"/>
+<use href="#tc" transform="translate(358.1 289) scale(1.3)"/>
+<use href="#tb" transform="translate(385.1 295.2)"/>
+<use href="#t2" transform="translate(346.8 265.4) scale(0.9)"/>
+<use href="#tc" transform="translate(383.1 268.2)"/>
+<use href="#tc" transform="translate(356 271.6) scale(0.8)"/>
+<use href="#t2" transform="translate(373.1 259.4) scale(0.8)"/>
+<use href="#tc" transform="translate(350.3 292.2) scale(0.9)"/>
+<use href="#t2" transform="translate(374 295.9) scale(1.1)"/>
+<use href="#t0" transform="translate(371.2 266.1) scale(1.1)"/>
+<use href="#t1" transform="translate(368 276.3) scale(0.9)"/>
+<use href="#t2" transform="translate(389 283.4) scale(1)"/>
+<use href="#t2" transform="translate(373.4 286.5) scale(1.2)"/>
+<use href="#t0" transform="translate(369 300.7) scale(1.2)"/>
+<use href="#t0" transform="translate(382.8 259.2) scale(1.1)"/>
+<use href="#t1" transform="translate(361.2 255.8) scale(0.9)"/>
+<use href="#tb" transform="translate(320.6 201.7) scale(1.1)"/>
+<use href="#t2" transform="translate(308.7 202.1) scale(1.2)"/>
+<use href="#t2" transform="translate(287.4 179.8) scale(0.9)"/>
+<use href="#tc" transform="translate(310.2 210.1) scale(1.3)"/>
+<use href="#t2" transform="translate(304.6 196) scale(0.8)"/>
+<use href="#t1" transform="translate(279.3 200.2) scale(1.1)"/>
+<use href="#t1" transform="translate(320.5 185.1) scale(1.1)"/>
+<use href="#t0" transform="translate(273 204.2) scale(1.2)"/>
+<use href="#tb" transform="translate(294.6 212.9) scale(1.2)"/>
+<use href="#t0" transform="translate(278.5 184.4)"/>
+<use href="#t2" transform="translate(292.3 188.6) scale(1.1)"/>
+<use href="#t1" transform="translate(303.8 178.2) scale(0.8)"/>
+<use href="#tb" transform="translate(312.1 178.1) scale(0.7)"/>
+<use href="#t0" transform="translate(286.3 201) scale(0.8)"/>
+<use href="#t0" transform="translate(299.1 207) scale(0.7)"/>
+<use href="#t2" transform="translate(270.4 194.6) scale(1.2)"/>
+<use href="#t2" transform="translate(150.6 150.3)"/>
+<use href="#t2" transform="translate(147.4 175.6) scale(0.8)"/>
+<use href="#t0" transform="translate(134.4 161.4) scale(1.2)"/>
+<use href="#t2" transform="translate(156.9 183.2) scale(1)"/>
+<use href="#t0" transform="translate(138.6 177.5) scale(0.8)"/>
+<use href="#t1" transform="translate(181.3 163.9) scale(1.2)"/>
+<use href="#t0" transform="translate(129.7 155.4) scale(0.8)"/>
+<use href="#t2" transform="translate(153.1 161.9) scale(0.8)"/>
+<use href="#t1" transform="translate(139.8 155.4) scale(0.9)"/>
+<use href="#t0" transform="translate(170 175.2) scale(1.2)"/>
+<use href="#t2" transform="translate(174.3 156) scale(1.2)"/>
+<use href="#t2" transform="translate(166 168.9) scale(1.2)"/>
+<use href="#tc" transform="translate(131.1 170.6) scale(1.1)"/>
+<use href="#t0" transform="translate(148 167.3) scale(1.2)"/>
+<use href="#t2" transform="translate(227.5 341.7) scale(0.8)"/>
+<use href="#tb" transform="translate(209.8 336.6) scale(0.9)"/>
+<use href="#t0" transform="translate(215.9 330.4) scale(0.8)"/>
+<use href="#t2" transform="translate(223.5 349.7)"/>
+<use href="#t0" transform="translate(193.5 341.4) scale(0.9)"/>
+<use href="#t1" transform="translate(200.3 335.8) scale(1.2)"/>
+<use href="#tb" transform="translate(219.3 335.9) scale(1.1)"/>
+<use href="#t2" transform="translate(236.2 334.5) scale(1)"/>
+<use href="#tb" transform="translate(226.7 334) scale(1.1)"/>
+<use href="#t2" transform="translate(208.5 343.6) scale(0.7)"/>
+<use href="#t0" transform="translate(338.8 220.2) scale(0.9)"/>
+<use href="#tc" transform="translate(344.7 214.1) scale(0.9)"/>
+<use href="#t2" transform="translate(333.5 224.7) scale(1.1)"/>
+<use href="#tc" transform="translate(353.1 240.2) scale(1.1)"/>
+<use href="#t0" transform="translate(357 214.3) scale(1.2)"/>
+<use href="#t1" transform="translate(347.3 234.7) scale(0.8)"/>
+<use href="#t2" transform="translate(362.3 230.4) scale(0.9)"/>
+<use href="#t2" transform="translate(359.8 237.4) scale(1.2)"/>
+<use href="#t0" transform="translate(346.2 247.9) scale(0.8)"/>
+<use href="#t1" transform="translate(339.6 234.2) scale(0.8)"/>
+<use href="#t1" transform="translate(335.9 212.4) scale(0.8)"/>
+<use href="#t2" transform="translate(224.4 126.4) scale(1)"/>
+<use href="#t2" transform="translate(224.7 114.5) scale(0.8)"/>
+<use href="#tc" transform="translate(223 105.4) scale(1.1)"/>
+<use href="#t2" transform="translate(220.7 137.4) scale(1.2)"/>
+<use href="#t1" transform="translate(218.6 111.5) scale(1.2)"/>
+<use href="#t1" transform="translate(242.2 122.4) scale(1.1)"/>
+<use href="#t1" transform="translate(233.3 109.4) scale(1.1)"/>
+<use href="#tc" transform="translate(238.5 104.8) scale(1.2)"/>
+<use href="#tb" transform="translate(246.7 108) scale(1.1)"/>
+<use href="#tb" transform="translate(243.7 134.7) scale(1.2)"/>
+<use href="#tb" transform="translate(217.8 127.9) scale(1)"/>
+<use href="#t2" transform="translate(211.8 118.4)"/>
+<use href="#tb" transform="translate(232.3 128.9) scale(0.8)"/>
+<use href="#t0" transform="translate(234.6 118.6) scale(0.8)"/>
+<use href="#t1" transform="translate(254.9 116) scale(1.2)"/>
+<use href="#t1" transform="translate(165.6 347.3) scale(0.8)"/>
+<use href="#tc" transform="translate(131 350.1) scale(1.1)"/>
+<use href="#t1" transform="translate(159.8 349.7) scale(1.2)"/>
+<use href="#tb" transform="translate(172.8 344.7) scale(1)"/>
+<use href="#t1" transform="translate(177.8 353.6) scale(0.8)"/>
+<use href="#t0" transform="translate(409.9 536.9) scale(1.1)"/>
+<use href="#t1" transform="translate(413.4 527.7) scale(0.8)"/>
+<use href="#t0" transform="translate(417.7 532.7) scale(0.9)"/>
+<use href="#t2" transform="translate(397.5 529) scale(1)"/>
+<use href="#t0" transform="translate(404.1 518.3) scale(1)"/>
+<use href="#t2" transform="translate(424.6 533) scale(1)"/>
+<use href="#t0" transform="translate(418.7 518.2) scale(0.9)"/>
+<use href="#tc" transform="translate(424.7 523.1) scale(1)"/>
+<use href="#t2" transform="translate(411.5 517) scale(1.1)"/>
+<use href="#t2" transform="translate(402.1 535.5) scale(0.9)"/>
+<use href="#t1" transform="translate(393.5 523.8) scale(0.8)"/>
+<use href="#tb" transform="translate(405.1 525.8) scale(0.7)"/>
+<use href="#tc" transform="translate(184 346.6) scale(1.3)"/>
+<use href="#t1" transform="translate(158.6 328.1) scale(0.9)"/>
+<use href="#t2" transform="translate(201 326.8) scale(1)"/>
+<use href="#t1" transform="translate(176.9 320) scale(0.9)"/>
+<use href="#t2" transform="translate(147.9 342.6) scale(0.7)"/>
+<use href="#t1" transform="translate(189.1 333.2) scale(1.1)"/>
+<use href="#t2" transform="translate(201 352.9) scale(1)"/>
+<use href="#tb" transform="translate(149.8 328.7) scale(1.1)"/>
+<use href="#t2" transform="translate(160.4 359.1) scale(0.8)"/>
+<use href="#tb" transform="translate(151.1 351.4) scale(1.1)"/>
+<use href="#t1" transform="translate(193.9 357.1) scale(1)"/>
+<use href="#t2" transform="translate(162.3 321.2) scale(0.8)"/>
+<use href="#t0" transform="translate(183.4 325.7) scale(1.2)"/>
+<use href="#t2" transform="translate(180.8 338.6) scale(1.1)"/>
+<use href="#t2" transform="translate(172 327.2) scale(1.2)"/>
+<use href="#t2" transform="translate(355.3 382.3) scale(1.1)"/>
+<use href="#t1" transform="translate(368.7 395.1) scale(1.2)"/>
+<use href="#t0" transform="translate(383.4 400.7) scale(1.1)"/>
+<use href="#t0" transform="translate(381.9 394.1) scale(0.9)"/>
+<use href="#tc" transform="translate(355.3 374) scale(0.9)"/>
+<use href="#t1" transform="translate(364.7 408.4) scale(0.9)"/>
+<use href="#t1" transform="translate(387.6 381.2) scale(0.8)"/>
+<use href="#t0" transform="translate(375.8 404.1) scale(1.1)"/>
+<use href="#t0" transform="translate(358.4 397.8) scale(0.8)"/>
+<use href="#t0" transform="translate(363.9 378.3) scale(0.8)"/>
+<use href="#t1" transform="translate(362.7 385.3) scale(1.2)"/>
+<use href="#tb" transform="translate(349.9 401.7) scale(0.8)"/>
+<use href="#t2" transform="translate(395.3 383.5) scale(1.1)"/>
+<use href="#t0" transform="translate(390.9 397.4) scale(1.2)"/>
+<use href="#t0" transform="translate(348.4 393.1) scale(1.2)"/>
+<use href="#tb" transform="translate(355.2 390.8) scale(0.7)"/>
+<use href="#t2" transform="translate(351.2 473.3) scale(1.2)"/>
+<use href="#tb" transform="translate(348.5 486.5)"/>
+<use href="#t2" transform="translate(357.6 469.6) scale(0.8)"/>
+<use href="#t0" transform="translate(355.4 484.8) scale(1.2)"/>
+<use href="#t1" transform="translate(367.9 467.3) scale(1.1)"/>
+<use href="#t0" transform="translate(248.2 497.2) scale(0.8)"/>
+<use href="#t1" transform="translate(234.5 497.6) scale(1.2)"/>
+<use href="#t2" transform="translate(230.7 483.3) scale(1.2)"/>
+<use href="#t0" transform="translate(221.4 485) scale(0.9)"/>
+<use href="#t1" transform="translate(214.9 503.3) scale(1.1)"/>
+<use href="#t2" transform="translate(226.3 494.4) scale(1.2)"/>
+<use href="#t2" transform="translate(213.7 481.6) scale(1.1)"/>
+<use href="#t0" transform="translate(227.1 471.2) scale(1.2)"/>
+<use href="#tb" transform="translate(205.2 497.7) scale(0.8)"/>
+<use href="#t2" transform="translate(247.9 480.9)"/>
+<use href="#tc" transform="translate(240.7 477.7) scale(1.1)"/>
+<use href="#t0" transform="translate(208.8 477.2) scale(0.9)"/>
+<use href="#t0" transform="translate(222.7 505.1) scale(1.1)"/>
+<use href="#t2" transform="translate(224.9 478.3) scale(0.8)"/>
+<use href="#t2" transform="translate(242 493.8) scale(1.1)"/>
+<use href="#tc" transform="translate(208.1 511.8) scale(1)"/>
+<use href="#t1" transform="translate(155.7 513.9) scale(1.1)"/>
+<use href="#t0" transform="translate(178.6 515.6) scale(1.2)"/>
+<use href="#t2" transform="translate(192.8 520.6) scale(0.9)"/>
+<use href="#t2" transform="translate(174.6 500.8) scale(1.1)"/>
+<use href="#t0" transform="translate(200.9 516.7) scale(1.1)"/>
+<use href="#t1" transform="translate(182.4 507.9) scale(0.8)"/>
+<use href="#t1" transform="translate(198.3 509.9) scale(0.8)"/>
+<use href="#t1" transform="translate(189.6 507.4)"/>
+<use href="#t1" transform="translate(204.4 504.9) scale(0.8)"/>
+<use href="#t1" transform="translate(174.4 521.9) scale(1.1)"/>
+<use href="#t2" transform="translate(209.3 519.4) scale(0.8)"/>
+<use href="#t2" transform="translate(174.2 508.9) scale(0.9)"/>
+<use href="#t2" transform="translate(165.6 509.1) scale(1)"/>
+<use href="#t2" transform="translate(355.3 201.5) scale(1)"/>
+<use href="#t0" transform="translate(332.2 191.8) scale(1.2)"/>
+<use href="#t2" transform="translate(338.9 192) scale(1.2)"/>
+<use href="#t1" transform="translate(355.6 192.9) scale(1)"/>
+<use href="#t2" transform="translate(305.7 186.8) scale(1.2)"/>
+<use href="#t0" transform="translate(312.5 196.5) scale(0.8)"/>
+<use href="#t2" transform="translate(344.6 180.6) scale(0.7)"/>
+<use href="#t0" transform="translate(313.3 186.3) scale(0.9)"/>
+<use href="#t1" transform="translate(317.2 270) scale(1.1)"/>
+<use href="#t0" transform="translate(304.8 267.5)"/>
+<use href="#t2" transform="translate(344.3 255.1) scale(1.1)"/>
+<use href="#t0" transform="translate(318.7 247.2) scale(0.9)"/>
+<use href="#t2" transform="translate(168.5 236.9) scale(1.2)"/>
+<use href="#t1" transform="translate(162.8 240.5) scale(1.1)"/>
+<use href="#tc" transform="translate(135.4 238.8) scale(1.3)"/>
+<use href="#t2" transform="translate(130.6 224.8) scale(1.2)"/>
+<use href="#t2" transform="translate(364.9 214.8) scale(1)"/>
+<use href="#t1" transform="translate(386.9 215.2) scale(0.9)"/>
+<use href="#t1" transform="translate(386.4 206.4) scale(1)"/>
+<use href="#t2" transform="translate(371.2 208.4) scale(0.8)"/>
+<use href="#tb" transform="translate(381.1 194.7) scale(1.1)"/>
+<use href="#t2" transform="translate(374.5 214.9) scale(1)"/>
+<use href="#t1" transform="translate(392.6 210.1) scale(0.9)"/>
+<use href="#t2" transform="translate(349.9 218.9) scale(0.8)"/>
+<use href="#tc" transform="translate(191.3 558.6) scale(1)"/>
+<use href="#t2" transform="translate(209.7 583.3) scale(0.8)"/>
+<use href="#tb" transform="translate(216.1 586.1) scale(1.2)"/>
+<use href="#t2" transform="translate(239.9 572.9) scale(1)"/>
+<use href="#t2" transform="translate(228.5 586.1) scale(1.1)"/>
+<use href="#t1" transform="translate(205.9 564.4) scale(1.2)"/>
+<use href="#tc" transform="translate(211.7 590.8) scale(1)"/>
+<use href="#t1" transform="translate(201.9 558.5) scale(0.8)"/>
+<use href="#tc" transform="translate(204.7 549.7) scale(1.2)"/>
+<use href="#t2" transform="translate(210.4 556.9) scale(1.1)"/>
+<use href="#t1" transform="translate(218.3 552.1) scale(1.2)"/>
+<use href="#t2" transform="translate(227.3 577.6) scale(0.9)"/>
+<use href="#t2" transform="translate(189.2 566.2) scale(0.8)"/>
+</g>
+<g>
+<use href="#tp" transform="translate(215.2 119.7)"/>
+<use href="#tp" transform="translate(225.9 126) scale(1.1)"/>
+<use href="#tp" transform="translate(236.6 131) scale(0.9)"/>
+<use href="#tp" transform="translate(247.7 135.9) scale(1.1)"/>
+<use href="#tp" transform="translate(258.8 139.9) scale(0.8)"/>
+<use href="#tp" transform="translate(269.3 144.1)"/>
+<use href="#tp" transform="translate(280.3 149.6) scale(1)"/>
+<use href="#tp" transform="translate(292.1 155) scale(0.9)"/>
+<use href="#tp" transform="translate(300.9 160) scale(1.1)"/>
+<use href="#tp" transform="translate(258.9 262.2) scale(0.9)"/>
+<use href="#tp" transform="translate(269.1 256.8) scale(0.9)"/>
+<use href="#tp" transform="translate(277 254.6) scale(1.1)"/>
+<use href="#tp" transform="translate(287.1 249.1) scale(1.1)"/>
+<use href="#tp" transform="translate(299.2 245.4) scale(0.9)"/>
+<use href="#tp" transform="translate(307.9 240.9) scale(0.9)"/>
+<use href="#tp" transform="translate(317.7 238.2) scale(1)"/>
+<use href="#tp" transform="translate(149.2 449.8)"/>
+<use href="#tp" transform="translate(162.8 455.3) scale(1)"/>
+<use href="#tp" transform="translate(173.6 462.2) scale(1.1)"/>
+<use href="#tp" transform="translate(186.2 469.1) scale(0.9)"/>
+<use href="#tp" transform="translate(198.1 474.5) scale(0.9)"/>
+<use href="#tp" transform="translate(210.6 480.1) scale(0.9)"/>
+<use href="#tp" transform="translate(329.5 551.6) scale(0.9)"/>
+<use href="#tp" transform="translate(318.2 557.9) scale(1)"/>
+<use href="#tp" transform="translate(306.8 561.1) scale(0.8)"/>
+<use href="#tp" transform="translate(297.8 568.2) scale(0.8)"/>
+<use href="#tp" transform="translate(285.1 572.6) scale(1.1)"/>
+<use href="#tp" transform="translate(274.4 578.1) scale(1.1)"/>
+<use href="#tp" transform="translate(367.1 300.7) scale(0.9)"/>
+<use href="#tp" transform="translate(363.9 312.2) scale(1.1)"/>
+<use href="#tp" transform="translate(360.8 325.5) scale(1)"/>
+<use href="#tp" transform="translate(356.1 338) scale(0.9)"/>
+<use href="#tp" transform="translate(350.9 352.6) scale(0.9)"/>
+<use href="#tp" transform="translate(347.2 365.3) scale(0.9)"/>
+</g>
+<g filter="url(#wob2)">
+<ellipse cx="150" cy="118" rx="30" ry="18" fill="#e6eeca" opacity=".55"/>
+</g>
+<g transform="translate(150 112) scale(1.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#d2703f"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<use href="#t1" transform="translate(130 118) scale(1.1)"/>
+<use href="#tb" transform="translate(169 121)"/>
+<g transform="translate(244 168)" filter="url(#wob2)">
+<ellipse cx="0" cy="4" rx="26" ry="15" fill="#e4ecac" opacity=".9"/>
+<rect x="-16" y="-6" width="7" height="18" rx="2" fill="#cfe0a0" opacity=".9"/>
+<rect x="-7" y="-6" width="7" height="18" rx="2" fill="#cfe0a0" opacity=".9"/>
+<rect x="2" y="-6" width="7" height="18" rx="2" fill="#cfe0a0" opacity=".9"/>
+<rect x="11" y="-6" width="7" height="18" rx="2" fill="#cfe0a0" opacity=".9"/>
+</g>
+<g>
+<circle cx="229" cy="159" r="2.2" fill="#f2c94c"/>
+<circle cx="236.5" cy="159" r="2.2" fill="#f2c94c"/>
+<circle cx="244" cy="159" r="2.2" fill="#f2c94c"/>
+<circle cx="251.5" cy="159" r="2.2" fill="#f2c94c"/>
+<circle cx="259" cy="159" r="2.2" fill="#f2c94c"/>
+</g>
+<g filter="url(#wob2)">
+<ellipse cx="176" cy="280" rx="26" ry="14" fill="#dceef6"/>
+<ellipse cx="176" cy="279" rx="19" ry="9" fill="#c9e2ef" opacity=".7"/>
+</g>
+<use href="#t0" transform="translate(151 270) scale(2)"/>
+<use href="#t2" transform="translate(142 279) scale(1.3)"/>
+<g stroke="#b99a6c" stroke-width="1.6"><path d="M158 286h10"/></g>
+<g filter="url(#wob2)"><ellipse cx="300" cy="348" rx="52" ry="34" fill="#e6eeca" opacity=".55"/></g>
+<g transform="translate(290.5 319.1) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(276.3 321.8) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e59a63"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(310.8 321.9) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(320.6 322.3) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(285.3 327) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(272 331.9) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(261.1 332.3) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(301 332.9) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(310.9 333.4) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(322.8 334.8) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e59a63"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(292.1 336.4) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(336.5 337.3) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e59a63"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(303.7 340.7) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(283.7 342.7) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(292.5 345) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(270.1 345.1) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(342.3 350) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#d2703f"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(300.7 352.4) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#d2703f"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(259.4 352.4) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(270.7 356.3) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(327.1 357.6) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(311.3 357.9) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(296.4 359.8) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(281.3 361.5) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(310.5 368.4) scale(0.9)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(295.4 370) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<use href="#tp" transform="translate(256 332) scale(0.9)"/>
+<use href="#tp" transform="translate(345 352) scale(0.9)"/>
+<g filter="url(#wob2)"><ellipse cx="204" cy="437" rx="30" ry="18" fill="#dbe8b6" opacity=".5"/></g>
+<g transform="translate(204 432) scale(2.1)"><path d="M-7 1 h14 v7 h-14 z" fill="#efe4d2"/><path d="M-8.6 1.2 L0 -5.4 L8.6 1.2 Z" fill="#8f7ac2"/><rect x="-4.6" y="2.4" width="3.4" height="3" fill="#7fc6de"/><rect x="1.2" y="2.4" width="3.4" height="3" fill="#e69bc4"/><path d="M-2 4 h4 v4 h-4 z" fill="#cdb894"/></g>
+<use href="#t1" transform="translate(180 439)"/>
+<g filter="url(#wob2)"><ellipse cx="314" cy="520" rx="40" ry="24" fill="#e6eeca" opacity=".5"/></g>
+<g transform="translate(302 514)">
+<path d="M0 0 L-10 19M0 0 L10 19" stroke="#c0a678" stroke-width="2.2"/>
+<circle cx="0" cy="0" r="17" fill="none" stroke="#dd8551" stroke-width="2.2"/>
+<g stroke="#eaa987" stroke-width="1.2">
+<path d="M0 0 L0 -17"/>
+<path d="M0 0 L14.7 -8.5"/>
+<path d="M0 0 L14.7 8.5"/>
+<path d="M0 0 L0 17"/>
+<path d="M0 0 L-14.7 8.5"/>
+<path d="M0 0 L-14.7 -8.5"/>
+</g>
+<rect x="-2.4" y="-2" width="4.8" height="4" rx="1.4" fill="#e59a63" transform="translate(0 -14.2)"/>
+<rect x="-2.4" y="-2" width="4.8" height="4" rx="1.4" fill="#dd8551" transform="translate(14.7 -5.7)"/>
+<rect x="-2.4" y="-2" width="4.8" height="4" rx="1.4" fill="#d2703f" transform="translate(14.7 11.3)"/>
+<rect x="-2.4" y="-2" width="4.8" height="4" rx="1.4" fill="#e8a877" transform="translate(0 19.8)"/>
+<rect x="-2.4" y="-2" width="4.8" height="4" rx="1.4" fill="#e59a63" transform="translate(-14.7 11.3)"/>
+<rect x="-2.4" y="-2" width="4.8" height="4" rx="1.4" fill="#dd8551" transform="translate(-14.7 -5.7)"/>
+<circle cx="0" cy="0" r="2.2" fill="#f2c94c"/></g>
+<g transform="translate(328 522)"><path d="M-8 6 L0 -8 L8 6 Z" fill="#e59a63"/><path d="M0 -8 L2 6 h-3 z" fill="#fbf4ea" opacity=".8"/></g>
+<g transform="translate(341 527)"><path d="M-8 6 L0 -8 L8 6 Z" fill="#7fb6df"/><path d="M0 -8 L2 6 h-3 z" fill="#fbf4ea" opacity=".8"/></g>
+<g filter="url(#wob2)"><ellipse cx="150" cy="612" rx="42" ry="17" fill="#eee0bd" opacity=".9"/></g>
+<g transform="translate(134 606)">
+<path d="M0 8 q-3 -10 1 -15" stroke="#b08a5c" stroke-width="2" fill="none"/>
+<g fill="#6fb37a"><path d="M2 -7 q-10 -4 -15 -1 q7 -1 14 3 z"/><path d="M2 -7 q10 -5 15 -2 q-7 -1 -14 4 z"/><path d="M2 -8 q-4 -9 -11 -11 q6 5 10 12 z"/><path d="M2 -8 q5 -9 12 -10 q-7 4 -11 11 z"/></g></g>
+<g transform="translate(162 608)"><path d="M-9 1 a9 6 0 0 1 18 0 z" fill="#ec8a6a"/><path d="M-9 1 a9 6 0 0 1 4 -5 l1 5 z" fill="#fbf4ea"/><path d="M4 -4 a9 6 0 0 1 5 5 h-4 z" fill="#fbf4ea"/><rect x="-.7" y="1" width="1.4" height="8" fill="#d6c3a0"/></g>
+<g fill="#e3cd9c"><rect x="148" y="613" width="12" height="6" rx="1"/><rect x="149" y="609" width="4" height="5" rx="1"/><rect x="154" y="609" width="4" height="5" rx="1"/></g>
+<g>
+<g transform="translate(387.7 445.9) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(328.5 567.7) scale(0.8)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e59a63"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(393.6 448.1) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(296.2 94.1) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#d2703f"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(95.1 490.5) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#d2703f"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(282.6 274.3) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#e8a877"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(330.4 174.2) scale(1.1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#dd8551"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(46.3 586.5) scale(0.8)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#d2703f"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+<g transform="translate(212.9 507.8) scale(1)"><path d="M-5 1 h10 v6 h-10 z" fill="#f7efe0"/><path d="M-6.6 1.2 L0 -4.8 L6.6 1.2 Z" fill="#d2703f"/><path d="M-1.4 3 h2.8 v4 h-2.8 z" fill="#cdb894"/></g>
+</g>
+<rect width="420" height="700" filter="url(#grain)" opacity=".20" style="mix-blend-mode:multiply"/>
 </svg>
