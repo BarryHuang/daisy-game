@@ -905,15 +905,15 @@ body.immersive .app-container .card {
        所以光關 backdrop-filter 還不夠（實測籠子偏移了 10px 還露出頁首）。 */
     animation: none !important; transform: none !important;
 }
-/* 其他東西全部收起來，只留籠子 */
+/* 其他東西全部收起來，只留籠子和下方抽屜。
+   數值條和按鈕牆以前是直接隱藏的，現在改成收進 .pet-drawer，
+   所以這裡不能再把它們關掉，只要留下籠子和抽屜兩個子元素。 */
 body.immersive .fx-header,
 body.immersive .fx-scene,
 body.immersive .game-section,
-body.immersive .hamster-stats,
-body.immersive .pet-actions,
 body.immersive .dm-btn,
 body.immersive .app-container > *:not(.hamster-section),
-body.immersive .hamster-section > *:not(.hamster-cage) { display: none !important; }
+body.immersive .hamster-section > *:not(.hamster-cage):not(.pet-drawer) { display: none !important; }
 body.immersive .app-container { padding: 0 !important; }
 body.immersive .app-container .card.hamster-section {
     padding: 0 !important; border: 0 !important; box-shadow: none !important;
@@ -1029,21 +1029,7 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
     .curtain, .curtain-card { transition-duration: .01s; }
 }
 
-/* 地圖選單的卡片 */
-.map-card {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    padding: 14px 8px; border-radius: 16px; cursor: pointer;
-    border: 2px solid #e6d9f2; background: #fbf7ff; color: #4a2d63;
-    font-family: inherit; transition: transform .16s, border-color .16s;
-}
-.map-card:active { transform: scale(.95); }
-.map-card .m-emoji { font-size: 2rem; }
-.map-card .m-name  { font-weight: 800; font-size: .98rem; }
-.map-card .m-note  { font-size: .74rem; color: #8a7b98; }
-.map-card.here { border-color: #7b1fa2; background: #f1e6fa; }
-.map-card.here .m-note { color: #7b1fa2; font-weight: 700; }
-.map-card.locked { background: #f4f4f6; border-color: #e0e0e4; color: #8a8a95; }
-.map-card.locked .m-note { color: #c48a2f; font-weight: 700; }
+/* 舊的 .map-card 方塊格已改成下面的 .world-map 路線圖 */
 
 /* ===================================================================
    室內地圖（倉鼠的家）
@@ -1287,3 +1273,123 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
 @media (prefers-reduced-motion: reduce) {
     .ride-ferris .fw-wheel, .ride-ferris .fw-car, .rcar.hit { animation: none; }
 }
+
+/* ===================================================================
+   主頁的入口卡片
+   =================================================================== */
+/* 倉鼠世界平常整塊藏起來，按入口才以全螢幕出現 */
+#pet-world { display: none; }
+body.immersive #pet-world { display: block; }
+
+.enter-world {
+    display: flex; align-items: center; gap: 14px;
+    width: 100%; margin-top: 16px; padding: 16px 18px;
+    border: 3px solid rgba(255,255,255,.85); border-radius: 22px;
+    background: linear-gradient(135deg, #9b5de5 0%, #c77dff 45%, #ff8fb0 100%);
+    color: #fff; font-family: inherit; cursor: pointer; text-align: left;
+    box-shadow: 0 6px 0 rgba(110, 60, 160, .35), 0 10px 26px rgba(155, 93, 229, .35);
+    transition: transform .14s, box-shadow .14s;
+}
+.enter-world:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 rgba(110, 60, 160, .35), 0 6px 16px rgba(155, 93, 229, .3);
+}
+.enter-world .ew-art {
+    font-size: 2.6rem; line-height: 1; flex: 0 0 auto;
+    filter: drop-shadow(0 3px 5px rgba(60,30,90,.35));
+    animation: ewBob 2.6s ease-in-out infinite;
+}
+@keyframes ewBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+.enter-world .ew-text { flex: 1 1 auto; min-width: 0; }
+.enter-world .ew-text b { display: block; font-size: 1.16rem; font-weight: 900; letter-spacing: .02em; }
+.enter-world .ew-text i {
+    display: block; font-style: normal; font-size: .74rem; font-weight: 600;
+    opacity: .9; margin-top: 2px;
+}
+.enter-world .ew-stats {
+    flex: 0 0 auto; display: flex; flex-direction: column; gap: 3px;
+    font-size: .8rem; font-weight: 800; text-align: right;
+}
+@media (prefers-reduced-motion: reduce) { .enter-world .ew-art { animation: none; } }
+
+/* ===================================================================
+   全螢幕世界：下方抽屜（數值條 + 整面按鈕牆）
+   =================================================================== */
+/* 主頁不需要抽屜的殼，直接當一般區塊排版就好 */
+.pet-drawer { display: block; }
+
+body.immersive .pet-drawer {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 960;
+    max-height: 76dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 6px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255, 253, 250, .97);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -10px 34px rgba(60, 30, 80, .3);
+    transform: translateY(102%);
+    transition: transform .3s cubic-bezier(.22,.9,.3,1);
+}
+body.immersive.drawer-open .pet-drawer { transform: none; }
+/* 抽屜上緣的那一條，按了收起來 */
+.pet-drawer-grip { display: none; }
+body.immersive .pet-drawer-grip {
+    display: block; width: 46px; height: 5px; margin: 4px auto 10px;
+    border: 0; border-radius: 999px; background: #d9cfe4; cursor: pointer; padding: 0;
+}
+.drawer-scrim { display: none; }
+body.immersive .drawer-scrim {
+    display: block; position: fixed; inset: 0; z-index: 955;
+    background: rgba(30, 18, 45, .4);
+    opacity: 0; pointer-events: none; transition: opacity .28s;
+}
+body.immersive.drawer-open .drawer-scrim { opacity: 1; pointer-events: auto; }
+/* 抽屜拉開時把快捷列和工具列讓開 */
+body.immersive.drawer-open .imm-dock,
+body.immersive.drawer-open .cage-tools { opacity: 0; pointer-events: none; }
+body.immersive .imm-dock, body.immersive .cage-tools { transition: opacity .2s; }
+.imm-act.more { border-color: #ffd166; }
+
+/* ===================================================================
+   世界地圖（🗺️ 選單）
+   =================================================================== */
+.world-map { margin-top: 14px; display: flex; flex-direction: column; text-align: left; }
+.wm-node {
+    position: relative; display: flex; align-items: center; gap: 12px;
+    padding: 8px 10px 8px 0; border: 0; background: none; cursor: pointer;
+    font-family: inherit; color: #4a2d63;
+}
+/* 節點之間的那條路 */
+.wm-node .wm-line {
+    position: absolute; left: 23px; top: -50%; width: 4px; height: 100%;
+    background: repeating-linear-gradient(to bottom,
+        #d8c7ea 0 6px, transparent 6px 12px);
+    border-radius: 2px;
+}
+.wm-node.first .wm-line { display: none; }
+.wm-node .wm-dot {
+    position: relative; flex: 0 0 auto;
+    width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    background: #fbf7ff; border: 3px solid #d8c7ea;
+    box-shadow: 0 3px 8px rgba(90, 50, 130, .14);
+}
+.wm-node.indoor .wm-dot { background: #f5eee6; border-color: #e0cbb2; }
+.wm-node .wm-you {
+    position: absolute; right: -8px; bottom: -8px; font-size: .95rem;
+    background: #fff; border-radius: 50%; padding: 1px 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.2);
+}
+.wm-node .wm-info { flex: 1 1 auto; min-width: 0; }
+.wm-node .wm-info b { display: block; font-size: 1rem; font-weight: 800; }
+.wm-node .wm-info i {
+    display: block; font-style: normal; font-size: .74rem; color: #8a7b98; margin-top: 1px;
+}
+.wm-node .wm-go {
+    flex: 0 0 auto; font-size: .74rem; font-weight: 800; color: #9b5de5;
+    background: #f1e6fa; border-radius: 999px; padding: 4px 10px;
+}
+.wm-node.here .wm-dot { border-color: #9b5de5; background: #f1e6fa; }
+.wm-node.here .wm-go { background: #9b5de5; color: #fff; }
+.wm-node.locked { color: #8a8a95; }
+.wm-node.locked .wm-dot { background: #f4f4f6; border-color: #e0e0e4; }
+.wm-node.locked .wm-go { background: #fff3dc; color: #c48a2f; }
+.wm-node:active .wm-dot { transform: scale(.93); }

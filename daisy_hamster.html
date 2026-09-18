@@ -101,31 +101,9 @@
         </div>
 
         <!-- 右側：倉鼠養成 -->
-        <div class="card hamster-section">
-            <div class="hamster-stats">
-                <div class="stat-row">
-                    <div class="stat">⭐ Lvl: <span id="h-lvl">1</span></div>
-                    <div class="stat">💰 金幣: <span id="h-coins">0</span></div>
-                </div>
-                <div class="exp-bar-container">
-                    <div class="exp-bar-label"><span>EXP</span><span id="exp-text">0 / 100</span></div>
-                    <div class="exp-bar"><div class="exp-bar-fill" id="exp-fill" style="width: 0%"></div></div>
-                </div>
-                <div class="exp-bar-container">
-                    <div class="happiness-label"><span>快樂度</span><span class="mood-emoji" id="mood-emoji">😊</span></div>
-                    <div class="happiness-bar"><div class="happiness-fill" id="happiness-fill" style="width: 50%"></div></div>
-                </div>
-                <!-- 飽食度 -->
-                <div class="exp-bar-container" style="width: 48%;">
-                    <div class="happiness-label"><span>飽食度 🍎</span></div>
-                    <div class="happiness-bar"><div class="happiness-fill" id="hunger-fill" style="background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); width: 100%"></div></div>
-                </div>
-                <!-- 清潔度 -->
-                <div class="exp-bar-container" style="width: 48%;">
-                    <div class="happiness-label"><span>清潔度 🛁</span></div>
-                    <div class="happiness-bar"><div class="happiness-fill" id="clean-fill" style="background: linear-gradient(90deg, #89f7fe 0%, #66a6ff 100%); width: 100%"></div></div>
-                </div>
-            </div>
+        <!-- 倉鼠世界。平常整塊藏起來，按「進入倉鼠世界」才會以全螢幕出現。
+             主頁只留拼字遊戲，不再是「一張卡片 + 一整面按鈕牆」。 -->
+        <div class="card hamster-section" id="pet-world">
             <div class="hamster-cage" id="cage">
                 <!-- 天空：固定不捲，時段換色交給 .time-* 的 CSS 漸層 -->
                 <div class="habitat-sun"></div>
@@ -465,7 +443,7 @@
                     <button class="cage-tool" id="btn-map" type="button"
                             title="去別的地方" onclick="openMapPicker()">🗺️</button>
                     <button class="cage-tool" id="btn-fullscreen" type="button"
-                            title="全螢幕" onclick="toggleImmersive()">⛶</button>
+                            title="離開倉鼠世界" onclick="exitPetWorld()">✕</button>
                     <button class="cage-tool" id="btn-feel" type="button"
                             title="設定" onclick="openFeel()">⚙️</button>
                 </div>
@@ -482,10 +460,12 @@
                 <div class="imm-dock" id="imm-dock" aria-hidden="true">
                     <button class="imm-act" type="button" onclick="petHamster()"><i>🖐️</i>摸摸</button>
                     <button class="imm-act" type="button" onclick="feedHamster('seed', 1, 10, '🌻')"><i>🌻</i>餵食</button>
-                    <button class="imm-act" type="button" onclick="playWheel()"><i>🎡</i>跑輪</button>
                     <button class="imm-act" type="button" onclick="bathHamster()"><i>🧽</i>洗澡</button>
                     <button class="imm-act" type="button" onclick="sleepHamster()"><i>💤</i>睡覺</button>
+                    <button class="imm-act more" type="button" onclick="toggleDrawer()"><i>🎒</i>更多</button>
                 </div>
+                <!-- 抽屜拉開時的背景，點一下收起來 -->
+                <div class="drawer-scrim" id="drawer-scrim" onclick="toggleDrawer(false)"></div>
 
                 <!-- 換地圖時的轉場布幕 -->
                 <div class="curtain" id="curtain" aria-hidden="true">
@@ -497,6 +477,34 @@
 
             </div>
             
+            <!-- 下方抽屜：數值條和所有按鈕都收在這裡，按 🎒 才滑出來。 -->
+            <div class="pet-drawer" id="pet-drawer">
+                <button class="pet-drawer-grip" type="button" onclick="toggleDrawer(false)"
+                        aria-label="收起來"></button>
+                <div class="hamster-stats">
+                    <div class="stat-row">
+                        <div class="stat">⭐ Lvl: <span id="h-lvl">1</span></div>
+                        <div class="stat">💰 金幣: <span id="h-coins">0</span></div>
+                    </div>
+                    <div class="exp-bar-container">
+                        <div class="exp-bar-label"><span>EXP</span><span id="exp-text">0 / 100</span></div>
+                        <div class="exp-bar"><div class="exp-bar-fill" id="exp-fill" style="width: 0%"></div></div>
+                    </div>
+                    <div class="exp-bar-container">
+                        <div class="happiness-label"><span>快樂度</span><span class="mood-emoji" id="mood-emoji">😊</span></div>
+                        <div class="happiness-bar"><div class="happiness-fill" id="happiness-fill" style="width: 50%"></div></div>
+                    </div>
+                    <!-- 飽食度 -->
+                    <div class="exp-bar-container" style="width: 48%;">
+                        <div class="happiness-label"><span>飽食度 🍎</span></div>
+                        <div class="happiness-bar"><div class="happiness-fill" id="hunger-fill" style="background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%); width: 100%"></div></div>
+                    </div>
+                    <!-- 清潔度 -->
+                    <div class="exp-bar-container" style="width: 48%;">
+                        <div class="happiness-label"><span>清潔度 🛁</span></div>
+                        <div class="happiness-bar"><div class="happiness-fill" id="clean-fill" style="background: linear-gradient(90deg, #89f7fe 0%, #66a6ff 100%); width: 100%"></div></div>
+                    </div>
+                </div>
             <div class="pet-actions">
                 <!-- 食物專區 -->
                 <div class="action-btn" id="btn-feed-seed" onclick="feedHamster('seed', 1, 10, '🌻')">
@@ -554,56 +562,37 @@
                     <span style="font-size: 0.8rem; font-weight: normal;" id="txt-run">50 💰</span>
                 </div>
             </div>
-            <div style="margin-top:20px; font-size: 0.9rem; color:#888; font-weight:bold; text-align:center;">
-                登入帳號: <span id="current-user" style="color: var(--primary);">---</span>
-                <button onclick="logout()" style="margin-left: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid #ccc; background: white; cursor: pointer;">切換</button>
-            </div>
-            <!-- 家長後台按鈕：只有 BARRY 登入時顯示 -->
-            <div id="parent-dashboard-btn" style="display:none; margin-top:10px; text-align:center;">
-                <a href="parent_dashboard.html" style="display:inline-block; padding:8px 20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:20px; font-weight:bold; font-size:0.9rem; text-decoration:none;">👨‍👩‍👧 家長學習後台</a>
-            </div>
+            </div><!-- /.pet-drawer -->
+        </div><!-- /#pet-world -->
 
-            <!-- ✨ 彩虹蟲蟲貪食蛇遊戲入口 ✨ -->
-            <div style="margin-top:16px; text-align:center; display:flex; flex-direction:column; gap:10px; align-items:center;">
-                <a href="daisy_snake.html" class="snake-portal-btn">
-                    🐛 去玩彩虹蟲蟲！🌈
-                </a>
-                <a href="daisy_hex.html" class="snake-portal-btn" style="background: linear-gradient(135deg, #ab47bc, #7b1fa2); box-shadow: 0 4px 0 rgba(123, 31, 162, 0.35), 0 6px 20px rgba(171,71,188,0.35); animation-delay: 1s;">
-                    🐾 去玩圍貓貓！🪨
-                </a>
-            </div>
+        <!-- 主頁上唯一的入口。彩虹蟲蟲和圍貓貓的捷徑拿掉了 ——
+             它們現在是遊戲中心裡的機台。 -->
+        <button class="enter-world" id="btn-enter-world" type="button" onclick="enterPetWorld()">
+            <span class="ew-art" aria-hidden="true">🐹</span>
+            <span class="ew-text">
+                <b>進入倉鼠世界</b>
+                <i>七張地圖・餵食・遊樂園・遊戲中心</i>
+            </span>
+            <span class="ew-stats">
+                <span>⭐ <b id="ew-lvl">1</b></span>
+                <span>💰 <b id="ew-coins">0</b></span>
+                <span id="ew-mood">😊</span>
+            </span>
+        </button>
+
+        <div style="margin-top:16px; font-size: 0.9rem; color:#888; font-weight:bold; text-align:center;">
+            登入帳號: <span id="current-user" style="color: var(--primary);">---</span>
+            <button onclick="logout()" style="margin-left: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid #ccc; background: white; cursor: pointer;">切換</button>
+        </div>
+        <!-- 家長後台按鈕：只有 BARRY 登入時顯示 -->
+        <div id="parent-dashboard-btn" style="display:none; margin-top:10px; text-align:center;">
+            <a href="parent_dashboard.html" style="display:inline-block; padding:8px 20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:20px; font-weight:bold; font-size:0.9rem; text-decoration:none;">👨‍👩‍👧 家長學習後台</a>
         </div>
     </div>
 
     <style>
-      /* ── 彩虹蟲蟲按鈕 ── */
-      .snake-portal-btn {
-        display: inline-block;
-        padding: 12px 28px;
-        /* Rainbow gradient matching the snake game palette */
-        background: linear-gradient(135deg, #FF3D82 0%, #FF7050 30%, #FFB800 55%, #3CC47C 75%, #4DA6FF 100%);
-        color: white;
-        border: 3px solid white;
-        border-radius: 30px;
-        font-weight: 800;
-        font-size: 1rem;
-        text-decoration: none;
-        box-shadow: 0 4px 0 rgba(200, 50, 100, 0.35), 0 6px 20px rgba(255,100,150,0.35);
-        letter-spacing: 0.04em;
-        /* Breathing pulse — same technique as the snake game's start btn */
-        animation: snakeBtnBreathe 2s ease-in-out infinite;
-        -webkit-tap-highlight-color: transparent;
-        transition: transform .12s, box-shadow .12s;
-      }
-      .snake-portal-btn:active {
-        transform: scale(.95) translateY(2px);
-        box-shadow: 0 2px 0 rgba(200,50,100,.3), 0 4px 12px rgba(255,100,150,.25);
-        animation: none;
-      }
-      @keyframes snakeBtnBreathe {
-        0%,100% { transform: scale(1);    box-shadow: 0 4px 0 rgba(200,50,100,.35), 0 6px 20px rgba(255,100,150,.35); }
-        50%      { transform: scale(1.06); box-shadow: 0 4px 0 rgba(200,50,100,.40), 0 8px 28px rgba(255,100,150,.50); }
-      }
+      /* 彩虹蟲蟲和圍貓貓的捷徑按鈕拿掉了（現在是遊戲中心裡的機台），
+         連帶的 .snake-portal-btn 樣式也一起刪掉。 */
     </style>
 
     <script src="words.js"></script>
@@ -708,6 +697,10 @@
                 checkDailyLogin();
                 checkDailyQuests();
                 updatePetUI();
+                // 從機台出去玩、剛回來的話直接進世界（不要把她丟在主頁）。
+                // 這一行不能放進 initHabitat：那邊要等世界顯示出來才跑，
+                // 而「顯示世界」正是這裡要做的事，兩邊會互相等。
+                welcomeBackFromGame();
             }
             
             function initAsNewPlayer() {
@@ -742,6 +735,10 @@
                 checkDailyLogin();
                 checkDailyQuests();
                 updatePetUI();
+                // 從機台出去玩、剛回來的話直接進世界（不要把她丟在主頁）。
+                // 這一行不能放進 initHabitat：那邊要等世界顯示出來才跑，
+                // 而「顯示世界」正是這裡要做的事，兩邊會互相等。
+                welcomeBackFromGame();
             }
             
             petRef.once('value', (snapshot) => {
@@ -880,13 +877,43 @@
         //   不支援 Element.requestFullscreen，所以①一定要能單獨成立）。
         function immersiveOn() { return document.body.classList.contains('immersive'); }
 
+        // ================================================================
+        // 進出倉鼠世界
+        // ================================================================
+        // 主頁只留拼字遊戲和一顆入口。整個養成介面（場景、數值、按鈕牆）
+        // 都搬進全螢幕，按鈕牆再收進下方的抽屜。
+        // （habitatReady 宣告在下面 initHabitat 那一區，這裡只用不宣告）
+
+        /** 場景要先看得到才建得起來：藏起來的時候量出來的寬高都是 0 */
+        function ensureHabitat() {
+            if (habitatReady) return false;
+            const c = cageEl();
+            if (!c || !c.clientWidth) return false;
+            habitatReady = true;
+            initHabitat();
+            return true;
+        }
+
+        function enterPetWorld() {
+            toggleImmersive(true);
+            if (typeof fxHaptic === 'function') feelHaptic(12);
+        }
+        function exitPetWorld() {
+            toggleDrawer(false);
+            toggleImmersive(false);
+        }
+
+        /** 下方抽屜：數值條 + 整面按鈕牆 */
+        function toggleDrawer(force) {
+            const open = (force === undefined)
+                ? !document.body.classList.contains('drawer-open') : !!force;
+            document.body.classList.toggle('drawer-open', open);
+        }
+
+
         function toggleImmersive(force) {
             const on = (force === undefined) ? !immersiveOn() : !!force;
             document.body.classList.toggle('immersive', on);
-            const btn = document.getElementById('btn-fullscreen');
-            if (btn) { btn.textContent = on ? '⤡' : '⛶'; btn.classList.toggle('on', on); }
-            const sw = document.getElementById('sw-immersive');
-            if (sw) sw.classList.toggle('on', on);
 
             try {
                 const el = document.documentElement;
@@ -897,9 +924,13 @@
                 }
             } catch (e) { /* 不支援就只用 CSS 的沉浸模式 */ }
 
+            if (!on) document.body.classList.remove('drawer-open');
+
             // 籠子尺寸整個變了：平台高度、倉鼠站的那一層、鏡頭、探頭的小動物
             // 都是依尺寸算出來的，要全部重算。等兩幀讓版面先套用完。
             requestAnimationFrame(() => requestAnimationFrame(() => {
+                // 第一次進來要先把場景建起來（之前藏著，量不到尺寸）
+                if (ensureHabitat()) return;
                 if (typeof buildPlatforms === 'function') {
                     buildPlatforms();
                     buildSpots();          // 位置是依磚寬算的，場景縮放變了要重放
@@ -941,7 +972,6 @@
             };
             set('sw-shake', FEEL.shake);
             set('sw-haptic', FEEL.haptic);
-            set('sw-immersive', immersiveOn());
         }
 
         // ================================================================
@@ -1056,7 +1086,7 @@
         // 不然門牌會被平台壓住。
         const MAPS = {
             home: {
-                name: '倉鼠的家', emoji: '🏡', indoor: true,
+                name: '倉鼠的家', emoji: '🏡', indoor: true, desc: '睡窩・飼料碗・書櫃',
                 layers: { far: 'room-far.svg', mid: '',
                           near: 'room-near.svg', front: 'room-front.svg' },
                 platformImg: 'platform-shelf.svg',
@@ -1079,7 +1109,7 @@
                 exits: { right: 'garden' }
             },
             garden: {
-                name: '後院草地', emoji: '🌻',
+                name: '後院草地', emoji: '🌻', desc: '聞花香・挖土找金幣',
                 layers: { far: 'habitat-far.svg', mid: 'habitat-mid.svg',
                           near: 'habitat-near.svg', front: 'habitat-front.svg' },
                 platformImg: 'platform.svg',
@@ -1099,7 +1129,7 @@
                 exits: { left: 'home', right: 'park' }
             },
             park: {
-                name: '大公園', emoji: '🌳',
+                name: '大公園', emoji: '🌳', desc: '餵鴨子・釣魚・曬太陽',
                 layers: { far: 'park-far.svg', mid: 'habitat-mid.svg',
                           near: 'park-near.svg', front: 'habitat-front.svg' },
                 platformImg: 'platform.svg',
@@ -1120,7 +1150,7 @@
                 exits: { left: 'garden', right: 'street' }
             },
             street: {
-                name: '熱鬧街道', emoji: '🏘️',
+                name: '熱鬧街道', emoji: '🏘️', desc: '送報紙・郵筒・冰淇淋',
                 layers: { far: 'street-far.svg', mid: '',
                           near: 'street-near.svg', front: 'street-front.svg' },
                 platformImg: 'platform-wood.svg',
@@ -1141,7 +1171,7 @@
                 exits: { left: 'park', right: 'arcade' }
             },
             arcade: {
-                name: '遊戲中心', emoji: '🎮', indoor: true,
+                name: '遊戲中心', emoji: '🎮', indoor: true, desc: '12 台機台・扭蛋機',
                 layers: { far: 'arcade-far.svg', mid: '',
                           near: 'arcade-near.svg', front: 'arcade-front.svg' },
                 platformImg: 'platform-neon.svg',
@@ -1171,7 +1201,7 @@
                 exits: { left: 'street', right: 'fair' }
             },
             fair: {
-                name: '遊樂園', emoji: '🎠',
+                name: '遊樂園', emoji: '🎠', desc: '摩天輪・碰碰車・爆米花',
                 layers: { far: 'fair-far.svg', mid: '',
                           near: 'fair-near.svg', front: 'fair-front.svg' },
                 platformImg: 'platform-wood.svg',
@@ -1192,7 +1222,7 @@
                 exits: { left: 'arcade', right: 'beach' }
             },
             beach: {
-                name: '陽光沙灘', emoji: '🏖️', cost: 500,
+                name: '陽光沙灘', emoji: '🏖️', cost: 500, desc: '堆沙堡・撿貝殼・衝浪',
                 layers: { far: 'beach-far.svg', mid: '',
                           near: 'beach-near.svg', front: 'beach-front.svg' },
                 platformImg: 'platform-wood.svg',
@@ -2348,7 +2378,9 @@
                 sessionStorage.removeItem('daisy_from_game');
             } catch (e) {}
             if (!from) return;
-            setTimeout(() => {
+            // 她是從機台出去的，回來當然要直接回到世界裡，而不是丟在主頁
+            enterPetWorld();
+            setTimeout(() => {          // 等世界建好（enterPetWorld 是非同步鋪版面的）
                 const ham = document.getElementById('hamster');
                 if (!ham) return;
                 ham.classList.add('happy');
@@ -2359,7 +2391,7 @@
                 updatePetUI();
                 const el = document.querySelector('.cabinet');
                 if (el) floatAtSpot(el, from + ' 玩得開心！+3 快樂', '#7b1fa2');
-            }, 900);
+            }, 1300);
         }
 
         function curtain(on, map) {
@@ -2452,30 +2484,42 @@
             travelTo(id);
         }
 
-        /** 🗺️ 地圖選單：直接跳過去，不用一站一站走 */
+        /**
+         * 🗺️ 世界地圖。七個地方是一條線接起來的：
+         *   🏡 家 — 🌻 後院 — 🌳 公園 — 🏘️ 街道 — 🎮 遊戲中心 — 🎠 遊樂園 — 🏖️ 沙灘
+         * 所以畫成一條由上而下的路線，而不是一格一格的方塊 ——
+         * 她才看得懂「隔壁是哪裡」、「沙灘在最遠的那一頭」。
+         */
         function openMapPicker() {
             const list = document.getElementById('map-list');
             if (!list) return;
             list.innerHTML = '';
-            MAP_ORDER.forEach(id => {
+            MAP_ORDER.forEach((id, n) => {
                 const m = MAPS[id], here = id === currentMap, owned = ownsMap(id);
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'map-card' + (here ? ' here' : '') + (owned ? '' : ' locked');
-                btn.innerHTML =
-                    '<span class="m-emoji">' + (owned ? m.emoji : '🔒') + '</span>' +
-                    '<span class="m-name">' + m.name + '</span>' +
-                    '<span class="m-note">' + (here ? '現在在這裡' : (owned ? '出發 →' : m.cost + ' 💰 解鎖')) + '</span>';
-                btn.onclick = () => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'wm-node' + (here ? ' here' : '') + (owned ? '' : ' locked')
+                            + (m.indoor ? ' indoor' : '');
+                if (n === 0) b.classList.add('first');
+                b.innerHTML =
+                    '<span class="wm-line"></span>' +
+                    '<span class="wm-dot">' + (owned ? m.emoji : '🔒') +
+                      (here ? '<span class="wm-you">🐹</span>' : '') + '</span>' +
+                    '<span class="wm-info"><b>' + m.name + '</b>' +
+                      '<i>' + (owned ? (m.desc || '') : '還沒解鎖') + '</i></span>' +
+                    '<span class="wm-go">' +
+                      (here ? '在這裡' : (owned ? '出發' : m.cost + ' 💰')) + '</span>';
+                b.onclick = () => {
                     if (here) { closeMapPicker(); return; }
                     if (!owned) { askBuyMap(id); closeMapPicker(); return; }
                     closeMapPicker();
                     travelTo(id, true);
                 };
-                list.appendChild(btn);
+                list.appendChild(b);
             });
             document.getElementById('map-modal').style.display = 'flex';
         }
+
         function closeMapPicker() { document.getElementById('map-modal').style.display = 'none'; }
 
         // ================================================================
@@ -2697,7 +2741,6 @@
             applyWeather();
             placePeekers();
             applyLayout();
-            welcomeBackFromGame();
             ARRANGE_PROPS.forEach((k) => {
                 const el = document.getElementById('prop-' + k);
                 if (el) el.addEventListener('pointerdown', startPropDrag);
@@ -2741,6 +2784,10 @@
             immSet('imm-lvl', petData.level);
             immSet('imm-coins', petData.coins);
             immSet('imm-mood', moodEmoji);
+            // 主頁入口卡片上的小數值（讓她在主頁就看得到倉鼠的狀態）
+            immSet('ew-lvl', petData.level);
+            immSet('ew-coins', petData.coins);
+            immSet('ew-mood', moodEmoji);
             
             const hun = Math.max(0, Math.min(100, petData.hunger || 100));
             document.getElementById('hunger-fill').style.width = hun + '%';
@@ -2834,8 +2881,10 @@
             // 天氣和探頭的小動物只需要跑一次；她擺過的家具位置則每次資料同步
             // 回來都要重貼（換裝置時才吃得到雲端的擺設）。
             // 正在拖的時候不要重貼 —— 會跟手指搶著設定同一個 style。
-            if (!habitatReady) { habitatReady = true; initHabitat(); }
-            else if (!arranging) applyLayout();
+            // 場景藏著的時候量不到尺寸，所以只在世界顯示出來之後才建
+            const wasReady = habitatReady;
+            ensureHabitat();
+            if (wasReady && !arranging) applyLayout();
         }
 
         function refreshShopItem(itemId, cost, buyLabel, ownedLabel) {
@@ -4794,9 +4843,9 @@
     <div id="map-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
         <div class="login-box" style="position:relative; width:90%; max-width:400px; padding:20px;">
             <button onclick="closeMapPicker()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
-            <h3 style="color:#7b1fa2; margin-top:10px;">要去哪裡呢？ 🗺️</h3>
-            <p style="color:#666; font-size:0.9rem;">也可以走到場景最左邊或最右邊的門牌自己走過去</p>
-            <div id="map-list" style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+            <h3 style="color:#7b1fa2; margin-top:10px;">世界地圖 🗺️</h3>
+            <p style="color:#666; font-size:0.9rem;">七個地方連成一條路，也可以走到場景兩端的門牌自己走過去</p>
+            <div id="map-list" class="world-map"></div>
         </div>
     </div>
 
@@ -4806,13 +4855,6 @@
             <button onclick="closeFeel()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
             <h3 style="color:#7b1fa2; margin-top:10px;">設定 ⚙️</h3>
             <div style="margin-top:14px; text-align:left;">
-                <div class="feel-row">
-                    <span class="feel-label">全螢幕
-                        <span class="feel-note">把倉鼠的家放到最大，上下的按鈕會收起來</span>
-                    </span>
-                    <button class="feel-sw" id="sw-immersive" type="button"
-                            onclick="toggleImmersive()" aria-label="全螢幕"></button>
-                </div>
                 <div class="feel-row">
                     <span class="feel-label">畫面震動
                         <span class="feel-note">跑輪衝到最快時畫面會晃一下。會不舒服就關掉</span>
