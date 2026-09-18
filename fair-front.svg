@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="none">
+  <!-- 遊樂園·前景（捲動 1.35）：爆米花車、氣球、長椅會從倉鼠前面掠過 -->
+  <g>
+    <!-- 爆米花車 -->
+    <g transform="translate(40 58)">
+      <rect x="0" y="16" width="56" height="40" rx="4" fill="#f2857a" stroke="#c9564c" stroke-width="2.4"/>
+      <rect x="-5" y="8" width="66" height="10" rx="4" fill="#fff1e6" stroke="#c9564c" stroke-width="2"/>
+      <g stroke="#c9564c" stroke-width="2.4"><path d="M12 18v38M28 18v38M44 18v38"/></g>
+      <circle cx="14" cy="58" r="7" fill="#5c5470" stroke="#3d374d" stroke-width="2"/>
+      <circle cx="44" cy="58" r="7" fill="#5c5470" stroke="#3d374d" stroke-width="2"/>
+      <!-- 爆米花桶 -->
+      <g transform="translate(18 -14)">
+        <path d="M0 6 h22 l-3 18 h-16 z" fill="#fff1e6" stroke="#c9564c" stroke-width="2"/>
+        <path d="M0 6 h22" stroke="#c9564c" stroke-width="2"/>
+        <g fill="#fff6c9"><circle cx="5" cy="3" r="4.5"/><circle cx="12" cy="0" r="5"/><circle cx="19" cy="4" r="4.5"/></g>
+      </g>
+    </g>
+    <!-- 一串氣球 -->
+    <g transform="translate(178 40)">
+      <g stroke="#c9a06a" stroke-width="1" fill="none">
+        <path d="M14 34 q-6 14 -4 46M14 34 q2 16 0 46M14 34 q8 14 6 46"/>
+      </g>
+      <ellipse cx="2" cy="22" rx="12" ry="15" fill="#ff8fb0"/>
+      <ellipse cx="24" cy="18" rx="12" ry="15" fill="#9fc8f0"/>
+      <ellipse cx="14" cy="6" rx="12" ry="15" fill="#ffd166"/>
+      <g fill="#fff" opacity=".42">
+        <ellipse cx="-2" cy="16" rx="3.5" ry="5"/><ellipse cx="20" cy="12" rx="3.5" ry="5"/>
+        <ellipse cx="10" cy="0" rx="3.5" ry="5"/>
+      </g>
+    </g>
+    <!-- 長椅 -->
+    <g transform="translate(276 76)">
+      <g fill="#c98c52">
+        <rect x="0" y="14" width="58" height="6" rx="3"/>
+        <rect x="0" y="2" width="58" height="5" rx="2.5"/>
+      </g>
+      <g fill="#8a5f36">
+        <rect x="5" y="20" width="5" height="22" rx="2"/><rect x="48" y="20" width="5" height="22" rx="2"/>
+        <rect x="5" y="-2" width="5" height="18" rx="2"/><rect x="48" y="-2" width="5" height="18" rx="2"/>
+      </g>
+    </g>
+  </g>
+</svg>
