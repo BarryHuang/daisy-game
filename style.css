@@ -1350,46 +1350,80 @@ body.immersive .imm-dock, body.immersive .cage-tools { transition: opacity .2s; 
 
 /* ===================================================================
    世界地圖（🗺️ 選單）
+   world-map.svg 是真的畫出來的島嶼地圖，這裡只負責在上面疊可以點的按鈕。
    =================================================================== */
-.world-map { margin-top: 14px; display: flex; flex-direction: column; text-align: left; }
-.wm-node {
-    position: relative; display: flex; align-items: center; gap: 12px;
-    padding: 8px 10px 8px 0; border: 0; background: none; cursor: pointer;
+.wmap {
+    position: relative; margin-top: 12px;
+    max-height: 62vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    border-radius: 14px; border: 1px solid #e6dcc4;
+    box-shadow: 0 2px 10px rgba(90, 70, 35, .12);
+    background: #fbfaf2;                 /* 繪本的米白紙 */
+}
+.wmap-bg { display: block; width: 100%; height: auto; user-select: none; }
+
+/* 每個景點：一個透明的熱區蓋在插圖上，底下掛一塊名牌 */
+.wmap-pin {
+    /* 座標指的是「插圖的中心」，所以垂直方向只能往上推熱區的一半高，
+       不能用 translateY(-50%) —— 那會連底下的名牌一起算進去，
+       熱區會整個浮到插圖上面（實測店面都跑到圈圈外面）。 */
+    position: absolute; transform: translateX(-50%) translateY(-29px);
+    padding: 0; border: 0; background: none; cursor: pointer;
     font-family: inherit; color: #4a2d63;
+    display: flex; flex-direction: column; align-items: center;
+    width: 104px;
 }
-/* 節點之間的那條路 */
-.wm-node .wm-line {
-    position: absolute; left: 23px; top: -50%; width: 4px; height: 100%;
-    background: repeating-linear-gradient(to bottom,
-        #d8c7ea 0 6px, transparent 6px 12px);
-    border-radius: 2px;
+/* 熱區平常看不見 —— 七個虛線圈圈散在地圖上很吵，而且會蓋住插圖。
+   只留一點點白色的光暈暗示「這裡可以點」，真正的提示是底下的名牌。 */
+.wmap-hit {
+    width: 58px; height: 58px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,246,222,.55), rgba(255,246,222,0) 68%);
+    transition: transform .16s;
 }
-.wm-node.first .wm-line { display: none; }
-.wm-node .wm-dot {
-    position: relative; flex: 0 0 auto;
-    width: 46px; height: 46px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-    background: #fbf7ff; border: 3px solid #d8c7ea;
-    box-shadow: 0 3px 8px rgba(90, 50, 130, .14);
+.wmap-plate {
+    margin-top: 1px; padding: 2px 8px; border-radius: 8px;
+    background: rgba(253, 250, 240, .92); border: 1px solid #d9c9a6;
+    box-shadow: 0 2px 5px rgba(80, 60, 25, .16);
+    white-space: nowrap; line-height: 1.16;
 }
-.wm-node.indoor .wm-dot { background: #f5eee6; border-color: #e0cbb2; }
-.wm-node .wm-you {
-    position: absolute; right: -8px; bottom: -8px; font-size: .95rem;
-    background: #fff; border-radius: 50%; padding: 1px 2px;
-    box-shadow: 0 2px 5px rgba(0,0,0,.2);
+.wmap-plate b { display: block; font-size: .72rem; font-weight: 800; color: #6b4a2a; }
+.wmap-plate i {
+    display: block; font-style: normal; font-size: .58rem; color: #9b8a6d;
+    max-width: 96px; overflow: hidden; text-overflow: ellipsis;
 }
-.wm-node .wm-info { flex: 1 1 auto; min-width: 0; }
-.wm-node .wm-info b { display: block; font-size: 1rem; font-weight: 800; }
-.wm-node .wm-info i {
-    display: block; font-style: normal; font-size: .74rem; color: #8a7b98; margin-top: 1px;
+.wmap-pin:active .wmap-hit { transform: scale(.9); }
+
+/* 現在站的地方：圈起來，上面插一隻倉鼠 */
+.wmap-pin.here .wmap-hit {
+    border: 3px solid #e07a3c;
+    background: radial-gradient(circle, rgba(224, 122, 60, .12), rgba(224, 122, 60, .02) 70%);
+    box-shadow: 0 0 0 4px rgba(224, 122, 60, .20);
+    animation: wmapPulse 1.8s ease-in-out infinite;
 }
-.wm-node .wm-go {
-    flex: 0 0 auto; font-size: .74rem; font-weight: 800; color: #9b5de5;
-    background: #f1e6fa; border-radius: 999px; padding: 4px 10px;
+.wmap-pin.here .wmap-plate { border-color: #e07a3c; background: #fffdf6; }
+.wmap-pin.here .wmap-plate b { color: #a8532a; }
+@keyframes wmapPulse {
+    0%,100% { box-shadow: 0 0 0 4px rgba(224, 122, 60, .20); }
+    50%     { box-shadow: 0 0 0 9px rgba(224, 122, 60, .09); }
 }
-.wm-node.here .wm-dot { border-color: #9b5de5; background: #f1e6fa; }
-.wm-node.here .wm-go { background: #9b5de5; color: #fff; }
-.wm-node.locked { color: #8a8a95; }
-.wm-node.locked .wm-dot { background: #f4f4f6; border-color: #e0e0e4; }
-.wm-node.locked .wm-go { background: #fff3dc; color: #c48a2f; }
-.wm-node:active .wm-dot { transform: scale(.93); }
+.wmap-you {
+    position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+    font-size: 1.5rem; pointer-events: none;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.3));
+    animation: wmapBob 1.6s ease-in-out infinite;
+}
+@keyframes wmapBob { 0%,100% { transform: translateX(-50%) translateY(0); }
+                     50%     { transform: translateX(-50%) translateY(-6px); } }
+
+/* 還沒解鎖 */
+.wmap-pin.locked .wmap-hit { background: rgba(50, 42, 62, .30); }
+.wmap-pin.locked .wmap-plate { background: #f4f2f6; border-color: #ddd8e2; color: #8a8a95; }
+.wmap-pin.locked .wmap-plate i { color: #c48a2f; font-weight: 800; }
+.wmap-lock {
+    position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+    font-size: 1.3rem; pointer-events: none;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wmap-pin.here .wmap-hit, .wmap-you { animation: none; }
+}
