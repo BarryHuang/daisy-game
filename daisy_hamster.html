@@ -951,7 +951,18 @@
             if (!document.fullscreenElement && immersiveOn()) toggleImmersive(false);
         });
 
+        /** 設定面板裡的強制更新（跟 ☰ 選單底部那顆是同一套流程） */
+        function forceRefreshFromSettings(btn) {
+            if (typeof window.daisyForceRefresh === 'function') {
+                window.daisyForceRefresh(btn);
+            } else {
+                location.reload();
+            }
+        }
+
         function openFeel() {
+            const v = document.getElementById('feel-version');
+            if (v) v.textContent = (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '—');
             syncFeelUI();
             document.getElementById('feel-modal').style.display = 'flex';
         }
@@ -4892,6 +4903,15 @@
                     </span>
                     <button class="feel-sw" id="sw-haptic" type="button"
                             onclick="toggleFeel('haptic')" aria-label="手機震動"></button>
+                </div>
+                <!-- 全螢幕時看不到左上角的 ☰，所以更新鈕要在這裡也放一顆，
+                     不然她在倉鼠世界裡就沒辦法更新了。 -->
+                <div class="feel-row">
+                    <span class="feel-label">版本
+                        <span class="feel-note" id="feel-version">—</span>
+                    </span>
+                    <button class="feel-btn" id="feel-refresh" type="button"
+                            onclick="forceRefreshFromSettings(this)">強制更新</button>
                 </div>
             </div>
         </div>
