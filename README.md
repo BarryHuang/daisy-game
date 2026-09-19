@@ -256,7 +256,13 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 `#pet-world` 裡，平常 `display:none`，按入口才以全螢幕出現
 （以前主頁是 2 個螢幕高的按鈕牆，現在 1.1 個）。
 
-- `enterPetWorld()` / `exitPetWorld()` 就是 `toggleImmersive(true/false)`。
+- `enterPetWorld()` / `exitPetWorld()` 就是 `toggleImmersive(true/false)`，
+  並把「她現在在世界裡」記進 `sessionStorage["daisy_in_world"]`。
+  `body.immersive` 只是一個 class，頁面一重新載入就沒了 —— 而重新載入的理由比
+  想像中多（按了強制更新、Service Worker 換手、手機回收分頁、她自己下拉重整），
+  每一次都會讓她莫名其妙掉回主畫面。載入完 `restoreWorldIfNeeded()` 會把她送回去。
+  用 `sessionStorage` 而不是 `localStorage` 是刻意的：重整算同一個 session，
+  會回到世界；關掉 app 再打開是新的 session，還是從主畫面（拼字遊戲）開始。
 - **場景要看得到才建得起來**：藏著的時候 `clientWidth` 是 0，平台和鏡頭會全算成 0。
   所以 `initHabitat()` 改由 `ensureHabitat()` 在世界顯示之後才觸發。
 - `welcomeBackFromGame()`（從機台玩完回來直接進世界）**不能放進 `initHabitat()`**：

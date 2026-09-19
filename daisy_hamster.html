@@ -701,6 +701,7 @@
                 // 這一行不能放進 initHabitat：那邊要等世界顯示出來才跑，
                 // 而「顯示世界」正是這裡要做的事，兩邊會互相等。
                 welcomeBackFromGame();
+                restoreWorldIfNeeded();
             }
             
             function initAsNewPlayer() {
@@ -739,6 +740,7 @@
                 // 這一行不能放進 initHabitat：那邊要等世界顯示出來才跑，
                 // 而「顯示世界」正是這裡要做的事，兩邊會互相等。
                 welcomeBackFromGame();
+                restoreWorldIfNeeded();
             }
             
             petRef.once('value', (snapshot) => {
@@ -920,13 +922,39 @@
             return true;
         }
 
+        // 「她現在在倉鼠世界裡」記在 sessionStorage。
+        //
+        // 為什麼要記：body.immersive 只是一個 class，頁面一重新載入就沒了，
+        // 於是她會莫名其妙掉回主畫面。而重新載入的理由比想像中多 ——
+        // 按了強制更新、Service Worker 換手、手機把分頁回收、她自己下拉重整。
+        //
+        // 用 sessionStorage 而不是 localStorage 是刻意的：重整算同一個 session，
+        // 會回到世界；但關掉 app 再打開是新的 session，還是從主畫面（拼字遊戲）開始 ——
+        // 主畫面才是每天要做的正事。
+        const IN_WORLD_KEY = 'daisy_in_world';
+        function rememberWorld(on) {
+            try {
+                if (on) sessionStorage.setItem(IN_WORLD_KEY, '1');
+                else sessionStorage.removeItem(IN_WORLD_KEY);
+            } catch (e) {}
+        }
+
         function enterPetWorld() {
+            rememberWorld(true);
             toggleImmersive(true);
-            if (typeof fxHaptic === 'function') feelHaptic(12);
+            feelHaptic(12);
         }
         function exitPetWorld() {
+            rememberWorld(false);
             toggleDrawer(false);
             toggleImmersive(false);
+        }
+
+        /** 重整前人在世界裡的話，載入完就直接回到世界 */
+        function restoreWorldIfNeeded() {
+            let was = null;
+            try { was = sessionStorage.getItem(IN_WORLD_KEY); } catch (e) {}
+            if (was === '1' && !immersiveOn()) enterPetWorld();
         }
 
         /** 下方抽屜：數值條 + 整面按鈕牆 */
