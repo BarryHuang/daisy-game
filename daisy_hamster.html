@@ -875,6 +875,32 @@
         // 兩件事一起做：①把 body 加上 .immersive，籠子用 position:fixed 鋪滿視窗
         // ②有支援的話順便叫瀏覽器真的全螢幕（Android Chrome 可以，iOS Safari
         //   不支援 Element.requestFullscreen，所以①一定要能單獨成立）。
+        /**
+         * 遊戲內的提示。取代原本的 alert()。
+         *
+         * alert() 在這裡有兩個問題：它會擋住整個網頁的執行緒（遊戲動畫全停），
+         * 而且 Android Chrome 一跳對話框就會退出瀏覽器全螢幕。
+         * 用自己畫的小橫幅兩個問題都沒有，而且比系統對話框好看得多。
+         */
+        function gameToast(msg, kind) {
+            let host = document.getElementById('game-toast');
+            if (!host) {
+                host = document.createElement('div');
+                host.id = 'game-toast';
+                host.className = 'game-toast';
+                document.body.appendChild(host);
+            }
+            const t = document.createElement('div');
+            t.className = 'gt-item' + (kind ? ' ' + kind : '');
+            t.textContent = msg;
+            host.appendChild(t);
+            playTone(kind === 'bad' ? 260 : 620, 'sine', .08);
+            setTimeout(() => {
+                t.classList.add('out');
+                setTimeout(() => t.remove(), 320);
+            }, 2000);
+        }
+
         function immersiveOn() { return document.body.classList.contains('immersive'); }
 
         // ================================================================
@@ -945,10 +971,24 @@
             }));
         }
 
-        // 使用者按 Esc 或系統手勢離開全螢幕時，把沉浸模式一起關掉，
-        // 不然畫面會卡在「假全螢幕」但瀏覽器 UI 已經回來的狀態
+        // 以前這裡會在離開瀏覽器全螢幕時順手關掉倉鼠世界。那是個地雷：
+        // Android Chrome 只要跳出 alert()／confirm() 就會自動退出全螢幕，
+        // 於是「倉鼠吃飽了」的提示一跳出來，整個世界就跟著收掉、彈回主畫面。
+        //
+        // 現在「倉鼠世界」和「瀏覽器全螢幕」是兩件事：世界只有按 ✕ 才會關。
+        // 掉出全螢幕最多就是上面多一條瀏覽器的網址列，畫面還在。
         document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && immersiveOn()) toggleImmersive(false);
+            if (!document.fullscreenElement && immersiveOn()) {
+                // 尺寸變了（網址列回來了），場景要重算一次
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    if (!habitatReady) return;
+                    buildPlatforms(); buildSpots(); buildCabinets(); buildRides(); buildGates();
+                    hamY = surfaceAt(hamX, hamY);
+                    paintHamster();
+                    cameraLookAt(hamX, true);
+                    placePeekers();
+                }));
+            }
         });
 
         /** 設定面板裡的強制更新（跟 ☰ 選單底部那顆是同一套流程） */
@@ -2478,7 +2518,7 @@
             const m = MAPS[id];
             if (!m) return;
             if (petData.coins < m.cost) {
-                alert('金幣還不夠去' + m.name + '喔！(需要 ' + m.cost + ' 💰)');
+                gameToast('金幣還不夠去' + m.name + '喔！要 ' + m.cost + ' 💰', 'bad');
                 return;
             }
             if (!confirm('要花 ' + m.cost + ' 金幣解鎖「' + m.name + ' ' + m.emoji + '」嗎？\n解鎖之後隨時都可以去玩。')) return;
@@ -2994,13 +3034,13 @@
                 petData.items[itemId] = true;
                 savePetData();
                 updatePetUI();
-                alert(`🎊 購買成功！小倉鼠擁有 ${itemName} 了！`);
+                gameToast(`🎊 買到 ${itemName} 了！`);
                 
                 // 放個慶祝煙火
                 confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 , x: 0.75} }); 
                 playTone(600, 'sine', 0.1); setTimeout(()=>playTone(800, 'sine', 0.2), 150);
             } else {
-                alert(`金幣還不夠買 ${itemName} 喔！(需要 ${cost} 💰)`);
+                gameToast(`金幣還不夠買 ${itemName}，要 ${cost} 💰`, 'bad');
             }
         }
 
@@ -3307,7 +3347,7 @@
             if(currentIndex >= targetLetters.length) return;
             
             if(petData.coins < 2) {
-                alert("金幣不夠使用提示喔！你需要 2 💰");
+                gameToast("金幣不夠用提示，要 2 💰", 'bad');
                 return;
             }
             petData.coins -= 2;
@@ -3715,10 +3755,10 @@
                     petData.items.wheel = true;
                     savePetData();
                     updatePetUI();
-                    alert("🎡 購買成功！小倉鼠得到新玩具了！");
+                    gameToast("🎡 買到跑輪了！");
                     // 買完可以繼續玩下去
                 } else {
-                    alert("金幣還不夠買跑輪喔！(需要 50 💰)");
+                    gameToast("金幣還不夠買跑輪，要 50 💰", 'bad');
                     return;
                 }
             }
@@ -3895,11 +3935,11 @@
 
         function feedHamster(foodType = 'seed', cost = 1, exp = 10, emoji = '🌻') {
             if(petData.coins < cost || isRunning) {
-                if(petData.coins < cost && !isRunning) alert(`金幣不夠買${emoji}了！(需要 ${cost} 💰)`);
+                if(petData.coins < cost && !isRunning) gameToast(`金幣不夠買${emoji}，要 ${cost} 💰`, 'bad');
                 return;
             }
             if(petData.hunger >= 100) {
-                alert("倉鼠現在很飽，吃不下囉！");
+                gameToast("倉鼠已經吃很飽了，吃不下囉！", 'bad');
                 return;
             }
             wakeUp();
@@ -3921,7 +3961,7 @@
                 petData.exp = 0;
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 , x: 0.75} }); // 在右側放煙火
                 playTone(800, 'sine', 0.3); // Level up sound
-                alert(`太棒了！小倉鼠升級到 Level ${petData.level} 啦！`);
+                gameToast(`🎉 升級了！Level ${petData.level}`, 'good');
             }
             
             savePetData();
@@ -3942,11 +3982,11 @@
 
         function bathHamster() {
             if(petData.coins < 5 || isRunning) {
-                if(petData.coins < 5 && !isRunning) alert(`金幣不夠買海綿🧽了！(需要 5 💰)`);
+                if(petData.coins < 5 && !isRunning) gameToast(`金幣不夠買海綿🧽，要 5 💰`, 'bad');
                 return;
             }
             if(petData.cleanliness >= 100) {
-                alert("小倉鼠已經很乾淨囉！");
+                gameToast("小倉鼠已經很乾淨囉 ✨", 'bad');
                 return;
             }
             wakeUp();
@@ -4114,7 +4154,7 @@
 
         // 3. 驚喜盲盒
         function buyGacha() {
-            if(petData.coins < 100) { alert("金幣不足 100 💰，無法抽盲盒喔！"); return; }
+            if(petData.coins < 100) { gameToast("盲盒要 100 💰，還不夠喔", 'bad'); return; }
             petData.coins -= 100;
             savePetData();
             updatePetUI();
@@ -4300,7 +4340,7 @@
                 petData.coins -= cost;
                 petData.unlocks[type].push(id);
                 equipCosmetic(type, id);
-                alert(`✨ 購買成功！獲得了 ${name}！`);
+                gameToast(`✨ 獲得了 ${name}！`, 'good');
             }
         }
 
