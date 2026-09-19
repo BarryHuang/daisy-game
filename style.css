@@ -1436,3 +1436,34 @@ body.immersive .imm-dock, body.immersive .cage-tools { transition: opacity .2s; 
 }
 .feel-btn:active { transform: scale(.95); }
 .feel-btn:disabled { opacity: .6; cursor: default; }
+
+/* ===================================================================
+   遊戲內的提示橫幅（取代 alert）
+   掛在 <body> 上而不是籠子裡：主畫面和全螢幕世界都要看得到。
+   =================================================================== */
+.game-toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    top: calc(14px + env(safe-area-inset-top, 0px));
+    z-index: 3000; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    width: max-content; max-width: min(92vw, 420px);
+}
+.gt-item {
+    padding: 10px 18px; border-radius: 999px;
+    background: rgba(40, 25, 60, .92); color: #fff;
+    border: 2px solid rgba(255,255,255,.85);
+    font-size: .92rem; font-weight: 800; line-height: 1.3; text-align: center;
+    box-shadow: 0 6px 20px rgba(40, 20, 60, .35);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    animation: gtIn .28s cubic-bezier(.34,1.56,.64,1);
+}
+.gt-item.good { background: rgba(35, 120, 70, .94); }
+.gt-item.bad  { background: rgba(150, 70, 40, .94); }
+.gt-item.out  { animation: gtOut .3s ease forwards; }
+@keyframes gtIn  { from { opacity: 0; transform: translateY(-16px) scale(.9); } }
+@keyframes gtOut { to   { opacity: 0; transform: translateY(-12px) scale(.96); } }
+@media (prefers-reduced-motion: reduce) {
+    .gt-item, .gt-item.out { animation: none; }
+}
+/* 全螢幕時上面那排狀態列在 top:0，提示往下挪一點才不會疊在一起 */
+body.immersive .game-toast { top: calc(60px + env(safe-area-inset-top, 0px)); }
