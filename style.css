@@ -1427,3 +1427,12 @@ body.immersive .imm-dock, body.immersive .cage-tools { transition: opacity .2s; 
 @media (prefers-reduced-motion: reduce) {
     .wmap-pin.here .wmap-hit, .wmap-you { animation: none; }
 }
+
+/* 設定面板裡的「強制更新」 */
+.feel-btn {
+    flex: 0 0 auto; padding: 8px 14px; border-radius: 999px;
+    border: 2px solid #b07cd6; background: #fff; color: #7b1fa2;
+    font-family: inherit; font-size: .84rem; font-weight: 800; cursor: pointer;
+}
+.feel-btn:active { transform: scale(.95); }
+.feel-btn:disabled { opacity: .6; cursor: default; }

@@ -250,10 +250,10 @@ function initMenu() {
   //   2. 原本結尾是 location.reload(true)。那個 true 早就從規範拿掉、
   //      所有瀏覽器都忽略，等於普通重整，照樣吃 HTTP 快取。
   //   3. 順序不能顛倒：一定要先刪快取再 update()，反過來會把新裝好的檔案刪掉。
-  const refresh = document.getElementById("dm-refresh");
-  if (refresh) refresh.addEventListener("click", async () => {
-    refresh.textContent = "更新中…";
-    refresh.disabled = true;
+  // 掛到 window，讓其他地方也叫得到 ——
+  // 倉鼠世界是全螢幕的，那裡看不到 ☰，得在裡面另外放一顆更新鈕。
+  window.daisyForceRefresh = async function (btn) {
+    if (btn) { btn.textContent = "更新中…"; btn.disabled = true; }
     try {
       if (window.caches) {
         const names = await caches.keys();
@@ -266,7 +266,10 @@ function initMenu() {
       }
     } catch (e) { /* 清不掉就算了，還是重新載入 */ }
     location.reload();
-  });
+  };
+
+  const refresh = document.getElementById("dm-refresh");
+  if (refresh) refresh.addEventListener("click", () => window.daisyForceRefresh(refresh));
 
   checkForUpdate();
   back.addEventListener("click", () => setOpen(false));
