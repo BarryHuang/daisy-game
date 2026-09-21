@@ -291,9 +291,17 @@
                 </div>
 
 
-                <!-- 柵欄後偶爾探頭的小動物，位置由 JS 隨機挑 -->
-                <div class="peeker" id="peeker-a" aria-hidden="true">🐦</div>
-                <div class="peeker" id="peeker-b" aria-hidden="true">🐿️</div>
+                <!-- 柵欄後的小動物朋友。位置由 JS 隨機挑，點下去可以送禮物 -->
+                <div class="peeker" id="peeker-a" role="button" tabindex="0">
+                    <span class="peeker-face">🐦</span>
+                    <span class="peeker-hearts"></span>
+                    <span class="peeker-gift">🎁</span>
+                </div>
+                <div class="peeker" id="peeker-b" role="button" tabindex="0">
+                    <span class="peeker-face">🐿️</span>
+                    <span class="peeker-hearts"></span>
+                    <span class="peeker-gift">🎁</span>
+                </div>
 
 
 
@@ -637,7 +645,11 @@
             // 菜園。{ "0": { crop: 'carrot', day: 20260921 } }，key 是第幾塊田。
             // 存「種下那天」而不是時間戳，因為收成是看日曆天（今天種、明天收），
             // 不是看過了幾小時 —— 小二生對「明天再來」比「再等 18 小時」有感。
-            farm: {}
+            farm: {},
+            // 小動物朋友。{ "🐦": { love: 12, day: 20260921, gave: 20260921 } }
+            // love 是好感度點數，每 6 點一顆愛心；day 是今天送過禮沒有；
+            // gave 是「好朋友回送」那天，兩個都用日曆天
+            friends: {}
         };
 
         let comboCount = 0; // 連續全對次數
@@ -665,6 +677,7 @@
             if(!data.map || !MAPS[data.map]) data.map = 'home';
             if(!data.spots) data.spots = {};        // 互動點的冷卻時間
             if(!data.farm)  data.farm  = {};        // 菜園
+            if(!data.friends) data.friends = {};    // 小動物朋友
             return data;
         }
 
@@ -1013,6 +1026,7 @@
                     buildPlatforms();
                     buildSpots();          // 位置是依磚寬算的，場景縮放變了要重放
                     buildPlots();
+                    buildBoard();
                     buildCabinets();
                     buildRides();
                     buildGates();
@@ -1035,7 +1049,8 @@
                 // 尺寸變了（網址列回來了），場景要重算一次
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     if (!habitatReady) return;
-                    buildPlatforms(); buildSpots(); buildPlots(); buildCabinets(); buildRides(); buildGates();
+                    buildPlatforms(); buildSpots(); buildPlots(); buildBoard();
+                    buildCabinets(); buildRides(); buildGates();
                     hamY = surfaceAt(hamX, hamY);
                     paintHamster();
                     cameraLookAt(hamX, true);
@@ -1282,6 +1297,8 @@
                     { x: .430, ty: 150, icon: '📰', name: '送報紙',   act: 'paper'    },
                     { x: .830, ty: 150, icon: '🧁', name: '蛋糕店',   act: 'cake'     },
                 ],
+                // 每日挑戰的公佈欄。放在報紙攤和蛋糕店中間的空地
+                board: { x: .635 },
                 exits: { left: 'park', right: 'arcade' }
             },
             arcade: {
@@ -1792,6 +1809,7 @@
                 buildPlatforms();
                 buildSpots();
                 buildPlots();
+                buildBoard();
                 buildCabinets();
                 buildRides();
                 buildGates();
@@ -1837,22 +1855,29 @@
             const arrangeBtn = document.getElementById('btn-arrange');
             if (arrangeBtn) arrangeBtn.style.display = m.props ? '' : 'none';
 
-            // 每張地圖有自己會探頭的小動物
+            // 每張地圖有自己的小動物朋友
             const pk = m.peekers || ['🐦', '🐿️'];
-            const pa = document.getElementById('peeker-a'), pb = document.getElementById('peeker-b');
-            if (pa) pa.textContent = pk[0];
-            if (pb) pb.textContent = pk[1] || pk[0];
+            [['peeker-a', pk[0]], ['peeker-b', pk[1] || pk[0]]].forEach(([id, face]) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.dataset.friend = face;
+                el.querySelector('.peeker-face').textContent = face;
+                el.setAttribute('aria-label', friendName(face) + '，送禮物');
+            });
+            refreshFriends();
 
             cage.classList.toggle('indoor', !!m.indoor);
             buildPlatforms();
             buildGates();
             buildSpots();
             buildPlots();
+            buildBoard();
             buildCabinets();
             buildRides();
             placePeekers();
             updateMapChip();
             farmRipeNotice();
+            friendReturnGifts();
         }
 
         function updateMapChip() {
@@ -2043,6 +2068,7 @@
                 else if (gained) msg = (msg ? msg + ' ' : '') + '+' + gained + ' 💰';
                 if (msg) floatAtSpot(el, msg, '#7b1fa2');
 
+                updateQuestProgress('spot', 1);
                 if (!petData.spots) petData.spots = {};
                 petData.spots[spotKey(i)] = Math.round(Date.now() / 1000);
                 savePetData();
@@ -2224,6 +2250,7 @@
                     }
                     petData.coins -= c.cost;
                     plotSet(i, { crop: key, day: farmDay() });
+                    updateQuestProgress('plant', 1);
                     savePetData();
                     updatePetUI();
                     refreshPlots();
@@ -2254,6 +2281,7 @@
 
             plotSet(i, null);
             refreshPlots();
+            updateQuestProgress('harvest', 1);
             petData.coins += gain;
             petData.exp += c.exp;
             addHappiness(4);
@@ -2456,6 +2484,7 @@
                 await (RIDE_PLAY[r.type] || rideBumper)(el);
 
                 addHappiness(r.happy);
+                updateQuestProgress('ride', 1);
                 const ham = document.getElementById('hamster');
                 if (typeof fxFloat === 'function') {
                     fxFloat('+' + r.happy + ' 快樂 💖', ham.getBoundingClientRect(), '#ff8fb0');
@@ -3016,6 +3045,7 @@
                 feelHaptic(14);
                 await wait(actReduced() ? 80 : 420);
 
+                updateQuestProgress('game', 1);
                 petData.map = currentMap;
                 savePetData();
                 try { sessionStorage.setItem('daisy_from_game', c.name); } catch (e) {}
@@ -3076,6 +3106,21 @@
 
             traveling = true;
             try {
+                // 「今天走訪幾張地圖」要算不同的地圖，不是走了幾趟 ——
+                // 不然在兩張之間來回跑十次就破關了
+                if (!petData.quests) checkDailyQuests();
+                const seen = petData.quests && petData.quests.seen;
+                const today = farmDay();
+                if (petData.quests) {
+                    if (!seen || petData.quests.seenDay !== today) {
+                        petData.quests.seen = [currentMap];
+                        petData.quests.seenDay = today;
+                    }
+                    if (petData.quests.seen.indexOf(id) < 0) {
+                        petData.quests.seen.push(id);
+                        updateQuestProgress('travel', 1);
+                    }
+                }
                 const ex = curMap().exits || {};
                 // 從哪一側離開：右邊的門往右走，左邊的門往左走
                 const side = (ex.right === id) ? 'right' : (ex.left === id ? 'left' : null);
@@ -3313,6 +3358,14 @@
             ['peeker-a', 'peeker-b'].forEach((id) => {
                 const el = document.getElementById(id);
                 if (!el) return;
+                // 綁一次就好。placePeekers 每次換地圖／改尺寸都會跑
+                if (!el.dataset.bound) {
+                    el.dataset.bound = '1';
+                    el.addEventListener('click', (e) => { e.stopPropagation(); tapFriend(id); });
+                    el.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tapFriend(id); }
+                    });
+                }
                 // 兩隻至少隔開 14%，不然會肩並肩看起來像同一組
                 const ok = free.filter((g) => used.every((u) => Math.abs(g - u) >= 14));
                 if (!ok.length) { el.style.display = 'none'; return; }   // 擠不下就只出現一隻
@@ -3323,6 +3376,336 @@
                 el.style.bottom = '30%';
                 el.style.animationDelay = '-' + (Math.random() * 17).toFixed(1) + 's';
             });
+        }
+
+        // ================================================================
+        // 公佈欄（每日挑戰）
+        // ================================================================
+        // 每日挑戰本來只能從角落那顆 📜 打開，而且永遠是同三件事
+        // （拼字 10 個、洗澡 1 次、餵食 3 次），獎勵 2~5 金幣 —— 小到不值得做。
+        //
+        // 現在挑戰從一個池子裡每天抽三件、涵蓋世界裡所有玩法，獎勵也加大，
+        // 三件全做完還有額外獎金。公佈欄立在街上，她得走過去看，
+        // 那才像「今天有什麼事可以做」的地方。
+        function buildBoard() {
+            const world = worldEl();
+            if (!world) return;
+            world.querySelectorAll('.board').forEach(el => el.remove());
+            const cfg = curMap().board;
+            if (!cfg) return;
+
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'board';
+            b.style.left = (cfg.x * 100) + '%';
+            b.style.bottom = (footInset() - 4) + 'px';
+            b.title = '今日挑戰';
+            b.innerHTML = boardMarkup() + '<span class="board-dot">!</span>';
+            b.addEventListener('click', (e) => { e.stopPropagation(); tapBoard(); });
+            world.appendChild(b);
+            refreshBoard();
+        }
+
+        function boardMarkup() {
+            // 釘在板子上的三張紙條。角度各差一點，才不會像印上去的
+            const notes = [[-1.6, '#fffdf4'], [1.2, '#fff6e8'], [-0.7, '#f4fbff']];
+            let paper = '';
+            notes.forEach(([rot, col], i) => {
+                const y = 44 + i * 21;
+                paper += '<g transform="rotate(' + rot + ' 70 ' + (y + 7) + ')">'
+                       + '<rect x="22" y="' + y + '" width="96" height="15" rx="2" fill="' + col + '"'
+                       +   ' stroke="#c9b28f" stroke-width="1"/>'
+                       + '<g stroke="#bfae92" stroke-width="1.6" stroke-linecap="round">'
+                       +   '<path d="M28 ' + (y + 5.5) + ' h60M28 ' + (y + 10) + ' h40"/></g>'
+                       + '<circle cx="70" cy="' + (y + 2.5) + '" r="2.4" fill="#e0714c"/>'
+                       + '</g>';
+            });
+            return '<svg class="bd" viewBox="0 0 140 150" aria-hidden="true">'
+                 + '<ellipse cx="70" cy="145" rx="46" ry="7" fill="#000" opacity=".15"/>'
+                 // 兩根柱子
+                 + '<rect x="28" y="96" width="11" height="50" rx="4" fill="#a9703f"/>'
+                 + '<rect x="101" y="96" width="11" height="50" rx="4" fill="#a9703f"/>'
+                 // 板身
+                 + '<rect x="14" y="26" width="112" height="82" rx="6" fill="#c08b52"'
+                 +   ' stroke="#8a5f37" stroke-width="3"/>'
+                 + '<rect x="19" y="31" width="102" height="72" rx="4" fill="#e0bd8c"/>'
+                 + paper
+                 // 屋簷
+                 + '<path d="M6 30 L70 8 L134 30 Z" fill="#e0714c" stroke="#a83f32" stroke-width="2.5"'
+                 +   ' stroke-linejoin="round"/>'
+                 + '<rect x="6" y="28" width="128" height="7" rx="3.5" fill="#f2a68c"'
+                 +   ' stroke="#a83f32" stroke-width="2"/>'
+                 + '</svg>';
+        }
+
+        /** 還有沒做完的挑戰就亮紅點，她才知道要過來看 */
+        function refreshBoard() {
+            const el = document.querySelector('.board');
+            if (!el) return;
+            const q = petData.quests;
+            const left = q ? q.list.filter(x => !x.done).length : 0;
+            el.classList.toggle('has-new', left > 0);
+            el.querySelector('.board-dot').textContent = left || '✓';
+        }
+
+        let readingBoard = false;
+
+        async function tapBoard() {
+            if (readingBoard || gifting || farming || usingSpot || riding
+                || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+            readingBoard = true;
+            try {
+                const el = document.querySelector('.board');
+                await hamsterWalkTo(curMap().board.x * worldWidth(), 150, 0);
+                snd('click', 660, 'sine', .08);
+                createFloatingEmoji('📜', 1100, -30);
+                await wait(260);
+                openQuests();
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('看公佈欄中斷', e);
+            } finally {
+                readingBoard = false;
+            }
+        }
+
+        // 每天從這個池子抽三件。{n} 會換成當天抽到的數量。
+        // 刻意把世界裡每一種玩法都放進來 —— 挑戰的用處就是「今天去做點沒做過的」。
+        const QUEST_POOL = [
+            { id: 'word',    text: '拼對 {n} 個單字',       lo: 6, hi: 10, reward: 14 },
+            { id: 'feed',    text: '餵倉鼠吃 {n} 次東西',   lo: 2, hi: 3,  reward: 8  },
+            { id: 'bath',    text: '幫倉鼠洗 {n} 次澡',     lo: 1, hi: 1,  reward: 6  },
+            { id: 'spot',    text: '在世界裡互動 {n} 次',   lo: 3, hi: 5,  reward: 12 },
+            { id: 'plant',   text: '種下 {n} 株菜',         lo: 1, hi: 2,  reward: 10 },
+            { id: 'harvest', text: '收成 {n} 株菜',         lo: 1, hi: 2,  reward: 16 },
+            { id: 'gift',    text: '送小動物 {n} 個禮物',   lo: 1, hi: 2,  reward: 12 },
+            { id: 'ride',    text: '坐 {n} 次遊樂設施',     lo: 1, hi: 2,  reward: 16 },
+            { id: 'travel',  text: '走訪 {n} 張不同的地圖', lo: 3, hi: 4,  reward: 12 },
+            { id: 'game',    text: '去遊戲中心玩 {n} 次',   lo: 1, hi: 1,  reward: 14 },
+            { id: 'wheel',   text: '跑 {n} 次跑輪',         lo: 1, hi: 2,  reward: 10 },
+        ];
+        const QUEST_ALL_BONUS = 30;
+        const QUEST_VERSION = 2;      // 改了題庫就 +1，當天也會立刻換新的
+
+        /**
+         * 用日期當亂數種子，同一天抽到的一定一樣。
+         * 不這樣做的話，每次重整都會換一批挑戰，做到一半的進度就沒意義了。
+         */
+        function questRand(seed) {
+            let x = seed * 9301 + 49297;
+            return function () { x = (x * 9301 + 49297) % 233280; return x / 233280; };
+        }
+
+        // ================================================================
+        // 小動物朋友
+        // ================================================================
+        // 以前柵欄後的小動物只是背景動畫（17 秒才探頭一次、pointer-events:none）。
+        // 現在牠們是朋友：可以送禮物、有好感度、五顆愛心之後會每天回送東西。
+        //
+        // 所以牠們改成**一直看得到**。原本那種「探出來兩秒又縮回去」的做法
+        // 很可愛，但她得在那兩秒內點中 —— 對小二生來說只是挫折。
+        // 現在改成在柵欄後面一直上下晃，隨時點得到。
+        const FRIENDS = {
+            '🐦':  { name: '小鳥',   likes: 'nut',     say: ['啾啾～', '今天天氣真好！'] },
+            '🐿️': { name: '小松鼠', likes: 'nut',     say: ['有堅果嗎？', '我藏了好多果子！'] },
+            '🦆':  { name: '鴨子',   likes: 'cookie',  say: ['呱呱！', '一起去池塘玩！'] },
+            '🐢':  { name: '烏龜',   likes: 'cookie',  say: ['慢慢來就好～', '我走得很慢喔'] },
+            '🐈':  { name: '花貓',   likes: 'ribbon',  say: ['喵嗚～', '幫我搔搔下巴'] },
+            '🕊️': { name: '白鴿',   likes: 'ribbon',  say: ['咕咕～', '我會送信喔！'] },
+            '🐭':  { name: '小老鼠', likes: 'cookie',  say: ['吱吱！', '這裡好好玩'] },
+            '👾':  { name: '外星人', likes: 'ribbon',  say: ['嗶嗶啵啵', '帶我去打電動！'] },
+            '🐰':  { name: '兔子',   likes: 'bouquet', say: ['蹦蹦跳跳～', '紅蘿蔔最好吃'] },
+            '🎈':  { name: '氣球哥', likes: 'bouquet', say: ['飄～', '抓好我喔'] },
+            '🦀':  { name: '螃蟹',   likes: 'nut',     say: ['喀啦喀啦', '小心我的鉗子'] },
+            '🐠':  { name: '小魚',   likes: 'bouquet', say: ['咕嚕咕嚕', '水裡最舒服了'] },
+            '🐞':  { name: '瓢蟲',   likes: 'nut',     say: ['我是幸運蟲！', '點點好看嗎？'] },
+            '🕷️': { name: '小蜘蛛', likes: 'cookie',  say: ['我在織網', '別怕我啦'] },
+        };
+        const GIFTS = {
+            nut:     { emoji: '🌰', name: '堅果',   cost: 5,  love: 1 },
+            cookie:  { emoji: '🍪', name: '餅乾',   cost: 12, love: 2 },
+            ribbon:  { emoji: '🎀', name: '蝴蝶結', cost: 25, love: 3 },
+            bouquet: { emoji: '💐', name: '花束',   cost: 40, love: 5 },
+        };
+        const LOVE_PER_HEART = 6, MAX_HEARTS = 5;
+
+        function friendName(face) { return (FRIENDS[face] || {}).name || '小動物'; }
+        function friendData(face) {
+            if (!petData.friends) petData.friends = {};
+            if (!petData.friends[face]) petData.friends[face] = { love: 0, day: 0, gave: 0 };
+            return petData.friends[face];
+        }
+        function friendHearts(face) {
+            return Math.min(MAX_HEARTS, Math.floor(friendData(face).love / LOVE_PER_HEART));
+        }
+        function friendGiftedToday(face) { return friendData(face).day === farmDay(); }
+
+        /** 把兩隻的愛心和「今天還沒送」的小紅點刷新 */
+        function refreshFriends() {
+            ['peeker-a', 'peeker-b'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el || !el.dataset.friend) return;
+                const face = el.dataset.friend, h = friendHearts(face);
+                el.querySelector('.peeker-hearts').textContent = h ? '💗'.repeat(h) : '';
+                el.classList.toggle('can-gift', !friendGiftedToday(face));
+                el.classList.toggle('bff', h >= MAX_HEARTS);
+            });
+        }
+
+        /**
+         * 三顆愛心以上的朋友每天會自己回送東西。
+         * 這是「常常回來看看」的第二個理由（第一個是菜園），而且不用她做什麼，
+         * 純粹是打開來就有的好消息。
+         */
+        function friendReturnGifts() {
+            const today = farmDay();
+            let total = 0, who = [];
+            (curMap().peekers || []).forEach((face) => {
+                const h = friendHearts(face);
+                if (h < 3) return;
+                const d = friendData(face);
+                if (d.gave === today) return;
+                d.gave = today;
+                total += h * 4;
+                who.push(face);
+            });
+            if (!total) return;
+            petData.coins += total;
+            savePetData();
+            updatePetUI();
+            setTimeout(() => {
+                gameToast(who.join('') + ' 送你回禮 +' + total + ' 💰', 'good');
+                snd('coin', 800, 'sine', .1);
+            }, 1400);
+        }
+
+        let gifting = false;
+
+        async function tapFriend(id) {
+            const el = document.getElementById(id);
+            if (!el || !el.dataset.friend) return;
+            if (gifting || farming || usingSpot || riding || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+
+            const face = el.dataset.friend, f = FRIENDS[face] || {};
+            // 先打個招呼，就算今天不送禮也有回應
+            friendSay(el, f.say ? f.say[Math.floor(Math.random() * f.say.length)] : '嗨！');
+
+            if (friendGiftedToday(face)) {
+                setTimeout(() => friendSay(el, '今天的禮物收到了，明天見！ 🌙'), 900);
+                return;
+            }
+
+            gifting = true;
+            try {
+                // 走到牠底下再送，不然禮物是隔空飛過去的
+                await hamsterWalkTo(worldXOf(el), 150, 0);
+                await new Promise((resolve) => {
+                    openGiftShop(face, async (key) => {
+                        if (!key) return resolve();
+                        await giveGift(face, key, el);
+                        resolve();
+                    });
+                });
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('送禮中斷', e);
+            } finally {
+                gifting = false;
+            }
+        }
+
+        async function giveGift(face, key, el) {
+            const g = GIFTS[key], f = FRIENDS[face] || {};
+            if (!g) return;
+            if (petData.coins < g.cost) { friendSay(el, '金幣不夠買 ' + g.emoji); return; }
+
+            const d = friendData(face);
+            const before = friendHearts(face);
+            const loved = f.likes === key;              // 送到牠最喜歡的，好感度加倍
+
+            petData.coins -= g.cost;
+            d.love += g.love * (loved ? 2 : 1);
+            d.day = farmDay();
+            addHappiness(3);
+            updateQuestProgress('gift', 1);
+
+            const ham = document.getElementById('hamster');
+            ham.classList.add('happy');
+            createFloatingEmoji(g.emoji, 1300, -34);
+            snd('sparkle', 660, 'sine', .1);
+            await wait(520);
+            friendSay(el, loved ? '哇！我最喜歡 ' + g.emoji + ' 了！💗' : '謝謝你的 ' + g.emoji + '！');
+            if (typeof fxBurst === 'function' && !actReduced()) {
+                fxBurst(el.getBoundingClientRect(), loved ? 16 : 10);
+            }
+            await wait(600);
+            ham.classList.remove('happy');
+
+            const after = friendHearts(face);
+            if (after > before) {
+                // 升一顆愛心給一筆獎金，這是送禮的主要報酬
+                const bonus = after * 15;
+                petData.coins += bonus;
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
+                }
+                snd('levelup', 800, 'sine', .25);
+                gameToast('💗 和' + friendName(face) + '變成更好的朋友了！+' + bonus + ' 💰', 'good');
+                if (after >= MAX_HEARTS) {
+                    setTimeout(() => gameToast(
+                        '🎉 ' + face + ' 成為你的好朋友，以後每天都會回送禮物！', 'good'), 1600);
+                }
+            }
+            savePetData();
+            updatePetUI();
+            refreshFriends();
+        }
+
+        /** 小動物頭上的對話泡泡 */
+        function friendSay(el, text) {
+            if (!el) return;
+            el.querySelectorAll('.peeker-say').forEach((n) => n.remove());
+            const b = document.createElement('div');
+            b.className = 'peeker-say';
+            b.textContent = text;
+            el.appendChild(b);
+            setTimeout(() => b.remove(), 1900);
+        }
+
+        /** 禮物店。喜歡的那樣會標「最愛」，她才知道送什麼划算 */
+        function openGiftShop(face, done) {
+            const f = FRIENDS[face] || {};
+            const modal = document.getElementById('gift-modal');
+            const box = document.getElementById('gift-list');
+            let finished = false;
+            const close = (key) => {
+                if (finished) return;
+                finished = true;
+                modal.style.display = 'none';
+                done(key);
+            };
+            document.getElementById('gift-title').textContent =
+                '送禮物給' + friendName(face) + ' ' + face;
+            document.getElementById('gift-hearts').textContent =
+                friendHearts(face) ? '💗'.repeat(friendHearts(face)) : '還不太熟';
+            box.innerHTML = '';
+            Object.keys(GIFTS).forEach((key) => {
+                const g = GIFTS[key];
+                const afford = petData.coins >= g.cost;
+                const fav = f.likes === key;
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'seed-card' + (afford ? '' : ' poor') + (fav ? ' fav' : '');
+                b.innerHTML = '<span class="seed-emoji">' + g.emoji + '</span>'
+                            + '<span class="seed-name">' + g.name + '</span>'
+                            + '<span class="seed-meta">' + (fav ? '牠最愛 💗x2' : '好感 +' + g.love) + '</span>'
+                            + '<span class="seed-price">-' + g.cost + ' 💰</span>';
+                b.addEventListener('click', () => { snd('click', 660, 'sine', .07); close(key); });
+                box.appendChild(b);
+            });
+            document.getElementById('gift-close').onclick = () => close(null);
+            modal.onclick = (e) => { if (e.target === modal) close(null); };
+            modal.style.display = 'flex';
         }
 
         // ================================================================
@@ -4392,6 +4775,7 @@
             }
 
             isRunning = true;
+            updateQuestProgress('wheel', 1);
             const ham = document.getElementById('hamster');
             const wrap = document.getElementById('hamster-wrapper');
             const wheel = document.getElementById('prop-wheel');
@@ -4726,34 +5110,55 @@
         // 2. 每日任務
         function checkDailyQuests() {
             const today = new Date().toLocaleDateString();
-            if(!petData.quests || petData.quests.date !== today) {
-                // 產生新任務
-                petData.quests = {
-                    date: today,
-                    list: [
-                        { id: 'word', text: '拼對 10 個單字', target: 10, current: 0, reward: 5, done: false },
-                        { id: 'bath', text: '幫倉鼠洗澡 1 次', target: 1, current: 0, reward: 2, done: false },
-                        { id: 'feed', text: '餵食倉鼠 3 次', target: 3, current: 0, reward: 3, done: false }
-                    ]
-                };
-                savePetData();
+            const q = petData.quests;
+            if (q && q.date === today && q.v === QUEST_VERSION) return;
+
+            // 日期當種子：同一天抽到的一定一樣，不然每次重整都換一批，
+            // 做到一半的進度就沒意義了
+            const rnd = questRand(farmDay());
+            const pool = QUEST_POOL.slice();
+            const list = [];
+            for (let k = 0; k < 3 && pool.length; k++) {
+                const it = pool.splice(Math.floor(rnd() * pool.length), 1)[0];
+                const n = it.lo + Math.floor(rnd() * (it.hi - it.lo + 1));
+                list.push({
+                    id: it.id, text: it.text.replace('{n}', n),
+                    target: n, current: 0, reward: it.reward, done: false
+                });
             }
+            petData.quests = { date: today, v: QUEST_VERSION, list: list, bonus: false };
+            savePetData();
         }
-        
+
         function updateQuestProgress(id, amount) {
-            if(!petData.quests) return;
+            if (!petData.quests) return;
             const q = petData.quests.list.find(x => x.id === id);
-            if(q && !q.done) {
-                q.current += amount;
-                if(q.current >= q.target) {
-                    q.current = q.target;
-                    q.done = true;
-                    showAchievementToast(`完成任務：${q.text}！獲得 ${q.reward} 💰`);
-                    petData.coins += q.reward;
+            if (!q || q.done) return;
+
+            q.current += amount;
+            if (q.current >= q.target) {
+                q.current = q.target;
+                q.done = true;
+                showAchievementToast(`完成任務：${q.text}！獲得 ${q.reward} 💰`);
+                petData.coins += q.reward;
+                snd('success', 660, 'sine', .1);
+
+                // 三件全做完再給一筆。最後一件才是最難撐的，要有值得的理由
+                if (!petData.quests.bonus && petData.quests.list.every(x => x.done)) {
+                    petData.quests.bonus = true;
+                    petData.coins += QUEST_ALL_BONUS;
+                    setTimeout(() => {
+                        gameToast(`🏆 今日挑戰全破！額外 +${QUEST_ALL_BONUS} 💰`, 'good');
+                        snd('levelup', 800, 'sine', .3);
+                        if (typeof confetti === 'function') {
+                            confetti({ particleCount: 140, spread: 90 });
+                        }
+                    }, 1200);
                 }
-                savePetData();
-                updatePetUI();
             }
+            savePetData();
+            updatePetUI();
+            if (typeof refreshBoard === 'function') refreshBoard();
         }
         
         function openQuests() {
@@ -4775,6 +5180,18 @@
                     </div>
                 `;
             });
+            // 三件全做完的額外獎金也畫成一列，她才知道還有這筆
+            const allDone = petData.quests.list.every(x => x.done);
+            const bonusCol = allDone ? '#2ed573' : '#c9954c';
+            list.innerHTML += `
+                <div style="margin-top:6px; background:#fff8e8; padding:13px 15px; border-radius:15px;
+                            border-left:5px solid ${bonusCol}; display:flex;
+                            justify-content:space-between; align-items:center;">
+                    <span style="font-weight:bold; color:#8a5f37;">🏆 三件全做完</span>
+                    <span style="color:#e67e22; font-weight:bold;">
+                        ${allDone ? '已領取 ✓' : `+${QUEST_ALL_BONUS} 💰`}</span>
+                </div>`;
+
             document.getElementById('quest-modal').style.display = 'flex';
             document.getElementById('btn-daily-quest').classList.remove('bounce'); // 取消跳動
         }
@@ -5553,6 +5970,17 @@
     </div>
 
     <!-- 設定：震動與全螢幕 -->
+    <!-- 禮物店。點柵欄後的小動物進來 -->
+    <div id="gift-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:92%; max-width:420px; padding:20px;">
+            <button id="gift-close" type="button" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 id="gift-title" style="color:#c9564c; margin-top:10px;">送禮物</h3>
+            <p id="gift-hearts" style="color:#666; font-size:.9rem; margin:6px 0 4px;"></p>
+            <p style="color:#8a7b98; font-size:.78rem; margin:0;">一天送一次。送到牠最喜歡的，好感度加倍</p>
+            <div id="gift-list" class="seed-list"></div>
+        </div>
+    </div>
+
     <!-- 種子行。從菜園的空田點進來，挑完就直接種下去 -->
     <div id="seed-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
         <div class="login-box" style="position:relative; width:92%; max-width:420px; padding:20px;">

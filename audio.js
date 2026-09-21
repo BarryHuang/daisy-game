@@ -195,7 +195,64 @@
   };
   var CHORD = { maj: [0, 4, 7], min: [0, 3, 7] };
 
-  var music = { tune: null, name: null, timer: 0, next: 0, step: 0, playing: false };
+  var music = { tune: null, name: null, timer: 0, next: 0, step: 0, playing: false, src: null };
+
+  // ==================================================================
+  // 真的音樂檔（選用）
+  // ==================================================================
+  // 即時演奏的好處是幾乎不佔空間，缺點是聽久了還是電子味。
+  // 所以留一條路：music/<地圖>.mp3（或 .ogg）放得進去就用音檔，
+  // 放不進去就照舊即時演奏。**不放檔案完全不影響**，404 就靜靜退回去。
+  //
+  // 要放的話請注意：這是離線 PWA，Service Worker 會整包快取。
+  // 七首兩分鐘的 MP3 大概 20MB，太肥 —— 每首剪成 30~60 秒可循環、
+  // 64~96kbps 單聲道，壓到 300~500KB 左右比較合適，
+  // 然後把檔名加進 sw.js 的快取清單。
+  // 授權挑 CC0／公共領域最省事（這個 repo 是公開的，等於在散布這些檔案）。
+  var TRACK_EXT = ['.mp3', '.ogg'];
+  var tracks = {};        // name -> AudioBuffer
+  var trackMiss = {};     // name -> true（試過了，沒有這個檔，別再抓）
+
+  /** 試著載入某張地圖的音樂檔。沒有就回 null，呼叫端自己退回即時演奏。 */
+  function loadTrack(name) {
+    if (tracks[name]) return Promise.resolve(tracks[name]);
+    if (trackMiss[name]) return Promise.resolve(null);
+    var i = 0;
+    var tryNext = function () {
+      if (i >= TRACK_EXT.length) { trackMiss[name] = true; return null; }
+      var url = 'music/' + name + TRACK_EXT[i++];
+      return fetch(url)
+        .then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject(); })
+        .then(function (ab) {
+          return new Promise(function (res, rej) {
+            var pr = ctx.decodeAudioData(ab, res, rej);
+            if (pr && pr.then) pr.then(res, rej);
+          });
+        })
+        .then(function (buf) { tracks[name] = buf; return buf; })
+        .catch(tryNext);
+    };
+    return Promise.resolve(tryNext());
+  }
+
+  /** 用音檔播，無縫循環。回傳 true 表示接手了 */
+  function playTrack(name, buf) {
+    stopTrack();
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    src.connect(musicBus);
+    src.start();
+    music.src = src;
+    return true;
+  }
+
+  function stopTrack() {
+    if (!music.src) return;
+    try { music.src.stop(); } catch (e) {}
+    try { music.src.disconnect(); } catch (e) {}
+    music.src = null;
+  }
 
   function voice(type, freq, t, dur, vol, cutoff, send) {
     var o = ctx.createOscillator();
@@ -244,7 +301,7 @@
   }
 
   function tick() {
-    if (!music.playing || !ctx) return;
+    if (!music.playing || !ctx || music.src) return;   // 音檔接手了就不用排程
     var tune = music.tune;
     var bpb = tune.beatsPerBar || 4;
     var barLen = (60 / tune.bpm) * bpb;
@@ -269,13 +326,27 @@
     if (music.playing && music.name === name) return;
 
     musicStopTimer();
+    stopTrack();
     music.tune = tune; music.name = name;
-    music.step = 0;
-    music.next = c.currentTime + 0.12;
     music.playing = true;
     musicBus.gain.cancelScheduledValues(c.currentTime);
     musicBus.gain.setValueAtTime(Math.max(0.0001, musicBus.gain.value), c.currentTime);
     musicBus.gain.linearRampToValueAtTime(0.5, c.currentTime + 1.2);   // 淡入
+
+    // 先問有沒有音檔。這是非同步的，所以中間先讓即時演奏頂著 ——
+    // 不然第一次切地圖會有一兩秒的空白。音檔回來了再無縫換手。
+    startSequencer(c);
+    loadTrack(name).then(function (buf) {
+      if (!buf) return;                                  // 沒有這首的音檔，繼續演奏
+      if (!music.playing || music.name !== name) return; // 等的時候又換地圖了
+      musicStopTimer();
+      playTrack(name, buf);
+    });
+  }
+
+  function startSequencer(c) {
+    music.step = 0;
+    music.next = c.currentTime + 0.12;
     music.timer = setInterval(tick, 60);
     tick();
   }
@@ -290,7 +361,8 @@
     musicBus.gain.setValueAtTime(musicBus.gain.value, ctx.currentTime);
     musicBus.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
     music.playing = false;
-    setTimeout(musicStopTimer, 600);
+    music.name = null;
+    setTimeout(function () { musicStopTimer(); stopTrack(); }, 600);
   }
 
   /** 唸單字的時候把音樂壓小聲，不然聽不清楚發音 */

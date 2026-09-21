@@ -660,16 +660,50 @@
     100%     { opacity: 0; transform: translate(38px, 34px); }
 }
 
-/* 柵欄後探頭的小動物。位置由 JS 隨機挑柵欄的空隙 */
+/* 柵欄後的小動物朋友。位置由 JS 隨機挑柵欄的空隙。
+   以前是 17 秒才探頭兩秒的純裝飾（pointer-events:none），現在可以點了，
+   所以改成一直看得到、只是上下晃 —— 要在那兩秒內點中，對小二生只是挫折。 */
 .peeker {
-    position: absolute; z-index: 1; font-size: 1.15rem; line-height: 1;
-    pointer-events: none; opacity: 0;
-    animation: peek 17s ease-in-out infinite;
+    position: absolute; z-index: 1; line-height: 1; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center;
+    /* 小二生的手指需要點空間。padding 撐出可以點的範圍，
+       負的 margin 把它拉回來，視覺位置不受影響。 */
+    padding: 10px; margin: -10px;
+    background: none; border: 0; font-family: inherit;
+    animation: peek 3.6s ease-in-out infinite;
 }
-@keyframes peek {
-    0%, 86%, 100% { opacity: 0; transform: translateY(10px); }
-    89%, 96%      { opacity: 1; transform: translateY(0); }
+.peeker-face { font-size: calc(30px * var(--k, 1)); filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
+.peeker-hearts { font-size: .55rem; line-height: 1; margin-top: 1px; letter-spacing: -1px; }
+/* 今天還沒送禮就冒一個小禮物提示，她才知道這裡可以互動 */
+.peeker-gift {
+    position: absolute; top: calc(-2px * var(--k, 1)); right: calc(-1px * var(--k, 1));
+    font-size: calc(15px * var(--k, 1)); opacity: 0; transition: opacity .3s ease;
+    animation: giftHint 1.8s ease-in-out infinite;
 }
+.peeker.can-gift .peeker-gift { opacity: 1; }
+.peeker.bff .peeker-face { filter: drop-shadow(0 0 6px rgba(255,180,200,.95)); }
+.peeker:active { transform: scale(.94); }
+@keyframes peek     { 50% { transform: translateY(-4px); } }
+@keyframes giftHint { 50% { transform: translateY(-3px) rotate(-8deg); } }
+
+/* 小動物頭上的對話泡泡 */
+.peeker-say {
+    position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    margin-bottom: 6px; padding: 4px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.96); color: #5a3b26;
+    font-size: .68rem; font-weight: 800; white-space: nowrap;
+    box-shadow: 0 3px 8px rgba(0,0,0,.22); pointer-events: none;
+    animation: peekSay 1.9s ease-out forwards;
+}
+@keyframes peekSay {
+    0%   { opacity: 0; transform: translate(-50%, 6px); }
+    12%  { opacity: 1; transform: translate(-50%, 0); }
+    80%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -6px); }
+}
+
+/* 禮物店裡牠最喜歡的那一樣 */
+.seed-card.fav { border-color: #ff8fb0; background: #fff2f5; }
 
 /* ---- ② 天氣 -------------------------------------------------- */
 .weather { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
@@ -1209,6 +1243,32 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
 .hamster-cage.map-arcade.time-night  { --sky1: #2e2550; --sky2: #1c1636; }
 /* 遊戲中心本來就是暗的，不用再壓一層夜色 */
 .hamster-cage.map-arcade.time-night::after { opacity: .35; }
+
+/* ===================================================================
+   公佈欄（每日挑戰）
+   =================================================================== */
+.board {
+    position: absolute; z-index: 1; transform: translateX(-50%);
+    padding: 0; border: 0; background: none; cursor: pointer;
+    font-family: inherit;
+}
+.board .bd { display: block; overflow: visible;
+    width: calc(126px * var(--k, 1)); height: calc(135px * var(--k, 1)); }
+/* 還有沒做完的挑戰就亮紅點，做完變綠勾 */
+.board-dot {
+    position: absolute; top: calc(-4px * var(--k, 1)); right: calc(2px * var(--k, 1));
+    min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px;
+    background: #2ed573; color: #fff; border: 2px solid #fff;
+    font-size: .68rem; font-weight: 900; line-height: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.board.has-new .board-dot { background: #e0714c; animation: boardPing 1.6s ease-in-out infinite; }
+@keyframes boardPing { 50% { transform: scale(1.18); } }
+.board:active { transform: translateX(-50%) scale(.97); }
+
+@media (prefers-reduced-motion: reduce) {
+    .board.has-new .board-dot { animation: none; }
+}
 
 /* ===================================================================
    後院菜園
