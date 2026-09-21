@@ -359,8 +359,7 @@
                 clearTimeout(cycleTimer);
                 h.querySelector('.mole-emoji').textContent = '😵';
                 splash(h, '💥');
-                playTone(700, 'sine', 0.12);
-                setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+                if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0.15), 110);
 
                 good++;
                 combo++;
@@ -385,7 +384,7 @@
                 combo = 0;
                 h.querySelector('.mole-emoji').textContent = '😝';
                 splash(h, '💨');
-                playTone(200, 'sawtooth', 0.18);
+                snd('error', 200, 'sawtooth', 0.18);
                 updateStats();
                 // 打錯兩次算這題沒過，公布答案再前進
                 if (wrongThisRound >= 2) {

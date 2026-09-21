@@ -416,13 +416,13 @@
             stopClaw();
             setPad(false);
 
-            playTone(300, 'square', 0.1);
+            snd('click', 300, 'square', 0.1);
             ropeEl.style.height = REACH + 'px';
             await wait(800);
             if (token !== gameToken) return finishMove();
 
             clawEl.classList.add('closed');
-            playTone(520, 'square', 0.08);
+            snd('click', 520, 'square', 0.08);
             await wait(280);
             if (token !== gameToken) return finishMove();
 
@@ -440,7 +440,7 @@
             if (!got) {
                 clawEl.classList.remove('closed');
                 say('爪子撲空了！再對準一點 🤏');
-                playTone(180, 'sawtooth', 0.2);
+                snd('error', 180, 'sawtooth', 0.2);
                 busy = false; setPad(true);
                 return;
             }
@@ -461,8 +461,7 @@
 
             clawEl.classList.remove('closed');
             heldEl.textContent = '';
-            playTone(700, 'sine', 0.12);
-            setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+            if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0.15), 110);
 
             current.done = true;
             good++; combo++;
@@ -502,7 +501,7 @@
             got.taken = false;
             got.el.style.opacity = '1';
             got.el.style.bottom = '10px';
-            playTone(200, 'sawtooth', 0.2);
+            snd('error', 200, 'sawtooth', 0.2);
 
             wrongThisRound++; combo = 0;
             const m = meaningOf(got.word);

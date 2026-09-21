@@ -31,6 +31,7 @@
          所以她手機上一直是系統預設字體。中文維持系統字型。 -->
     <link rel="stylesheet" href="fx.css">
     <script src="./fx.js"></script>
+    <script src="./audio.js"></script>
 </head>
 <body>
 
@@ -896,7 +897,7 @@
             t.className = 'gt-item' + (kind ? ' ' + kind : '');
             t.textContent = msg;
             host.appendChild(t);
-            playTone(kind === 'bad' ? 260 : 620, 'sine', .08);
+            snd(kind === 'bad' ? 'error' : 'pop', kind === 'bad' ? 260 : 620, 'sine', .08);
             setTimeout(() => {
                 t.classList.add('out');
                 setTimeout(() => t.remove(), 320);
@@ -943,12 +944,30 @@
             rememberWorld(true);
             toggleImmersive(true);
             feelHaptic(12);
+            snd('door');
+            playMapMusic();
         }
         function exitPetWorld() {
             rememberWorld(false);
             toggleDrawer(false);
             toggleImmersive(false);
+            if (window.daisyAudio) window.daisyAudio.musicStop();
         }
+
+        /**
+         * 每張地圖一首背景音樂。只有人在世界裡才放 —— 主畫面是拼字和測驗，
+         * 配樂會蓋掉單字發音。分頁切走（切到別的 App、鎖螢幕）也要停，
+         * 不然音樂會在背景一直演奏。
+         */
+        function playMapMusic() {
+            if (!window.daisyAudio || !immersiveOn()) return;
+            window.daisyAudio.musicPlay(currentMap);
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (!window.daisyAudio) return;
+            if (document.hidden) window.daisyAudio.musicStop();
+            else if (immersiveOn()) playMapMusic();
+        });
 
         /** 重整前人在世界裡的話，載入完就直接回到世界 */
         function restoreWorldIfNeeded() {
@@ -1042,6 +1061,10 @@
             syncFeelUI();
             if (key === 'shake' && FEEL.shake) screenShake();      // 打開時示範一下
             if (key === 'haptic' && FEEL.haptic) feelHaptic(20);
+            if (key === 'sfx' && FEEL.sfx) snd('click', 660, 'sine', .08);
+            if (key === 'music' && window.daisyAudio) {
+                window.daisyAudio.refresh(immersiveOn() ? currentMap : null);
+            }
         }
 
         function syncFeelUI() {
@@ -1051,6 +1074,8 @@
             };
             set('sw-shake', FEEL.shake);
             set('sw-haptic', FEEL.haptic);
+            set('sw-sfx', FEEL.sfx);
+            set('sw-music', FEEL.music);
         }
 
         // ================================================================
@@ -1061,7 +1086,7 @@
         // 存 localStorage 不存雲端 —— 這是「這台裝置舒不舒服」的偏好，
         // 平板和手機本來就可能想要不一樣的設定。
         const FEEL_KEY = 'daisy_feel';
-        const FEEL = Object.assign({ shake: false, haptic: true }, (() => {
+        const FEEL = Object.assign({ shake: false, haptic: true, sfx: true, music: true }, (() => {
             try { return JSON.parse(localStorage.getItem(FEEL_KEY) || '{}'); }
             catch (e) { return {}; }
         })());
@@ -1474,7 +1499,7 @@
             hamVY = jumpVelocity() * (power || 1);
             hamMode = 'air';
             setPose('rising');
-            playTone(520, 'sine', .07);
+            snd('jump', 520, 'sine', .07);
             physWake();
             return true;
         }
@@ -1493,7 +1518,7 @@
                     spawnDust(hamX, hr.bottom - wr.top - 14, 3);
                 } catch (e) { /* 量不到就算了，別擋住落地 */ }
             }
-            playTone(300, 'sine', .06);
+            snd('land', 300, 'sine', .06);
         }
 
         /**
@@ -1773,6 +1798,7 @@
         /** 依 currentMap 重建整個場景。換地圖、開全螢幕、轉向都會叫到 */
         function applyMap(id) {
             currentMap = MAPS[id] ? id : 'home';
+            if (typeof playMapMusic === 'function') playMapMusic();
             const m = curMap();
             const cage = cageEl();
 
@@ -1970,8 +1996,7 @@
                 // 演一小段。沒有專屬動作就用 happy（跳兩下）
                 const pose = act.pose === 'eat' ? 'eat' : 'happy';
                 ham.classList.add(pose);
-                playTone(520, 'sine', .09);
-                setTimeout(() => playTone(660, 'sine', .09), 130);
+                if (snd('success', 520, 'sine', .09)) setTimeout(() => playTone(660, 'sine', .09), 130);
                 createFloatingEmoji(act.emoji, 1400, -40);
                 if (typeof fxBurst === 'function' && !actReduced()) {
                     fxBurst(ham.getBoundingClientRect(), 10);
@@ -2249,7 +2274,7 @@
             const TURNS = 1.75, MS = 7200;
             return new Promise((resolve) => {
                 if (actReduced()) { setTimeout(resolve, 500); return; }
-                playTone(440, 'sine', .12);
+                snd('ride', 440, 'sine', .12);
                 let topShown = false;
                 const t0 = performance.now();
                 const step = (now) => {
@@ -2261,12 +2286,12 @@
                     seat(a);
                     if (!topShown && e > 0.28) {           // 第一次到最高點
                         topShown = true;
-                        playTone(880, 'sine', .12);
+                        snd('sparkle', 880, 'sine', .12);
                         if (typeof fxBurst === 'function') fxBurst(ham.getBoundingClientRect(), 12);
                         createFloatingEmoji('✨', 1200, -30);
                     }
                     if (t < 1) requestAnimationFrame(step);
-                    else { el.style.setProperty('--a', '0'); seat(0); playTone(330, 'sine', .12); resolve(); }
+                    else { el.style.setProperty('--a', '0'); seat(0); snd('land', 330, 'sine', .12); resolve(); }
                 };
                 requestAnimationFrame(step);
             });
@@ -2324,7 +2349,7 @@
                 if (actReduced()) {
                     foes.forEach(f => f.remove()); mine.remove(); setTimeout(resolve, 500); return;
                 }
-                playTone(300, 'square', .1);
+                snd('ride', 300, 'square', .1);
                 let last = performance.now();
                 const t0 = last;
                 const step = (now) => {
@@ -2348,7 +2373,7 @@
                             mine.classList.add('hit');
                             f.el.classList.remove('hit'); void f.el.offsetWidth;
                             f.el.classList.add('hit');
-                            playTone(180, 'square', .07);
+                            snd('bump', 180, 'square', .07);
                             feelHaptic(10);
                             screenShake();
                             if (typeof fxBurst === 'function') fxBurst(mine.getBoundingClientRect(), 8);
@@ -2365,7 +2390,7 @@
                     else {
                         mine.remove(); foes.forEach(f => f.remove());
                         hamY = 0; paintHamster();
-                        playTone(520, 'sine', .12);
+                        snd('success', 520, 'sine', .12);
                         resolve();
                     }
                 };
@@ -2421,8 +2446,7 @@
                 await hamsterWalkTo(c.x * worldWidth(), 160, (c.y || 0) * usableH());
 
                 if (el) el.classList.add('on');
-                playTone(660, 'square', .07);
-                setTimeout(() => playTone(880, 'square', .07), 110);
+                if (snd('click', 660, 'square', .07)) setTimeout(() => playTone(880, 'square', .07), 110);
                 await wait(320);
 
                 // 跳進螢幕：縮小 + 往機台的高度靠過去
@@ -2504,7 +2528,7 @@
                 }
 
                 curtain(true, MAPS[id]);
-                playTone(520, 'sine', .1);
+                snd('whoosh', 520, 'sine', .1);
                 await wait(actReduced() ? 60 : 380);
 
                 petData.map = id;
@@ -2523,7 +2547,7 @@
 
                 await wait(actReduced() ? 60 : 420);
                 curtain(false);
-                playTone(660, 'sine', .1);
+                snd('door', 660, 'sine', .1);
                 // 往世界裡面走幾步，才不會卡在門邊
                 hamsterWalkTo(hamX + (enterLeft ? 1 : -1) * worldWidth() * 0.08, 130, 0);
             } catch (e) {
@@ -3019,7 +3043,7 @@
                 if(itemId === 'water') {
                     const hamster = document.getElementById('hamster');
                     hamster.classList.add('happy');
-                    playTone(800, 'sine', 0.1); setTimeout(()=>playTone(900, 'sine', 0.1), 150);
+                    if (snd('splash', 800, 'sine', 0.1)) setTimeout(()=>playTone(900, 'sine', 0.1), 150);
                     createFloatingEmoji('💧', 1200, -30);
                     addHappiness(5);
                     setTimeout(() => hamster.classList.remove('happy'), 1000);
@@ -3028,7 +3052,7 @@
                     const hamster = document.getElementById('hamster');
                     if(hamster.classList.contains('hide-in-house')) return;
                     hamster.classList.add('hide-in-house');
-                    playTone(400, 'sine', 0.2);
+                    snd('door', 400, 'sine', 0.2);
                     createFloatingEmoji('🏡', 1500, -40);
                     addHappiness(10);
                     setTimeout(() => {
@@ -3042,9 +3066,10 @@
                     const hamster = document.getElementById('hamster');
                     if(hamster.classList.contains('slide-down')) return;
                     hamster.classList.add('slide-down');
-                    playTone(600, 'triangle', 0.1);
-                    setTimeout(() => playTone(500, 'triangle', 0.1), 200);
-                    setTimeout(() => playTone(400, 'triangle', 0.1), 400);
+                    if (snd('whoosh', 600, 'triangle', 0.1)) {
+                        setTimeout(() => playTone(500, 'triangle', 0.1), 200);
+                        setTimeout(() => playTone(400, 'triangle', 0.1), 400);
+                    }
                     createFloatingEmoji('😆', 1500, -40);
                     addHappiness(15);
                     setTimeout(() => {
@@ -3066,7 +3091,7 @@
                 
                 // 放個慶祝煙火
                 confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 , x: 0.75} }); 
-                playTone(600, 'sine', 0.1); setTimeout(()=>playTone(800, 'sine', 0.2), 150);
+                if (snd('success', 600, 'sine', 0.1)) setTimeout(()=>playTone(800, 'sine', 0.2), 150);
             } else {
                 gameToast(`金幣還不夠買 ${itemName}，要 ${cost} 💰`, 'bad');
             }
@@ -3120,6 +3145,20 @@
             }
         }
 
+        /**
+         * 播音效。先試真的音檔（audio.js / sfx/*.wav），檔案還沒載好才退回
+         * 舊的 playTone() 合成音，所以第一次點畫面那幾下仍然有聲音。
+         * 使用者把音效關掉時 sfx() 回 true，這裡就整個安靜，不會漏出嗶聲。
+         *
+         * 回傳 true = 這次是用合成音頂替的。原本用兩三個 playTone 串成一小段
+         * 旋律的地方就靠它判斷：音檔播得出來就只播音檔，別再疊一串嗶聲上去。
+         */
+        function snd(name, freq, type, duration) {
+            try { if (window.sfx && window.sfx(name)) return false; } catch (e) { }
+            if (freq) playTone(freq, type || 'sine', duration || 0.1);
+            return true;
+        }
+
         function playTone(freq, type, duration) {
             try {
                 if(!audioCtx) {
@@ -3146,6 +3185,9 @@
             // 但 TTS 看到全大寫會當成縮寫，一個字母一個字母唸出來 ——
             // "WINDOW BOX" 會變成 "W-I-N-D-O-W B-O-X"（回報過的問題）。
             w = String(w).toLowerCase();
+
+            // 背景音樂壓小聲，不然蓋掉發音。字越長唸越久，時間跟著字長算。
+            if (window.daisyAudio) window.daisyAudio.duck(900 + w.length * 90);
 
             // 判斷是否為 iOS 裝置 (Safari/Webview 環境下 .catch() 的非同步會導致失去 User Gesture 權限)
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -3270,7 +3312,7 @@
                 savePetData();
                 updatePetUI();
                 confetti({ particleCount: 200, spread: 160 });
-                playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(783.99, 'sine', 0.2), 200);
+                if (snd('levelup', 523.25, 'sine', 0.1)) { setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(783.99, 'sine', 0.2), 200); }
                 document.getElementById('keyboard').innerHTML = `<button onclick="startLevel()" style="grid-column: 1 / -1; padding: 20px; font-size: 1.5rem; background: var(--primary); color: white; border: none; border-radius: 10px; cursor:pointer;">再玩一次</button>`;
                 return;
             }
@@ -3333,7 +3375,7 @@
             const expect = targetLetters[currentIndex];
             if(letter === expect) {
                 // 對了
-                playTone(600, 'sine', 0.1);
+                snd('pop', 600, 'sine', 0.1);
                 const slots = document.getElementsByClassName('slot');
                 slots[currentIndex].classList.remove('current');
                 slots[currentIndex].classList.add('filled');
@@ -3354,7 +3396,7 @@
                 // 錯了，抖動鍵盤按鈕，不扣分
                 mistakeCount++;
                 recordMistake(currentWord);
-                playTone(200, 'sawtooth', 0.15);
+                snd('error', 200, 'sawtooth', 0.15);
                 const btn = document.getElementById(`key-${letter}`);
                 if (typeof fxShake === 'function') fxShake(btn);
                 if(btn) {
@@ -3387,7 +3429,7 @@
             const expectedLetter = targetLetters[currentIndex];
             const btn = document.getElementById(`key-${expectedLetter}`);
             if (btn) {
-                playTone(500, 'triangle', 0.1);
+                snd('sparkle', 500, 'triangle', 0.1);
                 // Highlight blink animation
                 btn.style.transition = 'all 0.2s';
                 btn.style.backgroundColor = '#ffeb3b';
@@ -3515,13 +3557,13 @@
             const hamster = document.getElementById('hamster');
             hamster.classList.remove('sleep');
             document.getElementById('btn-sleep').querySelector('span').textContent = "睡覺 💤";
-            playTone(800, 'sine', 0.1);
+            snd('pop', 800, 'sine', 0.1);
         }
 
         function petHamster() {
             if(isRunning) return;
             wakeUp();
-            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.15), 100);
+            if (snd('sparkle', 900, 'sine', 0.1)) setTimeout(()=>playTone(1000, 'sine', 0.15), 100);
             const hamster = document.getElementById('hamster');
             
             const mouth = hamster.querySelector('.mouth');
@@ -3535,7 +3577,7 @@
             // 摸摸驚喜：15% 機率掉落金幣
             if(Math.random() < 0.15) {
                 setTimeout(() => {
-                    playTone(800, 'sine', 0.1);
+                    snd('coin', 800, 'sine', 0.1);
                     createFloatingEmoji('🪙', 1500, -50);
                     petData.coins += 1;
                     savePetData();
@@ -3637,7 +3679,7 @@
             savePetData();
             updatePetUI();
             
-            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 100); setTimeout(()=>playTone(1200, 'sine', 0.3), 200);
+            if (snd('success', 800, 'sine', 0.1)) { setTimeout(()=>playTone(1000, 'sine', 0.1), 100); setTimeout(()=>playTone(1200, 'sine', 0.3), 200); }
             confetti({ particleCount: 50, origin: { x: 0.5, y: 0.4 } });
             createFloatingEmoji('🦋 +10 💰', 2000, -40);
         }
@@ -3810,7 +3852,7 @@
 
                 // ── 1. 蓄力：往下壓一下，看向跑輪
                 ham.classList.add('acting', 'crouch');
-                playTone(220, 'triangle', .08);
+                snd('click', 220, 'triangle', .08);
                 await wait(230);
                 ham.classList.remove('crouch');
 
@@ -3847,7 +3889,7 @@
                 wrap.style.transition = ease;
                 wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,' + dy + 'px) scaleX('
                                      + (run.facing) + ')';
-                playTone(520, 'sine', .1);
+                snd('jump', 520, 'sine', .1);
                 await wait(320);
 
                 // ── 4. 在輪子裡跑：輪子加速 → 尖峰 → 減速
@@ -3856,7 +3898,7 @@
                 await spinWheelRamp(wheel, 2600, 900, () => {
                     // 到尖峰速度才開始震動和冒汗，前面是加速期
                     screenShake(cage);
-                    playTone(340, 'triangle', .12);
+                    snd('wheel', 340, 'triangle', .12);
                     sweatTimer = setInterval(() => {
                         const hb = rectIn(ham), wn = rectIn(wheel);
                         spawnSweat(hb.x + hb.w * .22, hb.y - hb.h * .5 + 8);
@@ -3873,7 +3915,7 @@
                 wrap.style.transition = 'transform .34s cubic-bezier(.34,1.56,.64,1)';
                 wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,-26px) scaleX('
                                      + run.facing + ')';
-                playTone(660, 'sine', .1);
+                snd('jump', 660, 'sine', .1);
                 await wait(200);
                 ham.style.transform = '';
                 wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,0px) scaleX('
@@ -3882,7 +3924,7 @@
                 const hb2r = rectIn(ham);
                 const hb2 = ham.getBoundingClientRect();
                 spawnDust(hb2r.x, hb2r.bottom - 14, 6);
-                playTone(300, 'sine', .12);
+                snd('land', 300, 'sine', .12);
                 feelHaptic([16, 40, 16]);
 
                 // ── 6. 領獎：快樂度 +10，數字往上飄
@@ -3891,7 +3933,7 @@
                     fxFloat('+10 快樂 💖', hb2, '#ff8fb0');
                     fxBurst(hb2, 14);
                 }
-                setTimeout(() => playTone(880, 'sine', .12), 90);
+                setTimeout(() => snd('sparkle', 880, 'sine', .12), 90);
                 await wait(620);
 
                 // ── 7. 走回畫面中央，開心跳一下
@@ -3928,7 +3970,7 @@
                 isSleeping = true;
                 hamster.classList.add('sleep');
                 sleepBtnSpan.textContent = "叫醒 ☀️";
-                playTone(200, 'sine', 0.5); // ZZZ 聲音
+                snd('sleep', 200, 'sine', 0.5); // ZZZ 聲音
                 
                 // 定期冒出 Zzz
                 let zzzInterval = setInterval(() => {
@@ -3988,7 +4030,7 @@
                 petData.level += 1;
                 petData.exp = 0;
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 , x: 0.75} }); // 在右側放煙火
-                playTone(800, 'sine', 0.3); // Level up sound
+                snd('levelup', 800, 'sine', 0.3); // Level up sound
                 gameToast(`🎉 升級了！Level ${petData.level}`, 'good');
             }
             
@@ -3997,7 +4039,7 @@
             updateQuestProgress('feed', 1);
             
             // 動畫與音效
-            playTone(400, 'square', 0.1); setTimeout(()=>playTone(450, 'square', 0.1), 150);
+            if (snd('eat', 400, 'square', 0.1)) setTimeout(()=>playTone(450, 'square', 0.1), 150);
             
             const hamster = document.getElementById('hamster');
             hamster.classList.remove('eat');
@@ -4027,7 +4069,7 @@
             updateQuestProgress('bath', 1);
             
             // 泡泡動畫音效
-            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 150); setTimeout(()=>playTone(1200, 'sine', 0.2), 300);
+            if (snd('splash', 900, 'sine', 0.1)) { setTimeout(()=>playTone(1000, 'sine', 0.1), 150); setTimeout(()=>playTone(1200, 'sine', 0.2), 300); }
             
             // 產生泡泡 Emoji
             createFloatingEmoji('🫧', 1500, -50);
@@ -4055,7 +4097,7 @@
             }
             
             if(newlyUnlocked) {
-                playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(1046.50, 'sine', 0.3), 200);
+                if (snd('levelup', 523.25, 'sine', 0.1)) { setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(1046.50, 'sine', 0.3), 200); }
                 confetti({ particleCount: 150, spread: 100 });
                 savePetData();
             }
@@ -4118,7 +4160,7 @@
                 daysDiv.innerHTML += html;
             }
             confetti({ particleCount: 100, spread: 70 });
-            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.2), 150);
+            if (snd('coin', 800, 'sine', 0.1)) setTimeout(()=>playTone(1000, 'sine', 0.2), 150);
             document.getElementById('login-reward-modal').style.display = 'flex';
         }
         function closeLoginReward() { document.getElementById('login-reward-modal').style.display = 'none'; }
@@ -4207,7 +4249,7 @@
             box.onclick = null;
             box.className = 'gacha-box'; // 停止震動
             
-            playTone(400, 'triangle', 0.1); setTimeout(()=>playTone(500, 'triangle', 0.1), 150); setTimeout(()=>playTone(800, 'triangle', 0.3), 300);
+            if (snd('sparkle', 400, 'triangle', 0.1)) { setTimeout(()=>playTone(500, 'triangle', 0.1), 150); setTimeout(()=>playTone(800, 'triangle', 0.3), 300); }
             confetti({ particleCount: 200, spread: 160 });
             
             // 決定獎勵
@@ -4284,7 +4326,7 @@
             bubble.textContent = greetings[Math.floor(Math.random() * greetings.length)];
             bubble.style.display = 'block';
             
-            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 150);
+            if (snd('pop', 800, 'sine', 0.1)) setTimeout(()=>playTone(1000, 'sine', 0.1), 150);
             
             petData.coins += 5; // 送 5 塊錢
             savePetData();
@@ -4646,15 +4688,14 @@
                 const h = document.getElementById('hamster');
                 h.classList.add('happy');
                 setTimeout(() => h.classList.remove('happy'), 900);
-                playTone(660, 'sine', 0.1);
-                setTimeout(() => playTone(880, 'sine', 0.12), 120);
+                if (snd('success', 660, 'sine', 0.1)) setTimeout(() => playTone(880, 'sine', 0.12), 120);
 
                 showMidtermFeedback('✅ 答對了！+3 💰', '#e8f5e9', '#2e7d32');
             } else {
                 clickedBtn.style.background  = '#ffebee';
                 clickedBtn.style.borderColor = '#e53935';
                 clickedBtn.style.color       = '#c62828';
-                playTone(200, 'sawtooth', 0.12);
+                snd('error', 200, 'sawtooth', 0.12);
 
                 showMidtermFeedback(`❌ 正確答案是「${correct}」`, '#ffebee', '#c62828');
             }
@@ -4708,9 +4749,10 @@
             // Confetti for ≥70%
             if (pct >= 0.7) {
                 confetti({ particleCount: 160, spread: 100, origin: { y: 0.55 } });
-                playTone(523, 'sine', 0.1);
-                setTimeout(() => playTone(659, 'sine', 0.1), 100);
-                setTimeout(() => playTone(784, 'sine', 0.2), 200);
+                if (snd('levelup', 523, 'sine', 0.1)) {
+                    setTimeout(() => playTone(659, 'sine', 0.1), 100);
+                    setTimeout(() => playTone(784, 'sine', 0.2), 200);
+                }
             }
         }
 
@@ -4845,15 +4887,14 @@
                 const h = document.getElementById('hamster');
                 h.classList.add('happy');
                 setTimeout(() => h.classList.remove('happy'), 900);
-                playTone(660, 'sine', 0.1);
-                setTimeout(() => playTone(880, 'sine', 0.12), 120);
+                if (snd('success', 660, 'sine', 0.1)) setTimeout(() => playTone(880, 'sine', 0.12), 120);
 
                 showFinalFeedback('✅ 答對了！+3 💰', '#e8f5e9', '#2e7d32');
             } else {
                 clickedBtn.style.background  = '#ffebee';
                 clickedBtn.style.borderColor = '#e53935';
                 clickedBtn.style.color       = '#c62828';
-                playTone(200, 'sawtooth', 0.12);
+                snd('error', 200, 'sawtooth', 0.12);
 
                 showFinalFeedback(`❌ 正確答案是「${correct}」`, '#ffebee', '#c62828');
             }
@@ -4900,9 +4941,10 @@
 
             if (pct >= 0.7) {
                 confetti({ particleCount: 160, spread: 100, origin: { y: 0.55 } });
-                playTone(523, 'sine', 0.1);
-                setTimeout(() => playTone(659, 'sine', 0.1), 100);
-                setTimeout(() => playTone(784, 'sine', 0.2), 200);
+                if (snd('levelup', 523, 'sine', 0.1)) {
+                    setTimeout(() => playTone(659, 'sine', 0.1), 100);
+                    setTimeout(() => playTone(784, 'sine', 0.2), 200);
+                }
             }
         }
 
@@ -4958,6 +5000,20 @@
             <button onclick="closeFeel()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
             <h3 style="color:#7b1fa2; margin-top:10px;">設定 ⚙️</h3>
             <div style="margin-top:14px; text-align:left;">
+                <div class="feel-row">
+                    <span class="feel-label">音效
+                        <span class="feel-note">跳躍、吃東西、撿金幣的聲音</span>
+                    </span>
+                    <button class="feel-sw" id="sw-sfx" type="button"
+                            onclick="toggleFeel('sfx')" aria-label="音效"></button>
+                </div>
+                <div class="feel-row">
+                    <span class="feel-label">背景音樂
+                        <span class="feel-note">倉鼠世界裡每張地圖各有一首</span>
+                    </span>
+                    <button class="feel-sw" id="sw-music" type="button"
+                            onclick="toggleFeel('music')" aria-label="背景音樂"></button>
+                </div>
                 <div class="feel-row">
                     <span class="feel-label">畫面震動
                         <span class="feel-note">跑輪衝到最快時畫面會晃一下。會不舒服就關掉</span>

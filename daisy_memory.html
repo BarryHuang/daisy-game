@@ -285,7 +285,7 @@
             if (lock || el.classList.contains('flipped')) return;
             el.classList.add('flipped');
             if (data.type === 'en') speak(data.word);
-            playTone(440, 'sine', 0.08);
+            snd('click', 440, 'sine', 0.08);
 
             if (!first) { first = { el, data }; return; }
 
@@ -298,8 +298,7 @@
                 el.classList.add('matched');
                 matchedPairs++;
                 coinsEarned += 2;
-                playTone(700, 'sine', 0.12);
-                setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+                if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0.15), 110);
                 // 配對前為這個字翻錯過幾次，會影響「乾淨過關」的連對紀錄
                 if (typeof recordAttempt === 'function')
                     recordAttempt(data.word, true, miss[data.word] || 0);
@@ -309,7 +308,7 @@
                 wrongTries++;
                 miss[a.data.word] = (miss[a.data.word] || 0) + 1;
                 miss[data.word] = (miss[data.word] || 0) + 1;
-                playTone(220, 'sawtooth', 0.15);
+                snd('error', 220, 'sawtooth', 0.15);
                 a.el.classList.add('shake'); el.classList.add('shake');
                 lock = true;
                 setTimeout(() => {

@@ -393,8 +393,7 @@
                 let gain = run.dash > 0 ? 4 : 2;
                 run.coins += gain;
                 run.speed = Math.min(430, run.speed + 12);
-                playTone(760, 'sine', 0.1);
-                setTimeout(() => playTone(1040, 'sine', 0.12), 90);
+                if (snd('success', 760, 'sine', 0.1)) setTimeout(() => playTone(1040, 'sine', 0.12), 90);
                 puff('✨', run.lane);
                 if (typeof recordAttempt === 'function') recordAttempt(g.word, true, 0);
 
@@ -414,7 +413,7 @@
                 run.lives--;
                 run.speed = Math.max(150, run.speed - 30);
                 if (!run.missed.includes(g.word)) run.missed.push(g.word);
-                playTone(180, 'sawtooth', 0.22);
+                snd('error', 180, 'sawtooth', 0.22);
                 hamster.classList.remove('crash'); void hamster.offsetWidth;
                 hamster.classList.add('crash');
                 puff('💥', run.lane);

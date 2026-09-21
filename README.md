@@ -39,6 +39,7 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `mastery.js` | 每個字的答對／答錯／連對次數 |
 | `rewards.js` | `awardCoins()`：遊戲把金幣加進倉鼠存檔。用 transaction，因為倉鼠頁可能同時開著並整包寫回 `petData` |
 | `wordset.js` | 進遊戲時隨機挑一組單字集。`pickRandomCategory()` / `applyPendingWeek()` 各加一行，見下面第 12 條 |
+| `audio.js` | 音效（`sfx/*.wav`）與背景音樂（Web Audio 即時演奏）。`menu.js` 會自動載入，每一頁都有 |
 
 ### 導覽
 主頁是 `daisy_hamster.html`（PWA 的 `start_url` 也指這裡）。
@@ -296,10 +297,64 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
   （`body.immersive .dm-btn { display:none }`），她在倉鼠世界裡就摸不到選單底部
   那顆更新鈕了。兩顆按鈕走同一套流程（`menu.js` 的 `window.daisyForceRefresh`）。
 - ⚙️ 設定存在 `localStorage["daisy_feel"]`（裝置偏好，不上雲）：
+  四個開關：**音效**、**背景音樂**（都預設開）、**畫面震動**（預設關）、**手機震動**。
   **畫面震動預設關**。以前跑輪高速時整個籠子用 `.09s` 無限迴圈抖 1.5 秒，
   很煩也容易暈；現在改成撞擊那一下抖一次、0.42 秒內衰減收斂。
   手機震動另外一個開關，`fx.js` 的 `fxHaptic()` 也會讀同一個 key，
   才不會「關掉了但按鈕答錯還是會震」。
+
+### 音效與背景音樂（`audio.js` + `sfx/`）
+
+原本全站只有一個 `playTone()`：一個裸的振盪器，沒有包絡也沒有層次，
+所以每個聲音聽起來都是同一種「嗶」。現在分成兩塊，**刻意用不同做法**：
+
+**① 音效 = 真的音檔。** `sfx/` 底下 17 個 wav，由 `tools/build_sfx.py`
+用純 Python 合成（`wave` + `struct` + `math`，這台機器沒有 ffmpeg 也沒有
+numpy，外部音效素材站也被擋）。每個音都是多層波形疊加 + ADSR 包絡 +
+濾波，例如金幣是兩顆滑音的方波加一點高頻閃光、落地是低頻噗 + 濾過的白噪。
+整包 260KB，比一首 mp3 還小。
+
+| | |
+|---|---|
+| `coin` `pop` `eat` | 撿錢、冒泡、吃東西 |
+| `jump` `land` `whoosh` | 跳、落地、轉場 |
+| `levelup` `success` `error` | 升級、答對、答錯 |
+| `sparkle` `splash` `bump` | 閃亮、洗澡、碰撞 |
+| `ride` `door` `sleep` `wheel` `click` | 設施、進出門、睡覺、跑輪、按鈕 |
+
+**② 背景音樂 = Web Audio 即時演奏，不放檔案。** 一首兩分鐘的曲子壓成 mp3
+也要好幾百 KB，而這裡要「每張地圖一首」，七首就爆了。所以 `TUNES` 裡每首
+只存 `{bpm, 和弦進行, 旋律}` 幾行資料，引擎用 lookahead 排程照著彈。
+好處是無縫循環、切地圖直接換曲、整首只有幾百 bytes。
+七首各有個性：家裡 76bpm 溫暖、遊戲中心 132bpm 電玩味、遊樂園是三拍的
+旋轉木馬、沙灘 72bpm 慵懶。
+
+**怎麼呼叫**：用 `snd(name, freq, type, dur)`，不要直接用 `sfx()`。
+`snd()` 先試音檔，音檔還沒載好（第一次進站那幾秒）才退回舊的 `playTone()`，
+所以不會有「一開始完全沒聲音」的空窗。它**回傳 true 代表這次是用合成音頂替的**
+—— 原本用兩三個 `playTone` 串成一小段旋律的地方靠它判斷要不要補後面幾聲：
+
+```js
+if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+```
+
+倉鼠頁自己也定義了一份同名的 `snd()`（怕 `menu.js` 載不到就整頁壞掉），
+`menu.js` 那份會讓路。
+
+**幾個一定要注意的**：
+
+- 瀏覽器規定要有使用者動作才能出聲，所以 `AudioContext` 是第一次
+  `pointerdown`／`keydown` 才建立，音檔也是那時才開始載。
+- 分頁切走要 `musicStop()`。不停的話音樂會在背景一直演奏，而且回來時
+  `music.next` 已經落後一大截，排程迴圈會把幾十個小節塞進同一瞬間變成巨響
+  （`tick()` 裡那行重新對齊就是防這個）。
+- `speakWord()` 會 `duck()` 把音樂壓到 0.08，不然蓋掉發音。
+- 使用者關掉音效時 `sfx()` 回 **true**（「我處理掉了」），`snd()` 才不會
+  好心地補一聲 `playTone` 上去 —— 關掉就是要安靜。
+- `audio.js` 開頭有 `if (window.daisyAudio) return;`：倉鼠頁自己放了
+  `<script>`，`menu.js` 又會補一個，載兩次會有兩套音樂排程。
+- 加新音效要三個地方一起改：`tools/build_sfx.py` 加產生器、`audio.js` 的
+  `SFX_NAMES`、`sw.js` 的快取清單。
 
 ---
 
@@ -506,7 +561,7 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 3. **人工核心層** — 匯入教育部「國中小基本字彙」，用 `OVERRIDES` 機制
 
 已完成：窄欄版面（iPad 分割畫面）、語音輸入、學期分層、逐字熟練度、
-單字表匯入工具、二上（2026-2027 Fall）單字表。
+單字表匯入工具、二上（2026-2027 Fall）單字表、音效與背景音樂。
 
 ## 待處理的風險與技術債
 
@@ -518,6 +573,12 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 ---
 
 ## 建置腳本
+
+`tools/build_sfx.py` 產生 `sfx/*.wav`（純 Python，不需要任何套件）：
+
+```bash
+python3 tools/build_sfx.py     # 改完音色重跑，會覆蓋 sfx/ 底下的檔案
+```
 
 字典資料不是手寫的，由腳本產生（腳本未納入本 repo，在開發機上）：
 `build_cedict.py`（CC-CEDICT → `cedict.js`）、`build_irregular.py`（不規則

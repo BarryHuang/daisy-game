@@ -437,11 +437,12 @@
             shake = Math.min(6, shake + (c.kind === 'coin' ? 1.6 : 4));
 
             if (c.kind === 'coin') {
-                playTone(620 + Math.random() * 120, 'sine', 0.07);
+                snd('coin', 620 + Math.random() * 120, 'sine', 0.07);
                 return;
             }
-            playTone(c.kind === 'gem' ? 1200 : 880, 'sine', 0.18);
-            setTimeout(() => playTone(1500, 'sine', 0.14), 120);
+            if (snd(c.kind === 'gem' ? 'sparkle' : 'coin', c.kind === 'gem' ? 1200 : 880, 'sine', 0.18)) {
+                setTimeout(() => playTone(1500, 'sine', 0.14), 120);
+            }
             say(FACE[c.kind] + ' 掉出來了！+' + gain + ' 金幣');
             if (typeof confetti !== 'undefined')
                 confetti({ particleCount: gain * 4, spread: 70, origin: { y: 0.75 } });
@@ -855,8 +856,7 @@
             if (w === current.word) {
                 current.done = true;
                 good++; combo++;
-                playTone(700, 'sine', 0.12);
-                setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+                if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0.15), 110);
                 if (typeof recordAttempt === 'function')
                     recordAttempt(current.word, true, wrongThisRound);
 
@@ -877,7 +877,7 @@
                 setCoinBtn();
             } else {
                 wrongThisRound++; combo = 0;
-                playTone(200, 'sawtooth', 0.18);
+                snd('error', 200, 'sawtooth', 0.18);
                 btn.classList.remove('nope'); void btn.offsetWidth;
                 btn.classList.add('nope');
                 btn.classList.add('dead');
@@ -930,7 +930,7 @@
             // 不加隨機偏移：落點就是她按下去的那一刻投幣頭在的地方，
             // 偏移會讓「抓時機」這件事變得沒有意義
             spawn(x, kind, word);
-            playTone(330, 'square', 0.06);
+            snd('click', 330, 'square', 0.06);
         }
 
         function finish(token) {
