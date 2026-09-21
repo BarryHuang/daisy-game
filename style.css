@@ -1211,8 +1211,13 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
 .hamster-cage.map-arcade.time-night::after { opacity: .35; }
 
 /* ===================================================================
-   遊樂設施（摩天輪 / 碰碰車）
+   遊樂設施（摩天輪 / 旋轉木馬 / 咖啡杯 / 碰碰車）
    =================================================================== */
+/* 遊樂園有四座設施，每座大概佔世界寬的 12~16%，用 300% 會全部疊在一起。
+   所有位置都是「世界寬的比例」算出來的，所以加寬不用改任何 JS。
+   視差層夠不夠寬：前景 600% ≥ 100% + 300%×1.35 = 505% ✓、
+   中景 400% ≥ 100% + 300%×0.55 = 265% ✓、遠景 400% ≥ 175% ✓ */
+.hamster-cage.map-fair .world { width: 400%; }
 .ride {
     position: absolute; z-index: 1; transform: translateX(-50%);
     padding: 0; border: 0; background: none; cursor: pointer;
@@ -1223,6 +1228,9 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
 /* 摩天輪畫大一點（1.45 倍），倉鼠坐進吊艙才不會比整座輪子還大 */
 .ride .fw { width: calc(261px * var(--k, 1)); height: calc(305px * var(--k, 1)); }
 .ride .bp { width: calc(260px * var(--k, 1)); height: calc(120px * var(--k, 1)); }
+/* 旋轉木馬畫大一點（1.18 倍），不然倉鼠騎上去會比整座木馬還高 */
+.ride .cs { width: calc(248px * var(--k, 1)); height: calc(236px * var(--k, 1)); }
+.ride .tc { width: calc(206px * var(--k, 1)); height: calc(143px * var(--k, 1)); }
 /* 價錢牌。摩天輪很高，牌子掛在底座旁邊才點得到也看得到 */
 .ride .ride-tag {
     /* 抬到前景層（場景高的 26%）以上，不然會被前面的氣球和爆米花車蓋住；
@@ -1235,9 +1243,13 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
     box-shadow: 0 3px 8px rgba(0,0,0,.28);
     backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
 }
+/* 矮的設施（咖啡杯、碰碰車）用同一個高度的話，牌子會飄在設施上方一大截，
+   看起來跟設施沒關係。壓低到剛好在設施頂上，但仍高過前景層的氣球。 */
+.ride-teacup .ride-tag, .ride-bumper .ride-tag { bottom: calc(var(--scene-h, 300px) * .29); }
 .ride .ride-tag b { color: #ffd166; }
 .ride:active { transform: translateX(-50%) scale(.97); }
-.ride.cooling .fw, .ride.cooling .bp { filter: grayscale(.7) brightness(.85); }
+.ride.cooling .fw, .ride.cooling .bp,
+.ride.cooling .cs, .ride.cooling .tc { filter: grayscale(.7) brightness(.85); }
 .ride.cooling .ride-tag { opacity: .6; }
 
 /* 摩天輪：--a 由 JS 每幀更新。輪框正轉、吊艙反轉回來維持水平，
@@ -1256,6 +1268,43 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
 @keyframes fwIdle    { to { transform: rotate(-360deg); } }
 @keyframes fwIdleCar { to { transform: rotate(360deg); } }
 
+/* 旋轉木馬。沒人坐的時候裝飾木馬慢慢上下浮、屋頂微微轉，場景才像活的。
+   有人坐（.on）就把裝飾馬淡掉，換成 JS 每幀擺位的 .chorse。 */
+.ride .cs-horses { transition: opacity .3s ease; }
+.ride-carousel:not(.on):not(.cooling) .cs-horses { animation: csBob 3.4s ease-in-out infinite; }
+.ride-carousel.on .cs-horses { opacity: 0; }
+@keyframes csBob { 50% { transform: translateY(-5px); } }
+
+/* 真正在轉的木馬。位置、縮放、亮度全由 JS 每幀寫進 style，
+   這裡只定「絕對定位 + 以底部中央為基準」，不要再加 transform，
+   會被 JS 那行整個蓋掉。 */
+.chorse, .tcup {
+    position: absolute; z-index: 2; transform: translateX(-50%);
+    pointer-events: none; transform-origin: 50% 100%;
+}
+.chorse svg, .tcup svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* 咖啡杯：轉盤的圈圈紋路平常慢慢轉，坐上去之後 JS 接手 */
+.ride-teacup:not(.on):not(.cooling) .tc-cups { animation: tcSway 4.2s ease-in-out infinite; }
+@keyframes tcSway { 50% { transform: rotate(2.5deg); } }
+.ride .tc-cups { transform-box: view-box; transform-origin: 95px 96px; }
+.ride-teacup.on .tc-cups { opacity: 0; transition: opacity .3s ease; }
+
+/* 下車之後頭暈的那一下。整個橋段的笑點就在這裡，不要拿掉 */
+#hamster.dizzy { animation: hamDizzy .9s ease-out; }
+@keyframes hamDizzy {
+    0%   { transform: rotate(0deg); }
+    20%  { transform: rotate(-11deg) translateX(-4px); }
+    45%  { transform: rotate(10deg) translateX(5px); }
+    70%  { transform: rotate(-7deg) translateX(-3px); }
+    100% { transform: rotate(0deg); }
+}
+
+/* 坐設施的時候把前景淡掉。氣球和爆米花車就長在設施前面，不淡的話
+   倉鼠整隻被擋住 —— 花了錢卻看不到，是最掃興的事。 */
+.hamster-cage.riding .layer.front { opacity: .38; }
+.layer.front { transition: opacity .45s ease; }
+
 /* 碰碰車 */
 .rcar {
     position: absolute; z-index: 2; transform: translateX(-50%);
@@ -1271,7 +1320,8 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ride-ferris .fw-wheel, .ride-ferris .fw-car, .rcar.hit { animation: none; }
+    .ride-ferris .fw-wheel, .ride-ferris .fw-car, .rcar.hit,
+    .ride-carousel .cs-horses, .ride-teacup .tc-cups, #hamster.dizzy { animation: none; }
 }
 
 /* ===================================================================

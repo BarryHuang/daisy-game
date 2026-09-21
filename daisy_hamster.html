@@ -1305,23 +1305,32 @@
                 exits: { left: 'street', right: 'fair' }
             },
             fair: {
-                name: '遊樂園', emoji: '🎠', desc: '摩天輪・碰碰車・爆米花',
+                name: '遊樂園', emoji: '🎠', desc: '摩天輪・旋轉木馬・咖啡杯・碰碰車',
                 layers: { far: 'fair-far.svg', mid: '',
                           near: 'fair-near.svg', front: 'fair-front.svg' },
                 platformImg: 'platform-wood.svg',
                 peekers: ['🐰', '🎈'],
+                // 四座設施排在一起會互相疊到（每座大概佔世界寬的 12~16%），
+                // 所以遊樂園的世界比別張地圖寬一截，見 .map-fair .world
+                wide: true,
+                // 平台全部避開設施：左邊兩塊在爆米花車和摩天輪之間，
+                // 第三塊架在咖啡杯正上方（咖啡杯很矮，不會打架）
                 platforms: [
-                    { x1: .160, x2: .265, y: .48 },
-                    { x1: .225, x2: .320, y: .95 },
-                    { x1: .830, x2: .930, y: .48 },
+                    { x1: .100, x2: .185, y: .48 },
+                    { x1: .155, x2: .238, y: .95 },
+                    { x1: .655, x2: .740, y: .95 },
                 ],
-                // 遊樂設施：要付錢，但快樂度給得很多
+                // 遊樂設施：要付錢，但快樂度給得很多。
+                // x 是一路量出來排開的 —— 四座加起來佔世界寬的 67%，
+                // 改位置前先跑一次測試看有沒有疊到。
                 rides: [
-                    { type: 'ferris', x: .450, cost: 20, happy: 18, cd: 180, name: '摩天輪' },
-                    { type: 'bumper', x: .700, cost: 15, happy: 14, cd: 180, name: '碰碰車' },
+                    { type: 'ferris',   x: .332, cost: 20, happy: 18, cd: 180, name: '摩天輪' },
+                    { type: 'carousel', x: .521, cost: 12, happy: 12, cd: 150, name: '旋轉木馬' },
+                    { type: 'teacup',   x: .685, cost: 16, happy: 16, cd: 180, name: '咖啡杯' },
+                    { type: 'bumper',   x: .853, cost: 15, happy: 14, cd: 180, name: '碰碰車' },
                 ],
                 spots: [
-                    { x: .120, ty: 150, icon: '🍿', name: '爆米花', act: 'popcorn' },
+                    { x: .058, ty: 150, icon: '🍿', name: '爆米花', act: 'popcorn' },
                 ],
                 exits: { left: 'arcade', right: 'beach' }
             },
@@ -2097,7 +2106,7 @@
                 b.style.left = (r.x * 100) + '%';
                 b.style.bottom = (footInset() - 4) + 'px';
                 b.title = r.name;
-                b.innerHTML = (r.type === 'ferris' ? ferrisMarkup() : bumperMarkup()) +
+                b.innerHTML = (RIDE_MARKUP[r.type] || bumperMarkup)() +
                     '<span class="ride-tag">' + r.name + ' <b>-' + r.cost + '💰</b></span>';
                 b.addEventListener('click', (e) => { e.stopPropagation(); useRide(i); });
                 world.appendChild(b);
@@ -2110,6 +2119,10 @@
                 el.classList.toggle('cooling', rideLeft(+el.dataset.i) > 0);
             });
         }
+
+        // 設施型別 -> 畫長相的函式 / 演出的函式。加新設施就補這兩張表。
+        const RIDE_MARKUP = {};
+        const RIDE_PLAY   = {};
         function rideKey(i) { return currentMap + ':ride:' + i; }
         function rideLeft(i) {
             const r = (curMap().rides || [])[i];
@@ -2172,6 +2185,11 @@
                  + '</svg>';
         }
 
+        RIDE_MARKUP.ferris = ferrisMarkup;
+        RIDE_MARKUP.bumper = bumperMarkup;
+        RIDE_PLAY.ferris = (el) => rideFerris(el);
+        RIDE_PLAY.bumper = (el) => rideBumper(el);
+
         let riding = false;
 
         async function useRide(i) {
@@ -2185,10 +2203,10 @@
 
             riding = true;
             try {
-                // 走到設施前面（摩天輪從正下方上車，碰碰車從左邊進場）
-                const board = r.type === 'ferris' ? r.x * worldWidth()
-                                                  : r.x * worldWidth() - rideRect(el).w * 0.34;
-                await hamsterWalkTo(board, 150, 0);
+                // 走到設施前面。摩天輪／旋轉木馬／咖啡杯都是從正下方上去的，
+                // 只有碰碰車要從場地左邊進場。
+                const side = r.type === 'bumper' ? rideRect(el).w * 0.34 : 0;
+                await hamsterWalkTo(r.x * worldWidth() - side, 150, 0);
 
                 petData.coins -= r.cost;
                 updatePetUI();
@@ -2196,8 +2214,10 @@
                 await wait(260);
 
                 physSuspend();
-                if (r.type === 'ferris') await rideFerris(el);
-                else await rideBumper(el);
+                // 演出期間把前景層（氣球、爆米花車）淡掉。花了錢坐設施結果
+                // 倉鼠整隻被前面的氣球擋住，那是最掃興的事。
+                cageEl().classList.add('riding');
+                await (RIDE_PLAY[r.type] || rideBumper)(el);
 
                 addHappiness(r.happy);
                 const ham = document.getElementById('hamster');
@@ -2234,8 +2254,9 @@
                 ham.classList.remove('acting');
             }
             document.querySelectorAll('.ride').forEach(e => e.classList.remove('on'));
-            document.querySelectorAll('.rcar').forEach(e => e.remove());
-            const c = cageEl(); if (c) c.classList.remove('shaking');
+            document.querySelectorAll('.rcar, .chorse, .tcup').forEach(e => e.remove());
+            if (ham) ham.classList.remove('dizzy');
+            const c = cageEl(); if (c) c.classList.remove('shaking', 'riding');
             physResume(hamX);
         }
 
@@ -2397,6 +2418,307 @@
                 requestAnimationFrame(step);
             });
         }
+
+        // ================================================================
+        // 旋轉木馬
+        // ================================================================
+        // 木馬是「繞著柱子轉」，不是平面來回跑。要看起來有深度，靠三件事：
+        //   ① 橢圓軌道 —— 左右擺幅大、前後擺幅小（rx 遠大於 ry）
+        //   ② 越後面越小 —— 依 cos 的深度值縮放
+        //   ③ 越後面越暗 —— 加一點點 brightness，補足縮放看不出來的遠近
+        // 木馬本身還要上下起伏，不然只是在水平繞圈，一點都不像旋轉木馬。
+        // deckY = 畫圖時木馬腳踩的那條線；orbitY = 真的繞行時的軌道中心。
+        // 兩個要分開：軌道中心得對準底座橢圓的圓心（deckY + 12），不然前面那匹
+        // 會浮在底座前緣上方十幾 px，看起來像懸空。
+        const CAROUSEL_VB = { w: 210, h: 200, deckY: 150, orbitY: 156, rx: 72, ry: 17, bob: 13 };
+
+        /**
+         * 一匹木馬。腳踩在 y=0、銅柱往上穿出框外，所以裝飾用的和真正會動的
+         * 那幾匹可以共用同一組路徑 —— 只要把原點對到「馬腳站的地方」就好。
+         * 脖子和腿都是先描一條粗的深色、再疊一條細的本色，等於免費的描邊。
+         */
+        function carouselHorse(col, mane) {
+            const O = '#a9703f';
+            const limb = (d, w1, w2) =>
+                '<path d="' + d + '" stroke="' + O + '" stroke-width="' + w1 + '" stroke-linecap="round" fill="none"/>'
+              + '<path d="' + d + '" stroke="' + col + '" stroke-width="' + w2 + '" stroke-linecap="round" fill="none"/>';
+            return '<path d="M0 -64 v64" stroke="#e8c877" stroke-width="3.4" stroke-linecap="round"/>'
+                 + limb('M-11 -20 l-3 19', 7, 4.4) + limb('M-6 -20 l1 19', 7, 4.4)
+                 + limb('M6 -20 l-1 19', 7, 4.4)   + limb('M11 -20 l3 19', 7, 4.4)
+                 + '<path d="M-15 -31 q-9 2 -8 13" stroke="' + mane + '" stroke-width="3.6"'
+                 +   ' fill="none" stroke-linecap="round"/>'
+                 + '<ellipse cx="0" cy="-28" rx="16" ry="9.5" fill="' + col + '"'
+                 +   ' stroke="' + O + '" stroke-width="2"/>'
+                 + limb('M7 -32 L18 -43', 13, 9)
+                 + '<path d="M16 -49 l0 -7 l6 5 z" fill="' + col + '" stroke="' + O + '"'
+                 +   ' stroke-width="1.6" stroke-linejoin="round"/>'
+                 + '<ellipse cx="21" cy="-45" rx="8.5" ry="5.2" transform="rotate(-18 21 -45)"'
+                 +   ' fill="' + col + '" stroke="' + O + '" stroke-width="2"/>'
+                 + '<path d="M10 -42 q6 -7 11 -6" stroke="' + mane + '" stroke-width="3.6"'
+                 +   ' fill="none" stroke-linecap="round"/>'
+                 + '<rect x="-8" y="-39" width="14" height="6" rx="2.5" fill="' + mane + '" opacity=".9"/>'
+                 + '<circle cx="24" cy="-46" r="1.5" fill="#5a3b26"/>';
+        }
+
+        function carouselMarkup() {
+            const V = CAROUSEL_VB;
+            // 屋頂的紅白條紋。整圈 20 片一起畫（不是只畫看得到的前半圈）——
+            // 少畫後半圈的話圓錐的兩側會缺一角，看起來像被咬掉。
+            let roof = '';
+            for (let k = 0; k < 20; k++) {
+                const a0 = k * Math.PI / 10, a1 = a0 + Math.PI / 10;
+                const P = (a) => (105 + 93 * Math.cos(a)).toFixed(1) + ' ' + (62 + 21 * Math.sin(a)).toFixed(1);
+                roof += '<path d="M105 16 L' + P(a0) + ' A93 21 0 0 1 ' + P(a1) + ' Z" fill="'
+                     + (k % 2 ? '#fff6ee' : '#e0714c') + '"/>';
+            }
+            const horse = (x, sc) => '<g transform="translate(' + x + ' ' + V.deckY + ') scale(' + sc + ')">';
+            return '<svg class="cs" viewBox="0 0 210 200" aria-hidden="true">'
+                 + '<ellipse cx="105" cy="' + (V.deckY + 26) + '" rx="86" ry="17" fill="#000" opacity=".14"/>'
+                 // 底座
+                 + '<ellipse cx="105" cy="' + (V.deckY + 18) + '" rx="84" ry="17" fill="#c07f4f"/>'
+                 + '<ellipse cx="105" cy="' + (V.deckY + 12) + '" rx="84" ry="17" fill="#e8b878"'
+                 +   ' stroke="#a9703f" stroke-width="2"/>'
+                 + '<ellipse cx="105" cy="' + (V.deckY + 12) + '" rx="58" ry="11" fill="none"'
+                 +   ' stroke="#c9954c" stroke-width="2" opacity=".7"/>'
+                 // 中柱
+                 + '<rect x="98" y="40" width="14" height="' + (V.deckY - 28) + '" rx="6"'
+                 +   ' fill="#f0c987" stroke="#c9954c" stroke-width="2"/>'
+                 // 裝飾木馬（沒人坐的時候慢慢上下浮）
+                 + '<g class="cs-horses">'
+                 +   horse(105, .74) + carouselHorse('#e7f0ff', '#4e7fa8') + '</g>'
+                 +   horse(44, 1) + carouselHorse('#fff1e2', '#e0714c') + '</g>'
+                 +   horse(166, 1) + carouselHorse('#ffe0e6', '#c792ea') + '</g>'
+                 + '</g>'
+                 // 屋頂
+                 + '<g class="cs-roof">' + roof + '</g>'
+                 + '<ellipse cx="105" cy="62" rx="93" ry="21" fill="none" stroke="#c9564c" stroke-width="3"/>'
+                 + '<path d="M105 16 v-13" stroke="#c9954c" stroke-width="3"/>'
+                 + '<path d="M105 3 l18 6 l-18 6 z" fill="#ffd166" stroke="#c9954c" stroke-width="1.5"/>'
+                 + '<circle cx="105" cy="16" r="6" fill="#ffd166" stroke="#c9564c" stroke-width="2"/>'
+                 // 屋簷小燈：沿著前半圈的橢圓擺一排
+                 + '<g fill="#ffd166" stroke="#c9564c" stroke-width="1">'
+                 + [1,2,3,4,5,6,7,8,9].map(k => {
+                       const a = Math.PI * k / 10;
+                       return '<circle cx="' + (105 + 93 * Math.cos(a)).toFixed(1)
+                            + '" cy="' + (62 + 21 * Math.sin(a)).toFixed(1) + '" r="3.2"/>';
+                   }).join('') + '</g>'
+                 + '</svg>';
+        }
+        RIDE_MARKUP.carousel = carouselMarkup;
+
+        /** 倉鼠挑一匹木馬，繞著柱子轉兩圈半，木馬同時上上下下 */
+        function rideCarousel(el) {
+            const R = rideRect(el), V = CAROUSEL_VB, k = R.h / V.h;
+            const g = {
+                cx: R.cx,
+                deckH: R.baseH + (V.h - V.orbitY) * k,  // 馬腳繞行的那一圈離地多高
+                rx: V.rx * k, ry: V.ry * k, bob: V.bob * k
+            };
+            const world = worldEl();
+            const ham = document.getElementById('hamster');
+            el.classList.add('on');
+            cameraLookAt(g.cx);
+
+            // 三匹會動的木馬。倉鼠騎第 0 匹，另外兩匹只是陪跑
+            const COLS = [['#fff1e2', '#e0714c'], ['#ffe0e6', '#c792ea'], ['#e7f0ff', '#4e7fa8']];
+            const horses = COLS.map((c, i) => {
+                const d = document.createElement('div');
+                d.className = 'chorse' + (i === 0 ? ' mine' : '');
+                d.style.width = (58 * k) + 'px';
+                // viewBox 的下緣就是馬腳，所以元素的 bottom 直接等於「站的高度」，
+                // 不用再去扣圖的留白
+                d.innerHTML = '<svg viewBox="-26 -64 54 65" aria-hidden="true">'
+                            + carouselHorse(c[0], c[1]) + '</svg>';
+                world.appendChild(d);
+                return d;
+            });
+
+            ham.classList.add('acting');
+            ham.style.transformOrigin = '50% 100%';
+
+            // 角度 a：0 = 最靠近鏡頭（正前方）。往後轉時越小越暗。
+            const place = (d, a, isHam) => {
+                const depth = -Math.cos(a);                        // -1 最前面, 1 最後面
+                const sc = 1 - 0.17 * depth;
+                const x = g.cx + g.rx * Math.sin(a);
+                const y = g.deckH + g.ry * depth
+                        + g.bob * (0.5 + 0.5 * Math.sin(a * 2));   // 上下起伏
+                d.style.left = (x / worldWidth() * 100) + '%';
+                d.style.bottom = y.toFixed(1) + 'px';
+                d.style.transform = 'translateX(-50%) scale(' + sc.toFixed(3) + ')'
+                                  + (Math.cos(a) >= 0 ? '' : ' scaleX(-1)');
+                d.style.filter = 'brightness(' + (1 - 0.18 * Math.max(0, depth)).toFixed(3) + ')';
+                d.style.zIndex = depth > 0 ? 1 : 3;                // 後面的壓在中柱後
+                if (isHam) {
+                    hamX = x; hamY = y + 10 * k;                   // 坐在馬背上，再高一點
+                    hamFacing = Math.cos(a) >= 0 ? 1 : -1;         // 轉到後面就背對鏡頭
+                    ham.style.transform = 'scale(' + (0.42 * sc).toFixed(3) + ')';
+                    paintHamster();
+                }
+            };
+
+            const TURNS = 2.5, MS = 8200;
+            return new Promise((resolve) => {
+                if (actReduced()) { horses.forEach(h => h.remove()); setTimeout(resolve, 500); return; }
+                snd('ride', 440, 'triangle', .12);
+                let waved = false;
+                const t0 = performance.now();
+                const step = (now) => {
+                    const t = Math.min(1, (now - t0) / MS);
+                    const e = t * t * (3 - 2 * t);                 // 起步慢、收尾慢
+                    const a = e * TURNS * Math.PI * 2;
+                    horses.forEach((d, i) => place(d, a + i * Math.PI * 2 / 3, i === 0));
+                    if (!waved && e > 0.55) {                      // 轉回正前方時招手
+                        waved = true;
+                        snd('sparkle', 880, 'triangle', .12);
+                        createFloatingEmoji('🎠', 1200, -30);
+                        if (typeof fxBurst === 'function') fxBurst(ham.getBoundingClientRect(), 10);
+                    }
+                    if (t < 1) requestAnimationFrame(step);
+                    else {
+                        horses.forEach(h => h.remove());
+                        hamY = 0; ham.style.transform = ''; paintHamster();
+                        snd('success', 520, 'triangle', .12);
+                        resolve();
+                    }
+                };
+                requestAnimationFrame(step);
+            });
+        }
+        RIDE_PLAY.carousel = rideCarousel;
+
+        // ================================================================
+        // 咖啡杯
+        // ================================================================
+        // 咖啡杯好玩的地方是「轉盤在轉，杯子自己又在轉」，兩個圓疊起來
+        // 會走出外擺線，路徑忽近忽遠，比單純繞圈有趣得多。
+        // 倉鼠在自己的杯子裡，所以位置 = 轉盤上的位置 + 杯子自轉的偏移。
+        const TEACUP_VB = { w: 190, h: 132, deckY: 96, orbitY: 104, rx: 60, ry: 15, spin: 18 };
+
+        function teacupMarkup() {
+            const V = TEACUP_VB;
+            const cup = (x, y, sc, col, dark) =>
+                '<g transform="translate(' + x + ' ' + y + ') scale(' + sc + ')">'
+              + '<ellipse cx="0" cy="13" rx="23" ry="6" fill="' + dark + '" opacity=".35"/>'
+              + '<ellipse cx="0" cy="10" rx="22" ry="6" fill="#fff6ee" stroke="' + dark + '" stroke-width="1.6"/>'
+              + '<path d="M17 -9 q9 0 9 6 q0 6 -9 6" fill="none" stroke="' + dark + '" stroke-width="3"/>'
+              + '<path d="M-17 -12 q0 18 5 21 h24 q5 -3 5 -21 z" fill="' + col + '"'
+              +   ' stroke="' + dark + '" stroke-width="1.8" stroke-linejoin="round"/>'
+              + '<ellipse cx="0" cy="-12" rx="17" ry="5" fill="#fff" opacity=".85"'
+              +   ' stroke="' + dark + '" stroke-width="1.5"/>'
+              + '</g>';
+            return '<svg class="tc" viewBox="0 0 190 132" aria-hidden="true">'
+                 + '<ellipse cx="95" cy="' + (V.deckY + 24) + '" rx="78" ry="15" fill="#000" opacity=".14"/>'
+                 + '<ellipse cx="95" cy="' + (V.deckY + 17) + '" rx="76" ry="15" fill="#9d7bb5"/>'
+                 + '<ellipse cx="95" cy="' + (V.deckY + 11) + '" rx="76" ry="15" fill="#c8a8dd"'
+                 +   ' stroke="#8a6aa3" stroke-width="2"/>'
+                 // 轉盤上的圈圈紋路，轉起來才看得出來在轉
+                 + '<g class="tc-deck" fill="none" stroke="#e5d2f0" stroke-width="2.5">'
+                 +   '<ellipse cx="95" cy="' + (V.deckY + 11) + '" rx="56" ry="11"/>'
+                 +   '<ellipse cx="95" cy="' + (V.deckY + 11) + '" rx="30" ry="6"/>'
+                 + '</g>'
+                 + '<g class="tc-cups">'
+                 +   cup(95, V.deckY - 20, .92, '#9fc8f0', '#4e7fa8')
+                 +   cup(34, V.deckY - 1, 1.16, '#f2857a', '#c9564c')
+                 +   cup(156, V.deckY - 1, 1.16, '#8fd0a0', '#4f9f6a')
+                 + '</g>'
+                 // 欄杆
+                 + '<g stroke="#e0e6ef" stroke-width="4" stroke-linecap="round">'
+                 +   '<path d="M14 ' + (V.deckY + 8) + ' v-12M95 ' + (V.deckY + 22) + ' v-12M176 '
+                 +   (V.deckY + 8) + ' v-12"/></g>'
+                 + '</svg>';
+        }
+        RIDE_MARKUP.teacup = teacupMarkup;
+
+        /** 轉盤轉 + 杯子自轉。結束時倉鼠會暈一下（😵‍💫），那是整個橋段的笑點 */
+        function rideTeacup(el) {
+            const R = rideRect(el), V = TEACUP_VB, k = R.h / V.h;
+            const g = {
+                cx: R.cx,
+                deckH: R.baseH + (V.h - V.orbitY) * k,
+                rx: V.rx * k, ry: V.ry * k, spin: V.spin * k
+            };
+            const world = worldEl();
+            const ham = document.getElementById('hamster');
+            el.classList.add('on');
+            cameraLookAt(g.cx);
+
+            const COLS = [['#ffd166', '#c9954c'], ['#f2857a', '#c9564c'], ['#8fd0a0', '#4f9f6a']];
+            const cups = COLS.map((c, i) => {
+                const d = document.createElement('div');
+                d.className = 'tcup' + (i === 0 ? ' mine' : '');
+                d.style.width = (68 * k) + 'px';
+                d.innerHTML =
+                  '<svg viewBox="-28 -22 56 42" aria-hidden="true">'
+                + '<ellipse cx="0" cy="13" rx="23" ry="6" fill="' + c[1] + '" opacity=".35"/>'
+                + '<ellipse cx="0" cy="10" rx="22" ry="6" fill="#fff6ee" stroke="' + c[1] + '" stroke-width="1.6"/>'
+                + '<path d="M17 -9 q9 0 9 6 q0 6 -9 6" fill="none" stroke="' + c[1] + '" stroke-width="3"/>'
+                + '<path d="M-17 -12 q0 18 5 21 h24 q5 -3 5 -21 z" fill="' + c[0] + '"'
+                +   ' stroke="' + c[1] + '" stroke-width="1.8" stroke-linejoin="round"/>'
+                + '<ellipse cx="0" cy="-12" rx="17" ry="5" fill="#fff" opacity=".85"'
+                +   ' stroke="' + c[1] + '" stroke-width="1.5"/></svg>';
+                world.appendChild(d);
+                return d;
+            });
+
+            ham.classList.add('acting');
+            ham.style.transformOrigin = '50% 100%';
+
+            // A = 轉盤角度，B = 杯子自轉角度（快很多，所以路徑會繞圈中帶繞圈）
+            const place = (d, A, B, isHam) => {
+                const depth = -Math.cos(A);
+                const sc = 1 - 0.15 * depth;
+                const x = g.cx + g.rx * Math.sin(A) + g.spin * Math.sin(B);
+                const y = g.deckH + g.ry * depth + g.spin * 0.34 * Math.cos(B);
+                d.style.left = (x / worldWidth() * 100) + '%';
+                d.style.bottom = y.toFixed(1) + 'px';
+                d.style.transform = 'translateX(-50%) scale(' + sc.toFixed(3) + ')'
+                                  + ' rotate(' + (Math.sin(B) * 9).toFixed(1) + 'deg)';
+                d.style.filter = 'brightness(' + (1 - 0.16 * Math.max(0, depth)).toFixed(3) + ')';
+                d.style.zIndex = depth > 0 ? 1 : 3;
+                if (isHam) {
+                    // 倉鼠縮在杯子裡，只露上半身，所以站的高度比杯底再高一點
+                    hamX = x; hamY = y + 16 * k;
+                    hamFacing = Math.sin(B) >= 0 ? 1 : -1;
+                    ham.style.transform = 'scale(' + (0.40 * sc).toFixed(3) + ')'
+                                        + ' rotate(' + (Math.sin(B) * 7).toFixed(1) + 'deg)';
+                    paintHamster();
+                }
+            };
+
+            const MS = 7600;
+            return new Promise((resolve) => {
+                if (actReduced()) { cups.forEach(c => c.remove()); setTimeout(resolve, 500); return; }
+                snd('ride', 300, 'sine', .12);
+                let spun = false;
+                const t0 = performance.now();
+                const step = (now) => {
+                    const t = Math.min(1, (now - t0) / MS);
+                    const e = t * t * (3 - 2 * t);
+                    const A = e * 2 * Math.PI * 2;        // 轉盤兩圈
+                    const B = e * 2 * Math.PI * 7;        // 杯子七圈
+                    cups.forEach((d, i) => place(d, A + i * Math.PI * 2 / 3,
+                                                 B + i * Math.PI * 2 / 3, i === 0));
+                    if (!spun && e > 0.45) {
+                        spun = true;
+                        snd('whoosh', 700, 'sine', .1);
+                        createFloatingEmoji('☕', 1200, -30);
+                    }
+                    if (t < 1) requestAnimationFrame(step);
+                    else {
+                        cups.forEach(c => c.remove());
+                        hamY = 0; ham.style.transform = ''; paintHamster();
+                        // 頭暈那一下：倉鼠原地晃兩圈才站穩
+                        ham.classList.add('dizzy');
+                        createFloatingEmoji('😵‍💫', 1500, -45);
+                        snd('pop', 520, 'sine', .12);
+                        setTimeout(() => { ham.classList.remove('dizzy'); resolve(); }, 900);
+                    }
+                };
+                requestAnimationFrame(step);
+            });
+        }
+        RIDE_PLAY.teacup = rideTeacup;
 
         // ================================================================
         // 遊戲中心的機台

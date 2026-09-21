@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20260921-0834';
+const CACHE_NAME = 'daisy-20260921-0847';
 
 const LOCAL_ASSETS = [
   './',
