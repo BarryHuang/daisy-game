@@ -282,14 +282,14 @@
             const m = MENU.find(x => x.en === en);
             tray[en] = (tray[en] || 0) + 1;
             speak(en, 0.9);
-            playTone(520, 'sine', 0.07);
+            snd('jump', 520, 'sine', 0.07);
             renderTray();
         }
         function removeItem(en) {
             if (!tray[en]) return;
             tray[en]--;
             if (!tray[en]) delete tray[en];
-            playTone(300, 'sine', 0.06);
+            snd('land', 300, 'sine', 0.06);
             renderTray();
         }
         function clearTray() {
@@ -413,13 +413,12 @@
                 shift.perfect++;
                 shop.served++;
                 c.className = 'happy'; c.textContent = '😻';
-                playTone(760, 'sine', 0.11);
-                setTimeout(() => playTone(1040, 'sine', 0.14), 95);
+                if (snd('success', 760, 'sine', 0.11)) setTimeout(() => playTone(1040, 'sine', 0.14), 95);
                 msg.innerHTML = `太完美了！小費 +${tip} 💰` + (speedBonus ? ' <span style="color:#e65100">（手腳好快！）</span>' : '');
                 speak('Thank you! Delicious!', 0.9);
             } else {
                 c.className = 'sad'; c.textContent = '🙀';
-                playTone(200, 'sawtooth', 0.2);
+                snd('error', 200, 'sawtooth', 0.2);
                 const rightList = shift.order.picks
                     .map(p => `${p.n}×${p.item.emoji}${p.item.en}`).join('、');
                 msg.textContent = `客人要的是 ${rightList}`;

@@ -549,7 +549,7 @@
             errThisQ++;
             btn.classList.add('bad');
             btn.disabled = true;
-            playTone(220, 'sawtooth', 0.15);
+            snd('error', 220, 'sawtooth', 0.15);
             qMsg.textContent = '再想想～ 🤔';
             return;                                  // 讓她自己找到對的，不直接跳過
         }
@@ -557,8 +557,7 @@
         locked = true;
         btn.classList.add('good');
         choicesEl.querySelectorAll('button').forEach((b) => (b.disabled = true));
-        playTone(700, 'sine', 0.12);
-        setTimeout(() => playTone(1000, 'sine', 0.15), 110);
+        if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0.15), 110);
         speakFact(q.a, q.b);
 
         if (!errThisQ) { rightCount++; coins += 2; qMsg.textContent = '答對了！ 🎉'; }

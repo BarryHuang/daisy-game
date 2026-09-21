@@ -276,7 +276,38 @@ function initMenu() {
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
 }
 
+// ── 音效 ────────────────────────────────────────────────────
+// 每個頁面本來都各自有一個 playTone()，就是一個裸振盪器，聽起來是「嗶」。
+// audio.js 改用真的音檔（sfx/*.wav）。menu.js 已經是全站都會載的檔案，
+// 就順手把它帶進來，不用去改十幾個 HTML。
+function loadAudioJs() {
+  if (window.daisyAudio) return;                                   // 已經載過
+  if (document.querySelector('script[src$="audio.js"]')) return;   // 頁面自己放了
+  const s = document.createElement("script");
+  s.src = "./audio.js";
+  s.defer = true;
+  document.head.appendChild(s);
+}
+
+/**
+ * 播音效：先試音檔，檔案還沒載好才退回該頁原本的 playTone()。
+ * 回傳 true 代表這次是用合成音頂替的 —— 原本用兩個 playTone 串成
+ * 「叮咚」的地方靠它判斷要不要補第二聲。
+ *
+ * 倉鼠頁自己有一份同名的（怕 menu.js 載不到就整頁壞掉），所以先讓路。
+ */
+if (typeof window !== "undefined" && typeof window.snd !== "function") {
+  window.snd = function (name, freq, type, duration) {
+    try { if (window.sfx && window.sfx(name)) return false; } catch (e) { }
+    if (freq && typeof window.playTone === "function") {
+      window.playTone(freq, type || "sine", duration || 0.1);
+    }
+    return true;
+  };
+}
+
 if (typeof document !== "undefined") {
+  loadAudioJs();
   document.readyState === "loading"
     ? document.addEventListener("DOMContentLoaded", initMenu)
     : initMenu();

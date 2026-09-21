@@ -31,6 +31,7 @@
          所以她手機上一直是系統預設字體。中文維持系統字型。 -->
     <link rel="stylesheet" href="fx.css">
     <script src="./fx.js"></script>
+    <script src="./audio.js"></script>
 </head>
 <body>
 
@@ -290,9 +291,17 @@
                 </div>
 
 
-                <!-- 柵欄後偶爾探頭的小動物，位置由 JS 隨機挑 -->
-                <div class="peeker" id="peeker-a" aria-hidden="true">🐦</div>
-                <div class="peeker" id="peeker-b" aria-hidden="true">🐿️</div>
+                <!-- 柵欄後的小動物朋友。位置由 JS 隨機挑，點下去可以送禮物 -->
+                <div class="peeker" id="peeker-a" role="button" tabindex="0">
+                    <span class="peeker-face">🐦</span>
+                    <span class="peeker-hearts"></span>
+                    <span class="peeker-gift">🎁</span>
+                </div>
+                <div class="peeker" id="peeker-b" role="button" tabindex="0">
+                    <span class="peeker-face">🐿️</span>
+                    <span class="peeker-hearts"></span>
+                    <span class="peeker-gift">🎁</span>
+                </div>
 
 
 
@@ -632,7 +641,15 @@
             // 上次離開時待在哪張地圖，下次進來從同一個地方繼續
             map: 'home',
             // 互動點的冷卻：{ "park:1": 秒數時間戳 }
-            spots: {}
+            spots: {},
+            // 菜園。{ "0": { crop: 'carrot', day: 20260921 } }，key 是第幾塊田。
+            // 存「種下那天」而不是時間戳，因為收成是看日曆天（今天種、明天收），
+            // 不是看過了幾小時 —— 小二生對「明天再來」比「再等 18 小時」有感。
+            farm: {},
+            // 小動物朋友。{ "🐦": { love: 12, day: 20260921, gave: 20260921 } }
+            // love 是好感度點數，每 6 點一顆愛心；day 是今天送過禮沒有；
+            // gave 是「好朋友回送」那天，兩個都用日曆天
+            friends: {}
         };
 
         let comboCount = 0; // 連續全對次數
@@ -659,6 +676,8 @@
             if(!data.layout) data.layout = {};
             if(!data.map || !MAPS[data.map]) data.map = 'home';
             if(!data.spots) data.spots = {};        // 互動點的冷卻時間
+            if(!data.farm)  data.farm  = {};        // 菜園
+            if(!data.friends) data.friends = {};    // 小動物朋友
             return data;
         }
 
@@ -896,7 +915,7 @@
             t.className = 'gt-item' + (kind ? ' ' + kind : '');
             t.textContent = msg;
             host.appendChild(t);
-            playTone(kind === 'bad' ? 260 : 620, 'sine', .08);
+            snd(kind === 'bad' ? 'error' : 'pop', kind === 'bad' ? 260 : 620, 'sine', .08);
             setTimeout(() => {
                 t.classList.add('out');
                 setTimeout(() => t.remove(), 320);
@@ -943,12 +962,30 @@
             rememberWorld(true);
             toggleImmersive(true);
             feelHaptic(12);
+            snd('door');
+            playMapMusic();
         }
         function exitPetWorld() {
             rememberWorld(false);
             toggleDrawer(false);
             toggleImmersive(false);
+            if (window.daisyAudio) window.daisyAudio.musicStop();
         }
+
+        /**
+         * 每張地圖一首背景音樂。只有人在世界裡才放 —— 主畫面是拼字和測驗，
+         * 配樂會蓋掉單字發音。分頁切走（切到別的 App、鎖螢幕）也要停，
+         * 不然音樂會在背景一直演奏。
+         */
+        function playMapMusic() {
+            if (!window.daisyAudio || !immersiveOn()) return;
+            window.daisyAudio.musicPlay(currentMap);
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (!window.daisyAudio) return;
+            if (document.hidden) window.daisyAudio.musicStop();
+            else if (immersiveOn()) playMapMusic();
+        });
 
         /** 重整前人在世界裡的話，載入完就直接回到世界 */
         function restoreWorldIfNeeded() {
@@ -988,6 +1025,8 @@
                 if (typeof buildPlatforms === 'function') {
                     buildPlatforms();
                     buildSpots();          // 位置是依磚寬算的，場景縮放變了要重放
+                    buildPlots();
+                    buildBoard();
                     buildCabinets();
                     buildRides();
                     buildGates();
@@ -1010,7 +1049,8 @@
                 // 尺寸變了（網址列回來了），場景要重算一次
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     if (!habitatReady) return;
-                    buildPlatforms(); buildSpots(); buildCabinets(); buildRides(); buildGates();
+                    buildPlatforms(); buildSpots(); buildPlots(); buildBoard();
+                    buildCabinets(); buildRides(); buildGates();
                     hamY = surfaceAt(hamX, hamY);
                     paintHamster();
                     cameraLookAt(hamX, true);
@@ -1042,6 +1082,10 @@
             syncFeelUI();
             if (key === 'shake' && FEEL.shake) screenShake();      // 打開時示範一下
             if (key === 'haptic' && FEEL.haptic) feelHaptic(20);
+            if (key === 'sfx' && FEEL.sfx) snd('click', 660, 'sine', .08);
+            if (key === 'music' && window.daisyAudio) {
+                window.daisyAudio.refresh(immersiveOn() ? currentMap : null);
+            }
         }
 
         function syncFeelUI() {
@@ -1051,6 +1095,8 @@
             };
             set('sw-shake', FEEL.shake);
             set('sw-haptic', FEEL.haptic);
+            set('sw-sfx', FEEL.sfx);
+            set('sw-music', FEEL.music);
         }
 
         // ================================================================
@@ -1061,7 +1107,7 @@
         // 存 localStorage 不存雲端 —— 這是「這台裝置舒不舒服」的偏好，
         // 平板和手機本來就可能想要不一樣的設定。
         const FEEL_KEY = 'daisy_feel';
-        const FEEL = Object.assign({ shake: false, haptic: true }, (() => {
+        const FEEL = Object.assign({ shake: false, haptic: true, sfx: true, music: true }, (() => {
             try { return JSON.parse(localStorage.getItem(FEEL_KEY) || '{}'); }
             catch (e) { return {}; }
         })());
@@ -1205,6 +1251,10 @@
                     { tile: 1, tx: 250, ty: 168, icon: '🪣', name: '鬆土區', act: 'dig'    },
                     { x: .640, ty: 168, icon: '🍀', name: '找幸運草', act: 'clover' },
                 ],
+                // 菜園。四塊田排在小花叢右邊的空地。小花叢的 x 是用磚寬算的
+                // （tile/tx），會隨場景縮放浮動到 .14 附近，所以田從 .215 才開始，
+                // 不然第一塊會和花叢疊在一起。
+                farm: [.215, .272, .329, .386],
                 exits: { left: 'home', right: 'park' }
             },
             park: {
@@ -1247,6 +1297,8 @@
                     { x: .430, ty: 150, icon: '📰', name: '送報紙',   act: 'paper'    },
                     { x: .830, ty: 150, icon: '🧁', name: '蛋糕店',   act: 'cake'     },
                 ],
+                // 每日挑戰的公佈欄。放在報紙攤和蛋糕店中間的空地
+                board: { x: .635 },
                 exits: { left: 'park', right: 'arcade' }
             },
             arcade: {
@@ -1280,23 +1332,32 @@
                 exits: { left: 'street', right: 'fair' }
             },
             fair: {
-                name: '遊樂園', emoji: '🎠', desc: '摩天輪・碰碰車・爆米花',
+                name: '遊樂園', emoji: '🎠', desc: '摩天輪・旋轉木馬・咖啡杯・碰碰車',
                 layers: { far: 'fair-far.svg', mid: '',
                           near: 'fair-near.svg', front: 'fair-front.svg' },
                 platformImg: 'platform-wood.svg',
                 peekers: ['🐰', '🎈'],
+                // 四座設施排在一起會互相疊到（每座大概佔世界寬的 12~16%），
+                // 所以遊樂園的世界比別張地圖寬一截，見 .map-fair .world
+                wide: true,
+                // 平台全部避開設施：左邊兩塊在爆米花車和摩天輪之間，
+                // 第三塊架在咖啡杯正上方（咖啡杯很矮，不會打架）
                 platforms: [
-                    { x1: .160, x2: .265, y: .48 },
-                    { x1: .225, x2: .320, y: .95 },
-                    { x1: .830, x2: .930, y: .48 },
+                    { x1: .100, x2: .185, y: .48 },
+                    { x1: .155, x2: .238, y: .95 },
+                    { x1: .655, x2: .740, y: .95 },
                 ],
-                // 遊樂設施：要付錢，但快樂度給得很多
+                // 遊樂設施：要付錢，但快樂度給得很多。
+                // x 是一路量出來排開的 —— 四座加起來佔世界寬的 67%，
+                // 改位置前先跑一次測試看有沒有疊到。
                 rides: [
-                    { type: 'ferris', x: .450, cost: 20, happy: 18, cd: 180, name: '摩天輪' },
-                    { type: 'bumper', x: .700, cost: 15, happy: 14, cd: 180, name: '碰碰車' },
+                    { type: 'ferris',   x: .332, cost: 20, happy: 18, cd: 180, name: '摩天輪' },
+                    { type: 'carousel', x: .521, cost: 12, happy: 12, cd: 150, name: '旋轉木馬' },
+                    { type: 'teacup',   x: .685, cost: 16, happy: 16, cd: 180, name: '咖啡杯' },
+                    { type: 'bumper',   x: .853, cost: 15, happy: 14, cd: 180, name: '碰碰車' },
                 ],
                 spots: [
-                    { x: .120, ty: 150, icon: '🍿', name: '爆米花', act: 'popcorn' },
+                    { x: .058, ty: 150, icon: '🍿', name: '爆米花', act: 'popcorn' },
                 ],
                 exits: { left: 'arcade', right: 'beach' }
             },
@@ -1474,7 +1535,7 @@
             hamVY = jumpVelocity() * (power || 1);
             hamMode = 'air';
             setPose('rising');
-            playTone(520, 'sine', .07);
+            snd('jump', 520, 'sine', .07);
             physWake();
             return true;
         }
@@ -1493,7 +1554,7 @@
                     spawnDust(hamX, hr.bottom - wr.top - 14, 3);
                 } catch (e) { /* 量不到就算了，別擋住落地 */ }
             }
-            playTone(300, 'sine', .06);
+            snd('land', 300, 'sine', .06);
         }
 
         /**
@@ -1747,6 +1808,8 @@
             addEventListener('resize', () => {
                 buildPlatforms();
                 buildSpots();
+                buildPlots();
+                buildBoard();
                 buildCabinets();
                 buildRides();
                 buildGates();
@@ -1755,7 +1818,7 @@
                 cameraLookAt(hamX, true);
             });
             // 冷卻中的互動點每 5 秒刷新一次顏色
-            setInterval(() => { refreshSpots(); refreshRides(); }, 5000);
+            setInterval(() => { refreshSpots(); refreshRides(); refreshPlots(); }, 5000);
         }
 
         // ================================================================
@@ -1773,6 +1836,7 @@
         /** 依 currentMap 重建整個場景。換地圖、開全螢幕、轉向都會叫到 */
         function applyMap(id) {
             currentMap = MAPS[id] ? id : 'home';
+            if (typeof playMapMusic === 'function') playMapMusic();
             const m = curMap();
             const cage = cageEl();
 
@@ -1791,20 +1855,29 @@
             const arrangeBtn = document.getElementById('btn-arrange');
             if (arrangeBtn) arrangeBtn.style.display = m.props ? '' : 'none';
 
-            // 每張地圖有自己會探頭的小動物
+            // 每張地圖有自己的小動物朋友
             const pk = m.peekers || ['🐦', '🐿️'];
-            const pa = document.getElementById('peeker-a'), pb = document.getElementById('peeker-b');
-            if (pa) pa.textContent = pk[0];
-            if (pb) pb.textContent = pk[1] || pk[0];
+            [['peeker-a', pk[0]], ['peeker-b', pk[1] || pk[0]]].forEach(([id, face]) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.dataset.friend = face;
+                el.querySelector('.peeker-face').textContent = face;
+                el.setAttribute('aria-label', friendName(face) + '，送禮物');
+            });
+            refreshFriends();
 
             cage.classList.toggle('indoor', !!m.indoor);
             buildPlatforms();
             buildGates();
             buildSpots();
+            buildPlots();
+            buildBoard();
             buildCabinets();
             buildRides();
             placePeekers();
             updateMapChip();
+            farmRipeNotice();
+            friendReturnGifts();
         }
 
         function updateMapChip() {
@@ -1970,8 +2043,7 @@
                 // 演一小段。沒有專屬動作就用 happy（跳兩下）
                 const pose = act.pose === 'eat' ? 'eat' : 'happy';
                 ham.classList.add(pose);
-                playTone(520, 'sine', .09);
-                setTimeout(() => playTone(660, 'sine', .09), 130);
+                if (snd('success', 520, 'sine', .09)) setTimeout(() => playTone(660, 'sine', .09), 130);
                 createFloatingEmoji(act.emoji, 1400, -40);
                 if (typeof fxBurst === 'function' && !actReduced()) {
                     fxBurst(ham.getBoundingClientRect(), 10);
@@ -1996,6 +2068,7 @@
                 else if (gained) msg = (msg ? msg + ' ' : '') + '+' + gained + ' 💰';
                 if (msg) floatAtSpot(el, msg, '#7b1fa2');
 
+                updateQuestProgress('spot', 1);
                 if (!petData.spots) petData.spots = {};
                 petData.spots[spotKey(i)] = Math.round(Date.now() / 1000);
                 savePetData();
@@ -2041,6 +2114,231 @@
             } catch (e) { return '書好好看！'; }
         }
 
+        // ================================================================
+        // 後院菜園
+        // ================================================================
+        // 這是整個遊戲唯一「今天做、明天才有結果」的設計，目的就是給她一個
+        // 明天還想打開的理由。所以刻意用**日曆天**而不是經過幾小時：
+        // 「今天種，明天來收」小二生一聽就懂；「再等 18 小時」不懂。
+        //
+        // 代價是可以調手機時間作弊。不管它 —— 她要是想騙倉鼠，那也是她的事。
+        const CROPS = {
+            carrot:  { emoji: '🥕', name: '紅蘿蔔', cost: 8,  days: 1, sell: [16, 24],  exp: 6  },
+            corn:    { emoji: '🌽', name: '玉米',   cost: 14, days: 1, sell: [26, 38],  exp: 10 },
+            straw:   { emoji: '🍓', name: '草莓',   cost: 22, days: 2, sell: [58, 78],  exp: 18 },
+            pumpkin: { emoji: '🎃', name: '南瓜',   cost: 35, days: 2, sell: [92, 126], exp: 28 },
+        };
+        const SPROUT = ['🌱', '🌿'];      // 還沒熟的樣子：剛種下 / 長大了
+
+        /** 今天是哪一天，20260921 這種整數。用本地時間，她在哪個時區就算哪天 */
+        function farmDay(d) {
+            d = d || new Date();
+            return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+        }
+        /** 兩個 farmDay 差幾天。跨月跨年都要對，所以轉回 Date 再減 */
+        function farmDayDiff(from, to) {
+            const P = (n) => new Date(Math.floor(n / 10000),
+                                      Math.floor(n / 100) % 100 - 1, n % 100);
+            return Math.round((P(to) - P(from)) / 86400000);
+        }
+
+        function farmList() { return curMap().farm || []; }
+        function plotData(i) { return (petData.farm || {})[currentMap + ':' + i] || null; }
+        function plotSet(i, v) {
+            if (!petData.farm) petData.farm = {};
+            if (v) petData.farm[currentMap + ':' + i] = v;
+            else delete petData.farm[currentMap + ':' + i];
+        }
+
+        /** 一塊田現在長什麼樣：空的 / 還要幾天 / 可以收了 */
+        function plotState(i) {
+            const d = plotData(i);
+            if (!d || !CROPS[d.crop]) return { empty: true };
+            const c = CROPS[d.crop];
+            const grown = Math.max(0, farmDayDiff(d.day, farmDay()));
+            const left = Math.max(0, c.days - grown);
+            return {
+                empty: false, crop: d.crop, c: c, left: left, ripe: left === 0,
+                // 還沒熟的話，越接近收成長得越大
+                icon: left === 0 ? c.emoji
+                    : SPROUT[Math.min(SPROUT.length - 1, grown)] || SPROUT[0]
+            };
+        }
+
+        function buildPlots() {
+            const world = worldEl();
+            if (!world) return;
+            world.querySelectorAll('.plot').forEach(el => el.remove());
+            const U = usableH(), W = worldWidth();
+            farmList().forEach((x, i) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'plot';
+                b.dataset.i = i;
+                b.style.left = (x * 100) + '%';
+                // 田就貼在地上。前景的草叢會擋住太矮的東西，所以比照互動點的下限
+                b.style.bottom = spotBottom({ y: 0 }, U) + 'px';
+                b.innerHTML = '<span class="plot-soil"></span>'
+                            + '<span class="plot-crop"></span>'
+                            + '<span class="plot-tag"></span>';
+                b.addEventListener('click', (e) => { e.stopPropagation(); usePlot(i); });
+                world.appendChild(b);
+            });
+            refreshPlots();
+        }
+
+        /** 把每塊田的樣子刷新。跨過午夜也靠這個（每 5 秒跑一次） */
+        function refreshPlots() {
+            document.querySelectorAll('.plot').forEach(el => {
+                const st = plotState(+el.dataset.i);
+                const crop = el.querySelector('.plot-crop'), tag = el.querySelector('.plot-tag');
+                el.classList.toggle('empty', !!st.empty);
+                el.classList.toggle('ripe', !!st.ripe);
+                if (st.empty) {
+                    crop.textContent = '';
+                    tag.textContent = '種菜';
+                    el.title = '空的田';
+                } else {
+                    crop.textContent = st.icon;
+                    tag.textContent = st.ripe ? '可以收了！' : '還要 ' + st.left + ' 天';
+                    el.title = st.c.name;
+                }
+            });
+        }
+
+        /** 進後院時提醒一聲有菜可以收，不然她不會想到要去看 */
+        function farmRipeNotice() {
+            const n = farmList().reduce((k, _, i) => k + (plotState(i).ripe ? 1 : 0), 0);
+            if (n) setTimeout(() => gameToast('🧺 菜園有 ' + n + ' 株可以收成了！', 'good'), 900);
+        }
+
+        let farming = false;
+
+        async function usePlot(i) {
+            if (farming || usingSpot || riding || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+            const el = document.querySelector('.plot[data-i="' + i + '"]');
+            const st = plotState(i);
+
+            if (!st.empty && !st.ripe) {
+                floatAtSpot(el, st.c.emoji + ' 還要 ' + st.left + ' 天 🌙', '#8a7b98');
+                return;
+            }
+
+            farming = true;
+            try {
+                await hamsterWalkTo(farmList()[i] * worldWidth(), 150, 0);
+                if (st.empty) await plantAt(i, el);
+                else await harvestAt(i, el, st);
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('菜園中斷', e);
+            } finally {
+                farming = false;
+                refreshPlots();
+            }
+        }
+
+        /** 種下去：先讓她挑種子，挑完倉鼠蹲下埋一下 */
+        function plantAt(i, el) {
+            return new Promise((resolve) => {
+                openSeedShop(async (key) => {
+                    if (!key) return resolve();
+                    const c = CROPS[key];
+                    if (petData.coins < c.cost) {
+                        floatAtSpot(el, '要 ' + c.cost + ' 💰 喔', '#e0714c');
+                        return resolve();
+                    }
+                    petData.coins -= c.cost;
+                    plotSet(i, { crop: key, day: farmDay() });
+                    updateQuestProgress('plant', 1);
+                    savePetData();
+                    updatePetUI();
+                    refreshPlots();
+
+                    const ham = document.getElementById('hamster');
+                    ham.classList.add('crouch');
+                    snd('eat', 300, 'sine', .1);
+                    createFloatingEmoji('🌱', 1200, -30);
+                    floatAtSpot(el, '種下 ' + c.emoji + '！' + c.days + ' 天後來收', '#4f9f6a');
+                    await wait(600);
+                    ham.classList.remove('crouch');
+                    resolve();
+                });
+            });
+        }
+
+        /** 收成：拔起來、飛金幣、田變空 */
+        async function harvestAt(i, el, st) {
+            const c = st.c;
+            const gain = c.sell[0] + Math.floor(Math.random() * (c.sell[1] - c.sell[0] + 1));
+            const ham = document.getElementById('hamster');
+
+            ham.classList.add('crouch');
+            snd('pop', 520, 'sine', .09);
+            await wait(260);
+            ham.classList.remove('crouch');
+            ham.classList.add('happy');
+
+            plotSet(i, null);
+            refreshPlots();
+            updateQuestProgress('harvest', 1);
+            petData.coins += gain;
+            petData.exp += c.exp;
+            addHappiness(4);
+            for (let k = 0; k < 3; k++) setTimeout(() => createFloatingEmoji(c.emoji, 1200, -30), k * 140);
+            snd('coin', 800, 'sine', .1);
+            floatAtSpot(el, c.name + ' 賣了 +' + gain + ' 💰', '#4f9f6a');
+            if (typeof fxBurst === 'function' && !actReduced()) {
+                fxBurst(ham.getBoundingClientRect(), 14);
+            }
+
+            // 升級判定跟餵食那邊同一套（每 100 exp 一級）
+            if (petData.exp >= petData.level * 100) {
+                petData.level += 1;
+                petData.exp = 0;
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6, x: 0.5 } });
+                }
+                snd('levelup', 800, 'sine', 0.3);
+                gameToast('🎉 升級了！Level ' + petData.level, 'good');
+            }
+            savePetData();
+            updatePetUI();
+            await wait(700);
+            ham.classList.remove('happy');
+        }
+
+        /** 種子行。把價錢、要幾天、賣多少一次講清楚，她才算得出划不划算 */
+        function openSeedShop(done) {
+            const modal = document.getElementById('seed-modal');
+            const box = document.getElementById('seed-list');
+            let finished = false;
+            const close = (key) => {
+                if (finished) return;
+                finished = true;
+                modal.style.display = 'none';
+                done(key);
+            };
+            box.innerHTML = '';
+            Object.keys(CROPS).forEach((key) => {
+                const c = CROPS[key];
+                const afford = petData.coins >= c.cost;
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'seed-card' + (afford ? '' : ' poor');
+                b.innerHTML = '<span class="seed-emoji">' + c.emoji + '</span>'
+                            + '<span class="seed-name">' + c.name + '</span>'
+                            + '<span class="seed-meta">' + c.days + ' 天後收成</span>'
+                            + '<span class="seed-price">-' + c.cost + ' 💰</span>'
+                            + '<span class="seed-gain">賣 ' + c.sell[0] + '~' + c.sell[1] + ' 💰</span>';
+                b.addEventListener('click', () => { snd('click', 660, 'sine', .07); close(key); });
+                box.appendChild(b);
+            });
+            document.getElementById('seed-close').onclick = () => close(null);
+            modal.onclick = (e) => { if (e.target === modal) close(null); };
+            modal.style.display = 'flex';
+        }
+
         /** 在互動點上方飄一行字 */
         function floatAtSpot(el, text, color) {
             if (!el) return;
@@ -2072,7 +2370,7 @@
                 b.style.left = (r.x * 100) + '%';
                 b.style.bottom = (footInset() - 4) + 'px';
                 b.title = r.name;
-                b.innerHTML = (r.type === 'ferris' ? ferrisMarkup() : bumperMarkup()) +
+                b.innerHTML = (RIDE_MARKUP[r.type] || bumperMarkup)() +
                     '<span class="ride-tag">' + r.name + ' <b>-' + r.cost + '💰</b></span>';
                 b.addEventListener('click', (e) => { e.stopPropagation(); useRide(i); });
                 world.appendChild(b);
@@ -2085,6 +2383,10 @@
                 el.classList.toggle('cooling', rideLeft(+el.dataset.i) > 0);
             });
         }
+
+        // 設施型別 -> 畫長相的函式 / 演出的函式。加新設施就補這兩張表。
+        const RIDE_MARKUP = {};
+        const RIDE_PLAY   = {};
         function rideKey(i) { return currentMap + ':ride:' + i; }
         function rideLeft(i) {
             const r = (curMap().rides || [])[i];
@@ -2147,6 +2449,11 @@
                  + '</svg>';
         }
 
+        RIDE_MARKUP.ferris = ferrisMarkup;
+        RIDE_MARKUP.bumper = bumperMarkup;
+        RIDE_PLAY.ferris = (el) => rideFerris(el);
+        RIDE_PLAY.bumper = (el) => rideBumper(el);
+
         let riding = false;
 
         async function useRide(i) {
@@ -2160,10 +2467,10 @@
 
             riding = true;
             try {
-                // 走到設施前面（摩天輪從正下方上車，碰碰車從左邊進場）
-                const board = r.type === 'ferris' ? r.x * worldWidth()
-                                                  : r.x * worldWidth() - rideRect(el).w * 0.34;
-                await hamsterWalkTo(board, 150, 0);
+                // 走到設施前面。摩天輪／旋轉木馬／咖啡杯都是從正下方上去的，
+                // 只有碰碰車要從場地左邊進場。
+                const side = r.type === 'bumper' ? rideRect(el).w * 0.34 : 0;
+                await hamsterWalkTo(r.x * worldWidth() - side, 150, 0);
 
                 petData.coins -= r.cost;
                 updatePetUI();
@@ -2171,10 +2478,13 @@
                 await wait(260);
 
                 physSuspend();
-                if (r.type === 'ferris') await rideFerris(el);
-                else await rideBumper(el);
+                // 演出期間把前景層（氣球、爆米花車）淡掉。花了錢坐設施結果
+                // 倉鼠整隻被前面的氣球擋住，那是最掃興的事。
+                cageEl().classList.add('riding');
+                await (RIDE_PLAY[r.type] || rideBumper)(el);
 
                 addHappiness(r.happy);
+                updateQuestProgress('ride', 1);
                 const ham = document.getElementById('hamster');
                 if (typeof fxFloat === 'function') {
                     fxFloat('+' + r.happy + ' 快樂 💖', ham.getBoundingClientRect(), '#ff8fb0');
@@ -2209,8 +2519,9 @@
                 ham.classList.remove('acting');
             }
             document.querySelectorAll('.ride').forEach(e => e.classList.remove('on'));
-            document.querySelectorAll('.rcar').forEach(e => e.remove());
-            const c = cageEl(); if (c) c.classList.remove('shaking');
+            document.querySelectorAll('.rcar, .chorse, .tcup').forEach(e => e.remove());
+            if (ham) ham.classList.remove('dizzy');
+            const c = cageEl(); if (c) c.classList.remove('shaking', 'riding');
             physResume(hamX);
         }
 
@@ -2249,7 +2560,7 @@
             const TURNS = 1.75, MS = 7200;
             return new Promise((resolve) => {
                 if (actReduced()) { setTimeout(resolve, 500); return; }
-                playTone(440, 'sine', .12);
+                snd('ride', 440, 'sine', .12);
                 let topShown = false;
                 const t0 = performance.now();
                 const step = (now) => {
@@ -2261,12 +2572,12 @@
                     seat(a);
                     if (!topShown && e > 0.28) {           // 第一次到最高點
                         topShown = true;
-                        playTone(880, 'sine', .12);
+                        snd('sparkle', 880, 'sine', .12);
                         if (typeof fxBurst === 'function') fxBurst(ham.getBoundingClientRect(), 12);
                         createFloatingEmoji('✨', 1200, -30);
                     }
                     if (t < 1) requestAnimationFrame(step);
-                    else { el.style.setProperty('--a', '0'); seat(0); playTone(330, 'sine', .12); resolve(); }
+                    else { el.style.setProperty('--a', '0'); seat(0); snd('land', 330, 'sine', .12); resolve(); }
                 };
                 requestAnimationFrame(step);
             });
@@ -2324,7 +2635,7 @@
                 if (actReduced()) {
                     foes.forEach(f => f.remove()); mine.remove(); setTimeout(resolve, 500); return;
                 }
-                playTone(300, 'square', .1);
+                snd('ride', 300, 'square', .1);
                 let last = performance.now();
                 const t0 = last;
                 const step = (now) => {
@@ -2348,7 +2659,7 @@
                             mine.classList.add('hit');
                             f.el.classList.remove('hit'); void f.el.offsetWidth;
                             f.el.classList.add('hit');
-                            playTone(180, 'square', .07);
+                            snd('bump', 180, 'square', .07);
                             feelHaptic(10);
                             screenShake();
                             if (typeof fxBurst === 'function') fxBurst(mine.getBoundingClientRect(), 8);
@@ -2365,13 +2676,314 @@
                     else {
                         mine.remove(); foes.forEach(f => f.remove());
                         hamY = 0; paintHamster();
-                        playTone(520, 'sine', .12);
+                        snd('success', 520, 'sine', .12);
                         resolve();
                     }
                 };
                 requestAnimationFrame(step);
             });
         }
+
+        // ================================================================
+        // 旋轉木馬
+        // ================================================================
+        // 木馬是「繞著柱子轉」，不是平面來回跑。要看起來有深度，靠三件事：
+        //   ① 橢圓軌道 —— 左右擺幅大、前後擺幅小（rx 遠大於 ry）
+        //   ② 越後面越小 —— 依 cos 的深度值縮放
+        //   ③ 越後面越暗 —— 加一點點 brightness，補足縮放看不出來的遠近
+        // 木馬本身還要上下起伏，不然只是在水平繞圈，一點都不像旋轉木馬。
+        // deckY = 畫圖時木馬腳踩的那條線；orbitY = 真的繞行時的軌道中心。
+        // 兩個要分開：軌道中心得對準底座橢圓的圓心（deckY + 12），不然前面那匹
+        // 會浮在底座前緣上方十幾 px，看起來像懸空。
+        const CAROUSEL_VB = { w: 210, h: 200, deckY: 150, orbitY: 156, rx: 72, ry: 17, bob: 13 };
+
+        /**
+         * 一匹木馬。腳踩在 y=0、銅柱往上穿出框外，所以裝飾用的和真正會動的
+         * 那幾匹可以共用同一組路徑 —— 只要把原點對到「馬腳站的地方」就好。
+         * 脖子和腿都是先描一條粗的深色、再疊一條細的本色，等於免費的描邊。
+         */
+        function carouselHorse(col, mane) {
+            const O = '#a9703f';
+            const limb = (d, w1, w2) =>
+                '<path d="' + d + '" stroke="' + O + '" stroke-width="' + w1 + '" stroke-linecap="round" fill="none"/>'
+              + '<path d="' + d + '" stroke="' + col + '" stroke-width="' + w2 + '" stroke-linecap="round" fill="none"/>';
+            return '<path d="M0 -64 v64" stroke="#e8c877" stroke-width="3.4" stroke-linecap="round"/>'
+                 + limb('M-11 -20 l-3 19', 7, 4.4) + limb('M-6 -20 l1 19', 7, 4.4)
+                 + limb('M6 -20 l-1 19', 7, 4.4)   + limb('M11 -20 l3 19', 7, 4.4)
+                 + '<path d="M-15 -31 q-9 2 -8 13" stroke="' + mane + '" stroke-width="3.6"'
+                 +   ' fill="none" stroke-linecap="round"/>'
+                 + '<ellipse cx="0" cy="-28" rx="16" ry="9.5" fill="' + col + '"'
+                 +   ' stroke="' + O + '" stroke-width="2"/>'
+                 + limb('M7 -32 L18 -43', 13, 9)
+                 + '<path d="M16 -49 l0 -7 l6 5 z" fill="' + col + '" stroke="' + O + '"'
+                 +   ' stroke-width="1.6" stroke-linejoin="round"/>'
+                 + '<ellipse cx="21" cy="-45" rx="8.5" ry="5.2" transform="rotate(-18 21 -45)"'
+                 +   ' fill="' + col + '" stroke="' + O + '" stroke-width="2"/>'
+                 + '<path d="M10 -42 q6 -7 11 -6" stroke="' + mane + '" stroke-width="3.6"'
+                 +   ' fill="none" stroke-linecap="round"/>'
+                 + '<rect x="-8" y="-39" width="14" height="6" rx="2.5" fill="' + mane + '" opacity=".9"/>'
+                 + '<circle cx="24" cy="-46" r="1.5" fill="#5a3b26"/>';
+        }
+
+        function carouselMarkup() {
+            const V = CAROUSEL_VB;
+            // 屋頂的紅白條紋。整圈 20 片一起畫（不是只畫看得到的前半圈）——
+            // 少畫後半圈的話圓錐的兩側會缺一角，看起來像被咬掉。
+            let roof = '';
+            for (let k = 0; k < 20; k++) {
+                const a0 = k * Math.PI / 10, a1 = a0 + Math.PI / 10;
+                const P = (a) => (105 + 93 * Math.cos(a)).toFixed(1) + ' ' + (62 + 21 * Math.sin(a)).toFixed(1);
+                roof += '<path d="M105 16 L' + P(a0) + ' A93 21 0 0 1 ' + P(a1) + ' Z" fill="'
+                     + (k % 2 ? '#fff6ee' : '#e0714c') + '"/>';
+            }
+            const horse = (x, sc) => '<g transform="translate(' + x + ' ' + V.deckY + ') scale(' + sc + ')">';
+            return '<svg class="cs" viewBox="0 0 210 200" aria-hidden="true">'
+                 + '<ellipse cx="105" cy="' + (V.deckY + 26) + '" rx="86" ry="17" fill="#000" opacity=".14"/>'
+                 // 底座
+                 + '<ellipse cx="105" cy="' + (V.deckY + 18) + '" rx="84" ry="17" fill="#c07f4f"/>'
+                 + '<ellipse cx="105" cy="' + (V.deckY + 12) + '" rx="84" ry="17" fill="#e8b878"'
+                 +   ' stroke="#a9703f" stroke-width="2"/>'
+                 + '<ellipse cx="105" cy="' + (V.deckY + 12) + '" rx="58" ry="11" fill="none"'
+                 +   ' stroke="#c9954c" stroke-width="2" opacity=".7"/>'
+                 // 中柱
+                 + '<rect x="98" y="40" width="14" height="' + (V.deckY - 28) + '" rx="6"'
+                 +   ' fill="#f0c987" stroke="#c9954c" stroke-width="2"/>'
+                 // 裝飾木馬（沒人坐的時候慢慢上下浮）
+                 + '<g class="cs-horses">'
+                 +   horse(105, .74) + carouselHorse('#e7f0ff', '#4e7fa8') + '</g>'
+                 +   horse(44, 1) + carouselHorse('#fff1e2', '#e0714c') + '</g>'
+                 +   horse(166, 1) + carouselHorse('#ffe0e6', '#c792ea') + '</g>'
+                 + '</g>'
+                 // 屋頂
+                 + '<g class="cs-roof">' + roof + '</g>'
+                 + '<ellipse cx="105" cy="62" rx="93" ry="21" fill="none" stroke="#c9564c" stroke-width="3"/>'
+                 + '<path d="M105 16 v-13" stroke="#c9954c" stroke-width="3"/>'
+                 + '<path d="M105 3 l18 6 l-18 6 z" fill="#ffd166" stroke="#c9954c" stroke-width="1.5"/>'
+                 + '<circle cx="105" cy="16" r="6" fill="#ffd166" stroke="#c9564c" stroke-width="2"/>'
+                 // 屋簷小燈：沿著前半圈的橢圓擺一排
+                 + '<g fill="#ffd166" stroke="#c9564c" stroke-width="1">'
+                 + [1,2,3,4,5,6,7,8,9].map(k => {
+                       const a = Math.PI * k / 10;
+                       return '<circle cx="' + (105 + 93 * Math.cos(a)).toFixed(1)
+                            + '" cy="' + (62 + 21 * Math.sin(a)).toFixed(1) + '" r="3.2"/>';
+                   }).join('') + '</g>'
+                 + '</svg>';
+        }
+        RIDE_MARKUP.carousel = carouselMarkup;
+
+        /** 倉鼠挑一匹木馬，繞著柱子轉兩圈半，木馬同時上上下下 */
+        function rideCarousel(el) {
+            const R = rideRect(el), V = CAROUSEL_VB, k = R.h / V.h;
+            const g = {
+                cx: R.cx,
+                deckH: R.baseH + (V.h - V.orbitY) * k,  // 馬腳繞行的那一圈離地多高
+                rx: V.rx * k, ry: V.ry * k, bob: V.bob * k
+            };
+            const world = worldEl();
+            const ham = document.getElementById('hamster');
+            el.classList.add('on');
+            cameraLookAt(g.cx);
+
+            // 三匹會動的木馬。倉鼠騎第 0 匹，另外兩匹只是陪跑
+            const COLS = [['#fff1e2', '#e0714c'], ['#ffe0e6', '#c792ea'], ['#e7f0ff', '#4e7fa8']];
+            const horses = COLS.map((c, i) => {
+                const d = document.createElement('div');
+                d.className = 'chorse' + (i === 0 ? ' mine' : '');
+                d.style.width = (58 * k) + 'px';
+                // viewBox 的下緣就是馬腳，所以元素的 bottom 直接等於「站的高度」，
+                // 不用再去扣圖的留白
+                d.innerHTML = '<svg viewBox="-26 -64 54 65" aria-hidden="true">'
+                            + carouselHorse(c[0], c[1]) + '</svg>';
+                world.appendChild(d);
+                return d;
+            });
+
+            ham.classList.add('acting');
+            ham.style.transformOrigin = '50% 100%';
+
+            // 角度 a：0 = 最靠近鏡頭（正前方）。往後轉時越小越暗。
+            const place = (d, a, isHam) => {
+                const depth = -Math.cos(a);                        // -1 最前面, 1 最後面
+                const sc = 1 - 0.17 * depth;
+                const x = g.cx + g.rx * Math.sin(a);
+                const y = g.deckH + g.ry * depth
+                        + g.bob * (0.5 + 0.5 * Math.sin(a * 2));   // 上下起伏
+                d.style.left = (x / worldWidth() * 100) + '%';
+                d.style.bottom = y.toFixed(1) + 'px';
+                d.style.transform = 'translateX(-50%) scale(' + sc.toFixed(3) + ')'
+                                  + (Math.cos(a) >= 0 ? '' : ' scaleX(-1)');
+                d.style.filter = 'brightness(' + (1 - 0.18 * Math.max(0, depth)).toFixed(3) + ')';
+                d.style.zIndex = depth > 0 ? 1 : 3;                // 後面的壓在中柱後
+                if (isHam) {
+                    hamX = x; hamY = y + 10 * k;                   // 坐在馬背上，再高一點
+                    hamFacing = Math.cos(a) >= 0 ? 1 : -1;         // 轉到後面就背對鏡頭
+                    ham.style.transform = 'scale(' + (0.42 * sc).toFixed(3) + ')';
+                    paintHamster();
+                }
+            };
+
+            const TURNS = 2.5, MS = 8200;
+            return new Promise((resolve) => {
+                if (actReduced()) { horses.forEach(h => h.remove()); setTimeout(resolve, 500); return; }
+                snd('ride', 440, 'triangle', .12);
+                let waved = false;
+                const t0 = performance.now();
+                const step = (now) => {
+                    const t = Math.min(1, (now - t0) / MS);
+                    const e = t * t * (3 - 2 * t);                 // 起步慢、收尾慢
+                    const a = e * TURNS * Math.PI * 2;
+                    horses.forEach((d, i) => place(d, a + i * Math.PI * 2 / 3, i === 0));
+                    if (!waved && e > 0.55) {                      // 轉回正前方時招手
+                        waved = true;
+                        snd('sparkle', 880, 'triangle', .12);
+                        createFloatingEmoji('🎠', 1200, -30);
+                        if (typeof fxBurst === 'function') fxBurst(ham.getBoundingClientRect(), 10);
+                    }
+                    if (t < 1) requestAnimationFrame(step);
+                    else {
+                        horses.forEach(h => h.remove());
+                        hamY = 0; ham.style.transform = ''; paintHamster();
+                        snd('success', 520, 'triangle', .12);
+                        resolve();
+                    }
+                };
+                requestAnimationFrame(step);
+            });
+        }
+        RIDE_PLAY.carousel = rideCarousel;
+
+        // ================================================================
+        // 咖啡杯
+        // ================================================================
+        // 咖啡杯好玩的地方是「轉盤在轉，杯子自己又在轉」，兩個圓疊起來
+        // 會走出外擺線，路徑忽近忽遠，比單純繞圈有趣得多。
+        // 倉鼠在自己的杯子裡，所以位置 = 轉盤上的位置 + 杯子自轉的偏移。
+        const TEACUP_VB = { w: 190, h: 132, deckY: 96, orbitY: 104, rx: 60, ry: 15, spin: 18 };
+
+        function teacupMarkup() {
+            const V = TEACUP_VB;
+            const cup = (x, y, sc, col, dark) =>
+                '<g transform="translate(' + x + ' ' + y + ') scale(' + sc + ')">'
+              + '<ellipse cx="0" cy="13" rx="23" ry="6" fill="' + dark + '" opacity=".35"/>'
+              + '<ellipse cx="0" cy="10" rx="22" ry="6" fill="#fff6ee" stroke="' + dark + '" stroke-width="1.6"/>'
+              + '<path d="M17 -9 q9 0 9 6 q0 6 -9 6" fill="none" stroke="' + dark + '" stroke-width="3"/>'
+              + '<path d="M-17 -12 q0 18 5 21 h24 q5 -3 5 -21 z" fill="' + col + '"'
+              +   ' stroke="' + dark + '" stroke-width="1.8" stroke-linejoin="round"/>'
+              + '<ellipse cx="0" cy="-12" rx="17" ry="5" fill="#fff" opacity=".85"'
+              +   ' stroke="' + dark + '" stroke-width="1.5"/>'
+              + '</g>';
+            return '<svg class="tc" viewBox="0 0 190 132" aria-hidden="true">'
+                 + '<ellipse cx="95" cy="' + (V.deckY + 24) + '" rx="78" ry="15" fill="#000" opacity=".14"/>'
+                 + '<ellipse cx="95" cy="' + (V.deckY + 17) + '" rx="76" ry="15" fill="#9d7bb5"/>'
+                 + '<ellipse cx="95" cy="' + (V.deckY + 11) + '" rx="76" ry="15" fill="#c8a8dd"'
+                 +   ' stroke="#8a6aa3" stroke-width="2"/>'
+                 // 轉盤上的圈圈紋路，轉起來才看得出來在轉
+                 + '<g class="tc-deck" fill="none" stroke="#e5d2f0" stroke-width="2.5">'
+                 +   '<ellipse cx="95" cy="' + (V.deckY + 11) + '" rx="56" ry="11"/>'
+                 +   '<ellipse cx="95" cy="' + (V.deckY + 11) + '" rx="30" ry="6"/>'
+                 + '</g>'
+                 + '<g class="tc-cups">'
+                 +   cup(95, V.deckY - 20, .92, '#9fc8f0', '#4e7fa8')
+                 +   cup(34, V.deckY - 1, 1.16, '#f2857a', '#c9564c')
+                 +   cup(156, V.deckY - 1, 1.16, '#8fd0a0', '#4f9f6a')
+                 + '</g>'
+                 // 欄杆
+                 + '<g stroke="#e0e6ef" stroke-width="4" stroke-linecap="round">'
+                 +   '<path d="M14 ' + (V.deckY + 8) + ' v-12M95 ' + (V.deckY + 22) + ' v-12M176 '
+                 +   (V.deckY + 8) + ' v-12"/></g>'
+                 + '</svg>';
+        }
+        RIDE_MARKUP.teacup = teacupMarkup;
+
+        /** 轉盤轉 + 杯子自轉。結束時倉鼠會暈一下（😵‍💫），那是整個橋段的笑點 */
+        function rideTeacup(el) {
+            const R = rideRect(el), V = TEACUP_VB, k = R.h / V.h;
+            const g = {
+                cx: R.cx,
+                deckH: R.baseH + (V.h - V.orbitY) * k,
+                rx: V.rx * k, ry: V.ry * k, spin: V.spin * k
+            };
+            const world = worldEl();
+            const ham = document.getElementById('hamster');
+            el.classList.add('on');
+            cameraLookAt(g.cx);
+
+            const COLS = [['#ffd166', '#c9954c'], ['#f2857a', '#c9564c'], ['#8fd0a0', '#4f9f6a']];
+            const cups = COLS.map((c, i) => {
+                const d = document.createElement('div');
+                d.className = 'tcup' + (i === 0 ? ' mine' : '');
+                d.style.width = (68 * k) + 'px';
+                d.innerHTML =
+                  '<svg viewBox="-28 -22 56 42" aria-hidden="true">'
+                + '<ellipse cx="0" cy="13" rx="23" ry="6" fill="' + c[1] + '" opacity=".35"/>'
+                + '<ellipse cx="0" cy="10" rx="22" ry="6" fill="#fff6ee" stroke="' + c[1] + '" stroke-width="1.6"/>'
+                + '<path d="M17 -9 q9 0 9 6 q0 6 -9 6" fill="none" stroke="' + c[1] + '" stroke-width="3"/>'
+                + '<path d="M-17 -12 q0 18 5 21 h24 q5 -3 5 -21 z" fill="' + c[0] + '"'
+                +   ' stroke="' + c[1] + '" stroke-width="1.8" stroke-linejoin="round"/>'
+                + '<ellipse cx="0" cy="-12" rx="17" ry="5" fill="#fff" opacity=".85"'
+                +   ' stroke="' + c[1] + '" stroke-width="1.5"/></svg>';
+                world.appendChild(d);
+                return d;
+            });
+
+            ham.classList.add('acting');
+            ham.style.transformOrigin = '50% 100%';
+
+            // A = 轉盤角度，B = 杯子自轉角度（快很多，所以路徑會繞圈中帶繞圈）
+            const place = (d, A, B, isHam) => {
+                const depth = -Math.cos(A);
+                const sc = 1 - 0.15 * depth;
+                const x = g.cx + g.rx * Math.sin(A) + g.spin * Math.sin(B);
+                const y = g.deckH + g.ry * depth + g.spin * 0.34 * Math.cos(B);
+                d.style.left = (x / worldWidth() * 100) + '%';
+                d.style.bottom = y.toFixed(1) + 'px';
+                d.style.transform = 'translateX(-50%) scale(' + sc.toFixed(3) + ')'
+                                  + ' rotate(' + (Math.sin(B) * 9).toFixed(1) + 'deg)';
+                d.style.filter = 'brightness(' + (1 - 0.16 * Math.max(0, depth)).toFixed(3) + ')';
+                d.style.zIndex = depth > 0 ? 1 : 3;
+                if (isHam) {
+                    // 倉鼠縮在杯子裡，只露上半身，所以站的高度比杯底再高一點
+                    hamX = x; hamY = y + 16 * k;
+                    hamFacing = Math.sin(B) >= 0 ? 1 : -1;
+                    ham.style.transform = 'scale(' + (0.40 * sc).toFixed(3) + ')'
+                                        + ' rotate(' + (Math.sin(B) * 7).toFixed(1) + 'deg)';
+                    paintHamster();
+                }
+            };
+
+            const MS = 7600;
+            return new Promise((resolve) => {
+                if (actReduced()) { cups.forEach(c => c.remove()); setTimeout(resolve, 500); return; }
+                snd('ride', 300, 'sine', .12);
+                let spun = false;
+                const t0 = performance.now();
+                const step = (now) => {
+                    const t = Math.min(1, (now - t0) / MS);
+                    const e = t * t * (3 - 2 * t);
+                    const A = e * 2 * Math.PI * 2;        // 轉盤兩圈
+                    const B = e * 2 * Math.PI * 7;        // 杯子七圈
+                    cups.forEach((d, i) => place(d, A + i * Math.PI * 2 / 3,
+                                                 B + i * Math.PI * 2 / 3, i === 0));
+                    if (!spun && e > 0.45) {
+                        spun = true;
+                        snd('whoosh', 700, 'sine', .1);
+                        createFloatingEmoji('☕', 1200, -30);
+                    }
+                    if (t < 1) requestAnimationFrame(step);
+                    else {
+                        cups.forEach(c => c.remove());
+                        hamY = 0; ham.style.transform = ''; paintHamster();
+                        // 頭暈那一下：倉鼠原地晃兩圈才站穩
+                        ham.classList.add('dizzy');
+                        createFloatingEmoji('😵‍💫', 1500, -45);
+                        snd('pop', 520, 'sine', .12);
+                        setTimeout(() => { ham.classList.remove('dizzy'); resolve(); }, 900);
+                    }
+                };
+                requestAnimationFrame(step);
+            });
+        }
+        RIDE_PLAY.teacup = rideTeacup;
 
         // ================================================================
         // 遊戲中心的機台
@@ -2421,8 +3033,7 @@
                 await hamsterWalkTo(c.x * worldWidth(), 160, (c.y || 0) * usableH());
 
                 if (el) el.classList.add('on');
-                playTone(660, 'square', .07);
-                setTimeout(() => playTone(880, 'square', .07), 110);
+                if (snd('click', 660, 'square', .07)) setTimeout(() => playTone(880, 'square', .07), 110);
                 await wait(320);
 
                 // 跳進螢幕：縮小 + 往機台的高度靠過去
@@ -2434,6 +3045,7 @@
                 feelHaptic(14);
                 await wait(actReduced() ? 80 : 420);
 
+                updateQuestProgress('game', 1);
                 petData.map = currentMap;
                 savePetData();
                 try { sessionStorage.setItem('daisy_from_game', c.name); } catch (e) {}
@@ -2494,6 +3106,21 @@
 
             traveling = true;
             try {
+                // 「今天走訪幾張地圖」要算不同的地圖，不是走了幾趟 ——
+                // 不然在兩張之間來回跑十次就破關了
+                if (!petData.quests) checkDailyQuests();
+                const seen = petData.quests && petData.quests.seen;
+                const today = farmDay();
+                if (petData.quests) {
+                    if (!seen || petData.quests.seenDay !== today) {
+                        petData.quests.seen = [currentMap];
+                        petData.quests.seenDay = today;
+                    }
+                    if (petData.quests.seen.indexOf(id) < 0) {
+                        petData.quests.seen.push(id);
+                        updateQuestProgress('travel', 1);
+                    }
+                }
                 const ex = curMap().exits || {};
                 // 從哪一側離開：右邊的門往右走，左邊的門往左走
                 const side = (ex.right === id) ? 'right' : (ex.left === id ? 'left' : null);
@@ -2504,7 +3131,7 @@
                 }
 
                 curtain(true, MAPS[id]);
-                playTone(520, 'sine', .1);
+                snd('whoosh', 520, 'sine', .1);
                 await wait(actReduced() ? 60 : 380);
 
                 petData.map = id;
@@ -2523,7 +3150,7 @@
 
                 await wait(actReduced() ? 60 : 420);
                 curtain(false);
-                playTone(660, 'sine', .1);
+                snd('door', 660, 'sine', .1);
                 // 往世界裡面走幾步，才不會卡在門邊
                 hamsterWalkTo(hamX + (enterLeft ? 1 : -1) * worldWidth() * 0.08, 130, 0);
             } catch (e) {
@@ -2731,6 +3358,14 @@
             ['peeker-a', 'peeker-b'].forEach((id) => {
                 const el = document.getElementById(id);
                 if (!el) return;
+                // 綁一次就好。placePeekers 每次換地圖／改尺寸都會跑
+                if (!el.dataset.bound) {
+                    el.dataset.bound = '1';
+                    el.addEventListener('click', (e) => { e.stopPropagation(); tapFriend(id); });
+                    el.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tapFriend(id); }
+                    });
+                }
                 // 兩隻至少隔開 14%，不然會肩並肩看起來像同一組
                 const ok = free.filter((g) => used.every((u) => Math.abs(g - u) >= 14));
                 if (!ok.length) { el.style.display = 'none'; return; }   // 擠不下就只出現一隻
@@ -2741,6 +3376,336 @@
                 el.style.bottom = '30%';
                 el.style.animationDelay = '-' + (Math.random() * 17).toFixed(1) + 's';
             });
+        }
+
+        // ================================================================
+        // 公佈欄（每日挑戰）
+        // ================================================================
+        // 每日挑戰本來只能從角落那顆 📜 打開，而且永遠是同三件事
+        // （拼字 10 個、洗澡 1 次、餵食 3 次），獎勵 2~5 金幣 —— 小到不值得做。
+        //
+        // 現在挑戰從一個池子裡每天抽三件、涵蓋世界裡所有玩法，獎勵也加大，
+        // 三件全做完還有額外獎金。公佈欄立在街上，她得走過去看，
+        // 那才像「今天有什麼事可以做」的地方。
+        function buildBoard() {
+            const world = worldEl();
+            if (!world) return;
+            world.querySelectorAll('.board').forEach(el => el.remove());
+            const cfg = curMap().board;
+            if (!cfg) return;
+
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'board';
+            b.style.left = (cfg.x * 100) + '%';
+            b.style.bottom = (footInset() - 4) + 'px';
+            b.title = '今日挑戰';
+            b.innerHTML = boardMarkup() + '<span class="board-dot">!</span>';
+            b.addEventListener('click', (e) => { e.stopPropagation(); tapBoard(); });
+            world.appendChild(b);
+            refreshBoard();
+        }
+
+        function boardMarkup() {
+            // 釘在板子上的三張紙條。角度各差一點，才不會像印上去的
+            const notes = [[-1.6, '#fffdf4'], [1.2, '#fff6e8'], [-0.7, '#f4fbff']];
+            let paper = '';
+            notes.forEach(([rot, col], i) => {
+                const y = 44 + i * 21;
+                paper += '<g transform="rotate(' + rot + ' 70 ' + (y + 7) + ')">'
+                       + '<rect x="22" y="' + y + '" width="96" height="15" rx="2" fill="' + col + '"'
+                       +   ' stroke="#c9b28f" stroke-width="1"/>'
+                       + '<g stroke="#bfae92" stroke-width="1.6" stroke-linecap="round">'
+                       +   '<path d="M28 ' + (y + 5.5) + ' h60M28 ' + (y + 10) + ' h40"/></g>'
+                       + '<circle cx="70" cy="' + (y + 2.5) + '" r="2.4" fill="#e0714c"/>'
+                       + '</g>';
+            });
+            return '<svg class="bd" viewBox="0 0 140 150" aria-hidden="true">'
+                 + '<ellipse cx="70" cy="145" rx="46" ry="7" fill="#000" opacity=".15"/>'
+                 // 兩根柱子
+                 + '<rect x="28" y="96" width="11" height="50" rx="4" fill="#a9703f"/>'
+                 + '<rect x="101" y="96" width="11" height="50" rx="4" fill="#a9703f"/>'
+                 // 板身
+                 + '<rect x="14" y="26" width="112" height="82" rx="6" fill="#c08b52"'
+                 +   ' stroke="#8a5f37" stroke-width="3"/>'
+                 + '<rect x="19" y="31" width="102" height="72" rx="4" fill="#e0bd8c"/>'
+                 + paper
+                 // 屋簷
+                 + '<path d="M6 30 L70 8 L134 30 Z" fill="#e0714c" stroke="#a83f32" stroke-width="2.5"'
+                 +   ' stroke-linejoin="round"/>'
+                 + '<rect x="6" y="28" width="128" height="7" rx="3.5" fill="#f2a68c"'
+                 +   ' stroke="#a83f32" stroke-width="2"/>'
+                 + '</svg>';
+        }
+
+        /** 還有沒做完的挑戰就亮紅點，她才知道要過來看 */
+        function refreshBoard() {
+            const el = document.querySelector('.board');
+            if (!el) return;
+            const q = petData.quests;
+            const left = q ? q.list.filter(x => !x.done).length : 0;
+            el.classList.toggle('has-new', left > 0);
+            el.querySelector('.board-dot').textContent = left || '✓';
+        }
+
+        let readingBoard = false;
+
+        async function tapBoard() {
+            if (readingBoard || gifting || farming || usingSpot || riding
+                || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+            readingBoard = true;
+            try {
+                const el = document.querySelector('.board');
+                await hamsterWalkTo(curMap().board.x * worldWidth(), 150, 0);
+                snd('click', 660, 'sine', .08);
+                createFloatingEmoji('📜', 1100, -30);
+                await wait(260);
+                openQuests();
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('看公佈欄中斷', e);
+            } finally {
+                readingBoard = false;
+            }
+        }
+
+        // 每天從這個池子抽三件。{n} 會換成當天抽到的數量。
+        // 刻意把世界裡每一種玩法都放進來 —— 挑戰的用處就是「今天去做點沒做過的」。
+        const QUEST_POOL = [
+            { id: 'word',    text: '拼對 {n} 個單字',       lo: 6, hi: 10, reward: 14 },
+            { id: 'feed',    text: '餵倉鼠吃 {n} 次東西',   lo: 2, hi: 3,  reward: 8  },
+            { id: 'bath',    text: '幫倉鼠洗 {n} 次澡',     lo: 1, hi: 1,  reward: 6  },
+            { id: 'spot',    text: '在世界裡互動 {n} 次',   lo: 3, hi: 5,  reward: 12 },
+            { id: 'plant',   text: '種下 {n} 株菜',         lo: 1, hi: 2,  reward: 10 },
+            { id: 'harvest', text: '收成 {n} 株菜',         lo: 1, hi: 2,  reward: 16 },
+            { id: 'gift',    text: '送小動物 {n} 個禮物',   lo: 1, hi: 2,  reward: 12 },
+            { id: 'ride',    text: '坐 {n} 次遊樂設施',     lo: 1, hi: 2,  reward: 16 },
+            { id: 'travel',  text: '走訪 {n} 張不同的地圖', lo: 3, hi: 4,  reward: 12 },
+            { id: 'game',    text: '去遊戲中心玩 {n} 次',   lo: 1, hi: 1,  reward: 14 },
+            { id: 'wheel',   text: '跑 {n} 次跑輪',         lo: 1, hi: 2,  reward: 10 },
+        ];
+        const QUEST_ALL_BONUS = 30;
+        const QUEST_VERSION = 2;      // 改了題庫就 +1，當天也會立刻換新的
+
+        /**
+         * 用日期當亂數種子，同一天抽到的一定一樣。
+         * 不這樣做的話，每次重整都會換一批挑戰，做到一半的進度就沒意義了。
+         */
+        function questRand(seed) {
+            let x = seed * 9301 + 49297;
+            return function () { x = (x * 9301 + 49297) % 233280; return x / 233280; };
+        }
+
+        // ================================================================
+        // 小動物朋友
+        // ================================================================
+        // 以前柵欄後的小動物只是背景動畫（17 秒才探頭一次、pointer-events:none）。
+        // 現在牠們是朋友：可以送禮物、有好感度、五顆愛心之後會每天回送東西。
+        //
+        // 所以牠們改成**一直看得到**。原本那種「探出來兩秒又縮回去」的做法
+        // 很可愛，但她得在那兩秒內點中 —— 對小二生來說只是挫折。
+        // 現在改成在柵欄後面一直上下晃，隨時點得到。
+        const FRIENDS = {
+            '🐦':  { name: '小鳥',   likes: 'nut',     say: ['啾啾～', '今天天氣真好！'] },
+            '🐿️': { name: '小松鼠', likes: 'nut',     say: ['有堅果嗎？', '我藏了好多果子！'] },
+            '🦆':  { name: '鴨子',   likes: 'cookie',  say: ['呱呱！', '一起去池塘玩！'] },
+            '🐢':  { name: '烏龜',   likes: 'cookie',  say: ['慢慢來就好～', '我走得很慢喔'] },
+            '🐈':  { name: '花貓',   likes: 'ribbon',  say: ['喵嗚～', '幫我搔搔下巴'] },
+            '🕊️': { name: '白鴿',   likes: 'ribbon',  say: ['咕咕～', '我會送信喔！'] },
+            '🐭':  { name: '小老鼠', likes: 'cookie',  say: ['吱吱！', '這裡好好玩'] },
+            '👾':  { name: '外星人', likes: 'ribbon',  say: ['嗶嗶啵啵', '帶我去打電動！'] },
+            '🐰':  { name: '兔子',   likes: 'bouquet', say: ['蹦蹦跳跳～', '紅蘿蔔最好吃'] },
+            '🎈':  { name: '氣球哥', likes: 'bouquet', say: ['飄～', '抓好我喔'] },
+            '🦀':  { name: '螃蟹',   likes: 'nut',     say: ['喀啦喀啦', '小心我的鉗子'] },
+            '🐠':  { name: '小魚',   likes: 'bouquet', say: ['咕嚕咕嚕', '水裡最舒服了'] },
+            '🐞':  { name: '瓢蟲',   likes: 'nut',     say: ['我是幸運蟲！', '點點好看嗎？'] },
+            '🕷️': { name: '小蜘蛛', likes: 'cookie',  say: ['我在織網', '別怕我啦'] },
+        };
+        const GIFTS = {
+            nut:     { emoji: '🌰', name: '堅果',   cost: 5,  love: 1 },
+            cookie:  { emoji: '🍪', name: '餅乾',   cost: 12, love: 2 },
+            ribbon:  { emoji: '🎀', name: '蝴蝶結', cost: 25, love: 3 },
+            bouquet: { emoji: '💐', name: '花束',   cost: 40, love: 5 },
+        };
+        const LOVE_PER_HEART = 6, MAX_HEARTS = 5;
+
+        function friendName(face) { return (FRIENDS[face] || {}).name || '小動物'; }
+        function friendData(face) {
+            if (!petData.friends) petData.friends = {};
+            if (!petData.friends[face]) petData.friends[face] = { love: 0, day: 0, gave: 0 };
+            return petData.friends[face];
+        }
+        function friendHearts(face) {
+            return Math.min(MAX_HEARTS, Math.floor(friendData(face).love / LOVE_PER_HEART));
+        }
+        function friendGiftedToday(face) { return friendData(face).day === farmDay(); }
+
+        /** 把兩隻的愛心和「今天還沒送」的小紅點刷新 */
+        function refreshFriends() {
+            ['peeker-a', 'peeker-b'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el || !el.dataset.friend) return;
+                const face = el.dataset.friend, h = friendHearts(face);
+                el.querySelector('.peeker-hearts').textContent = h ? '💗'.repeat(h) : '';
+                el.classList.toggle('can-gift', !friendGiftedToday(face));
+                el.classList.toggle('bff', h >= MAX_HEARTS);
+            });
+        }
+
+        /**
+         * 三顆愛心以上的朋友每天會自己回送東西。
+         * 這是「常常回來看看」的第二個理由（第一個是菜園），而且不用她做什麼，
+         * 純粹是打開來就有的好消息。
+         */
+        function friendReturnGifts() {
+            const today = farmDay();
+            let total = 0, who = [];
+            (curMap().peekers || []).forEach((face) => {
+                const h = friendHearts(face);
+                if (h < 3) return;
+                const d = friendData(face);
+                if (d.gave === today) return;
+                d.gave = today;
+                total += h * 4;
+                who.push(face);
+            });
+            if (!total) return;
+            petData.coins += total;
+            savePetData();
+            updatePetUI();
+            setTimeout(() => {
+                gameToast(who.join('') + ' 送你回禮 +' + total + ' 💰', 'good');
+                snd('coin', 800, 'sine', .1);
+            }, 1400);
+        }
+
+        let gifting = false;
+
+        async function tapFriend(id) {
+            const el = document.getElementById(id);
+            if (!el || !el.dataset.friend) return;
+            if (gifting || farming || usingSpot || riding || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+
+            const face = el.dataset.friend, f = FRIENDS[face] || {};
+            // 先打個招呼，就算今天不送禮也有回應
+            friendSay(el, f.say ? f.say[Math.floor(Math.random() * f.say.length)] : '嗨！');
+
+            if (friendGiftedToday(face)) {
+                setTimeout(() => friendSay(el, '今天的禮物收到了，明天見！ 🌙'), 900);
+                return;
+            }
+
+            gifting = true;
+            try {
+                // 走到牠底下再送，不然禮物是隔空飛過去的
+                await hamsterWalkTo(worldXOf(el), 150, 0);
+                await new Promise((resolve) => {
+                    openGiftShop(face, async (key) => {
+                        if (!key) return resolve();
+                        await giveGift(face, key, el);
+                        resolve();
+                    });
+                });
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('送禮中斷', e);
+            } finally {
+                gifting = false;
+            }
+        }
+
+        async function giveGift(face, key, el) {
+            const g = GIFTS[key], f = FRIENDS[face] || {};
+            if (!g) return;
+            if (petData.coins < g.cost) { friendSay(el, '金幣不夠買 ' + g.emoji); return; }
+
+            const d = friendData(face);
+            const before = friendHearts(face);
+            const loved = f.likes === key;              // 送到牠最喜歡的，好感度加倍
+
+            petData.coins -= g.cost;
+            d.love += g.love * (loved ? 2 : 1);
+            d.day = farmDay();
+            addHappiness(3);
+            updateQuestProgress('gift', 1);
+
+            const ham = document.getElementById('hamster');
+            ham.classList.add('happy');
+            createFloatingEmoji(g.emoji, 1300, -34);
+            snd('sparkle', 660, 'sine', .1);
+            await wait(520);
+            friendSay(el, loved ? '哇！我最喜歡 ' + g.emoji + ' 了！💗' : '謝謝你的 ' + g.emoji + '！');
+            if (typeof fxBurst === 'function' && !actReduced()) {
+                fxBurst(el.getBoundingClientRect(), loved ? 16 : 10);
+            }
+            await wait(600);
+            ham.classList.remove('happy');
+
+            const after = friendHearts(face);
+            if (after > before) {
+                // 升一顆愛心給一筆獎金，這是送禮的主要報酬
+                const bonus = after * 15;
+                petData.coins += bonus;
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
+                }
+                snd('levelup', 800, 'sine', .25);
+                gameToast('💗 和' + friendName(face) + '變成更好的朋友了！+' + bonus + ' 💰', 'good');
+                if (after >= MAX_HEARTS) {
+                    setTimeout(() => gameToast(
+                        '🎉 ' + face + ' 成為你的好朋友，以後每天都會回送禮物！', 'good'), 1600);
+                }
+            }
+            savePetData();
+            updatePetUI();
+            refreshFriends();
+        }
+
+        /** 小動物頭上的對話泡泡 */
+        function friendSay(el, text) {
+            if (!el) return;
+            el.querySelectorAll('.peeker-say').forEach((n) => n.remove());
+            const b = document.createElement('div');
+            b.className = 'peeker-say';
+            b.textContent = text;
+            el.appendChild(b);
+            setTimeout(() => b.remove(), 1900);
+        }
+
+        /** 禮物店。喜歡的那樣會標「最愛」，她才知道送什麼划算 */
+        function openGiftShop(face, done) {
+            const f = FRIENDS[face] || {};
+            const modal = document.getElementById('gift-modal');
+            const box = document.getElementById('gift-list');
+            let finished = false;
+            const close = (key) => {
+                if (finished) return;
+                finished = true;
+                modal.style.display = 'none';
+                done(key);
+            };
+            document.getElementById('gift-title').textContent =
+                '送禮物給' + friendName(face) + ' ' + face;
+            document.getElementById('gift-hearts').textContent =
+                friendHearts(face) ? '💗'.repeat(friendHearts(face)) : '還不太熟';
+            box.innerHTML = '';
+            Object.keys(GIFTS).forEach((key) => {
+                const g = GIFTS[key];
+                const afford = petData.coins >= g.cost;
+                const fav = f.likes === key;
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'seed-card' + (afford ? '' : ' poor') + (fav ? ' fav' : '');
+                b.innerHTML = '<span class="seed-emoji">' + g.emoji + '</span>'
+                            + '<span class="seed-name">' + g.name + '</span>'
+                            + '<span class="seed-meta">' + (fav ? '牠最愛 💗x2' : '好感 +' + g.love) + '</span>'
+                            + '<span class="seed-price">-' + g.cost + ' 💰</span>';
+                b.addEventListener('click', () => { snd('click', 660, 'sine', .07); close(key); });
+                box.appendChild(b);
+            });
+            document.getElementById('gift-close').onclick = () => close(null);
+            modal.onclick = (e) => { if (e.target === modal) close(null); };
+            modal.style.display = 'flex';
         }
 
         // ================================================================
@@ -3019,7 +3984,7 @@
                 if(itemId === 'water') {
                     const hamster = document.getElementById('hamster');
                     hamster.classList.add('happy');
-                    playTone(800, 'sine', 0.1); setTimeout(()=>playTone(900, 'sine', 0.1), 150);
+                    if (snd('splash', 800, 'sine', 0.1)) setTimeout(()=>playTone(900, 'sine', 0.1), 150);
                     createFloatingEmoji('💧', 1200, -30);
                     addHappiness(5);
                     setTimeout(() => hamster.classList.remove('happy'), 1000);
@@ -3028,7 +3993,7 @@
                     const hamster = document.getElementById('hamster');
                     if(hamster.classList.contains('hide-in-house')) return;
                     hamster.classList.add('hide-in-house');
-                    playTone(400, 'sine', 0.2);
+                    snd('door', 400, 'sine', 0.2);
                     createFloatingEmoji('🏡', 1500, -40);
                     addHappiness(10);
                     setTimeout(() => {
@@ -3042,9 +4007,10 @@
                     const hamster = document.getElementById('hamster');
                     if(hamster.classList.contains('slide-down')) return;
                     hamster.classList.add('slide-down');
-                    playTone(600, 'triangle', 0.1);
-                    setTimeout(() => playTone(500, 'triangle', 0.1), 200);
-                    setTimeout(() => playTone(400, 'triangle', 0.1), 400);
+                    if (snd('whoosh', 600, 'triangle', 0.1)) {
+                        setTimeout(() => playTone(500, 'triangle', 0.1), 200);
+                        setTimeout(() => playTone(400, 'triangle', 0.1), 400);
+                    }
                     createFloatingEmoji('😆', 1500, -40);
                     addHappiness(15);
                     setTimeout(() => {
@@ -3066,7 +4032,7 @@
                 
                 // 放個慶祝煙火
                 confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 , x: 0.75} }); 
-                playTone(600, 'sine', 0.1); setTimeout(()=>playTone(800, 'sine', 0.2), 150);
+                if (snd('success', 600, 'sine', 0.1)) setTimeout(()=>playTone(800, 'sine', 0.2), 150);
             } else {
                 gameToast(`金幣還不夠買 ${itemName}，要 ${cost} 💰`, 'bad');
             }
@@ -3120,6 +4086,20 @@
             }
         }
 
+        /**
+         * 播音效。先試真的音檔（audio.js / sfx/*.wav），檔案還沒載好才退回
+         * 舊的 playTone() 合成音，所以第一次點畫面那幾下仍然有聲音。
+         * 使用者把音效關掉時 sfx() 回 true，這裡就整個安靜，不會漏出嗶聲。
+         *
+         * 回傳 true = 這次是用合成音頂替的。原本用兩三個 playTone 串成一小段
+         * 旋律的地方就靠它判斷：音檔播得出來就只播音檔，別再疊一串嗶聲上去。
+         */
+        function snd(name, freq, type, duration) {
+            try { if (window.sfx && window.sfx(name)) return false; } catch (e) { }
+            if (freq) playTone(freq, type || 'sine', duration || 0.1);
+            return true;
+        }
+
         function playTone(freq, type, duration) {
             try {
                 if(!audioCtx) {
@@ -3146,6 +4126,9 @@
             // 但 TTS 看到全大寫會當成縮寫，一個字母一個字母唸出來 ——
             // "WINDOW BOX" 會變成 "W-I-N-D-O-W B-O-X"（回報過的問題）。
             w = String(w).toLowerCase();
+
+            // 背景音樂壓小聲，不然蓋掉發音。字越長唸越久，時間跟著字長算。
+            if (window.daisyAudio) window.daisyAudio.duck(900 + w.length * 90);
 
             // 判斷是否為 iOS 裝置 (Safari/Webview 環境下 .catch() 的非同步會導致失去 User Gesture 權限)
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -3270,7 +4253,7 @@
                 savePetData();
                 updatePetUI();
                 confetti({ particleCount: 200, spread: 160 });
-                playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(783.99, 'sine', 0.2), 200);
+                if (snd('levelup', 523.25, 'sine', 0.1)) { setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(783.99, 'sine', 0.2), 200); }
                 document.getElementById('keyboard').innerHTML = `<button onclick="startLevel()" style="grid-column: 1 / -1; padding: 20px; font-size: 1.5rem; background: var(--primary); color: white; border: none; border-radius: 10px; cursor:pointer;">再玩一次</button>`;
                 return;
             }
@@ -3333,7 +4316,7 @@
             const expect = targetLetters[currentIndex];
             if(letter === expect) {
                 // 對了
-                playTone(600, 'sine', 0.1);
+                snd('pop', 600, 'sine', 0.1);
                 const slots = document.getElementsByClassName('slot');
                 slots[currentIndex].classList.remove('current');
                 slots[currentIndex].classList.add('filled');
@@ -3354,7 +4337,7 @@
                 // 錯了，抖動鍵盤按鈕，不扣分
                 mistakeCount++;
                 recordMistake(currentWord);
-                playTone(200, 'sawtooth', 0.15);
+                snd('error', 200, 'sawtooth', 0.15);
                 const btn = document.getElementById(`key-${letter}`);
                 if (typeof fxShake === 'function') fxShake(btn);
                 if(btn) {
@@ -3387,7 +4370,7 @@
             const expectedLetter = targetLetters[currentIndex];
             const btn = document.getElementById(`key-${expectedLetter}`);
             if (btn) {
-                playTone(500, 'triangle', 0.1);
+                snd('sparkle', 500, 'triangle', 0.1);
                 // Highlight blink animation
                 btn.style.transition = 'all 0.2s';
                 btn.style.backgroundColor = '#ffeb3b';
@@ -3515,13 +4498,13 @@
             const hamster = document.getElementById('hamster');
             hamster.classList.remove('sleep');
             document.getElementById('btn-sleep').querySelector('span').textContent = "睡覺 💤";
-            playTone(800, 'sine', 0.1);
+            snd('pop', 800, 'sine', 0.1);
         }
 
         function petHamster() {
             if(isRunning) return;
             wakeUp();
-            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.15), 100);
+            if (snd('sparkle', 900, 'sine', 0.1)) setTimeout(()=>playTone(1000, 'sine', 0.15), 100);
             const hamster = document.getElementById('hamster');
             
             const mouth = hamster.querySelector('.mouth');
@@ -3535,7 +4518,7 @@
             // 摸摸驚喜：15% 機率掉落金幣
             if(Math.random() < 0.15) {
                 setTimeout(() => {
-                    playTone(800, 'sine', 0.1);
+                    snd('coin', 800, 'sine', 0.1);
                     createFloatingEmoji('🪙', 1500, -50);
                     petData.coins += 1;
                     savePetData();
@@ -3637,7 +4620,7 @@
             savePetData();
             updatePetUI();
             
-            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 100); setTimeout(()=>playTone(1200, 'sine', 0.3), 200);
+            if (snd('success', 800, 'sine', 0.1)) { setTimeout(()=>playTone(1000, 'sine', 0.1), 100); setTimeout(()=>playTone(1200, 'sine', 0.3), 200); }
             confetti({ particleCount: 50, origin: { x: 0.5, y: 0.4 } });
             createFloatingEmoji('🦋 +10 💰', 2000, -40);
         }
@@ -3792,6 +4775,7 @@
             }
 
             isRunning = true;
+            updateQuestProgress('wheel', 1);
             const ham = document.getElementById('hamster');
             const wrap = document.getElementById('hamster-wrapper');
             const wheel = document.getElementById('prop-wheel');
@@ -3810,7 +4794,7 @@
 
                 // ── 1. 蓄力：往下壓一下，看向跑輪
                 ham.classList.add('acting', 'crouch');
-                playTone(220, 'triangle', .08);
+                snd('click', 220, 'triangle', .08);
                 await wait(230);
                 ham.classList.remove('crouch');
 
@@ -3847,7 +4831,7 @@
                 wrap.style.transition = ease;
                 wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,' + dy + 'px) scaleX('
                                      + (run.facing) + ')';
-                playTone(520, 'sine', .1);
+                snd('jump', 520, 'sine', .1);
                 await wait(320);
 
                 // ── 4. 在輪子裡跑：輪子加速 → 尖峰 → 減速
@@ -3856,7 +4840,7 @@
                 await spinWheelRamp(wheel, 2600, 900, () => {
                     // 到尖峰速度才開始震動和冒汗，前面是加速期
                     screenShake(cage);
-                    playTone(340, 'triangle', .12);
+                    snd('wheel', 340, 'triangle', .12);
                     sweatTimer = setInterval(() => {
                         const hb = rectIn(ham), wn = rectIn(wheel);
                         spawnSweat(hb.x + hb.w * .22, hb.y - hb.h * .5 + 8);
@@ -3873,7 +4857,7 @@
                 wrap.style.transition = 'transform .34s cubic-bezier(.34,1.56,.64,1)';
                 wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,-26px) scaleX('
                                      + run.facing + ')';
-                playTone(660, 'sine', .1);
+                snd('jump', 660, 'sine', .1);
                 await wait(200);
                 ham.style.transform = '';
                 wrap.style.transform = 'translate(' + wrap.dataset.x + 'px,0px) scaleX('
@@ -3882,7 +4866,7 @@
                 const hb2r = rectIn(ham);
                 const hb2 = ham.getBoundingClientRect();
                 spawnDust(hb2r.x, hb2r.bottom - 14, 6);
-                playTone(300, 'sine', .12);
+                snd('land', 300, 'sine', .12);
                 feelHaptic([16, 40, 16]);
 
                 // ── 6. 領獎：快樂度 +10，數字往上飄
@@ -3891,7 +4875,7 @@
                     fxFloat('+10 快樂 💖', hb2, '#ff8fb0');
                     fxBurst(hb2, 14);
                 }
-                setTimeout(() => playTone(880, 'sine', .12), 90);
+                setTimeout(() => snd('sparkle', 880, 'sine', .12), 90);
                 await wait(620);
 
                 // ── 7. 走回畫面中央，開心跳一下
@@ -3928,7 +4912,7 @@
                 isSleeping = true;
                 hamster.classList.add('sleep');
                 sleepBtnSpan.textContent = "叫醒 ☀️";
-                playTone(200, 'sine', 0.5); // ZZZ 聲音
+                snd('sleep', 200, 'sine', 0.5); // ZZZ 聲音
                 
                 // 定期冒出 Zzz
                 let zzzInterval = setInterval(() => {
@@ -3988,7 +4972,7 @@
                 petData.level += 1;
                 petData.exp = 0;
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 , x: 0.75} }); // 在右側放煙火
-                playTone(800, 'sine', 0.3); // Level up sound
+                snd('levelup', 800, 'sine', 0.3); // Level up sound
                 gameToast(`🎉 升級了！Level ${petData.level}`, 'good');
             }
             
@@ -3997,7 +4981,7 @@
             updateQuestProgress('feed', 1);
             
             // 動畫與音效
-            playTone(400, 'square', 0.1); setTimeout(()=>playTone(450, 'square', 0.1), 150);
+            if (snd('eat', 400, 'square', 0.1)) setTimeout(()=>playTone(450, 'square', 0.1), 150);
             
             const hamster = document.getElementById('hamster');
             hamster.classList.remove('eat');
@@ -4027,7 +5011,7 @@
             updateQuestProgress('bath', 1);
             
             // 泡泡動畫音效
-            playTone(900, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 150); setTimeout(()=>playTone(1200, 'sine', 0.2), 300);
+            if (snd('splash', 900, 'sine', 0.1)) { setTimeout(()=>playTone(1000, 'sine', 0.1), 150); setTimeout(()=>playTone(1200, 'sine', 0.2), 300); }
             
             // 產生泡泡 Emoji
             createFloatingEmoji('🫧', 1500, -50);
@@ -4055,7 +5039,7 @@
             }
             
             if(newlyUnlocked) {
-                playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(1046.50, 'sine', 0.3), 200);
+                if (snd('levelup', 523.25, 'sine', 0.1)) { setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(1046.50, 'sine', 0.3), 200); }
                 confetti({ particleCount: 150, spread: 100 });
                 savePetData();
             }
@@ -4118,7 +5102,7 @@
                 daysDiv.innerHTML += html;
             }
             confetti({ particleCount: 100, spread: 70 });
-            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.2), 150);
+            if (snd('coin', 800, 'sine', 0.1)) setTimeout(()=>playTone(1000, 'sine', 0.2), 150);
             document.getElementById('login-reward-modal').style.display = 'flex';
         }
         function closeLoginReward() { document.getElementById('login-reward-modal').style.display = 'none'; }
@@ -4126,34 +5110,55 @@
         // 2. 每日任務
         function checkDailyQuests() {
             const today = new Date().toLocaleDateString();
-            if(!petData.quests || petData.quests.date !== today) {
-                // 產生新任務
-                petData.quests = {
-                    date: today,
-                    list: [
-                        { id: 'word', text: '拼對 10 個單字', target: 10, current: 0, reward: 5, done: false },
-                        { id: 'bath', text: '幫倉鼠洗澡 1 次', target: 1, current: 0, reward: 2, done: false },
-                        { id: 'feed', text: '餵食倉鼠 3 次', target: 3, current: 0, reward: 3, done: false }
-                    ]
-                };
-                savePetData();
+            const q = petData.quests;
+            if (q && q.date === today && q.v === QUEST_VERSION) return;
+
+            // 日期當種子：同一天抽到的一定一樣，不然每次重整都換一批，
+            // 做到一半的進度就沒意義了
+            const rnd = questRand(farmDay());
+            const pool = QUEST_POOL.slice();
+            const list = [];
+            for (let k = 0; k < 3 && pool.length; k++) {
+                const it = pool.splice(Math.floor(rnd() * pool.length), 1)[0];
+                const n = it.lo + Math.floor(rnd() * (it.hi - it.lo + 1));
+                list.push({
+                    id: it.id, text: it.text.replace('{n}', n),
+                    target: n, current: 0, reward: it.reward, done: false
+                });
             }
+            petData.quests = { date: today, v: QUEST_VERSION, list: list, bonus: false };
+            savePetData();
         }
-        
+
         function updateQuestProgress(id, amount) {
-            if(!petData.quests) return;
+            if (!petData.quests) return;
             const q = petData.quests.list.find(x => x.id === id);
-            if(q && !q.done) {
-                q.current += amount;
-                if(q.current >= q.target) {
-                    q.current = q.target;
-                    q.done = true;
-                    showAchievementToast(`完成任務：${q.text}！獲得 ${q.reward} 💰`);
-                    petData.coins += q.reward;
+            if (!q || q.done) return;
+
+            q.current += amount;
+            if (q.current >= q.target) {
+                q.current = q.target;
+                q.done = true;
+                showAchievementToast(`完成任務：${q.text}！獲得 ${q.reward} 💰`);
+                petData.coins += q.reward;
+                snd('success', 660, 'sine', .1);
+
+                // 三件全做完再給一筆。最後一件才是最難撐的，要有值得的理由
+                if (!petData.quests.bonus && petData.quests.list.every(x => x.done)) {
+                    petData.quests.bonus = true;
+                    petData.coins += QUEST_ALL_BONUS;
+                    setTimeout(() => {
+                        gameToast(`🏆 今日挑戰全破！額外 +${QUEST_ALL_BONUS} 💰`, 'good');
+                        snd('levelup', 800, 'sine', .3);
+                        if (typeof confetti === 'function') {
+                            confetti({ particleCount: 140, spread: 90 });
+                        }
+                    }, 1200);
                 }
-                savePetData();
-                updatePetUI();
             }
+            savePetData();
+            updatePetUI();
+            if (typeof refreshBoard === 'function') refreshBoard();
         }
         
         function openQuests() {
@@ -4175,6 +5180,18 @@
                     </div>
                 `;
             });
+            // 三件全做完的額外獎金也畫成一列，她才知道還有這筆
+            const allDone = petData.quests.list.every(x => x.done);
+            const bonusCol = allDone ? '#2ed573' : '#c9954c';
+            list.innerHTML += `
+                <div style="margin-top:6px; background:#fff8e8; padding:13px 15px; border-radius:15px;
+                            border-left:5px solid ${bonusCol}; display:flex;
+                            justify-content:space-between; align-items:center;">
+                    <span style="font-weight:bold; color:#8a5f37;">🏆 三件全做完</span>
+                    <span style="color:#e67e22; font-weight:bold;">
+                        ${allDone ? '已領取 ✓' : `+${QUEST_ALL_BONUS} 💰`}</span>
+                </div>`;
+
             document.getElementById('quest-modal').style.display = 'flex';
             document.getElementById('btn-daily-quest').classList.remove('bounce'); // 取消跳動
         }
@@ -4207,7 +5224,7 @@
             box.onclick = null;
             box.className = 'gacha-box'; // 停止震動
             
-            playTone(400, 'triangle', 0.1); setTimeout(()=>playTone(500, 'triangle', 0.1), 150); setTimeout(()=>playTone(800, 'triangle', 0.3), 300);
+            if (snd('sparkle', 400, 'triangle', 0.1)) { setTimeout(()=>playTone(500, 'triangle', 0.1), 150); setTimeout(()=>playTone(800, 'triangle', 0.3), 300); }
             confetti({ particleCount: 200, spread: 160 });
             
             // 決定獎勵
@@ -4284,7 +5301,7 @@
             bubble.textContent = greetings[Math.floor(Math.random() * greetings.length)];
             bubble.style.display = 'block';
             
-            playTone(800, 'sine', 0.1); setTimeout(()=>playTone(1000, 'sine', 0.1), 150);
+            if (snd('pop', 800, 'sine', 0.1)) setTimeout(()=>playTone(1000, 'sine', 0.1), 150);
             
             petData.coins += 5; // 送 5 塊錢
             savePetData();
@@ -4646,15 +5663,14 @@
                 const h = document.getElementById('hamster');
                 h.classList.add('happy');
                 setTimeout(() => h.classList.remove('happy'), 900);
-                playTone(660, 'sine', 0.1);
-                setTimeout(() => playTone(880, 'sine', 0.12), 120);
+                if (snd('success', 660, 'sine', 0.1)) setTimeout(() => playTone(880, 'sine', 0.12), 120);
 
                 showMidtermFeedback('✅ 答對了！+3 💰', '#e8f5e9', '#2e7d32');
             } else {
                 clickedBtn.style.background  = '#ffebee';
                 clickedBtn.style.borderColor = '#e53935';
                 clickedBtn.style.color       = '#c62828';
-                playTone(200, 'sawtooth', 0.12);
+                snd('error', 200, 'sawtooth', 0.12);
 
                 showMidtermFeedback(`❌ 正確答案是「${correct}」`, '#ffebee', '#c62828');
             }
@@ -4708,9 +5724,10 @@
             // Confetti for ≥70%
             if (pct >= 0.7) {
                 confetti({ particleCount: 160, spread: 100, origin: { y: 0.55 } });
-                playTone(523, 'sine', 0.1);
-                setTimeout(() => playTone(659, 'sine', 0.1), 100);
-                setTimeout(() => playTone(784, 'sine', 0.2), 200);
+                if (snd('levelup', 523, 'sine', 0.1)) {
+                    setTimeout(() => playTone(659, 'sine', 0.1), 100);
+                    setTimeout(() => playTone(784, 'sine', 0.2), 200);
+                }
             }
         }
 
@@ -4845,15 +5862,14 @@
                 const h = document.getElementById('hamster');
                 h.classList.add('happy');
                 setTimeout(() => h.classList.remove('happy'), 900);
-                playTone(660, 'sine', 0.1);
-                setTimeout(() => playTone(880, 'sine', 0.12), 120);
+                if (snd('success', 660, 'sine', 0.1)) setTimeout(() => playTone(880, 'sine', 0.12), 120);
 
                 showFinalFeedback('✅ 答對了！+3 💰', '#e8f5e9', '#2e7d32');
             } else {
                 clickedBtn.style.background  = '#ffebee';
                 clickedBtn.style.borderColor = '#e53935';
                 clickedBtn.style.color       = '#c62828';
-                playTone(200, 'sawtooth', 0.12);
+                snd('error', 200, 'sawtooth', 0.12);
 
                 showFinalFeedback(`❌ 正確答案是「${correct}」`, '#ffebee', '#c62828');
             }
@@ -4900,9 +5916,10 @@
 
             if (pct >= 0.7) {
                 confetti({ particleCount: 160, spread: 100, origin: { y: 0.55 } });
-                playTone(523, 'sine', 0.1);
-                setTimeout(() => playTone(659, 'sine', 0.1), 100);
-                setTimeout(() => playTone(784, 'sine', 0.2), 200);
+                if (snd('levelup', 523, 'sine', 0.1)) {
+                    setTimeout(() => playTone(659, 'sine', 0.1), 100);
+                    setTimeout(() => playTone(784, 'sine', 0.2), 200);
+                }
             }
         }
 
@@ -4953,11 +5970,46 @@
     </div>
 
     <!-- 設定：震動與全螢幕 -->
+    <!-- 禮物店。點柵欄後的小動物進來 -->
+    <div id="gift-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:92%; max-width:420px; padding:20px;">
+            <button id="gift-close" type="button" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 id="gift-title" style="color:#c9564c; margin-top:10px;">送禮物</h3>
+            <p id="gift-hearts" style="color:#666; font-size:.9rem; margin:6px 0 4px;"></p>
+            <p style="color:#8a7b98; font-size:.78rem; margin:0;">一天送一次。送到牠最喜歡的，好感度加倍</p>
+            <div id="gift-list" class="seed-list"></div>
+        </div>
+    </div>
+
+    <!-- 種子行。從菜園的空田點進來，挑完就直接種下去 -->
+    <div id="seed-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:92%; max-width:420px; padding:20px;">
+            <button id="seed-close" type="button" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 style="color:#4f9f6a; margin-top:10px;">種子行 🌱</h3>
+            <p style="color:#666; font-size:.85rem; margin:6px 0 4px;">種下去，隔幾天回來就能收成賣錢</p>
+            <div id="seed-list" class="seed-list"></div>
+        </div>
+    </div>
+
     <div id="feel-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
         <div class="login-box" style="position:relative; width:90%; max-width:400px; padding:20px;">
             <button onclick="closeFeel()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
             <h3 style="color:#7b1fa2; margin-top:10px;">設定 ⚙️</h3>
             <div style="margin-top:14px; text-align:left;">
+                <div class="feel-row">
+                    <span class="feel-label">音效
+                        <span class="feel-note">跳躍、吃東西、撿金幣的聲音</span>
+                    </span>
+                    <button class="feel-sw" id="sw-sfx" type="button"
+                            onclick="toggleFeel('sfx')" aria-label="音效"></button>
+                </div>
+                <div class="feel-row">
+                    <span class="feel-label">背景音樂
+                        <span class="feel-note">倉鼠世界裡每張地圖各有一首</span>
+                    </span>
+                    <button class="feel-sw" id="sw-music" type="button"
+                            onclick="toggleFeel('music')" aria-label="背景音樂"></button>
+                </div>
                 <div class="feel-row">
                     <span class="feel-label">畫面震動
                         <span class="feel-note">跑輪衝到最快時畫面會晃一下。會不舒服就關掉</span>

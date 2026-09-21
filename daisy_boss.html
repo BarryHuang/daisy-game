@@ -366,8 +366,7 @@
 
             if (correct) {
                 btn.classList.add('good');
-                playTone(700, 'sine', 0.12);
-                setTimeout(() => playTone(1050, 'sine', 0.15), 110);
+                if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1050, 'sine', 0.15), 110);
                 heroAttack();
             } else {
                 btn.classList.add('bad');
@@ -375,7 +374,7 @@
                 document.getElementById('choices').querySelectorAll('.choice').forEach(b => {
                     if (b.dataset.key.toLowerCase() === mon.word.toLowerCase()) b.classList.add('good');
                 });
-                playTone(200, 'sawtooth', 0.2);
+                snd('error', 200, 'sawtooth', 0.2);
                 mon.wrong++;
                 monsterAttack();
             }

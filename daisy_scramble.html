@@ -250,7 +250,7 @@
             // 檢查是否點擊了「正確順序」的下一個字母
             if(letter === targetLetters[currentIndex]) {
                 // 答對了！
-                playTone(600, 'sine', 0.1); // Ding
+                snd('success', 600, 'sine', 0.1); // Ding
                 bubbleEl.classList.add('hidden'); // 隱藏泡泡
                 
                 // 把字母填入底下的空格
@@ -267,7 +267,7 @@
                     if (typeof recordAttempt === 'function')
                         recordAttempt(currentWord, true, wrongTaps);
                     document.getElementById('message').textContent = "Daisy 太強了！🎉";
-                    playTone(800, 'sine', 0.1); // 高音提示過關
+                    snd('levelup', 800, 'sine', 0.1); // 高音提示過關
                     triggerConfetti();
                     setTimeout(speakWord, 800);
                     
@@ -277,7 +277,7 @@
             } else {
                 // 答錯了！順序不對或是點到干擾字母
                 wrongTaps++;
-                playTone(200, 'sawtooth', 0.2); // Buzz
+                snd('error', 200, 'sawtooth', 0.2); // Buzz
                 bubbleEl.classList.remove('shake');
                 void bubbleEl.offsetWidth; // 觸發重繪 (Reflow) 讓動畫可以重複點擊重播
                 bubbleEl.classList.add('shake');

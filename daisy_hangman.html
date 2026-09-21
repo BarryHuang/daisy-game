@@ -166,7 +166,7 @@
             if(current.includes(l)) {
                 guessed.push(l); 
                 render();
-                playTone(600, 'sine', 0.15); // 答對音效 Ding!
+                snd('success', 600, 'sine', 0.15); // 答對音效 Ding!
                 
                 // 檢查是否全對
                 if(!document.getElementById('word-display').textContent.includes('_')) {
@@ -183,7 +183,7 @@
                     setTimeout(() => speakWord(), 500);
                 }
             } else {
-                playTone(200, 'sawtooth', 0.2); // 答錯音效 Buzz!
+                snd('error', 200, 'sawtooth', 0.2); // 答錯音效 Buzz!
                 const part = document.getElementById(`part-${err}`);
                 if(part) part.style.display="block";
                 err++;

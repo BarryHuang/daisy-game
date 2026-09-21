@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20260919-0843';
+const CACHE_NAME = 'daisy-20260921-1317';
 
 const LOCAL_ASSETS = [
   './',
@@ -49,6 +49,24 @@ const LOCAL_ASSETS = [
   './daisy_multiply.html',
   './fx.css',
   './fx.js',
+  './audio.js',
+  './sfx/coin.wav',
+  './sfx/pop.wav',
+  './sfx/eat.wav',
+  './sfx/jump.wav',
+  './sfx/land.wav',
+  './sfx/levelup.wav',
+  './sfx/error.wav',
+  './sfx/success.wav',
+  './sfx/sparkle.wav',
+  './sfx/whoosh.wav',
+  './sfx/splash.wav',
+  './sfx/bump.wav',
+  './sfx/ride.wav',
+  './sfx/door.wav',
+  './sfx/sleep.wav',
+  './sfx/wheel.wav',
+  './sfx/click.wav',
   './fredoka-latin.woff2',
   './scene-meadow.svg',
   './habitat-far.svg',
