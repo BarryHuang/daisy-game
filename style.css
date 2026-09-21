@@ -1211,6 +1211,69 @@ body.immersive .arrange-btn{ top: calc(46px + env(safe-area-inset-top, 0px)); }
 .hamster-cage.map-arcade.time-night::after { opacity: .35; }
 
 /* ===================================================================
+   後院菜園
+   =================================================================== */
+/* 一塊田 = 一坨土 + 上面長的東西 + 一張狀態牌。
+   整塊是按鈕，點空田開種子行、點熟的收成。 */
+.plot {
+    position: absolute; z-index: 1; transform: translateX(-50%);
+    padding: 0; border: 0; background: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    font-family: inherit; width: calc(58px * var(--k, 1));
+}
+.plot-soil {
+    width: calc(52px * var(--k, 1)); height: calc(16px * var(--k, 1));
+    border-radius: 50% 50% 46% 46% / 70% 70% 30% 30%;
+    background: linear-gradient(180deg, #8d6242 0%, #6f4a30 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.18), 0 2px 4px rgba(0,0,0,.22);
+    order: 2;
+}
+.plot-crop {
+    font-size: calc(26px * var(--k, 1)); line-height: 1;
+    order: 1; margin-bottom: calc(-4px * var(--k, 1));
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.28));
+}
+.plot-tag {
+    order: 0; margin-bottom: 3px;
+    background: rgba(40, 25, 60, .62); color: #fff;
+    border: 2px solid rgba(255,255,255,.8); border-radius: 999px;
+    padding: 2px 8px; font-size: .6rem; font-weight: 800; white-space: nowrap;
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.plot.empty .plot-tag { opacity: .72; }
+/* 熟了要一眼看得出來：牌子轉綠、整株上下跳 */
+.plot.ripe .plot-tag { background: #4f9f6a; border-color: #fff; }
+.plot.ripe .plot-crop { animation: plotRipe 1.5s ease-in-out infinite; }
+@keyframes plotRipe {
+    50% { transform: translateY(-5px) scale(1.06); }
+}
+.plot:active { transform: translateX(-50%) scale(.96); }
+
+/* 種子行的卡片 */
+.seed-list {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
+}
+.seed-card {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 10px 6px; border-radius: 14px; cursor: pointer; font-family: inherit;
+    background: #fff8f0; border: 2px solid #e8d9c8;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.seed-card:active { transform: scale(.96); }
+.seed-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+/* 買不起的不藏起來，只壓灰 —— 看得到才知道要存錢買什麼 */
+.seed-card.poor { opacity: .45; }
+.seed-emoji { font-size: 1.9rem; line-height: 1.1; }
+.seed-name  { font-weight: 800; color: #5a3b26; font-size: .92rem; }
+.seed-meta  { color: #8a7b98; font-size: .7rem; }
+.seed-price { color: #e0714c; font-weight: 800; font-size: .8rem; }
+.seed-gain  { color: #4f9f6a; font-weight: 800; font-size: .74rem; }
+
+@media (prefers-reduced-motion: reduce) {
+    .plot.ripe .plot-crop { animation: none; }
+}
+
+/* ===================================================================
    遊樂設施（摩天輪 / 旋轉木馬 / 咖啡杯 / 碰碰車）
    =================================================================== */
 /* 遊樂園有四座設施，每座大概佔世界寬的 12~16%，用 300% 會全部疊在一起。

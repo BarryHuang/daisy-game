@@ -633,7 +633,11 @@
             // 上次離開時待在哪張地圖，下次進來從同一個地方繼續
             map: 'home',
             // 互動點的冷卻：{ "park:1": 秒數時間戳 }
-            spots: {}
+            spots: {},
+            // 菜園。{ "0": { crop: 'carrot', day: 20260921 } }，key 是第幾塊田。
+            // 存「種下那天」而不是時間戳，因為收成是看日曆天（今天種、明天收），
+            // 不是看過了幾小時 —— 小二生對「明天再來」比「再等 18 小時」有感。
+            farm: {}
         };
 
         let comboCount = 0; // 連續全對次數
@@ -660,6 +664,7 @@
             if(!data.layout) data.layout = {};
             if(!data.map || !MAPS[data.map]) data.map = 'home';
             if(!data.spots) data.spots = {};        // 互動點的冷卻時間
+            if(!data.farm)  data.farm  = {};        // 菜園
             return data;
         }
 
@@ -1007,6 +1012,7 @@
                 if (typeof buildPlatforms === 'function') {
                     buildPlatforms();
                     buildSpots();          // 位置是依磚寬算的，場景縮放變了要重放
+                    buildPlots();
                     buildCabinets();
                     buildRides();
                     buildGates();
@@ -1029,7 +1035,7 @@
                 // 尺寸變了（網址列回來了），場景要重算一次
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     if (!habitatReady) return;
-                    buildPlatforms(); buildSpots(); buildCabinets(); buildRides(); buildGates();
+                    buildPlatforms(); buildSpots(); buildPlots(); buildCabinets(); buildRides(); buildGates();
                     hamY = surfaceAt(hamX, hamY);
                     paintHamster();
                     cameraLookAt(hamX, true);
@@ -1230,6 +1236,10 @@
                     { tile: 1, tx: 250, ty: 168, icon: '🪣', name: '鬆土區', act: 'dig'    },
                     { x: .640, ty: 168, icon: '🍀', name: '找幸運草', act: 'clover' },
                 ],
+                // 菜園。四塊田排在小花叢右邊的空地。小花叢的 x 是用磚寬算的
+                // （tile/tx），會隨場景縮放浮動到 .14 附近，所以田從 .215 才開始，
+                // 不然第一塊會和花叢疊在一起。
+                farm: [.215, .272, .329, .386],
                 exits: { left: 'home', right: 'park' }
             },
             park: {
@@ -1781,6 +1791,7 @@
             addEventListener('resize', () => {
                 buildPlatforms();
                 buildSpots();
+                buildPlots();
                 buildCabinets();
                 buildRides();
                 buildGates();
@@ -1789,7 +1800,7 @@
                 cameraLookAt(hamX, true);
             });
             // 冷卻中的互動點每 5 秒刷新一次顏色
-            setInterval(() => { refreshSpots(); refreshRides(); }, 5000);
+            setInterval(() => { refreshSpots(); refreshRides(); refreshPlots(); }, 5000);
         }
 
         // ================================================================
@@ -1836,10 +1847,12 @@
             buildPlatforms();
             buildGates();
             buildSpots();
+            buildPlots();
             buildCabinets();
             buildRides();
             placePeekers();
             updateMapChip();
+            farmRipeNotice();
         }
 
         function updateMapChip() {
@@ -2073,6 +2086,229 @@
                 setTimeout(() => { try { speakWord(w); } catch (e) {} }, 260);
                 return w + (zh ? '（' + zh + '）' : '');
             } catch (e) { return '書好好看！'; }
+        }
+
+        // ================================================================
+        // 後院菜園
+        // ================================================================
+        // 這是整個遊戲唯一「今天做、明天才有結果」的設計，目的就是給她一個
+        // 明天還想打開的理由。所以刻意用**日曆天**而不是經過幾小時：
+        // 「今天種，明天來收」小二生一聽就懂；「再等 18 小時」不懂。
+        //
+        // 代價是可以調手機時間作弊。不管它 —— 她要是想騙倉鼠，那也是她的事。
+        const CROPS = {
+            carrot:  { emoji: '🥕', name: '紅蘿蔔', cost: 8,  days: 1, sell: [16, 24],  exp: 6  },
+            corn:    { emoji: '🌽', name: '玉米',   cost: 14, days: 1, sell: [26, 38],  exp: 10 },
+            straw:   { emoji: '🍓', name: '草莓',   cost: 22, days: 2, sell: [58, 78],  exp: 18 },
+            pumpkin: { emoji: '🎃', name: '南瓜',   cost: 35, days: 2, sell: [92, 126], exp: 28 },
+        };
+        const SPROUT = ['🌱', '🌿'];      // 還沒熟的樣子：剛種下 / 長大了
+
+        /** 今天是哪一天，20260921 這種整數。用本地時間，她在哪個時區就算哪天 */
+        function farmDay(d) {
+            d = d || new Date();
+            return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+        }
+        /** 兩個 farmDay 差幾天。跨月跨年都要對，所以轉回 Date 再減 */
+        function farmDayDiff(from, to) {
+            const P = (n) => new Date(Math.floor(n / 10000),
+                                      Math.floor(n / 100) % 100 - 1, n % 100);
+            return Math.round((P(to) - P(from)) / 86400000);
+        }
+
+        function farmList() { return curMap().farm || []; }
+        function plotData(i) { return (petData.farm || {})[currentMap + ':' + i] || null; }
+        function plotSet(i, v) {
+            if (!petData.farm) petData.farm = {};
+            if (v) petData.farm[currentMap + ':' + i] = v;
+            else delete petData.farm[currentMap + ':' + i];
+        }
+
+        /** 一塊田現在長什麼樣：空的 / 還要幾天 / 可以收了 */
+        function plotState(i) {
+            const d = plotData(i);
+            if (!d || !CROPS[d.crop]) return { empty: true };
+            const c = CROPS[d.crop];
+            const grown = Math.max(0, farmDayDiff(d.day, farmDay()));
+            const left = Math.max(0, c.days - grown);
+            return {
+                empty: false, crop: d.crop, c: c, left: left, ripe: left === 0,
+                // 還沒熟的話，越接近收成長得越大
+                icon: left === 0 ? c.emoji
+                    : SPROUT[Math.min(SPROUT.length - 1, grown)] || SPROUT[0]
+            };
+        }
+
+        function buildPlots() {
+            const world = worldEl();
+            if (!world) return;
+            world.querySelectorAll('.plot').forEach(el => el.remove());
+            const U = usableH(), W = worldWidth();
+            farmList().forEach((x, i) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'plot';
+                b.dataset.i = i;
+                b.style.left = (x * 100) + '%';
+                // 田就貼在地上。前景的草叢會擋住太矮的東西，所以比照互動點的下限
+                b.style.bottom = spotBottom({ y: 0 }, U) + 'px';
+                b.innerHTML = '<span class="plot-soil"></span>'
+                            + '<span class="plot-crop"></span>'
+                            + '<span class="plot-tag"></span>';
+                b.addEventListener('click', (e) => { e.stopPropagation(); usePlot(i); });
+                world.appendChild(b);
+            });
+            refreshPlots();
+        }
+
+        /** 把每塊田的樣子刷新。跨過午夜也靠這個（每 5 秒跑一次） */
+        function refreshPlots() {
+            document.querySelectorAll('.plot').forEach(el => {
+                const st = plotState(+el.dataset.i);
+                const crop = el.querySelector('.plot-crop'), tag = el.querySelector('.plot-tag');
+                el.classList.toggle('empty', !!st.empty);
+                el.classList.toggle('ripe', !!st.ripe);
+                if (st.empty) {
+                    crop.textContent = '';
+                    tag.textContent = '種菜';
+                    el.title = '空的田';
+                } else {
+                    crop.textContent = st.icon;
+                    tag.textContent = st.ripe ? '可以收了！' : '還要 ' + st.left + ' 天';
+                    el.title = st.c.name;
+                }
+            });
+        }
+
+        /** 進後院時提醒一聲有菜可以收，不然她不會想到要去看 */
+        function farmRipeNotice() {
+            const n = farmList().reduce((k, _, i) => k + (plotState(i).ripe ? 1 : 0), 0);
+            if (n) setTimeout(() => gameToast('🧺 菜園有 ' + n + ' 株可以收成了！', 'good'), 900);
+        }
+
+        let farming = false;
+
+        async function usePlot(i) {
+            if (farming || usingSpot || riding || traveling || isRunning || arranging) return;
+            if (isSleeping) return wakeUp();
+            const el = document.querySelector('.plot[data-i="' + i + '"]');
+            const st = plotState(i);
+
+            if (!st.empty && !st.ripe) {
+                floatAtSpot(el, st.c.emoji + ' 還要 ' + st.left + ' 天 🌙', '#8a7b98');
+                return;
+            }
+
+            farming = true;
+            try {
+                await hamsterWalkTo(farmList()[i] * worldWidth(), 150, 0);
+                if (st.empty) await plantAt(i, el);
+                else await harvestAt(i, el, st);
+            } catch (e) {
+                if (typeof console !== 'undefined') console.warn('菜園中斷', e);
+            } finally {
+                farming = false;
+                refreshPlots();
+            }
+        }
+
+        /** 種下去：先讓她挑種子，挑完倉鼠蹲下埋一下 */
+        function plantAt(i, el) {
+            return new Promise((resolve) => {
+                openSeedShop(async (key) => {
+                    if (!key) return resolve();
+                    const c = CROPS[key];
+                    if (petData.coins < c.cost) {
+                        floatAtSpot(el, '要 ' + c.cost + ' 💰 喔', '#e0714c');
+                        return resolve();
+                    }
+                    petData.coins -= c.cost;
+                    plotSet(i, { crop: key, day: farmDay() });
+                    savePetData();
+                    updatePetUI();
+                    refreshPlots();
+
+                    const ham = document.getElementById('hamster');
+                    ham.classList.add('crouch');
+                    snd('eat', 300, 'sine', .1);
+                    createFloatingEmoji('🌱', 1200, -30);
+                    floatAtSpot(el, '種下 ' + c.emoji + '！' + c.days + ' 天後來收', '#4f9f6a');
+                    await wait(600);
+                    ham.classList.remove('crouch');
+                    resolve();
+                });
+            });
+        }
+
+        /** 收成：拔起來、飛金幣、田變空 */
+        async function harvestAt(i, el, st) {
+            const c = st.c;
+            const gain = c.sell[0] + Math.floor(Math.random() * (c.sell[1] - c.sell[0] + 1));
+            const ham = document.getElementById('hamster');
+
+            ham.classList.add('crouch');
+            snd('pop', 520, 'sine', .09);
+            await wait(260);
+            ham.classList.remove('crouch');
+            ham.classList.add('happy');
+
+            plotSet(i, null);
+            refreshPlots();
+            petData.coins += gain;
+            petData.exp += c.exp;
+            addHappiness(4);
+            for (let k = 0; k < 3; k++) setTimeout(() => createFloatingEmoji(c.emoji, 1200, -30), k * 140);
+            snd('coin', 800, 'sine', .1);
+            floatAtSpot(el, c.name + ' 賣了 +' + gain + ' 💰', '#4f9f6a');
+            if (typeof fxBurst === 'function' && !actReduced()) {
+                fxBurst(ham.getBoundingClientRect(), 14);
+            }
+
+            // 升級判定跟餵食那邊同一套（每 100 exp 一級）
+            if (petData.exp >= petData.level * 100) {
+                petData.level += 1;
+                petData.exp = 0;
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6, x: 0.5 } });
+                }
+                snd('levelup', 800, 'sine', 0.3);
+                gameToast('🎉 升級了！Level ' + petData.level, 'good');
+            }
+            savePetData();
+            updatePetUI();
+            await wait(700);
+            ham.classList.remove('happy');
+        }
+
+        /** 種子行。把價錢、要幾天、賣多少一次講清楚，她才算得出划不划算 */
+        function openSeedShop(done) {
+            const modal = document.getElementById('seed-modal');
+            const box = document.getElementById('seed-list');
+            let finished = false;
+            const close = (key) => {
+                if (finished) return;
+                finished = true;
+                modal.style.display = 'none';
+                done(key);
+            };
+            box.innerHTML = '';
+            Object.keys(CROPS).forEach((key) => {
+                const c = CROPS[key];
+                const afford = petData.coins >= c.cost;
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'seed-card' + (afford ? '' : ' poor');
+                b.innerHTML = '<span class="seed-emoji">' + c.emoji + '</span>'
+                            + '<span class="seed-name">' + c.name + '</span>'
+                            + '<span class="seed-meta">' + c.days + ' 天後收成</span>'
+                            + '<span class="seed-price">-' + c.cost + ' 💰</span>'
+                            + '<span class="seed-gain">賣 ' + c.sell[0] + '~' + c.sell[1] + ' 💰</span>';
+                b.addEventListener('click', () => { snd('click', 660, 'sine', .07); close(key); });
+                box.appendChild(b);
+            });
+            document.getElementById('seed-close').onclick = () => close(null);
+            modal.onclick = (e) => { if (e.target === modal) close(null); };
+            modal.style.display = 'flex';
         }
 
         /** 在互動點上方飄一行字 */
@@ -5317,6 +5553,16 @@
     </div>
 
     <!-- 設定：震動與全螢幕 -->
+    <!-- 種子行。從菜園的空田點進來，挑完就直接種下去 -->
+    <div id="seed-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width:92%; max-width:420px; padding:20px;">
+            <button id="seed-close" type="button" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
+            <h3 style="color:#4f9f6a; margin-top:10px;">種子行 🌱</h3>
+            <p style="color:#666; font-size:.85rem; margin:6px 0 4px;">種下去，隔幾天回來就能收成賣錢</p>
+            <div id="seed-list" class="seed-list"></div>
+        </div>
+    </div>
+
     <div id="feel-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
         <div class="login-box" style="position:relative; width:90%; max-width:400px; padding:20px;">
             <button onclick="closeFeel()" style="position:absolute; right:15px; top:15px; background:transparent; border:none; font-size:1.5rem; font-weight:bold; cursor:pointer;" aria-label="Close">✕</button>
