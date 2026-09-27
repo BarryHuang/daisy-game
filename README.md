@@ -38,7 +38,7 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `wordlists.js` | 她自己建的單字卡清單。在字典加字，會出現在 `flashcards.html` 和遊戲選單 |
 | `mastery.js` | 每個字的答對／答錯／連對次數 |
 | `rewards.js` | `awardCoins()`：遊戲把金幣加進倉鼠存檔。用 transaction，因為倉鼠頁可能同時開著並整包寫回 `petData` |
-| `wordset.js` | 進遊戲時隨機挑一組單字集。`pickRandomCategory()` / `applyPendingWeek()` 各加一行，見下面第 12 條 |
+| `wordset.js` | 進遊戲時隨機挑一組單字集。`pickRandomCategory()` / `applyPendingWeek()` 各加一行，見下面第 13 條 |
 | `audio.js` | 音效（`sfx/*.wav`）與背景音樂（Web Audio 即時演奏）。`menu.js` 會自動載入，每一頁都有 |
 
 ### 導覽
@@ -439,14 +439,23 @@ if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0
    CC-CEDICT 的 `(Tw)` 標記、成對提權）。台灣用詞還要**豁免最低詞頻門檻**，
    否則 `印表機`（zipf 2.24）會被當罕見詞丟掉。
 
-2. **詞頻綁「字形」不綁「讀音」。** `強[jiàng]`（頑固）會偷走 `強[qiáng]` 的
+2. **索引展開變化形時不看詞性，會造出不存在的字。** `build_cedict.py` 為了讓
+   `hesitated`、`mice` 這種變化形查得到，會把每個英文釋義字展開成 `-ing` /
+   `-ed` 形。但它不判斷詞性，所以**名詞也被硬造出進行式和過去式** ——
+   `口徑` 的釋義是 `bore; caliber`，於是 `boring` 多出一個「口徑」的意思；
+   `heading` 變成「腦袋」、`canned` 變成「可以」、`parroting` 變成「鸚鵡」。
+   全字典有 888 筆這種假索引、影響 449 個字。
+   `tools/fix_inflections.py` 會把它們清掉（見下面的建置腳本），
+   **重跑 `build_cedict.py` 之後要再跑一次**。
+
+3. **詞頻綁「字形」不綁「讀音」。** `強[jiàng]`（頑固）會偷走 `強[qiáng]` 的
    高詞頻。單字詞的次要讀音要重罰，否則 `的[di1]` 會變成 "taxi" 的答案。
 
-3. **pypinyin 的詞組字典是簡體鍵值。** 繁體字要先逐字轉簡再查，否則
+4. **pypinyin 的詞組字典是簡體鍵值。** 繁體字要先逐字轉簡再查，否則
    「睡覺」會念成 ㄕㄨㄟˋ ㄐㄩㄝˊ。但繁簡合併會反咬：`隻`→`只` 變 ㄓˇ、
    `擦乾`→`擦干` 變 ㄍㄢˋ。
 
-4. **不要再加詞頻門檻。** 曾經兩邊各設 2.5，害 `pangolin` 查不到
+5. **不要再加詞頻門檻。** 曾經兩邊各設 2.5，害 `pangolin` 查不到
    （穿山甲中文 2.26、英文 2.36，兩道都砍）。後來實測：**把門檻全部拿掉，
    25 個回歸樣本只有 4 個變動，而且第一名全部不變**，檔案只從 4.12 長到
    4.77 MB。門檻對排序品質幾乎沒貢獻（計分本身已經處理了），卻一直在
@@ -455,34 +464,34 @@ if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0
    順帶記一下規模的天花板：**整部 CC-CEDICT 在這個壓縮格式下就是 ~4.8 MB**，
    沒有「再放寬就能查到更多」這回事。剩下查不到的字是 CC-CEDICT 本身沒有。
 
-5. **演算法有天花板。** 詞頻、義項位置、語域、破音字、字數、地區訊號全部用盡
+6. **演算法有天花板。** 詞頻、義項位置、語域、破音字、字數、地區訊號全部用盡
    後，仍有約三分之一是選錯義項（`sentence → 判處`）。這種錯誤只能人工修，
    見 `build_cedict.py` 的 `OVERRIDES`。
 
-6. **注音以家長判斷為準。** 交叉比對顯示原本手工的注音常比自動管線準
+7. **注音以家長判斷為準。** 交叉比對顯示原本手工的注音常比自動管線準
    （`長滿草的 ㄓㄤˇ`、`快速地 ˙ㄉㄜ`）。家長已決定 `建築物` 保留 ㄓㄨˊ、
    `記得` 保留 ㄉㄜˊ，**不要改回去**。
 
-7. **`words.js` 有四個頂層宣告，不是兩個。** `words`、`wordTranslations`、
+8. **`words.js` 有四個頂層宣告，不是兩個。** `words`、`wordTranslations`、
    `wordImages`（每個字的 emoji）、`wordExamples`（每個字的英文例句）。
    後兩個只有倉鼠頁的複習卡在用，很容易在改動時被漏掉——2026-08 就漏過一次，
    結果複習卡按「下一個」直接黑畫面。
 
-8. **`wordlists.js` 的 `words` 是 `{w, zh, z}` 物件，不是字串。**
+9. **`wordlists.js` 的 `words` 是 `{w, zh, z}` 物件，不是字串。**
    改成物件時漏改 `flashcards.html`，`deck[pos]` 變成物件卻還被當字串用，
    丟出 `word.toLowerCase is not a function`。而且它發生在 `async` 函式裡，
    變成 unhandled rejection —— **畫面只是卡在「準備中…」，什麼都不顯示**。
    非同步流程要自己接錯誤，否則失敗是無聲的。
 
-9. **`.zh` 這個 class 撞過兩次。** 它是「中文詞本體」的樣式（字級 1.8rem 以上、
+10. **`.zh` 這個 class 撞過兩次。** 它是「中文詞本體」的樣式（字級 1.8rem 以上、
    `flex:1`），發音鈕如果也叫 `.zh` 會被套上去，變成又大又會撐開版面。
    按鈕一律用 `.say-zh`。
 
-10. **遊戲的下拉選單不能重建。** `setupConfig()` 會連帶呼叫 `init()`，
+11. **遊戲的下拉選單不能重建。** `setupConfig()` 會連帶呼叫 `init()`，
    Firebase 資料若在她玩到一半才回來，會把進行中的遊戲重置掉。只 append
    `<option>`。
 
-11. **推幣機的幣堆是單層的，開局就必須鋪到出口邊緣。** `daisy_pusher.html`
+12. **推幣機的幣堆是單層的，開局就必須鋪到出口邊緣。** `daisy_pusher.html`
    的物理很簡單：推板是一道會前進的牆，幣互相擠開，越過前緣就掉進獎池。
    兩件事只有實測才看得出來：
 
@@ -512,7 +521,7 @@ if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0
    答對只是拿到投幣的權利，按下投幣鈕的那一刻投幣頭在哪就落在哪。
    所以 `dropCoin()` **不能加隨機偏移** —— 加了「抓時機」就沒有意義了。
 
-12. **隨機單字集要從「所有 (類別, 週次) 組合」裡抽，不能先抽類別再抽週次。**
+13. **隨機單字集要從「所有 (類別, 週次) 組合」裡抽，不能先抽類別再抽週次。**
    `words` 的各類別大小差很多：二上 FET Spelling 15 組、二上 CET Vocabulary
    14 組、二上 Santa Sleigh 7 組、一下兩份各 12／13 組，常用單字只有 2 組
    （星期、月份）。先抽類別的話，她有六分之一的機會拿到星期或月份。
@@ -545,7 +554,7 @@ if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0
    卻被丟去背星期月份是最惱人的。猜單字和字母重組沒有「一輪」，它們的
    「換個單字」是在同一組裡換字，維持原樣。
 
-13. **Service Worker 的 `cache.add(url)` 會走瀏覽器的 HTTP 快取。**
+14. **Service Worker 的 `cache.add(url)` 會走瀏覽器的 HTTP 快取。**
    GitHub Pages 對這些檔案送 `Cache-Control: max-age=600`，所以「清掉快取重裝」
    會從 HTTP 快取抓回同一批舊檔，原封不動存進新名字的快取裡 —— 快取名是新的、
    版本號還是舊的，看起來像更新過了，實際上一個字都沒換。
@@ -564,7 +573,7 @@ if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0
    修正前部署後重整四次都還是舊版、按強制更新也毫無作用；修正後重整第二次就換新，
    按強制更新立刻換新。這個測試值得留著 —— 光看程式碼三個坑都不明顯。
 
-14. **版本號本身也可能是從快取來的。** 選單顯示的數字讀自快取裡的 `version.js`，
+15. **版本號本身也可能是從快取來的。** 選單顯示的數字讀自快取裡的 `version.js`，
    快取是舊的那個數字就是舊的，於是「已經最新」和「根本沒更新到」長得一模一樣。
    `checkForUpdate()` 改成直接向網路要 `version.js?ts=…`（`cache: "no-store"`）
    來核對，有新版就在 ☰ 上點紅點、把按鈕改成「更新到 …」，並主動叫 SW 去裝。
@@ -655,6 +664,25 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 ```bash
 python3 tools/build_sfx.py     # 改完音色重跑，會覆蓋 sfx/ 底下的檔案
 ```
+
+`tools/fix_inflections.py` 清掉字典索引裡「名詞被硬展開成 -ing / -ed」的
+假條目（見「已知的坑」第 2 條）：
+
+```bash
+python3 tools/fix_inflections.py --dry-run   # 只報告
+python3 tools/fix_inflections.py             # 直接改 cedict.js
+```
+
+判斷規則是 CC-CEDICT 的動詞一律寫成 `to bore a hole`，名詞就是裸的
+`bore; caliber` —— 所以看義項開頭是不是 `to ` 就能分詞性。
+兩個實作上的坑：**`CEDICT.g` 是截斷過的**（結尾帶真的 `…`，最後一個字可能
+被切一半，不處理會把 `demented` 讀成 `demente`）；有些動詞義項漏寫 `to`
+（`文明化` 的釋義只有 `civilize`），所以 `-ize/-ise/-ify/-ate/-en` 結尾另外
+當動詞處理。腳本是冪等的，沒東西可改就不重寫檔案。
+
+整個字被清空也沒關係 —— `inflect.js` 在查詢時會把 `racing` 還原成 `race`，
+卡片上還會標出還原成什麼，比直接說「racing = 種族」誠實。實測那 48 個被
+清空的字 100% 都還原得到。
 
 字典資料不是手寫的，由腳本產生（腳本未納入本 repo，在開發機上）：
 `build_cedict.py`（CC-CEDICT → `cedict.js`）、`build_irregular.py`（不規則
