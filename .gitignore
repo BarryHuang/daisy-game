@@ -1,1 +1,5 @@
 .claude/
+
+# Python 匯入 tools/ 底下的腳本時會產生
+__pycache__/
+*.pyc
