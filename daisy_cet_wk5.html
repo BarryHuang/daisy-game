@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CET Week 5 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// CET 二上 Wk 5：planet / surface / space / divide / piece
+//                continent / natural / feature / landform / valley
+// 這一週整組都是地理和太空的字，意思彼此很接近，所以誘答刻意也挑
+// 同一類的（island、valley、desert…）—— 她得真的讀懂句子才選得出來。
+startClozeQuiz({
+  title: 'CET Week 5 — 選擇填空',
+  subtitle: '二上 · CET Vocabulary ｜ Week 5 ｜ 10 題',
+  accent: '#1565c0',
+  questions: [
+    { sentence: 'Earth is the ___ we live on.',
+      zh: '地球是我們居住的行星。',
+      answer: 'planet', wrong: ['island', 'valley'], source: 'CET Wk 5' },
+
+    { sentence: 'The ___ of the lake is smooth, like a mirror.',
+      zh: '湖的表面很平滑，像一面鏡子。',
+      answer: 'surface', wrong: ['shadow', 'scent'], source: 'CET Wk 5' },
+
+    { sentence: 'Astronauts fly into ___ to look at the stars.',
+      zh: '太空人飛到太空去看星星。',
+      answer: 'space', wrong: ['daylight', 'soil'], source: 'CET Wk 5' },
+
+    { sentence: 'Let us ___ the cake into four pieces, one for each of us.',
+      zh: '我們把蛋糕分成四塊，每個人一塊。',
+      answer: 'divide', wrong: ['collect', 'admire'], source: 'CET Wk 5' },
+
+    { sentence: 'Can I have a ___ of your chocolate?',
+      zh: '我可以吃一塊你的巧克力嗎？',
+      answer: 'piece', wrong: ['booth', 'snapshot'], source: 'CET Wk 5' },
+
+    { sentence: 'Asia is the biggest ___ in the world.',
+      zh: '亞洲是世界上最大的大陸。',
+      answer: 'continent', wrong: ['island', 'valley'], source: 'CET Wk 5' },
+
+    { sentence: 'A rainbow is ___. People do not make it.',
+      zh: '彩虹是自然的，不是人做出來的。',
+      answer: 'natural', wrong: ['busy', 'salty'], source: 'CET Wk 5' },
+
+    { sentence: 'A long nose is a special ___ of an elephant.',
+      zh: '長長的鼻子是大象特別的特徵。',
+      answer: 'feature', wrong: ['pleasure', 'meeting'], source: 'CET Wk 5' },
+
+    { sentence: 'A mountain is one kind of ___, and a river is another kind.',
+      zh: '山是一種地形，河又是另一種。',
+      answer: 'landform', wrong: ['creature', 'souvenir'], source: 'CET Wk 5' },
+
+    { sentence: 'The river runs through the ___ between the two mountains.',
+      zh: '那條河流過兩座山之間的山谷。',
+      answer: 'valley', wrong: ['desert', 'backyard'], source: 'CET Wk 5' },
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

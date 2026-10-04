@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CET Week 6 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// CET 二上 Wk 6：lie / wide / island / flow / popular
+//                survive / salty / human / produce / breathe
+startClozeQuiz({
+  title: 'CET Week 6 — 選擇填空',
+  subtitle: '二上 · CET Vocabulary ｜ Week 6 ｜ 10 題',
+  accent: '#00796b',
+  questions: [
+    { sentence: 'I am tired. I want to ___ down on the bed.',
+      zh: '我累了，我想躺在床上。',
+      answer: 'lie', wrong: ['climb', 'crawl'], source: 'CET Wk 6' },
+
+    { sentence: 'The river is very ___. We need a boat to cross it.',
+      zh: '這條河很寬，我們需要一艘船才能過去。',
+      answer: 'wide', wrong: ['steep', 'shallow'], source: 'CET Wk 6' },
+
+    { sentence: 'Taiwan is an ___. There is water all around it.',
+      zh: '台灣是一座島，四周都是水。',
+      answer: 'island', wrong: ['continent', 'valley'], source: 'CET Wk 6' },
+
+    { sentence: 'Watch the water ___ down the river to the sea.',
+      zh: '看看水順著河流流向大海。',
+      answer: 'flow', wrong: ['bloom', 'gasp'], source: 'CET Wk 6' },
+
+    { sentence: 'This song is very ___. Everyone in my class likes it.',
+      zh: '這首歌很受歡迎，我們班每個人都喜歡。',
+      answer: 'popular', wrong: ['salty', 'empty'], source: 'CET Wk 6' },
+
+    { sentence: 'Plants need water and light to ___.',
+      zh: '植物需要水和光才能存活。',
+      answer: 'survive', wrong: ['divide', 'explore'], source: 'CET Wk 6' },
+
+    { sentence: 'Sea water is ___. Please do not drink it!',
+      zh: '海水是鹹的，請不要喝！',
+      answer: 'salty', wrong: ['bright', 'wide'], source: 'CET Wk 6' },
+
+    { sentence: 'A ___ can talk and read, but animals cannot.',
+      zh: '人類會說話和閱讀，但動物不會。',
+      answer: 'human', wrong: ['vulture', 'cactus'], source: 'CET Wk 6' },
+
+    { sentence: 'Cows ___ milk for us to drink every day.',
+      zh: '乳牛每天製造牛奶給我們喝。',
+      answer: 'produce', wrong: ['collect', 'decide'], source: 'CET Wk 6' },
+
+    { sentence: 'We ___ air with our nose and mouth.',
+      zh: '我們用鼻子和嘴巴呼吸空氣。',
+      answer: 'breathe', wrong: ['survive', 'pour'], source: 'CET Wk 6' },
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
