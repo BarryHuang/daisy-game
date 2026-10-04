@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CET Week 4 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// CET 二上 Wk 4：notice / busy / flour / worried / forgive
+//                solve / nod / stealing / month / fair
+// 錯誤選項一律取自 二上 CET Wk 1~6 和 FET Wk 1~6（她學過的字），
+// 而且盡量挑同詞性的 —— 用沒學過的字當誘答，等於在考運氣不是考單字。
+startClozeQuiz({
+  title: 'CET Week 4 — 選擇填空',
+  subtitle: '二上 · CET Vocabulary ｜ Week 4 ｜ 10 題',
+  accent: '#e65100',
+  questions: [
+    { sentence: 'Did you ___ the new bird in our garden? It is blue and very pretty.',
+      zh: '你有注意到我們花園裡的新鳥嗎？牠是藍色的，很漂亮。',
+      answer: 'notice', wrong: ['explain', 'collect'], source: 'CET Wk 4' },
+
+    { sentence: 'Mom is very ___ today. She has a lot of work to do.',
+      zh: '媽媽今天很忙，她有很多工作要做。',
+      answer: 'busy', wrong: ['empty', 'bright'], source: 'CET Wk 4' },
+
+    { sentence: 'To make bread, we need ___, water, and salt.',
+      zh: '要做麵包，我們需要麵粉、水和鹽。',
+      answer: 'flour', wrong: ['soil', 'glass'], source: 'CET Wk 4' },
+
+    { sentence: 'Lily is ___ because she cannot find her little dog.',
+      zh: '莉莉很擔心，因為她找不到她的小狗。',
+      answer: 'worried', wrong: ['excited', 'popular'], source: 'CET Wk 4' },
+
+    { sentence: 'I am sorry I broke your toy. Please ___ me.',
+      zh: '對不起我弄壞了你的玩具，請原諒我。',
+      answer: 'forgive', wrong: ['invite', 'admire'], source: 'CET Wk 4' },
+
+    { sentence: 'This math problem is hard, but I think I can ___ it.',
+      zh: '這個數學題很難，但我想我可以解決它。',
+      answer: 'solve', wrong: ['survive', 'produce'], source: 'CET Wk 4' },
+
+    { sentence: 'When you agree with someone, you ___ your head.',
+      zh: '當你同意別人的時候，你會點頭。',
+      answer: 'nod', wrong: ['wink', 'crawl'], source: 'CET Wk 4' },
+
+    { sentence: 'The police caught the man ___ money from the shop.',
+      zh: '警察抓到那個人從店裡偷錢。',
+      answer: 'stealing', wrong: ['climbing', 'pouring'], source: 'CET Wk 4' },
+
+    { sentence: 'January is the first ___ of the year.',
+      zh: '一月是一年的第一個月。',
+      answer: 'month', wrong: ['holiday', 'meeting'], source: 'CET Wk 4' },
+
+    { sentence: 'Everyone gets the same number of cookies. That is ___.',
+      zh: '每個人都拿到一樣多的餅乾，那很公平。',
+      answer: 'fair', wrong: ['strange', 'steep'], source: 'CET Wk 4' },
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

@@ -40,6 +40,7 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `rewards.js` | `awardCoins()`：遊戲把金幣加進倉鼠存檔。用 transaction，因為倉鼠頁可能同時開著並整包寫回 `petData` |
 | `wordset.js` | 進遊戲時隨機挑一組單字集。`pickRandomCategory()` / `applyPendingWeek()` 各加一行，見下面第 13 條 |
 | `audio.js` | 音效（`sfx/*.wav`）與背景音樂（Web Audio 即時演奏）。`menu.js` 會自動載入，每一頁都有 |
+| `cloze_quiz.js` | 選擇填空測驗引擎。測驗頁只放題目，版面和計分都在這裡 |
 
 ### 導覽
 主頁是 `daisy_hamster.html`（PWA 的 `start_url` 也指這裡）。
@@ -646,7 +647,7 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 已完成：窄欄版面（iPad 分割畫面）、語音輸入、學期分層、逐字熟練度、
 單字表匯入工具、二上（2026-2027 Fall）單字表、音效與背景音樂、
 遊樂園四座設施（摩天輪／旋轉木馬／咖啡杯／碰碰車）、後院菜園、
-小動物朋友與送禮、街上的公佈欄與每日挑戰。
+小動物朋友與送禮、街上的公佈欄與每日挑戰、CET 每週選擇填空卷。
 
 ## 待處理的風險與技術債
 
@@ -656,6 +657,46 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 - `parent_dashboard.html` 用 Firebase 8.10.1，其餘頁面用 10.9.0
 
 ---
+
+## 選擇填空測驗（`cloze_quiz.js`）
+
+`daisy_cet_wk4/5/6.html` 是每週單字的選擇填空卷。**頁面只放題目**，版面、
+計分、詳解、重作都在 `cloze_quiz.js` —— 每張卷子的差別只有題目，三份各
+複製一次等於三份要一起改，而她的卷子會一直增加。
+
+```js
+startClozeQuiz({
+  title: 'CET Week 4 — 選擇填空',
+  subtitle: '二上 · CET Vocabulary ｜ Week 4 ｜ 10 題',
+  accent: '#e65100',                      // 每張卷子一個主色，才分得出來是哪一週
+  questions: [
+    { sentence: 'Did you ___ the new bird in our garden?',   // ___ 就是空格
+      zh: '你有注意到我們花園裡的新鳥嗎？',                     // 看不懂句子時的救生圈
+      answer: 'notice', wrong: ['explain', 'collect'], source: 'CET Wk 4' },
+  ]
+});
+```
+
+出題的原則：
+
+- **誘答一定要是她學過的字**（同一學期、該週之前的範圍）。用沒學過的字當
+  誘答，等於在考運氣不是考單字 —— 她只要認得出哪個字沒看過就會了。
+- **誘答盡量同詞性、同類別**。Week 5 整組都是地理和太空的字，所以誘答也挑
+  `island` / `valley` / `desert`，她得真的讀懂句子才選得出來。
+- 每個目標單字**剛好出一題**，不重複也不遺漏。
+
+幾個實作上要注意的：
+
+- `renderShell()` **不能用 `document.body.innerHTML = ...`** —— 那會把頁尾的
+  `<script src="menu.js">` 一起洗掉，選單和音效就沒了。要用 `appendChild`。
+- 題目容器的 click 事件**只綁一次**（`dataset.bound`）。`renderQuestions()`
+  每次「重新作答」都會跑，每次都綁的話一個點擊會觸發好幾次。
+- 🔊 在作答前把空格唸成 "blank"，交卷後才唸出答案 —— 不然按一下就等於
+  直接把答案講出來。
+- 返回連結左邊要留 58px，`menu.js` 的浮動 ☰ 就長在那裡。
+- 副標題會被 escape，**不要塞 HTML entity**（第一版寫 `&nbsp;` 直接顯示成文字）。
+- 交卷時會呼叫 `recordAttempt()` 記熟練度、`awardCoins()` 發金幣，
+  所以頁面要載 `mastery.js` 和 `rewards.js`。
 
 ## 建置腳本
 
