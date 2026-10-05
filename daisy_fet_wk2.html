@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FET Week 2 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// FET 二上 Wk 2：soil / elevator / important / pour / hang
+//                invite / bloom / scent / joy / admire
+startClozeQuiz({
+  title: 'FET Week 2 — 選擇填空',
+  subtitle: '二上 · FET Spelling ｜ Week 2 ｜ 10 題',
+  accent: '#2e7d32',
+  questions: [
+    { sentence: 'Put the seed in the ___ and give it some water.',
+      answer: 'soil', wrong: ['glass', 'scent'], source: 'FET Wk 2' },
+
+    { sentence: 'The shop is on the tenth floor. Let us take the ___.',
+      answer: 'elevator', wrong: ['booth', 'tour'], source: 'FET Wk 2' },
+
+    { sentence: 'Do not forget your homework. It is very ___.',
+      answer: 'important', wrong: ['shallow', 'salty'], source: 'FET Wk 2' },
+
+    { sentence: 'Please ___ some milk into my cup.',
+      answer: 'pour', wrong: ['collect', 'climb'], source: 'FET Wk 2' },
+
+    { sentence: 'Dad will ___ the new picture on the wall.',
+      answer: 'hang', wrong: ['divide', 'arrive'], source: 'FET Wk 2' },
+
+    { sentence: 'I want to ___ all my friends to my birthday party.',
+      answer: 'invite', wrong: ['forgive', 'admire'], source: 'FET Wk 2' },
+
+    { sentence: 'The flowers ___ in spring and the garden turns pink.',
+      answer: 'bloom', wrong: ['gasp', 'wink'], source: 'FET Wk 2' },
+
+    { sentence: 'I love the sweet ___ of these roses.',
+      answer: 'scent', wrong: ['shadow', 'thought'], source: 'FET Wk 2' },
+
+    { sentence: 'The children jumped with ___ when they saw the new puppy.',
+      answer: 'joy', wrong: ['thought', 'shadow'], source: 'FET Wk 2' },
+
+    { sentence: 'Everyone stopped to ___ the beautiful painting on the wall.',
+      answer: 'admire', wrong: ['explain', 'divide'], source: 'FET Wk 2' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
