@@ -36,9 +36,17 @@ const MENU_GROUPS = [
     { href: "daisy_multiply.html", emoji: "✖️", name: "九九乘法", note: "看表・練習・唸給妳聽" }
   ]},
   { title: "練習與測驗", items: [
-    { href: "daisy_cet_wk4.html",            emoji: "🧩", name: "CET Wk 4 填空", note: "選字填進句子" },
-    { href: "daisy_cet_wk5.html",            emoji: "🧩", name: "CET Wk 5 填空", note: "選字填進句子" },
-    { href: "daisy_cet_wk6.html",            emoji: "🧩", name: "CET Wk 6 填空", note: "選字填進句子" },
+    { href: "daisy_cet_wk1.html",            emoji: "🧩", name: "CET Wk 1&2 填空", note: "選字填進句子" },
+    { href: "daisy_cet_wk3.html",            emoji: "🧩", name: "CET Wk 3 填空" },
+    { href: "daisy_cet_wk4.html",            emoji: "🧩", name: "CET Wk 4 填空" },
+    { href: "daisy_cet_wk5.html",            emoji: "🧩", name: "CET Wk 5 填空" },
+    { href: "daisy_cet_wk6.html",            emoji: "🧩", name: "CET Wk 6 填空" },
+    { href: "daisy_fet_wk1.html",            emoji: "🔤", name: "FET Wk 1 填空", note: "選字填進句子" },
+    { href: "daisy_fet_wk2.html",            emoji: "🔤", name: "FET Wk 2 填空" },
+    { href: "daisy_fet_wk3.html",            emoji: "🔤", name: "FET Wk 3 填空" },
+    { href: "daisy_fet_wk4.html",            emoji: "🔤", name: "FET Wk 4 填空" },
+    { href: "daisy_fet_wk5.html",            emoji: "🔤", name: "FET Wk 5 填空" },
+    { href: "daisy_fet_wk6.html",            emoji: "🔤", name: "FET Wk 6 填空" },
     { href: "daisy_vocab_final.html",        emoji: "✏️", name: "單字測驗" },
     { href: "daisy_grammar_final.html",      emoji: "📝", name: "文法測驗" },
     { href: "final_exam_pronunciation.html", emoji: "🗣️", name: "發音測驗" }

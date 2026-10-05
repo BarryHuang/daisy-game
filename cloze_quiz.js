@@ -8,7 +8,6 @@
 //
 // 每一題：
 //   { sentence: 'Did you ___ the new bird?',   // ___ 就是要填的空格
-//     zh: '你有注意到花園裡的新鳥嗎？',          // 中文提示，看不懂句子時的救生圈
 //     answer: 'notice',
 //     wrong: ['explain', 'collect'],
 //     source: 'CET Wk 4' }
@@ -65,8 +64,7 @@
              background: color-mix(in srgb, var(--accent) 10%, transparent);
              border-radius: 4px 4px 0 0; text-align: center; font-weight: bold;
              color: var(--accent); padding: 0 6px; }
-  .q-zh { font-size: 13px; color: #999; margin: 6px 0 2px 36px; }
-  .q-meta { margin: 0 0 10px 36px; display: flex; align-items: center; gap: 8px; }
+  .q-meta { margin: 8px 0 10px 36px; display: flex; align-items: center; gap: 8px; }
   .q-source-tag { font-size: 11px; color: #aaa; background: #f3f3f3;
                   border-radius: 999px; padding: 2px 8px; }
   .q-speak { border: none; background: #f3f3f3; border-radius: 999px; cursor: pointer;
@@ -172,7 +170,7 @@
   function build() {
     return cfg.questions.map(function (q) {
       return {
-        sentence: q.sentence, zh: q.zh, answer: q.answer,
+        sentence: q.sentence, answer: q.answer,
         source: q.source, options: shuffle([q.answer].concat(q.wrong))
       };
     });
@@ -238,7 +236,6 @@
       card.innerHTML =
         '<div class="q-num-row"><span class="q-num-badge">' + (i + 1) + '</span>'
       +   '<span class="q-sentence">' + fill(q.sentence) + '</span></div>'
-      + '<div class="q-zh">' + esc(q.zh) + '</div>'
       + '<div class="q-meta"><button class="q-speak" type="button" data-i="' + i + '">🔊 唸一次</button>'
       +   '<span class="q-source-tag">' + esc(q.source) + '</span></div>'
       + '<div class="options-wrap">'
