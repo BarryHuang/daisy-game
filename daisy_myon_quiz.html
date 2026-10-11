@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Continents and Oceans 課文理解</title>
+<title>Continents and Oceans 課文理解 第一份</title>
 <link rel="icon" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
@@ -15,7 +15,8 @@
 </head>
 <body>
 <script>
-// Continents and Oceans 的課文理解測驗。
+// Continents and Oceans 的課文理解測驗 —— 第一份（考定義和大方向）。
+// 第二份在 daisy_myon_quiz2.html，換成考細節（地名、數字、因果），題目不重複。
 //
 // 和單字填空不一樣：這裡考的是「讀懂了沒有」，所以選項是整句話，
 // 而且每一題的答案都能在課文裡直接找到依據 —— 不用推論、不用課外知識。
@@ -24,13 +25,13 @@
 // river 的定義當誘答。三個選項都是課文裡出現過的正確敘述，
 // 只有一個回答得了這個問題，她非得讀懂題目不可。
 startClozeQuiz({
-  title: '課文理解 — Continents and Oceans',
-  subtitle: 'Nancy Kelly Allen ・ Level H ・ 10 題',
+  title: '課文理解 第一份 — Continents and Oceans',
+  subtitle: 'Nancy Kelly Allen ・ Level H ・ 10 題 ・ 考定義和大方向',
   accent: '#0E9AC8',
   instr: '讀完課文再作答。答案都在課文裡。',
   questions: [
     { sentence: 'How many continents are there on Earth?',
-      answer: 'seven', wrong: ['five', 'three'], source: 'p.4' },
+      answer: 'seven', wrong: ['five', 'three'], lemma: 'continent', source: 'p.4' },
 
     { sentence: 'About how much of Earth\'s surface is water?',
       answer: 'almost three-quarters', wrong: ['about one-half', 'about one-quarter'],
