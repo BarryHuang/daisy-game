@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FET Week 6 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// FET 二上 Wk 6：desert / vulture / glass / lizard / crawl
+//                match / fun fact / lead / assistant / decide
+startClozeQuiz({
+  title: 'FET Week 6 — 選擇填空',
+  subtitle: '二上 · FET Spelling ｜ Week 6 ｜ 10 題',
+  accent: '#4527a0',
+  questions: [
+    { sentence: 'There is almost no water in the ___, but a cactus can live there.',
+      answer: 'desert', wrong: ['valley', 'island'], source: 'FET Wk 6' },
+
+    { sentence: 'A big ___ flew in a circle over the dry land.',
+      answer: 'vulture', wrong: ['seagull', 'lizard'], source: 'FET Wk 6' },
+
+    { sentence: 'Be careful! The cup is made of ___ and it can break.',
+      answer: 'glass', wrong: ['soil', 'flour'], source: 'FET Wk 6' },
+
+    { sentence: 'A little green ___ sat on the warm rock.',
+      answer: 'lizard', wrong: ['seagull', 'hermit crab'], source: 'FET Wk 6' },
+
+    { sentence: 'The baby is too small to walk, so she can only ___.',
+      answer: 'crawl', wrong: ['climb', 'flutter'], source: 'FET Wk 6' },
+
+    { sentence: 'These two socks do not ___. One is long and one is short.',
+      answer: 'match', wrong: ['divide', 'notice'], source: 'FET Wk 6' },
+
+    { sentence: 'Here is a ___: a seagull can drink sea water!',
+      answer: 'fun fact', wrong: ['snapshot', 'souvenir'], source: 'FET Wk 6' },
+
+    { sentence: 'You know the way, so please ___ us to the park.',
+      answer: 'lead', wrong: ['invite', 'arrive'], source: 'FET Wk 6' },
+
+    { sentence: 'The teacher\'s ___ helps her hand out the books.',
+      answer: 'assistant', wrong: ['landlord', 'suspect'], source: 'FET Wk 6' },
+
+    { sentence: 'We must ___ now: pizza or noodles?',
+      answer: 'decide', wrong: ['believe', 'explain'], source: 'FET Wk 6' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

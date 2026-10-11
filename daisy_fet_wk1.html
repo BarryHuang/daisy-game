@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FET Week 1 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// FET 二上 Wk 1：shadow / meeting / scurry / flutter / nod
+//                colorful / plant / garden / landlord / window box
+startClozeQuiz({
+  title: 'FET Week 1 — 選擇填空',
+  subtitle: '二上 · FET Spelling ｜ Week 1 ｜ 10 題',
+  accent: '#6a1b9a',
+  questions: [
+    { sentence: 'The sun is behind me, so my ___ is in front of me on the ground.',
+      answer: 'shadow', wrong: ['scent', 'joy'], source: 'FET Wk 1' },
+
+    { sentence: 'Mom cannot talk now. She is in a ___ with her boss.',
+      answer: 'meeting', wrong: ['holiday', 'booth'], source: 'FET Wk 1' },
+
+    { sentence: 'When I turn on the light, the little mice ___ under the bed.',
+      answer: 'scurry', wrong: ['bloom', 'gasp'], source: 'FET Wk 1' },
+
+    { sentence: 'I can see the butterfly ___ its wings in the garden.',
+      answer: 'flutter', wrong: ['pour', 'admire'], source: 'FET Wk 1' },
+
+    { sentence: 'If your answer is yes, you can just ___ your head.',
+      answer: 'nod', wrong: ['wink', 'crawl'], source: 'FET Wk 1' },
+
+    { sentence: 'The rainbow is very ___. It has red, blue, and yellow in it.',
+      answer: 'colorful', wrong: ['steep', 'empty'], source: 'FET Wk 1' },
+
+    { sentence: 'Let us ___ some seeds in the soil today.',
+      answer: 'plant', wrong: ['collect', 'explain'], source: 'FET Wk 1' },
+
+    { sentence: 'Grandma grows roses in her ___ behind the house.',
+      answer: 'garden', wrong: ['elevator', 'snapshot'], source: 'FET Wk 1' },
+
+    { sentence: 'The ___ owns this building, and we pay him every month.',
+      answer: 'landlord', wrong: ['assistant', 'guide'], source: 'FET Wk 1' },
+
+    { sentence: 'She keeps her small plants in a ___, not in the garden.',
+      answer: 'window box', wrong: ['cell phone', 'hermit crab'], source: 'FET Wk 1' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

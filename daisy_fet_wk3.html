@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FET Week 3 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// FET 二上 Wk 3：backyard / daylight / seaweed / snapshot / bright
+//                gasp / wink / arrive / seagull / steep
+startClozeQuiz({
+  title: 'FET Week 3 — 選擇填空',
+  subtitle: '二上 · FET Spelling ｜ Week 3 ｜ 10 題',
+  accent: '#0277bd',
+  questions: [
+    { sentence: 'We play ball in the ___ behind our house.',
+      answer: 'backyard', wrong: ['elevator', 'booth'], source: 'FET Wk 3' },
+
+    { sentence: 'We must get home before dark, while there is still ___.',
+      answer: 'daylight', wrong: ['shadow', 'thought'], source: 'FET Wk 3' },
+
+    { sentence: 'Green ___ floats in the sea near the rocks.',
+      answer: 'seaweed', wrong: ['cactus', 'vulture'], source: 'FET Wk 3' },
+
+    { sentence: 'Dad took a quick ___ of us with his camera.',
+      answer: 'snapshot', wrong: ['souvenir', 'symbol'], source: 'FET Wk 3' },
+
+    { sentence: 'The sun is so ___ today that I need my hat.',
+      answer: 'bright', wrong: ['steep', 'shallow'], source: 'FET Wk 3' },
+
+    { sentence: 'The trick was so surprising that we all ___.',
+      answer: 'gasp', wrong: ['wink', 'nod'], source: 'FET Wk 3' },
+
+    { sentence: 'Dad closed one eye to ___ at me.',
+      answer: 'wink', wrong: ['crawl', 'pour'], source: 'FET Wk 3' },
+
+    { sentence: 'The train will ___ at the station at five.',
+      answer: 'arrive', wrong: ['disappear', 'explore'], source: 'FET Wk 3' },
+
+    { sentence: 'A white ___ flew over the beach and took my bread.',
+      answer: 'seagull', wrong: ['lizard', 'critter'], source: 'FET Wk 3' },
+
+    { sentence: 'The hill is very ___, so it is hard to ride up.',
+      answer: 'steep', wrong: ['shallow', 'wide'], source: 'FET Wk 3' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

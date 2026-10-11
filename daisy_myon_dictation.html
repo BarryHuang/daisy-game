@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Continents and Oceans 聽寫克漏字</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// 聽寫克漏字：沒有選項，按 🔊 聽整句，把缺的那個字拼出來。
+//
+// 這是三種練習裡最難的 —— 選擇題可以用刪去法，聽寫不行，得真的會拼。
+// 所以給兩個扶手：① 每題下面有首字母和字數提示（b _ _ _ _ _ _）
+// ② 可以無限次重聽。大小寫和前後空白都不計較，考的是拼字不是排版。
+//
+// 句子全部取自課本原句（Continents and Oceans, Nancy Kelly Allen,
+// Rubicon Publishing, Level H），十題橫跨 CET Wk 5 / 6 / 7。
+startClozeQuiz({
+  title: '聽寫克漏字 — Continents and Oceans',
+  subtitle: 'CET Wk 5・6・7 ｜ 10 題 ｜ 聽句子，拼出缺的字',
+  accent: '#7b1fa2',
+  mode: 'typing',
+  instr: '按 🔊 聽句子，把缺的那個字拼出來。可以重聽很多次。',
+  questions: [
+    { sentence: 'Earth is sometimes called the blue ___.',
+      answer: 'planet', source: 'CET Wk 5' },
+
+    { sentence: 'From ___, the water looks blue.',
+      answer: 'space', source: 'CET Wk 5' },
+
+    { sentence: 'An island is smaller than a ___.',
+      answer: 'continent', source: 'CET Wk 5' },
+
+    { sentence: 'Valleys ___ between hills or mountains.',
+      answer: 'lie', source: 'CET Wk 6' },
+
+    { sentence: 'Rivers ___ to other rivers, lakes, and even oceans.',
+      answer: 'flow', source: 'CET Wk 6' },
+
+    { sentence: 'Ocean water is ___.',
+      answer: 'salty', source: 'CET Wk 6' },
+
+    { sentence: 'Humans need oxygen to ___.',
+      answer: 'breathe', source: 'CET Wk 6' },
+
+    { sentence: 'Strong winds cause high ___.',
+      answer: 'waves', lemma: 'wave', source: 'CET Wk 7' },
+
+    { sentence: 'Cold temperatures ___ the water.',
+      answer: 'freeze', source: 'CET Wk 7' },
+
+    { sentence: 'Some Arctic ice sheets are 15 feet ___.',
+      answer: 'thick', source: 'CET Wk 7' },
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

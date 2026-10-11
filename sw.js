@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20261004-2102';
+const CACHE_NAME = 'daisy-20261011-1028';
 
 const LOCAL_ASSETS = [
   './',
@@ -43,9 +43,25 @@ const LOCAL_ASSETS = [
   './daisy_pusher.html',
   './daisy_claw.html',
   './rewards.js',
+  './daisy_myon_reader.html',
+  './daisy_myon_quiz.html',
+  './daisy_myon_cloze.html',
+  './daisy_myon_dictation.html',
+  './myon_data.js',
+  './myon-cover.jpg',
+  './passage_cloze.js',
+  './daisy_cet_wk1.html',
+  './daisy_cet_wk3.html',
   './daisy_cet_wk4.html',
   './daisy_cet_wk5.html',
   './daisy_cet_wk6.html',
+  './daisy_cet_wk7.html',
+  './daisy_fet_wk1.html',
+  './daisy_fet_wk2.html',
+  './daisy_fet_wk3.html',
+  './daisy_fet_wk4.html',
+  './daisy_fet_wk5.html',
+  './daisy_fet_wk6.html',
   './cloze_quiz.js',
   './daisy_vocab_final.html',
   './daisy_grammar_final.html',

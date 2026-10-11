@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FET Week 4 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// FET 二上 Wk 4：notice / explain / shallow / critter / collect
+//                cell phone / creature / hermit crab / explore / pleasure
+startClozeQuiz({
+  title: 'FET Week 4 — 選擇填空',
+  subtitle: '二上 · FET Spelling ｜ Week 4 ｜ 10 題',
+  accent: '#ad1457',
+  questions: [
+    { sentence: 'I did not ___ the sign, so I walked the wrong way.',
+      answer: 'notice', wrong: ['produce', 'invite'], source: 'FET Wk 4' },
+
+    { sentence: 'Can you ___ this game to me? I do not know how to play.',
+      answer: 'explain', wrong: ['admire', 'collect'], source: 'FET Wk 4' },
+
+    { sentence: 'The water here is ___. It only comes up to my knees.',
+      answer: 'shallow', wrong: ['steep', 'huge'], source: 'FET Wk 4' },
+
+    { sentence: 'A small ___ ran under the log when we came near.',
+      answer: 'critter', wrong: ['souvenir', 'symbol'], source: 'FET Wk 4' },
+
+    { sentence: 'My brother likes to ___ stamps from many countries.',
+      answer: 'collect', wrong: ['explain', 'forgive'], source: 'FET Wk 4' },
+
+    { sentence: 'Mom called me on her ___ to say she would be late.',
+      answer: 'cell phone', wrong: ['window box', 'hermit crab'], source: 'FET Wk 4' },
+
+    { sentence: 'A whale is the biggest ___ in the sea.',
+      answer: 'creature', wrong: ['landform', 'feature'], source: 'FET Wk 4' },
+
+    { sentence: 'A ___ carries a shell on its back and lives on the beach.',
+      answer: 'hermit crab', wrong: ['seagull', 'window box'], source: 'FET Wk 4' },
+
+    { sentence: 'Let us ___ the cave and see what is inside.',
+      answer: 'explore', wrong: ['divide', 'arrive'], source: 'FET Wk 4' },
+
+    { sentence: 'Reading books gives me great ___.',
+      answer: 'pleasure', wrong: ['shadow', 'scent'], source: 'FET Wk 4' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

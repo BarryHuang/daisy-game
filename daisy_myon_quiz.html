@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Continents and Oceans 課文理解</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// Continents and Oceans 的課文理解測驗。
+//
+// 和單字填空不一樣：這裡考的是「讀懂了沒有」，所以選項是整句話，
+// 而且每一題的答案都能在課文裡直接找到依據 —— 不用推論、不用課外知識。
+//
+// 誘答刻意用課文裡「別的東西的定義」：問 island 是什麼，就拿 lake 和
+// river 的定義當誘答。三個選項都是課文裡出現過的正確敘述，
+// 只有一個回答得了這個問題，她非得讀懂題目不可。
+startClozeQuiz({
+  title: '課文理解 — Continents and Oceans',
+  subtitle: 'Nancy Kelly Allen ・ Level H ・ 10 題',
+  accent: '#0E9AC8',
+  instr: '讀完課文再作答。答案都在課文裡。',
+  questions: [
+    { sentence: 'How many continents are there on Earth?',
+      answer: 'seven', wrong: ['five', 'three'], source: 'p.4' },
+
+    { sentence: 'About how much of Earth\'s surface is water?',
+      answer: 'almost three-quarters', wrong: ['about one-half', 'about one-quarter'],
+      lemma: 'three-quarters', source: 'p.3' },
+
+    { sentence: 'Which ocean is the largest?',
+      answer: 'the Pacific Ocean', wrong: ['the Arctic Ocean', 'the Indian Ocean'],
+      lemma: 'Pacific', source: 'p.10' },
+
+    { sentence: 'What is the world\'s largest island?',
+      answer: 'Greenland', wrong: ['Australia', 'Antarctica'], source: 'p.7' },
+
+    { sentence: 'What is an island?',
+      answer: 'a body of land surrounded by water',
+      wrong: ['a large body of water surrounded by land', 'a moving stream of water'],
+      lemma: 'island', source: 'p.7' },
+
+    { sentence: 'What is a canyon?',
+      answer: 'a very deep valley', wrong: ['a very tall mountain', 'a long sandy coast'],
+      lemma: 'canyon', source: 'p.6' },
+
+    { sentence: 'Why can plants and animals not survive in the Dead Sea?',
+      answer: 'The water is too salty.',
+      wrong: ['The water is too cold.', 'The water is too deep.'],
+      lemma: 'survive', source: 'p.9' },
+
+    { sentence: 'Where do hurricanes form?',
+      answer: 'over oceans', wrong: ['in valleys', 'on mountains'],
+      lemma: 'hurricane', source: 'p.14' },
+
+    { sentence: 'What do tiny ocean plants produce?',
+      answer: 'oxygen', wrong: ['salt', 'ice'], source: 'p.11' },
+
+    { sentence: 'What is the coast?',
+      answer: 'where the land and the ocean meet',
+      wrong: ['the bottom of the ocean', 'the deepest part of a river'],
+      lemma: 'coast', source: 'p.15' },
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

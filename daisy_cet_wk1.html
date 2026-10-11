@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CET Week 1&2 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// CET 二上 Wk 1&2：visit / huge / reply / holiday / souvenir
+//                  booth / rush / outside / upset / thought
+startClozeQuiz({
+  title: 'CET Week 1&2 — 選擇填空',
+  subtitle: '二上 · CET Vocabulary ｜ Week 1&2 ｜ 10 題',
+  accent: '#c62828',
+  questions: [
+    { sentence: 'We will ___ Grandma in Tainan this weekend.',
+      answer: 'visit', wrong: ['invite', 'arrive'], source: 'CET Wk 1&2' },
+
+    { sentence: 'An elephant is ___. It is much bigger than a dog.',
+      answer: 'huge', wrong: ['shallow', 'empty'], source: 'CET Wk 1&2' },
+
+    { sentence: 'I sent her a letter last week, but she did not ___.',
+      answer: 'reply', wrong: ['notice', 'explain'], source: 'CET Wk 1&2' },
+
+    { sentence: 'There is no school tomorrow because it is a ___.',
+      answer: 'holiday', wrong: ['meeting', 'month'], source: 'CET Wk 1&2' },
+
+    { sentence: 'I bought a small ___ to help me remember our trip.',
+      answer: 'souvenir', wrong: ['snapshot', 'booth'], source: 'CET Wk 1&2' },
+
+    { sentence: 'We bought our tickets at the little ___ by the gate.',
+      answer: 'booth', wrong: ['elevator', 'window box'], source: 'CET Wk 1&2' },
+
+    { sentence: 'We have to ___ or we will miss the bus!',
+      answer: 'rush', wrong: ['crawl', 'admire'], source: 'CET Wk 1&2' },
+
+    { sentence: 'It is sunny today. Let us go and play ___.',
+      answer: 'outside', wrong: ['important', 'bright'], source: 'CET Wk 1&2' },
+
+    { sentence: 'She was ___ when her ice cream fell on the ground.',
+      answer: 'upset', wrong: ['excited', 'colorful'], source: 'CET Wk 1&2' },
+
+    { sentence: 'I had a good ___ about how to solve the problem.',
+      answer: 'thought', wrong: ['symbol', 'scent'], source: 'CET Wk 1&2' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

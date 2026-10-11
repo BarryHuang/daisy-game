@@ -8,8 +8,10 @@
 //
 // 每一題：
 //   { sentence: 'Did you ___ the new bird?',   // ___ 就是要填的空格
-//     zh: '你有注意到花園裡的新鳥嗎？',          // 中文提示，看不懂句子時的救生圈
 //     answer: 'notice',
+//     lemma: 'notice',                        // 選填。答案是變化形時（divided、
+//                                             // Hurricanes）用它記熟練度，不然
+//                                             // 熟練度會被拆成兩個不同的字
 //     wrong: ['explain', 'collect'],
 //     source: 'CET Wk 4' }
 
@@ -65,8 +67,7 @@
              background: color-mix(in srgb, var(--accent) 10%, transparent);
              border-radius: 4px 4px 0 0; text-align: center; font-weight: bold;
              color: var(--accent); padding: 0 6px; }
-  .q-zh { font-size: 13px; color: #999; margin: 6px 0 2px 36px; }
-  .q-meta { margin: 0 0 10px 36px; display: flex; align-items: center; gap: 8px; }
+  .q-meta { margin: 8px 0 10px 36px; display: flex; align-items: center; gap: 8px; }
   .q-source-tag { font-size: 11px; color: #aaa; background: #f3f3f3;
                   border-radius: 999px; padding: 2px 8px; }
   .q-speak { border: none; background: #f3f3f3; border-radius: 999px; cursor: pointer;
@@ -88,6 +89,25 @@
   .opt-btn.correct      { border-color: #2e9e5b; background: #e9f8ee; }
   .opt-btn.show-correct { border-color: #2e9e5b; background: #e9f8ee; }
   .opt-btn.wrong        { border-color: #d14343; background: #fdeaea; }
+
+  /* 聽寫模式：打字格 */
+  .type-row { display: flex; gap: 8px; align-items: center; }
+  .type-in {
+    flex: 1; min-width: 0; padding: 11px 13px; border: 2px solid #e8e8e8; border-radius: 11px;
+    font-family: inherit; font-size: 18px; font-weight: 700; letter-spacing: .5px;
+    color: #222; background: #fff; outline: none; text-align: center;
+  }
+  .type-in:focus { border-color: var(--accent);
+                   background: color-mix(in srgb, var(--accent) 7%, transparent); }
+  .type-in.correct { border-color: #2e9e5b; background: #e9f8ee; }
+  .type-in.wrong   { border-color: #d14343; background: #fdeaea; }
+  .type-in:disabled { opacity: 1; }
+  .type-play { flex: none; border: none; border-radius: 11px; cursor: pointer;
+               background: var(--accent); color: #fff; font-family: inherit;
+               font-size: 15px; font-weight: 700; padding: 11px 15px; }
+  .type-play:active { transform: scale(.95); }
+  /* 提示：給首字母和字長，不然聽不出來就完全卡住 */
+  .type-hint { margin-top: 7px; font-size: 12px; color: #999; letter-spacing: 2px; }
 
   .feedback-tag { display: inline-block; margin-top: 9px; font-size: 13px;
                   font-weight: bold; border-radius: 999px; padding: 4px 11px; }
@@ -163,6 +183,14 @@
     } catch (e) { native(); }
   }
 
+  /** 聽寫提示：首字母 + 幾個字母。完全沒提示的話聽不出來就整題卡住 */
+  function hint(ans) {
+    return String(ans).split(/(\s+)/).map(function (w) {
+      if (!w.trim()) return ' ';
+      return w[0] + ' _'.repeat(w.length - 1);
+    }).join('　');
+  }
+
   /** 把句子裡的 ___ 換成空格，或換成某個字 */
   function fill(sentence, word) {
     return esc(sentence).split(BLANK).join(
@@ -172,7 +200,7 @@
   function build() {
     return cfg.questions.map(function (q) {
       return {
-        sentence: q.sentence, zh: q.zh, answer: q.answer,
+        sentence: q.sentence, answer: q.answer, lemma: q.lemma || q.answer,
         source: q.source, options: shuffle([q.answer].concat(q.wrong))
       };
     });
@@ -201,7 +229,8 @@
     +       '<span id="progress-pct">0%</span></div>'
     +     '<div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>'
     +   '</div>'
-    +   '<p class="instr">每題選一個字填進空格。共 ' + cfg.questions.length + ' 題，每題 '
+    +   '<p class="instr">' + esc(cfg.instr || '每題選一個字填進空格。')
+    +     '共 ' + cfg.questions.length + ' 題，每題 '
     +     (100 / cfg.questions.length).toFixed(0) + ' 分。</p>'
     +   '<div id="questions-container"></div>'
     + '</div>'
@@ -231,6 +260,7 @@
     var box = document.getElementById('questions-container');
     box.innerHTML = '';
     var letters = ['A', 'B', 'C', 'D'];
+    var typing = cfg.mode === 'typing';
 
     questions.forEach(function (q, i) {
       var card = document.createElement('div');
@@ -238,15 +268,25 @@
       card.innerHTML =
         '<div class="q-num-row"><span class="q-num-badge">' + (i + 1) + '</span>'
       +   '<span class="q-sentence">' + fill(q.sentence) + '</span></div>'
-      + '<div class="q-zh">' + esc(q.zh) + '</div>'
-      + '<div class="q-meta"><button class="q-speak" type="button" data-i="' + i + '">🔊 唸一次</button>'
+      // 聽寫模式下面已經有一顆「再聽一次」了，這裡不用再放一顆一樣的
+      + '<div class="q-meta">'
+      +   (typing ? '' : '<button class="q-speak" type="button" data-i="' + i + '">🔊 唸一次</button>')
       +   '<span class="q-source-tag">' + esc(q.source) + '</span></div>'
-      + '<div class="options-wrap">'
-      +   q.options.map(function (o, k) {
-            return '<button class="opt-btn" type="button" data-i="' + i + '" data-v="' + esc(o) + '">'
-                 + '<span class="opt-letter">' + letters[k] + '</span><span>' + esc(o) + '</span></button>';
-          }).join('')
-      + '</div><div class="feedback" id="fb_' + i + '"></div>';
+      + (typing
+          ? '<div class="type-row">'
+          +   '<button class="type-play" type="button" data-play="' + i + '">🔊 再聽一次</button>'
+          +   '<input class="type-in" type="text" data-i="' + i + '" autocomplete="off"'
+          +     ' autocapitalize="off" autocorrect="off" spellcheck="false"'
+          +     ' inputmode="latin" aria-label="把聽到的字拼出來">'
+          + '</div>'
+          + '<div class="type-hint">' + hint(q.answer) + '</div>'
+          : '<div class="options-wrap">'
+          +   q.options.map(function (o, k) {
+                return '<button class="opt-btn" type="button" data-i="' + i + '" data-v="' + esc(o) + '">'
+                     + '<span class="opt-letter">' + letters[k] + '</span><span>' + esc(o) + '</span></button>';
+              }).join('')
+          + '</div>')
+      + '<div class="feedback" id="fb_' + i + '"></div>';
       box.appendChild(card);
     });
 
@@ -255,6 +295,7 @@
     if (!box.dataset.bound) {
       box.dataset.bound = '1';
       box.addEventListener('click', onClick);
+      box.addEventListener('input', onType);
     }
   }
 
@@ -262,13 +303,24 @@
     var speakBtn = e.target.closest('.q-speak');
     if (speakBtn) {
       var q = questions[+speakBtn.dataset.i];
-      // 作答前唸完整句子會直接把答案講出來，所以空格先唸成 "blank"
+      // 作答前唸完整句子會直接把答案講出來，所以空格先唸成 "blank"。
+      // 閱讀理解的題目沒有空格，split 不會切到東西，整句照唸。
       speak(q.sentence.split(BLANK).join(submitted ? ' ' + q.answer + ' ' : ' blank '));
       return;
     }
+    var replay = e.target.closest('[data-play]');
+    if (replay) { speak(questions[+replay.dataset.play].sentence.split(BLANK).join(' ')); return; }
     var opt = e.target.closest('.opt-btn');
     if (!opt || submitted) return;
     select(+opt.dataset.i, opt.dataset.v);
+  }
+
+  function onType(e) {
+    var el = e.target.closest('.type-in');
+    if (!el || submitted) return;
+    var v = el.value.trim();
+    if (v) answers[+el.dataset.i] = v; else delete answers[+el.dataset.i];
+    updateProgress();
   }
 
   function select(i, value) {
@@ -290,17 +342,24 @@
     document.getElementById('submit-btn').disabled = n < total;
   }
 
+  /** 聽寫時大小寫和前後空白都不計較 —— 考的是拼字不是排版 */
+  function isRight(given, answer) {
+    if (given == null) return false;
+    if (cfg.mode !== 'typing') return given === answer;
+    return String(given).trim().toLowerCase() === String(answer).trim().toLowerCase();
+  }
+
   function submit() {
     if (submitted) return;
     submitted = true;
 
     var right = 0;
     questions.forEach(function (q, i) {
-      var ok = answers[i] === q.answer;
+      var ok = isRight(answers[i], q.answer);
       if (ok) right++;
       // 餵給熟練度系統：倉鼠的書櫃和幾個遊戲都會optionally拿弱字當題庫
       if (typeof recordAttempt === 'function') {
-        try { recordAttempt(q.answer, ok, ok ? 0 : 1); } catch (e) {}
+        try { recordAttempt(q.lemma, ok, ok ? 0 : 1); } catch (e) {}
       }
     });
     var score = Math.round(right / questions.length * 100);
@@ -339,12 +398,18 @@
 
     questions.forEach(function (q, i) {
       var card = document.querySelectorAll('.q-card')[i];
-      var chosen = answers[i], ok = chosen === q.answer;
+      var chosen = answers[i], ok = isRight(chosen, q.answer);
 
       // 詳解時把正確答案填進句子，整句讀起來才完整
       card.querySelector('.q-sentence').innerHTML =
         fill(q.sentence, '<b style="color:var(--accent)">' + esc(q.answer) + '</b>');
 
+      var input = card.querySelector('.type-in');
+      if (input) {
+        input.disabled = true;
+        input.classList.add(ok ? 'correct' : 'wrong');
+        if (!ok) input.value = chosen || '（沒寫）';
+      }
       card.querySelectorAll('.opt-btn').forEach(function (b) {
         b.classList.remove('selected');
         var v = b.dataset.v;

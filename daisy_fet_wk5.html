@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FET Week 5 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// FET 二上 Wk 5：excited / favorite / tour / guide / explore
+//                different / strange / empty / cactus / climb
+// explore 在 Wk 4 和 Wk 5 都有，兩張卷子各出一題，跟課表一致
+startClozeQuiz({
+  title: 'FET Week 5 — 選擇填空',
+  subtitle: '二上 · FET Spelling ｜ Week 5 ｜ 10 題',
+  accent: '#ef6c00',
+  questions: [
+    { sentence: 'Daisy is so ___ about her trip tomorrow that she cannot sleep.',
+      answer: 'excited', wrong: ['worried', 'upset'], source: 'FET Wk 5' },
+
+    { sentence: 'Blue is my ___ color. I like it best of all.',
+      answer: 'favorite', wrong: ['different', 'strange'], source: 'FET Wk 5' },
+
+    { sentence: 'We took a ___ of the museum with twenty other people.',
+      answer: 'tour', wrong: ['booth', 'meeting'], source: 'FET Wk 5' },
+
+    { sentence: 'The ___ showed us the way and told us about the old city.',
+      answer: 'guide', wrong: ['landlord', 'assistant'], source: 'FET Wk 5' },
+
+    { sentence: 'The children want to ___ the forest behind the school.',
+      answer: 'explore', wrong: ['survive', 'admire'], source: 'FET Wk 5' },
+
+    { sentence: 'These two shoes are ___. One is red and one is black.',
+      answer: 'different', wrong: ['natural', 'popular'], source: 'FET Wk 5' },
+
+    { sentence: 'I heard a ___ sound at night. I did not know what it was.',
+      answer: 'strange', wrong: ['colorful', 'bright'], source: 'FET Wk 5' },
+
+    { sentence: 'The box is ___. There is nothing inside it.',
+      answer: 'empty', wrong: ['huge', 'steep'], source: 'FET Wk 5' },
+
+    { sentence: 'A ___ has sharp points and grows in dry places.',
+      answer: 'cactus', wrong: ['seaweed', 'vulture'], source: 'FET Wk 5' },
+
+    { sentence: 'Monkeys like to ___ up tall trees.',
+      answer: 'climb', wrong: ['crawl', 'flow'], source: 'FET Wk 5' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

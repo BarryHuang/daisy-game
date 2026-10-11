@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CET Week 3 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// CET 二上 Wk 3：hang / know / believe / only / suspect
+//                lead / shocked / disappear / symbol / cover
+startClozeQuiz({
+  title: 'CET Week 3 — 選擇填空',
+  subtitle: '二上 · CET Vocabulary ｜ Week 3 ｜ 10 題',
+  accent: '#00838f',
+  questions: [
+    { sentence: 'Please ___ your coat on the hook by the door.',
+      answer: 'hang', wrong: ['pour', 'collect'], source: 'CET Wk 3' },
+
+    { sentence: 'I do not ___ the answer. Can you tell me?',
+      answer: 'know', wrong: ['reply', 'explain'], source: 'CET Wk 3' },
+
+    { sentence: 'I ___ you. I am sure you are telling the truth.',
+      answer: 'believe', wrong: ['forgive', 'admire'], source: 'CET Wk 3' },
+
+    { sentence: 'I have ___ one cookie left. Do you want it?',
+      answer: 'only', wrong: ['important', 'different'], source: 'CET Wk 3' },
+
+    { sentence: 'The police think the ___ took the money from the shop.',
+      answer: 'suspect', wrong: ['assistant', 'landlord'], source: 'CET Wk 3' },
+
+    { sentence: 'The guide will ___ us up the mountain.',
+      answer: 'lead', wrong: ['notice', 'invite'], source: 'CET Wk 3' },
+
+    { sentence: 'We were ___ when we heard the loud crash outside.',
+      answer: 'shocked', wrong: ['excited', 'popular'], source: 'CET Wk 3' },
+
+    { sentence: 'The sun will ___ behind the hill at six o\'clock.',
+      answer: 'disappear', wrong: ['arrive', 'bloom'], source: 'CET Wk 3' },
+
+    { sentence: 'A heart is a ___ for love.',
+      answer: 'symbol', wrong: ['feature', 'thought'], source: 'CET Wk 3' },
+
+    { sentence: 'Please ___ the food so the flies cannot get it.',
+      answer: 'cover', wrong: ['divide', 'match'], source: 'CET Wk 3' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
