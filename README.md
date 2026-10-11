@@ -774,30 +774,34 @@ startClozeQuiz({
 CSS 的 `none` —— 畫面整片空白，而且**測試如果只檢查 `style.display` 會驗不出來**
 （行內屬性是 `''`，確實不等於 `'none'`）。要用 `getComputedStyle()`。
 
-## Continents and Oceans（`myon_*`）
+## CET 課文練習（`daisy_cet_read*` / `daisy_cet_cloze` / `daisy_cet_dictation`）
 
-她 CET Wk 5/6/7 的課文來源是同一本讀本（*Continents and Oceans*, Nancy Kelly
-Allen, Rubicon Publishing, Level H，442 字）。
+**CET Wk 5/6/7 的課文**是同一篇讀本（*Continents and Oceans*, Nancy Kelly
+Allen, Rubicon Publishing, Level H，442 字），那三十個單字 100% 出自它。
+
+> 檔名一度叫 `daisy_myon_*`，那是誤會 —— `myON` 只是當初那份整理檔的檔名
+> （她另外在用的閱讀 App），這篇是 CET 課本的課文。已經全部改成 `daisy_cet_*`。
 
 | 頁面 | 做什麼 |
 |---|---|
-| `daisy_myon_quiz.html` | 課文理解 **第一份** —— 考定義和大方向 |
-| `daisy_myon_quiz2.html` | 課文理解 **第二份** —— 考細節（地名、數字、因果） |
-| `daisy_myon_cloze.html` | 整段克漏字，10 個空格配一個單字庫 |
-| `daisy_myon_dictation.html` | 聽寫克漏字，聽句子把字拼出來 |
+| `daisy_cet_read1.html` | 課文理解 **第一份** —— 考定義和大方向 |
+| `daisy_cet_read2.html` | 課文理解 **第二份** —— 考細節（地名、數字、因果） |
+| `daisy_cet_cloze.html` | 整段克漏字，10 個空格配一個單字庫 |
+| `daisy_cet_dictation.html` | 聽寫克漏字，聽句子把字拼出來 |
 
 ### ⚠️ 課文本身不在這個 repo 裡
 
-讀本有版權（Rubicon，All rights reserved），而這個 repo 是公開的，
+課文有版權（Rubicon，All rights reserved），而這個 repo 是公開的，
 所以**完整課文頁（54 句全文 + 封面圖）沒有進版控**，單獨做成一個內嵌所有
-資料的 HTML 檔放在裝置上。曾經短暫存在過的 `daisy_myon_reader.html`、
-`myon_data.js`、`myon-cover.jpg` 都已經移除。
+資料的 HTML 檔放在裝置上。那三個檔案（課文頁、句子／單字資料、封面圖）
+在 PR #40 短暫進過 repo，PR #41 已經移除 —— 但**還留在 git 歷史裡**，
+刪檔不會從歷史移除。
 
-留下來的三個練習頁**只含挖空後的單句或段落**，那是標準的習題用法
-（每本英文習作都這樣做），和重製整本書是兩回事。
+留下來的四個練習頁**只含挖空後的單句或段落**，那是標準的習題用法
+（每本英文習作都這樣做），和重製整篇課文是兩回事。
 
-要重建那個離線課文頁：把句子／單字資料和封面 base64 內嵌回
-`daisy_myon_reader.html` 的樣板就好 —— 它只是個從資料跑迴圈的殼。
+要重建那個離線課文頁：它只是個從資料跑迴圈的殼，把句子／單字資料和封面
+base64 內嵌回去就好。
 
 幾個設計上的取捨：
 
