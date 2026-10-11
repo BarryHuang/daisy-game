@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>📝 練習中心</title>
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#fff8f0;--ink:#2a2228;--dim:#8a7b80;--ok:#2e9e5b;--line:#f0e4e2;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',Arial,sans-serif;
+     background:var(--bg);color:var(--ink);max-width:680px;margin:0 auto;
+     line-height:1.6;padding-bottom:44px}
+/* 左邊留 58px 讓開 menu.js 注入的浮動 ☰ */
+.back-link{display:inline-flex;align-items:center;gap:6px;padding:14px 20px 14px 58px;
+           font-size:15px;color:#7b1fa2;font-weight:bold;text-decoration:none}
+.wrap{padding:0 16px}
+h1{font-size:23px}
+.lede{font-size:13px;color:var(--dim);margin-top:3px}
+
+section{margin-top:26px}
+.sec-head{display:flex;align-items:baseline;gap:9px;margin-bottom:11px}
+.sec-head h2{font-size:16px}
+.sec-head .hint{font-size:12px;color:var(--dim)}
+
+/* 錯題本：單獨一張大的，因為它是每天最該點的那一個 */
+.hero-card{display:block;text-decoration:none;color:#fff;border-radius:18px;padding:18px 20px;
+           background:linear-gradient(135deg,#c62828 0%,#e05252 100%);
+           box-shadow:0 4px 16px rgba(198,40,40,.26)}
+.hero-card .t{font-size:19px;font-weight:800}
+.hero-card .d{font-size:13px;opacity:.92;margin-top:3px}
+.hero-card .n{margin-top:12px;display:inline-block;background:rgba(255,255,255,.22);
+              border:1px solid rgba(255,255,255,.35);border-radius:999px;
+              padding:4px 12px;font-size:13px;font-weight:700}
+
+/* 每週卷子：網格。加到 Wk 20 也只是多幾張卡，選單完全不動 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:9px}
+.paper{display:block;text-decoration:none;color:var(--ink);background:#fff;
+       border:1.5px solid var(--line);border-radius:14px;padding:11px 10px 10px}
+.paper:active{transform:scale(.97)}
+.paper .wk{font-size:14px;font-weight:800}
+.paper .cnt{font-size:11px;color:var(--dim);margin-top:1px}
+.paper .barbg{margin-top:8px;height:6px;border-radius:3px;background:#f0eae8;overflow:hidden}
+.paper .bar{height:100%;width:0;border-radius:3px;background:var(--ok)}
+.paper .st{font-size:11px;color:var(--dim);margin-top:4px}
+.paper.done{border-color:var(--ok);background:#f2fbf5}
+.paper.done .wk::after{content:' 🎓'}
+.paper.fresh .st{color:#c08b52}
+
+/* 其他練習：橫列 */
+.rowlink{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--line);
+         border-radius:14px;padding:12px 14px;margin-bottom:8px;
+         text-decoration:none;color:var(--ink)}
+.rowlink:active{transform:scale(.99)}
+.rowlink .ic{font-size:21px;flex:none}
+.rowlink .tx{flex:1;min-width:0}
+/* .tt / .dd 是 <span>，不給 block 的話標題和說明會疊在同一行（踩過） */
+.rowlink .tt{display:block;font-size:15px;font-weight:700}
+.rowlink .dd{display:block;font-size:12px;color:var(--dim);line-height:1.45}
+.rowlink .go{color:#cfc2c4;font-size:18px;flex:none}
+
+.foot{margin-top:28px;font-size:12px;color:var(--dim);text-align:center;line-height:1.9}
+.foot a{color:#7b1fa2}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+<script src="./words.js"></script>
+<script src="./wordlists.js"></script>
+<script src="./mastery.js"></script>
+</head>
+<body>
+
+<a href="daisy_hamster.html" class="back-link">← 返回主頁</a>
+
+<div class="wrap">
+  <h1>📝 練習中心</h1>
+  <div class="lede">所有測驗都在這裡。卡片上的綠條是那一週她已經學會幾個字。</div>
+  <div id="body"></div>
+</div>
+
+<script>
+// 練習中心 —— 選單原本把 19 張測驗卷平舖在「練習與測驗」底下，其中 12 張是
+// 長得一模一樣的「Wk N 填空」，而課表的 CET 排到 Wk 20。線性列下去不可能收斂，
+// 所以收成這一頁：選單只留一個入口，卷子多寡跟選單長度脫鉤。
+//
+// 順便解決選單給不了的東西：每張卡顯示那一週的熟練進度（10 個字學會幾個），
+// 她才看得出「哪張還沒寫」和「哪張已經全會了」—— 這是下拉選單做不到的。
+(function () {
+  'use strict';
+
+  // 哪一張卷子對應 words.js 裡的哪一組。新增卷子只要在這裡加一行。
+  var PAPERS = [
+    { key: 'cet', title: 'CET Vocabulary', cat: '二上 · CET Vocabulary',
+      items: [
+        { wk: 'Wk 1&2', href: 'daisy_cet_wk1.html' },
+        { wk: 'Wk 3',   href: 'daisy_cet_wk3.html' },
+        { wk: 'Wk 4',   href: 'daisy_cet_wk4.html' },
+        { wk: 'Wk 5',   href: 'daisy_cet_wk5.html' },
+        { wk: 'Wk 6',   href: 'daisy_cet_wk6.html' },
+        { wk: 'Wk 7',   href: 'daisy_cet_wk7.html' },
+      ] },
+    { key: 'fet', title: 'FET Spelling', cat: '二上 · FET Spelling',
+      items: [
+        { wk: 'Wk 1', href: 'daisy_fet_wk1.html' },
+        { wk: 'Wk 2', href: 'daisy_fet_wk2.html' },
+        { wk: 'Wk 3', href: 'daisy_fet_wk3.html' },
+        { wk: 'Wk 4', href: 'daisy_fet_wk4.html' },
+        { wk: 'Wk 5', href: 'daisy_fet_wk5.html' },
+        { wk: 'Wk 6', href: 'daisy_fet_wk6.html' },
+      ] },
+  ];
+
+  var READER = [
+    { ic: '📖', href: 'daisy_myon_quiz.html',      t: '課文理解測驗', d: '讀完課文回答 10 題' },
+    { ic: '🧩', href: 'daisy_myon_cloze.html',     t: '選擇克漏字',   d: '整段挖空，從單字庫裡挑' },
+    { ic: '🎧', href: 'daisy_myon_dictation.html', t: '聽寫克漏字',   d: '聽句子，把缺的字拼出來' },
+  ];
+  var EXAMS = [
+    { ic: '✏️', href: 'daisy_vocab_final.html',        t: '單字測驗', d: '整學期單字・看字選意思' },
+    { ic: '📝', href: 'daisy_grammar_final.html',      t: '文法測驗', d: '整學期文法' },
+    { ic: '🗣️', href: 'final_exam_pronunciation.html', t: '發音測驗', d: '聽音選字' },
+  ];
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  /** 這一組字裡有幾個已經「連對三次畢業」了 */
+  function progress(cat, wk) {
+    var arr = [];
+    try { arr = (words[cat] || {})[wk] || []; } catch (e) {}
+    if (!arr.length) return null;
+    var done = 0, touched = 0;
+    arr.forEach(function (w) {
+      if (typeof isMastered === 'function' && isMastered(w)) done++;
+      if (typeof getMastery === 'function' && getMastery(w)) touched++;
+    });
+    return { total: arr.length, done: done, touched: touched };
+  }
+
+  function paperCard(p, it) {
+    var g = progress(p.cat, it.wk);
+    var cls = 'paper', st, pct = 0;
+    if (!g) { st = '—'; }
+    else {
+      pct = Math.round(g.done / g.total * 100);
+      if (g.done === g.total) { cls += ' done'; st = '全部學會'; }
+      else if (!g.touched)    { cls += ' fresh'; st = '還沒練過'; }
+      else                    { st = '學會 ' + g.done + ' / ' + g.total; }
+    }
+    return '<a class="' + cls + '" href="' + it.href + '">'
+      + '<div class="wk">' + esc(it.wk) + '</div>'
+      + '<div class="cnt">' + (g ? g.total + ' 個字' : '') + '</div>'
+      + '<div class="barbg"><div class="bar" style="width:' + pct + '%"></div></div>'
+      + '<div class="st">' + esc(st) + '</div></a>';
+  }
+
+  function rows(list) {
+    return list.map(function (r) {
+      return '<a class="rowlink" href="' + r.href + '">'
+        + '<span class="ic">' + r.ic + '</span>'
+        + '<span class="tx"><span class="tt">' + esc(r.t) + '</span>'
+        +   '<span class="dd">' + esc(r.d) + '</span></span>'
+        + '<span class="go">›</span></a>';
+    }).join('');
+  }
+
+  function render() {
+    var weak = 0;
+    try { weak = (getWeakWords(0) || []).length; } catch (e) {}
+
+    var html =
+      '<section><div class="sec-head"><h2>先從這裡開始</h2></div>'
+    +   '<a class="hero-card" href="daisy_mistakes.html">'
+    +     '<div class="t">📕 錯題本</div>'
+    +     '<div class="d">寫測驗卷答錯的字會自動收進來，連對 3 次就畢業</div>'
+    +     '<div class="n">' + (weak ? '還有 ' + weak + ' 個字要加強' : '目前沒有要加強的字 🎉') + '</div>'
+    +   '</a></section>';
+
+    PAPERS.forEach(function (p) {
+      var all = p.items.map(function (it) { return progress(p.cat, it.wk); }).filter(Boolean);
+      var done = all.reduce(function (a, g) { return a + g.done; }, 0);
+      var tot  = all.reduce(function (a, g) { return a + g.total; }, 0);
+      html += '<section><div class="sec-head"><h2>' + esc(p.title) + ' 每週填空</h2>'
+            +   '<span class="hint">' + (tot ? '學會 ' + done + ' / ' + tot + ' 個字' : '') + '</span></div>'
+            + '<div class="grid">'
+            + p.items.map(function (it) { return paperCard(p, it); }).join('')
+            + '</div></section>';
+    });
+
+    html += '<section><div class="sec-head"><h2>課文練習</h2>'
+          +   '<span class="hint">Continents and Oceans</span></div>'
+          + rows(READER) + '</section>'
+          + '<section><div class="sec-head"><h2>整學期測驗</h2></div>'
+          + rows(EXAMS) + '</section>'
+          + '<div class="foot">想查單字或看所有單字的熟練度？<br>'
+          +   '<a href="daisy_dictionary.html">查單字</a>　·　'
+          +   '<a href="wordbook.html">單字總表</a>　·　'
+          +   '<a href="flashcards.html">單字卡</a></div>';
+
+    document.getElementById('body').innerHTML = html;
+  }
+
+  render();
+  // 熟練度可能晚點才從雲端回來（換裝置時），回來了就把進度重畫一次
+  if (typeof syncMastery === 'function') syncMastery(render);
+})();
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
