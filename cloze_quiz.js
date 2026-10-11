@@ -9,6 +9,9 @@
 // 每一題：
 //   { sentence: 'Did you ___ the new bird?',   // ___ 就是要填的空格
 //     answer: 'notice',
+//     lemma: 'notice',                        // 選填。答案是變化形時（divided、
+//                                             // Hurricanes）用它記熟練度，不然
+//                                             // 熟練度會被拆成兩個不同的字
 //     wrong: ['explain', 'collect'],
 //     source: 'CET Wk 4' }
 
@@ -170,7 +173,7 @@
   function build() {
     return cfg.questions.map(function (q) {
       return {
-        sentence: q.sentence, answer: q.answer,
+        sentence: q.sentence, answer: q.answer, lemma: q.lemma || q.answer,
         source: q.source, options: shuffle([q.answer].concat(q.wrong))
       };
     });
@@ -297,7 +300,7 @@
       if (ok) right++;
       // 餵給熟練度系統：倉鼠的書櫃和幾個遊戲都會optionally拿弱字當題庫
       if (typeof recordAttempt === 'function') {
-        try { recordAttempt(q.answer, ok, ok ? 0 : 1); } catch (e) {}
+        try { recordAttempt(q.lemma, ok, ok ? 0 : 1); } catch (e) {}
       }
     });
     var score = Math.round(right / questions.length * 100);

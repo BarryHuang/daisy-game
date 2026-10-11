@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CET Week 7 選擇填空</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// CET 二上 Wk 7：bottom / strong / wave / hurricane / cause
+//                storm / grow / damage / freeze / thick
+//
+// 句子全部取自課本原句（Continents and Oceans, Nancy Kelly Allen,
+// Rubicon Publishing, Level H）—— 她在課堂上讀過的句子，複習時認得出來。
+startClozeQuiz({
+  title: 'CET Week 7 — 選擇填空',
+  subtitle: '二上 · CET Vocabulary ｜ Week 7 ｜ 10 題',
+  accent: '#5d4037',
+  questions: [
+    { sentence: 'The ___ of the ocean is called the ocean floor.',
+      answer: 'bottom', wrong: ['surface', 'feature'], source: 'CET Wk 7' },
+
+    { sentence: '___ winds cause high waves.',
+      answer: 'Strong', lemma: 'strong', wrong: ['Thick', 'Salty'], source: 'CET Wk 7' },
+
+    { sentence: 'Strong winds cause high ___.',
+      answer: 'waves', lemma: 'wave', wrong: ['storms', 'pieces'], source: 'CET Wk 7' },
+
+    { sentence: '___ are huge storms that form over oceans.',
+      answer: 'Hurricanes', lemma: 'hurricane', wrong: ['Islands', 'Valleys'], source: 'CET Wk 7' },
+
+    { sentence: 'Strong winds ___ high waves.',
+      answer: 'cause', wrong: ['survive', 'divide'], source: 'CET Wk 7' },
+
+    { sentence: 'Warm ocean water and wind make the ___ grow.',
+      answer: 'storm', wrong: ['island', 'valley'], source: 'CET Wk 7' },
+
+    { sentence: 'Giant kelp can ___ up to two feet per day.',
+      answer: 'grow', wrong: ['flow', 'freeze'], source: 'CET Wk 7' },
+
+    { sentence: 'Hurricanes can cause floods and ___ buildings.',
+      answer: 'damage', wrong: ['produce', 'collect'], source: 'CET Wk 7' },
+
+    { sentence: 'Cold temperatures ___ the water.',
+      answer: 'freeze', wrong: ['breathe', 'divide'], source: 'CET Wk 7' },
+
+    { sentence: 'Some Arctic ice sheets are 15 feet ___.',
+      answer: 'thick', wrong: ['salty', 'popular'], source: 'CET Wk 7' },
+
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
