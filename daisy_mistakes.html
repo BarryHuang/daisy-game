@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>📕 錯題本</title>
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--accent:#c62828;--ok:#2e9e5b;--bg:#fff6f5;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',Arial,sans-serif;
+     background:var(--bg);color:#2a2228;max-width:620px;margin:0 auto;
+     line-height:1.6;padding-bottom:40px}
+/* 左邊留 58px 讓開 menu.js 注入的浮動 ☰ */
+.back-link{display:inline-flex;align-items:center;gap:6px;padding:14px 20px 14px 58px;
+           font-size:15px;color:var(--accent);font-weight:bold;text-decoration:none}
+.wrap{padding:0 16px}
+
+.head{background:#fff;border-radius:18px;padding:20px;border-top:5px solid var(--accent);
+      box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.head h1{font-size:21px;color:var(--accent)}
+.head .sub{font-size:13px;color:#8a7b80;margin-top:4px}
+.stats{display:flex;gap:9px;margin-top:16px}
+.stat{flex:1;background:#faf4f4;border-radius:13px;padding:11px 8px;text-align:center}
+.stat b{display:block;font-size:25px;line-height:1.1;color:var(--accent)}
+.stat.good b{color:var(--ok)}
+.stat span{font-size:11px;color:#8a7b80}
+
+.go{display:block;width:100%;margin-top:15px;padding:15px;border:none;border-radius:14px;
+    background:var(--accent);color:#fff;font-family:inherit;font-size:17px;
+    font-weight:800;cursor:pointer}
+.go:disabled{background:#d8cfd0;cursor:not-allowed}
+.go.small{background:#eee;color:#555;font-size:15px;padding:12px}
+
+.bar{display:flex;align-items:center;gap:10px;margin:18px 2px 10px}
+.bar h2{font-size:15px;color:#6a5b60;flex:1}
+.toggle{border:1.5px solid #e4d4d4;background:#fff;border-radius:999px;padding:5px 12px;
+        font-family:inherit;font-size:12px;color:#8a7b80;cursor:pointer}
+.toggle.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.row{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;
+     display:flex;align-items:center;gap:11px;border:1px solid #f1e4e4}
+.row .w{flex:1;min-width:0}
+.row .en{font-size:17px;font-weight:800}
+.row .zh{font-size:13px;color:#8a7b80;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .num{font-size:11px;color:#b9a8ac;margin-top:1px}
+.row .num .bad{color:var(--accent);font-weight:700}
+.row .num .ok{color:var(--ok);font-weight:700}
+/* 連對三次就畢業，用三顆點讓她看得到自己離畢業多遠 */
+.dots{letter-spacing:2px;font-size:12px;color:#e0d0d2;white-space:nowrap}
+.dots b{color:var(--ok)}
+.row .act{display:flex;gap:6px}
+.icon{border:none;background:#f6eeee;border-radius:10px;padding:7px 9px;cursor:pointer;
+      font-size:14px;text-decoration:none;color:#8a7b80;line-height:1}
+.icon:active{transform:scale(.93)}
+.row.done{opacity:.55}
+
+.empty{background:#fff;border-radius:16px;padding:30px 22px;text-align:center;color:#8a7b80}
+.empty .big{font-size:42px}
+.empty p{margin-top:10px;font-size:14px}
+.empty a{display:inline-block;margin-top:14px;padding:11px 18px;border-radius:12px;
+         background:var(--accent);color:#fff;text-decoration:none;font-weight:700}
+
+/* ── 練習模式：一次一張卡 ── */
+#drill{display:none;padding:0 16px}
+.d-top{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
+.d-top .pbar{flex:1;height:9px;background:#eadede;border-radius:5px;overflow:hidden}
+.d-top .pfill{height:100%;width:0;background:var(--accent);transition:width .3s ease}
+.d-top .cnt{font-size:12px;color:#8a7b80;font-weight:700;white-space:nowrap}
+.card{background:#fff;border-radius:20px;padding:26px 20px;text-align:center;
+      box-shadow:0 3px 16px rgba(0,0,0,.1)}
+.card .q{font-size:34px;font-weight:800;letter-spacing:.5px;word-break:break-word}
+.card .say{margin-top:10px;border:none;background:#f6eeee;border-radius:999px;
+           padding:7px 15px;font-family:inherit;font-size:14px;color:#8a7b80;cursor:pointer}
+.opts{margin-top:18px;display:flex;flex-direction:column;gap:9px}
+.opt{padding:14px;border:2px solid #ece0e0;border-radius:13px;background:#fff;
+     font-family:inherit;font-size:17px;color:#2a2228;cursor:pointer;text-align:center}
+.opt:active{transform:scale(.985)}
+.opt.right{border-color:var(--ok);background:#e9f8ee;color:#1c7a44;font-weight:800}
+.opt.bad{border-color:var(--accent);background:#fdeaea;color:#b53333}
+.opt:disabled{cursor:default}
+.tip{margin-top:13px;font-size:14px;font-weight:700;min-height:22px}
+.tip.ok{color:var(--ok)}
+.tip.no{color:var(--accent)}
+
+#done{display:none;padding:0 16px}
+.done-card{background:#fff;border-radius:20px;padding:32px 20px;text-align:center;
+           box-shadow:0 4px 18px rgba(0,0,0,.1);border-top:6px solid var(--accent)}
+.done-card .score{font-size:58px;font-weight:800;color:var(--accent);line-height:1}
+.done-card .of{font-size:14px;color:#8a7b80}
+.done-card .stars{font-size:30px;margin:12px 0 6px}
+.done-card .msg{font-size:17px;font-weight:800}
+.done-card .grad{margin-top:14px;font-size:14px;color:var(--ok);font-weight:700}
+.done-card .grad small{display:block;color:#8a7b80;font-weight:400;margin-top:3px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./words.js"></script>
+<script src="./wordlists.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+</head>
+<body>
+
+<a href="daisy_hamster.html" class="back-link">← 返回主頁</a>
+
+<div id="list" class="wrap"></div>
+<div id="drill"></div>
+<div id="done"></div>
+
+<script>
+// 錯題本 —— 把所有答錯過的字集中起來重練。
+//
+// 每張測驗卷交卷時都會呼叫 recordAttempt()，資料一直在累積，但在這一頁出現
+// 之前沒有任何地方把它攤開來看，也沒辦法針對那些字重練。
+//
+// 和「單字總表」(wordbook.html) 的差別：那是一本可以翻的字表，這是一支
+// 練習工具 —— 只收她錯過的字，而且練完會直接更新熟練度，字會自己畢業。
+//
+// 複習題用「看英文選中文」。這是三種難度裡最低的（認得出來就好，不用拼、
+// 不用想句子），刻意的 —— 錯題本是用來把陌生的字拉回熟悉，不是再考她一次。
+// 而且任意一個字都造得出這種題目，不需要事先寫好句子。
+(function () {
+  'use strict';
+
+  var MASTER_AT = 3;          // 連對三次畢業，跟 mastery.js 的 isMastered 一致
+  var DRILL_SIZE = 10;
+  var onlyWeak = true;
+  var drill = [], at = 0, got = 0, graduated = [];
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function shuffle(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  /** 課表裡所有字的原始大小寫。熟練度的 key 是小寫的，顯示時要還原 */
+  var CASE = {};
+  try {
+    Object.values(words).forEach(function (cat) {
+      Object.values(cat).forEach(function (arr) {
+        (arr || []).forEach(function (w) { CASE[String(w).toLowerCase()] = w; });
+      });
+    });
+  } catch (e) {}
+
+  /** 中文意思。沒有翻譯的字造不出選擇題，會被濾掉 */
+  function meaningOf(word) {
+    if (typeof lookupWord === 'function') {
+      var e = lookupWord(word);
+      if (e && e.s && e.s[0] && e.s[0].zh) return e.s[0].zh;
+    }
+    try {
+      var t = wordTranslations[word] || wordTranslations[String(word).toLowerCase()];
+      if (t) return String(t).split('/')[0].replace(/\s*[（(].*?[）)]/g, '').trim();
+    } catch (e2) {}
+    return '';
+  }
+
+  function speak(w) {
+    try {
+      if (!('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(w);
+      u.lang = 'en-US'; u.rate = .85;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  /** 整理出畫面要用的資料。弱的排前面（getWeakWords 已經排好了） */
+  function collect() {
+    var raw = (typeof getWeakWords === 'function') ? getWeakWords(0) : [];
+    var map = (typeof readMastery === 'function') ? readMastery() : {};
+
+    // getWeakWords 只回「還沒畢業」的，畢業的要另外從原始資料撈
+    var weak = raw.map(function (x) {
+      return { key: x.word, word: CASE[x.word] || x.word, right: x.right,
+               wrong: x.wrong, last: x.last, streak: (map[x.word] || {}).s || 0 };
+    }).filter(function (x) { return x.wrong > 0 || x.right > 0; });
+
+    var weakKeys = {};
+    weak.forEach(function (x) { weakKeys[x.key] = 1; });
+    var done = Object.keys(map).filter(function (k) { return !weakKeys[k]; })
+      .map(function (k) {
+        var m = map[k];
+        return { key: k, word: CASE[k] || k, right: m.r || 0, wrong: m.w || 0,
+                 last: m.t || 0, streak: m.s || 0, mastered: true };
+      })
+      .sort(function (a, b) { return b.last - a.last; });
+
+    return { weak: weak, done: done, all: weak.concat(done) };
+  }
+
+  function ago(t) {
+    if (!t) return '還沒練過';
+    var d = Math.floor((Date.now() - t) / 86400000);
+    if (d <= 0) return '今天練過';
+    if (d === 1) return '昨天練過';
+    if (d < 30) return d + ' 天前';
+    return Math.floor(d / 30) + ' 個月前';
+  }
+
+  function dots(n) {
+    var s = '';
+    for (var i = 0; i < MASTER_AT; i++) s += (i < n ? '<b>●</b>' : '○');
+    return s;
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // 清單
+  // ──────────────────────────────────────────────────────────
+  function renderList() {
+    var d = collect();
+    var box = document.getElementById('list');
+    // #drill / #done 的 CSS 本身就是 display:none，所以要顯示時得明確寫
+    // 'block' —— 設成 '' 只是清掉行內樣式，又落回 CSS 的 none（踩過）
+    document.getElementById('drill').style.display = 'none';
+    document.getElementById('done').style.display = 'none';
+    box.style.display = 'block';
+
+    if (!d.all.length) {
+      box.innerHTML = '<div class="empty"><div class="big">📕</div>'
+        + '<p>錯題本還是空的。<br>去寫幾張測驗卷，答錯的字就會自動收進來。</p>'
+        + '<a href="daisy_cet_wk5.html">先去寫一張填空卷</a></div>';
+      return;
+    }
+
+    var canDrill = d.weak.filter(function (x) { return meaningOf(x.word); });
+    var show = onlyWeak ? d.weak : d.all;
+
+    box.innerHTML =
+      '<div class="head"><h1>📕 錯題本</h1>'
+    +   '<div class="sub">寫測驗卷答錯的字會自動收進來。連對 ' + MASTER_AT + ' 次就畢業。</div>'
+    +   '<div class="stats">'
+    +     '<div class="stat"><b>' + d.all.length + '</b><span>練過的字</span></div>'
+    +     '<div class="stat"><b>' + d.weak.length + '</b><span>還要加強</span></div>'
+    +     '<div class="stat good"><b>' + d.done.length + '</b><span>已學會</span></div>'
+    +   '</div>'
+    +   '<button class="go" id="start"' + (canDrill.length ? '' : ' disabled') + '>'
+    +     (canDrill.length ? '開始複習（' + Math.min(DRILL_SIZE, canDrill.length) + ' 個字）'
+                           : '目前沒有需要複習的字 🎉') + '</button>'
+    + '</div>'
+    + '<div class="bar"><h2>' + (onlyWeak ? '還要加強' : '全部') + ' ' + show.length + ' 個</h2>'
+    +   '<button class="toggle' + (onlyWeak ? ' on' : '') + '" id="tg">只看沒學會的</button></div>'
+    + show.map(function (x) {
+        var zh = meaningOf(x.word);
+        return '<div class="row' + (x.mastered ? ' done' : '') + '">'
+          + '<div class="w"><div class="en">' + esc(x.word) + (x.mastered ? ' 🎓' : '') + '</div>'
+          +   '<div class="zh">' + esc(zh || '（字典查不到這個字）') + '</div>'
+          +   '<div class="num"><span class="bad">✗' + x.wrong + '</span>　'
+          +     '<span class="ok">✓' + x.right + '</span>　' + ago(x.last) + '</div></div>'
+          + '<div class="dots">' + dots(x.streak) + '</div>'
+          + '<div class="act"><button class="icon" data-say="' + esc(x.word) + '">🔊</button>'
+          +   '<a class="icon" href="daisy_dictionary.html?q=' + encodeURIComponent(x.word) + '">📖</a></div>'
+          + '</div>';
+      }).join('');
+
+    document.getElementById('tg').onclick = function () { onlyWeak = !onlyWeak; renderList(); };
+    var s = document.getElementById('start');
+    if (s && canDrill.length) s.onclick = function () { startDrill(canDrill); };
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // 練習：一次一張卡，答完立刻知道對錯
+  // ──────────────────────────────────────────────────────────
+  // 刻意不做成「全部答完才交卷」。錯題本的重點是把錯的字弄懂，
+  // 當下就看到正解才記得住；等到最後再一起看，她早就忘了當初為什麼選那個。
+  function startDrill(pool) {
+    var pick = pool.slice(0, DRILL_SIZE);
+    // 誘答從她學過的所有字裡抽，不要抽到同義的
+    var others = Object.keys(CASE).map(function (k) { return meaningOf(CASE[k]); })
+                       .filter(Boolean);
+    drill = pick.map(function (x) {
+      var zh = meaningOf(x.word);
+      var wrong = shuffle(others.filter(function (m) { return m && m !== zh; })).slice(0, 2);
+      return { word: x.word, answer: zh, options: shuffle([zh].concat(wrong)) };
+    });
+    at = 0; got = 0; graduated = [];
+    document.getElementById('list').style.display = 'none';
+    document.getElementById('done').style.display = 'none';
+    document.getElementById('drill').style.display = 'block';
+    renderCard();
+  }
+
+  function renderCard() {
+    var q = drill[at];
+    var box = document.getElementById('drill');
+    box.innerHTML =
+      '<div class="d-top"><div class="pbar"><div class="pfill" style="width:'
+    +   (at / drill.length * 100) + '%"></div></div>'
+    +   '<span class="cnt">' + (at + 1) + ' / ' + drill.length + '</span></div>'
+    + '<div class="card"><div class="q">' + esc(q.word) + '</div>'
+    +   '<button class="say" data-say="' + esc(q.word) + '">🔊 唸一次</button>'
+    +   '<div class="opts">'
+    +     q.options.map(function (o) {
+            return '<button class="opt" data-v="' + esc(o) + '">' + esc(o) + '</button>';
+          }).join('')
+    +   '</div><div class="tip" id="tip"></div></div>';
+    speak(q.word);
+  }
+
+  function answer(btn, value) {
+    var q = drill[at];
+    var ok = value === q.answer;
+    document.querySelectorAll('.opt').forEach(function (b) {
+      b.disabled = true;
+      if (b.dataset.v === q.answer) b.classList.add('right');
+      else if (b === btn) b.classList.add('bad');
+    });
+    var tip = document.getElementById('tip');
+    tip.className = 'tip ' + (ok ? 'ok' : 'no');
+    tip.textContent = ok ? '✓ 答對了！' : '✗ 正確答案是：' + q.answer;
+    if (ok) { got++; if (window.snd) window.snd('success', 660, 'sine', .1); }
+    else if (window.snd) { window.snd('error', 200, 'sawtooth', .12); }
+
+    // 立刻記熟練度。連到第三次的在結算畫面報喜
+    var before = 0;
+    try { before = (readMastery()[String(q.word).toLowerCase()] || {}).s || 0; } catch (e) {}
+    if (typeof recordAttempt === 'function') recordAttempt(q.word, ok, ok ? 0 : 1);
+    if (ok && before === MASTER_AT - 1) graduated.push(q.word);
+
+    setTimeout(function () {
+      at++;
+      if (at < drill.length) renderCard(); else finish();
+    }, ok ? 850 : 1900);
+  }
+
+  function finish() {
+    document.getElementById('drill').style.display = 'none';
+    var box = document.getElementById('done');
+    box.style.display = 'block';
+    var pct = Math.round(got / drill.length * 100);
+    var stars = pct >= 90 ? '⭐⭐⭐' : pct >= 70 ? '⭐⭐' : pct >= 50 ? '⭐' : '💪';
+    var msg = pct >= 90 ? '太厲害了！' : pct >= 70 ? '進步很多！'
+            : pct >= 50 ? '再練一次會更好' : '這幾個字再多看看';
+    box.innerHTML =
+      '<div class="done-card"><div class="score">' + got + ' / ' + drill.length + '</div>'
+    +   '<div class="of">答對題數</div><div class="stars">' + stars + '</div>'
+    +   '<div class="msg">' + msg + '</div>'
+    +   (graduated.length
+        ? '<div class="grad">🎓 ' + graduated.map(esc).join('、') + ' 畢業了！'
+          + '<small>連對 ' + MASTER_AT + ' 次，之後不會再出現在錯題本</small></div>' : '')
+    +   '<button class="go" id="again" style="margin-top:20px">再練一次</button>'
+    +   '<button class="go small" id="back">回錯題本</button></div>';
+
+    if (got > 0 && typeof awardCoins === 'function') { try { awardCoins(got); } catch (e) {} }
+    if (pct >= 70) {
+      if (window.snd) window.snd('levelup', 800, 'sine', .3);
+      if (typeof confetti === 'function') confetti({ particleCount: 130, spread: 90 });
+    }
+    document.getElementById('again').onclick = function () {
+      var d = collect().weak.filter(function (x) { return meaningOf(x.word); });
+      if (d.length) startDrill(d); else renderList();
+    };
+    document.getElementById('back').onclick = renderList;
+    window.scrollTo(0, 0);
+  }
+
+  // 事件綁在 document 上。三個畫面都是整塊重畫的，綁在裡面每次都要重綁
+  document.addEventListener('click', function (e) {
+    var say = e.target.closest('[data-say]');
+    if (say) { speak(say.dataset.say); return; }
+    var opt = e.target.closest('.opt');
+    if (opt && !opt.disabled) answer(opt, opt.dataset.v);
+  });
+
+  renderList();
+  // 熟練度可能晚點才從雲端回來（換裝置時）。回來了就重畫，但正在練習中不要打斷
+  if (typeof syncMastery === 'function') {
+    syncMastery(function () {
+      // 同樣不能看行內的 style.display，要看實際算出來的
+      if (getComputedStyle(document.getElementById('list')).display !== 'none') renderList();
+    });
+  }
+})();
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

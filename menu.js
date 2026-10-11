@@ -36,6 +36,7 @@ const MENU_GROUPS = [
     { href: "daisy_multiply.html", emoji: "✖️", name: "九九乘法", note: "看表・練習・唸給妳聽" }
   ]},
   { title: "練習與測驗", items: [
+    { href: "daisy_mistakes.html",           emoji: "📕", name: "錯題本", note: "答錯過的字集中重練" },
     { href: "daisy_myon_quiz.html",          emoji: "📖", name: "課文理解測驗" },
     { href: "daisy_myon_cloze.html",         emoji: "🧩", name: "選擇克漏字", note: "整段挖空" },
     { href: "daisy_myon_dictation.html",     emoji: "🎧", name: "聽寫克漏字", note: "聽句子拼字" },
