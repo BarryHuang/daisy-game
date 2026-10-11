@@ -42,7 +42,6 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `audio.js` | 音效（`sfx/*.wav`）與背景音樂（Web Audio 即時演奏）。`menu.js` 會自動載入，每一頁都有 |
 | `cloze_quiz.js` | 選擇填空／聽寫測驗引擎。測驗頁只放題目，版面和計分都在這裡 |
 | `passage_cloze.js` | 整段克漏字引擎（文章挖空 + 單字庫） |
-| `myon_data.js` | Continents and Oceans 讀本的 54 句課文和 76 個單字，四個頁面共用 |
 
 ### 導覽
 主頁是 `daisy_hamster.html`（PWA 的 `start_url` 也指這裡）。
@@ -651,7 +650,7 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 遊樂園四座設施（摩天輪／旋轉木馬／咖啡杯／碰碰車）、後院菜園、
 小動物朋友與送禮、街上的公佈欄與每日挑戰、
 CET／FET 每週選擇填空卷（12 張・120 題，CET Wk 5/6/7 用課本原句）、
-Continents and Oceans 課文頁與三種練習。
+Continents and Oceans 的三種練習、讀本補充單字 38 個。
 
 ## 待處理的風險與技術債
 
@@ -725,22 +724,29 @@ startClozeQuiz({
 ## Continents and Oceans（`myon_*`）
 
 她 CET Wk 5/6/7 的課文來源是同一本讀本（*Continents and Oceans*, Nancy Kelly
-Allen, Rubicon Publishing, Level H，442 字）。四個頁面圍著它做，**共用
-`myon_data.js` 一份資料**：
+Allen, Rubicon Publishing, Level H，442 字）。
 
 | 頁面 | 做什麼 |
 |---|---|
-| `daisy_myon_reader.html` | 課文 54 句（點生字跳解釋）＋ 單字 76 個（分類／搜尋） |
 | `daisy_myon_quiz.html` | 課文理解 10 題 |
 | `daisy_myon_cloze.html` | 整段克漏字，10 個空格配一個單字庫 |
 | `daisy_myon_dictation.html` | 聽寫克漏字，聽句子把字拼出來 |
 
+### ⚠️ 課文本身不在這個 repo 裡
+
+讀本有版權（Rubicon，All rights reserved），而這個 repo 是公開的，
+所以**完整課文頁（54 句全文 + 封面圖）沒有進版控**，單獨做成一個內嵌所有
+資料的 HTML 檔放在裝置上。曾經短暫存在過的 `daisy_myon_reader.html`、
+`myon_data.js`、`myon-cover.jpg` 都已經移除。
+
+留下來的三個練習頁**只含挖空後的單句或段落**，那是標準的習題用法
+（每本英文習作都這樣做），和重製整本書是兩回事。
+
+要重建那個離線課文頁：把句子／單字資料和封面 base64 內嵌回
+`daisy_myon_reader.html` 的樣板就好 —— 它只是個從資料跑迴圈的殼。
+
 幾個設計上的取捨：
 
-- **資料和呈現分開。** 原本那份 HTML 是 1900 行手寫的卡片，句子要改一個字得
-  去翻兩千行。現在句子和單字都在 `myon_data.js`，四個頁面各自跑迴圈產生畫面。
-  封面圖也從 base64 拉出來存成 `myon-cover.jpg` —— 塞在 JS 裡會讓資料檔肥一倍，
-  而且不能被瀏覽器單獨快取。
 - **理解測驗的誘答用「課文裡別的東西的定義」。** 問 `island` 是什麼，就拿
   `lake` 和 `river` 的定義當誘答。三個選項都是課文裡出現過的正確敘述，
   只有一個回答得了這個問題 —— 她非得讀懂題目不可，不能靠「哪個聽起來對」。
@@ -750,10 +756,6 @@ Allen, Rubicon Publishing, Level H，442 字）。四個頁面圍著它做，**�
 - **整段克漏字刻意做成兩段式點選**（先點空格、再點字），不用拖曳 ——
   拖曳在手機上容易失手，捲動中的長文章更難拖。單字庫多放四個用不到的字，
   不然填到最後一格會變成「剩下哪個就是哪個」。
-
-⚠️ **讀本有版權**（Rubicon，All rights reserved），而這個 repo 是公開的。
-課文全文放進來等於公開重製整本書 —— 這是知情的決定，不是疏忽。
-要收回去的話就是把 repo 轉 private，或把 `myon_*` 和 `myon_data.js` 排除掉。
 
 ## 建置腳本
 

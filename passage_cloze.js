@@ -10,7 +10,7 @@
 // 用法：
 //   startPassageCloze({
 //     title, subtitle, accent, source,
-//     paragraphs: [ 'Earth is sometimes called the blue {planet}.', ... ],
+//     paragraphs: [ 'The cat sat on the {mat} and looked at the {bird}.', ... ],
 //     extra: ['feature', 'thick']        // 單字庫裡多放幾個用不到的，增加難度
 //   })
 // {花括號} 裡的字就是答案，會變成一個洞。
@@ -127,7 +127,7 @@
   function renderShell() {
     var root = document.createElement('div');
     root.innerHTML =
-      '<a href="daisy_myon_reader.html" class="back-link">← 回課文</a>'
+      '<a href="daisy_hamster.html" class="back-link">← 返回主頁</a>'
     + '<div id="wrap">'
     +   '<div class="header-card"><h1>' + esc(cfg.title) + '</h1>'
     +     '<div class="subtitle">' + esc(cfg.subtitle) + '</div>'
