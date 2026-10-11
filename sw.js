@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20261011-1052';
+const CACHE_NAME = 'daisy-20261011-1105';
 
 const LOCAL_ASSETS = [
   './',
@@ -46,6 +46,7 @@ const LOCAL_ASSETS = [
   './daisy_practice.html',
   './daisy_mistakes.html',
   './daisy_myon_quiz.html',
+  './daisy_myon_quiz2.html',
   './daisy_myon_cloze.html',
   './daisy_myon_dictation.html',
   './passage_cloze.js',

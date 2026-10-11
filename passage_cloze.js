@@ -14,6 +14,8 @@
 //     extra: ['feature', 'thick']        // 單字庫裡多放幾個用不到的，增加難度
 //   })
 // {花括號} 裡的字就是答案，會變成一個洞。
+// 答案是變化形時寫成 {divided|divide}：前面是填進去的字，後面是記熟練度用的
+// 原形。不分開的話 divided 和 divide 會被當成兩個不同的字，弱字清單就散了。
 
 (function () {
   'use strict';
@@ -115,9 +117,11 @@
   function parse(paragraphs) {
     blanks = [];
     return paragraphs.map(function (p) {
-      return '<p>' + p.replace(/\{([^}]+)\}/g, function (_, word) {
+      return '<p>' + p.replace(/\{([^}]+)\}/g, function (_, spec) {
+        var bits = spec.split('|');
+        var word = bits[0].trim(), lemma = (bits[1] || bits[0]).trim();
         var i = blanks.length;
-        blanks.push({ answer: word, filled: null });
+        blanks.push({ answer: word, lemma: lemma, filled: null });
         return '<button class="blank" type="button" data-b="' + i + '">'
              + '<span class="n">' + (i + 1) + '</span><span class="t">?</span></button>';
       }) + '</p>';
@@ -226,7 +230,7 @@
       var ok = b.filled !== null && bank[b.filled] === b.answer;
       if (ok) right++;
       if (typeof recordAttempt === 'function') {
-        try { recordAttempt(b.answer, ok, ok ? 0 : 1); } catch (e) {}
+        try { recordAttempt(b.lemma, ok, ok ? 0 : 1); } catch (e) {}
       }
     });
     var score = Math.round(right / blanks.length * 100);

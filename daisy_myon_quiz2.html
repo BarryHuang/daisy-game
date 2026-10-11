@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Continents and Oceans 課文理解 第二份</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script>
+// Continents and Oceans 課文理解 —— 第二份。
+//
+// 第一份考的是定義和大方向（幾個洲、哪個洋最大、island 是什麼）。
+// 這一份換成細節：地名、數字、因果。十題和第一份完全不重複。
+//
+// 誘答這次全部用「課文裡別處真實出現的數字或東西」，不是隨便編的：
+//   · 問大峽谷多深（1 mile），誘答是 15 feet（北極冰層）和 650 feet（陽光穿透）
+//   · 問陽光穿透多深（650 feet），誘答是 100 feet（藍鯨長度）和 15 feet（冰層）
+//   · 問多少人住海岸邊（about half），誘答是 almost three-quarters（地表的水）
+//     和 about five million（每年去大峽谷的人數）
+// 這樣她不能靠「哪個數字看起來合理」猜，非得回去課文找那一句。
+startClozeQuiz({
+  title: '課文理解 第二份 — Continents and Oceans',
+  subtitle: 'Nancy Kelly Allen ・ Level H ・ 10 題 ・ 考細節',
+  accent: '#00838f',
+  instr: '讀完課文再作答。答案都在課文裡，數字要看仔細。',
+  questions: [
+    { sentence: 'How many oceans are there on Earth?',
+      answer: 'five', wrong: ['seven', 'three'], lemma: 'ocean', source: 'p.10' },
+
+    { sentence: 'Where is Mount Everest?',
+      answer: 'in Asia', wrong: ['in Africa', 'in Australia'], lemma: 'Asia', source: 'p.5' },
+
+    { sentence: 'What are landforms made of?',
+      answer: 'rocks and dirt', wrong: ['water and ice', 'rivers and lakes'],
+      lemma: 'landform', source: 'p.5' },
+
+    { sentence: 'What is a lake?',
+      answer: 'a large body of water surrounded by land',
+      wrong: ['a body of land surrounded by water', 'a moving stream of water'],
+      lemma: 'lake', source: 'p.9' },
+
+    { sentence: 'About how deep is the Grand Canyon?',
+      answer: 'about 1 mile', wrong: ['about 15 feet', 'about 650 feet'],
+      lemma: 'canyon', source: 'p.6' },
+
+    { sentence: 'How far does sunlight shine through ocean water?',
+      answer: '650 feet', wrong: ['100 feet', '15 feet'], lemma: 'shine', source: 'p.12' },
+
+    { sentence: 'What is the bottom of the ocean called?',
+      answer: 'the ocean floor', wrong: ['the midnight zone', 'the coast'],
+      lemma: 'floor', source: 'p.12' },
+
+    { sentence: 'What makes a storm grow?',
+      answer: 'warm ocean water and wind', wrong: ['cold temperatures', 'thick ice sheets'],
+      lemma: 'storm', source: 'p.14' },
+
+    { sentence: 'About how many of the people on Earth live near a coast?',
+      answer: 'about half', wrong: ['almost three-quarters', 'about 5 million'],
+      lemma: 'half', source: 'p.15' },
+
+    { sentence: 'What do birds such as gulls feed on?',
+      answer: 'fish', wrong: ['kelp', 'dirt'], lemma: 'feed', source: 'p.15' },
+  ]
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

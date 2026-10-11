@@ -669,7 +669,8 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 遊樂園四座設施（摩天輪／旋轉木馬／咖啡杯／碰碰車）、後院菜園、
 小動物朋友與送禮、街上的公佈欄與每日挑戰、
 CET／FET 每週選擇填空卷（12 張・120 題，CET Wk 5/6/7 用課本原句）、
-Continents and Oceans 的三種練習、讀本補充單字 38 個、錯題本、練習中心。
+Continents and Oceans 的四種練習（理解兩份＋兩種克漏字）、
+讀本補充單字 38 個、錯題本、練習中心。
 
 ## 待處理的風險與技術債
 
@@ -780,7 +781,8 @@ Allen, Rubicon Publishing, Level H，442 字）。
 
 | 頁面 | 做什麼 |
 |---|---|
-| `daisy_myon_quiz.html` | 課文理解 10 題 |
+| `daisy_myon_quiz.html` | 課文理解 **第一份** —— 考定義和大方向 |
+| `daisy_myon_quiz2.html` | 課文理解 **第二份** —— 考細節（地名、數字、因果） |
 | `daisy_myon_cloze.html` | 整段克漏字，10 個空格配一個單字庫 |
 | `daisy_myon_dictation.html` | 聽寫克漏字，聽句子把字拼出來 |
 
@@ -799,15 +801,45 @@ Allen, Rubicon Publishing, Level H，442 字）。
 
 幾個設計上的取捨：
 
-- **理解測驗的誘答用「課文裡別的東西的定義」。** 問 `island` 是什麼，就拿
-  `lake` 和 `river` 的定義當誘答。三個選項都是課文裡出現過的正確敘述，
-  只有一個回答得了這個問題 —— 她非得讀懂題目不可，不能靠「哪個聽起來對」。
+- **理解測驗的誘答用「課文裡別處真的有的東西」**，不是隨便編的。
+  第一份用「別的東西的定義」：問 `island` 是什麼，就拿 `lake` 和 `river`
+  的定義當誘答。第二份改用「別處真的出現過的數字」：問大峽谷多深（1 mile），
+  誘答是 `15 feet`（北極冰層）和 `650 feet`（陽光穿透深度）。
+  這樣她不能靠「哪個看起來合理」猜，非得回去課文找那一句。
+  兩份的題目和答案**完全不重複**（有腳本比對）。
 - **聽寫是三種裡最難的**（選擇題可以刪去法，聽寫不行），所以給兩個扶手：
   首字母和字數提示（`p _ _ _ _ _`）、無限次重聽。大小寫和前後空白不計較，
   考的是拼字不是排版。
 - **整段克漏字刻意做成兩段式點選**（先點空格、再點字），不用拖曳 ——
   拖曳在手機上容易失手，捲動中的長文章更難拖。單字庫多放四個用不到的字，
   不然填到最後一格會變成「剩下哪個就是哪個」。
+
+### ⚠️ 測驗卷一定要跑 `check_mastery_keys.js`
+
+每張卷子交卷時都會 `recordAttempt(key)`，而 `key` 預設就是答案本身。
+問題是：
+
+- **閱讀理解的答案是整句話** —— `'almost three-quarters'`、`'over oceans'`
+- **整段克漏字的答案是變化形** —— `'divided'`、`'continents'`
+
+這些直接記進去，**錯題本就會跑出一個叫 `seven` 的「單字」要她練**。
+（真的發生過，而且是跑這支檢查才抓到的。）
+
+正解是補 `lemma`：
+
+```js
+// 選擇／聽寫測驗
+{ sentence: 'How many continents …?', answer: 'seven', lemma: 'continent', … }
+// 整段克漏字（{填進去的字|記熟練度用的原形}）
+'All land on Earth is {divided|divide} into seven large pieces.'
+```
+
+```bash
+node tools/check_mastery_keys.js     # 有問題 exit 1
+```
+
+判斷標準是 key 必須是 `words.js` 裡的單字、或至少 `wordTranslations`
+查得到。**新增測驗卷之後一定要跑一次。**
 
 ## 建置腳本
 
