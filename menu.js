@@ -35,25 +35,12 @@ const MENU_GROUPS = [
   { title: "算數學", items: [
     { href: "daisy_multiply.html", emoji: "✖️", name: "九九乘法", note: "看表・練習・唸給妳聽" }
   ]},
+  // 這一組原本平舖 19 項，其中 12 項是長得一樣的「Wk N 填空」，而課表的 CET
+  // 排到 Wk 20 —— 線性列下去不可能收斂。全部收進練習中心，以後加卷子
+  // 只動那一頁的 PAPERS 表，選單不用改。
   { title: "練習與測驗", items: [
-    { href: "daisy_myon_quiz.html",          emoji: "📖", name: "課文理解測驗" },
-    { href: "daisy_myon_cloze.html",         emoji: "🧩", name: "選擇克漏字", note: "整段挖空" },
-    { href: "daisy_myon_dictation.html",     emoji: "🎧", name: "聽寫克漏字", note: "聽句子拼字" },
-    { href: "daisy_cet_wk1.html",            emoji: "🧩", name: "CET Wk 1&2 填空", note: "選字填進句子" },
-    { href: "daisy_cet_wk3.html",            emoji: "🧩", name: "CET Wk 3 填空" },
-    { href: "daisy_cet_wk4.html",            emoji: "🧩", name: "CET Wk 4 填空" },
-    { href: "daisy_cet_wk5.html",            emoji: "🧩", name: "CET Wk 5 填空" },
-    { href: "daisy_cet_wk6.html",            emoji: "🧩", name: "CET Wk 6 填空" },
-    { href: "daisy_cet_wk7.html",            emoji: "🧩", name: "CET Wk 7 填空" },
-    { href: "daisy_fet_wk1.html",            emoji: "🔤", name: "FET Wk 1 填空", note: "選字填進句子" },
-    { href: "daisy_fet_wk2.html",            emoji: "🔤", name: "FET Wk 2 填空" },
-    { href: "daisy_fet_wk3.html",            emoji: "🔤", name: "FET Wk 3 填空" },
-    { href: "daisy_fet_wk4.html",            emoji: "🔤", name: "FET Wk 4 填空" },
-    { href: "daisy_fet_wk5.html",            emoji: "🔤", name: "FET Wk 5 填空" },
-    { href: "daisy_fet_wk6.html",            emoji: "🔤", name: "FET Wk 6 填空" },
-    { href: "daisy_vocab_final.html",        emoji: "✏️", name: "單字測驗" },
-    { href: "daisy_grammar_final.html",      emoji: "📝", name: "文法測驗" },
-    { href: "final_exam_pronunciation.html", emoji: "🗣️", name: "發音測驗" }
+    { href: "daisy_practice.html", emoji: "📝", name: "練習中心", note: "所有測驗・看每週進度" },
+    { href: "daisy_mistakes.html", emoji: "📕", name: "錯題本", note: "答錯過的字集中重練" }
   ]},
   { title: "給爸媽", items: [
     { href: "parent_dashboard.html", emoji: "👨‍👩‍👧", name: "學習後台" },
