@@ -36,6 +36,10 @@ const MENU_GROUPS = [
     { href: "daisy_multiply.html", emoji: "✖️", name: "九九乘法", note: "看表・練習・唸給妳聽" }
   ]},
   { title: "練習與測驗", items: [
+    { href: "daisy_myon_reader.html",        emoji: "🌏", name: "Continents and Oceans", note: "課文 54 句・單字 76 個" },
+    { href: "daisy_myon_quiz.html",          emoji: "📖", name: "課文理解測驗" },
+    { href: "daisy_myon_cloze.html",         emoji: "🧩", name: "選擇克漏字", note: "整段挖空" },
+    { href: "daisy_myon_dictation.html",     emoji: "🎧", name: "聽寫克漏字", note: "聽句子拼字" },
     { href: "daisy_cet_wk1.html",            emoji: "🧩", name: "CET Wk 1&2 填空", note: "選字填進句子" },
     { href: "daisy_cet_wk3.html",            emoji: "🧩", name: "CET Wk 3 填空" },
     { href: "daisy_cet_wk4.html",            emoji: "🧩", name: "CET Wk 4 填空" },

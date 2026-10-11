@@ -40,7 +40,9 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `rewards.js` | `awardCoins()`：遊戲把金幣加進倉鼠存檔。用 transaction，因為倉鼠頁可能同時開著並整包寫回 `petData` |
 | `wordset.js` | 進遊戲時隨機挑一組單字集。`pickRandomCategory()` / `applyPendingWeek()` 各加一行，見下面第 13 條 |
 | `audio.js` | 音效（`sfx/*.wav`）與背景音樂（Web Audio 即時演奏）。`menu.js` 會自動載入，每一頁都有 |
-| `cloze_quiz.js` | 選擇填空測驗引擎。測驗頁只放題目，版面和計分都在這裡 |
+| `cloze_quiz.js` | 選擇填空／聽寫測驗引擎。測驗頁只放題目，版面和計分都在這裡 |
+| `passage_cloze.js` | 整段克漏字引擎（文章挖空 + 單字庫） |
+| `myon_data.js` | Continents and Oceans 讀本的 54 句課文和 76 個單字，四個頁面共用 |
 
 ### 導覽
 主頁是 `daisy_hamster.html`（PWA 的 `start_url` 也指這裡）。
@@ -648,7 +650,8 @@ PR #12（分支 `fix/word-data-and-sw`）包含：
 單字表匯入工具、二上（2026-2027 Fall）單字表、音效與背景音樂、
 遊樂園四座設施（摩天輪／旋轉木馬／咖啡杯／碰碰車）、後院菜園、
 小動物朋友與送禮、街上的公佈欄與每日挑戰、
-CET／FET 每週選擇填空卷（12 張・120 題，CET Wk 5/6/7 用課本原句）。
+CET／FET 每週選擇填空卷（12 張・120 題，CET Wk 5/6/7 用課本原句）、
+Continents and Oceans 課文頁與三種練習。
 
 ## 待處理的風險與技術債
 
@@ -718,6 +721,39 @@ startClozeQuiz({
 - 副標題會被 escape，**不要塞 HTML entity**（第一版寫 `&nbsp;` 直接顯示成文字）。
 - 交卷時會呼叫 `recordAttempt()` 記熟練度、`awardCoins()` 發金幣，
   所以頁面要載 `mastery.js` 和 `rewards.js`。
+
+## Continents and Oceans（`myon_*`）
+
+她 CET Wk 5/6/7 的課文來源是同一本讀本（*Continents and Oceans*, Nancy Kelly
+Allen, Rubicon Publishing, Level H，442 字）。四個頁面圍著它做，**共用
+`myon_data.js` 一份資料**：
+
+| 頁面 | 做什麼 |
+|---|---|
+| `daisy_myon_reader.html` | 課文 54 句（點生字跳解釋）＋ 單字 76 個（分類／搜尋） |
+| `daisy_myon_quiz.html` | 課文理解 10 題 |
+| `daisy_myon_cloze.html` | 整段克漏字，10 個空格配一個單字庫 |
+| `daisy_myon_dictation.html` | 聽寫克漏字，聽句子把字拼出來 |
+
+幾個設計上的取捨：
+
+- **資料和呈現分開。** 原本那份 HTML 是 1900 行手寫的卡片，句子要改一個字得
+  去翻兩千行。現在句子和單字都在 `myon_data.js`，四個頁面各自跑迴圈產生畫面。
+  封面圖也從 base64 拉出來存成 `myon-cover.jpg` —— 塞在 JS 裡會讓資料檔肥一倍，
+  而且不能被瀏覽器單獨快取。
+- **理解測驗的誘答用「課文裡別的東西的定義」。** 問 `island` 是什麼，就拿
+  `lake` 和 `river` 的定義當誘答。三個選項都是課文裡出現過的正確敘述，
+  只有一個回答得了這個問題 —— 她非得讀懂題目不可，不能靠「哪個聽起來對」。
+- **聽寫是三種裡最難的**（選擇題可以刪去法，聽寫不行），所以給兩個扶手：
+  首字母和字數提示（`p _ _ _ _ _`）、無限次重聽。大小寫和前後空白不計較，
+  考的是拼字不是排版。
+- **整段克漏字刻意做成兩段式點選**（先點空格、再點字），不用拖曳 ——
+  拖曳在手機上容易失手，捲動中的長文章更難拖。單字庫多放四個用不到的字，
+  不然填到最後一格會變成「剩下哪個就是哪個」。
+
+⚠️ **讀本有版權**（Rubicon，All rights reserved），而這個 repo 是公開的。
+課文全文放進來等於公開重製整本書 —— 這是知情的決定，不是疏忽。
+要收回去的話就是把 repo 轉 private，或把 `myon_*` 和 `myon_data.js` 排除掉。
 
 ## 建置腳本
 

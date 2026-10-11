@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Continents and Oceans 選擇克漏字</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./passage_cloze.js"></script>
+</head>
+<body>
+<script>
+// 選擇克漏字：整段課文挖十個洞，下面一個共用單字庫。
+//
+// 段落照課本的順序走（藍色星球 → 七大洲 → 地形 → 島 → 海洋），
+// 所以讀起來是一篇連貫的文章，不是十個散句 —— 她得靠上下文判斷，
+// 不能只看單句。
+//
+// 單字庫裡多放四個用不到的（feature、popular、thick、flow），
+// 不然填到最後一格會變成「剩下哪個就是哪個」。
+startPassageCloze({
+  title: '選擇克漏字 — Continents and Oceans',
+  subtitle: 'CET Wk 5・6 ｜ 10 個空格 ｜ 從單字庫裡挑',
+  accent: '#0277bd',
+  source: 'Continents and Oceans ・ Nancy Kelly Allen ・ Level H',
+  paragraphs: [
+    'Earth is sometimes called the blue {planet}. ' +
+    "Almost three-quarters of Earth's {surface} is water. " +
+    'From {space}, the water looks blue.',
+
+    'All land on Earth is {divided} into seven large pieces. ' +
+    'These pieces are called {continents}.',
+
+    'Landforms are {natural} features on Earth. ' +
+    'They are made of rocks and dirt. ' +
+    'A canyon is a very deep {valley}. ' +
+    'Valleys {lie} between hills or mountains.',
+
+    "An island is a body of land surrounded by water. " +
+    "Greenland is the world's largest {island}.",
+
+    'Ocean water is {salty}. But oceans are full of life.',
+  ],
+  extra: ['feature', 'popular', 'thick', 'flow'],
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
