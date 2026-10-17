@@ -6219,7 +6219,9 @@
             <div id="review-emoji" style="font-size:5rem; margin-bottom:10px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15));">😊</div>
             <div id="review-word" style="font-size:2.5rem; font-weight:900; color:#3d3d3d; letter-spacing:2px; margin-bottom:8px;">HAPPY</div>
             <div id="review-translation" style="font-size:1.3rem; color:#d63384; font-weight:bold; margin-bottom:14px;">快樂的 (ㄎㄨㄞˋ ㄌㄜˋ ㄉㄜ˙)</div>
-            <div id="review-example" style="font-size:1rem; color:#666; background:#f8f9fa; border-radius:12px; padding:12px 15px; margin-bottom:20px; font-style:italic; line-height:1.6;">She is happy to see you.</div>
+            <!-- 例句字體比單字小很多，她念的時候要瞇眼睛。最長的例句 47 個字元，
+                 1.25rem 在 440px 的卡片裡最多折成兩行，不會把卡片撐爆。 -->
+            <div id="review-example" style="font-size:1.25rem; color:#555; background:#f8f9fa; border-radius:12px; padding:14px 16px; margin-bottom:20px; font-style:italic; line-height:1.65;">She is happy to see you.</div>
 
             <!-- 聽發音 -->
             <button onclick="speakWord(reviewWords[reviewIndex].toLowerCase())" style="margin-bottom:16px; padding:8px 20px; border-radius:20px; background:#00bcd4; color:white; border:none; font-size:1rem; font-weight:bold; cursor:pointer;">🔊 聽發音</button>
