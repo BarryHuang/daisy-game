@@ -18,8 +18,13 @@
 // CET 二上 Wk 7：bottom / strong / wave / hurricane / cause
 //                storm / grow / damage / freeze / thick
 //
-// 句子全部取自課本原句（Continents and Oceans, Nancy Kelly Allen,
+// 句子盡量取自課本原句（Continents and Oceans, Nancy Kelly Allen,
 // Rubicon Publishing, Level H）—— 她在課堂上讀過的句子，複習時認得出來。
+//
+// 但 strong / wave 不行：整篇課文裡這兩個字只出現在「Strong winds cause
+// high waves.」這一句。原本三題（strong、wave、cause）都挖這一句的不同空格，
+// 十題裡有三題長一樣 —— 她自己寫到第三次就發現了。課文原句不夠用的時候，
+// 寧可自己寫一句她讀得懂的，也不要同一句出三次。
 startClozeQuiz({
   title: 'CET Week 7 — 選擇填空',
   subtitle: '二上 · CET Vocabulary ｜ Week 7 ｜ 10 題',
@@ -28,11 +33,11 @@ startClozeQuiz({
     { sentence: 'The ___ of the ocean is called the ocean floor.',
       answer: 'bottom', wrong: ['surface', 'feature'], source: 'CET Wk 7' },
 
-    { sentence: '___ winds cause high waves.',
-      answer: 'Strong', lemma: 'strong', wrong: ['Thick', 'Salty'], source: 'CET Wk 7' },
+    { sentence: 'The wind was so ___ that we could not open the door.',
+      answer: 'strong', wrong: ['thick', 'shallow'], source: 'CET Wk 7' },
 
-    { sentence: 'Strong winds cause high ___.',
-      answer: 'waves', lemma: 'wave', wrong: ['storms', 'pieces'], source: 'CET Wk 7' },
+    { sentence: 'We watched the big ___ hit the rocks at the coast.',
+      answer: 'waves', lemma: 'wave', wrong: ['floods', 'rivers'], source: 'CET Wk 7' },
 
     { sentence: '___ are huge storms that form over oceans.',
       answer: 'Hurricanes', lemma: 'hurricane', wrong: ['Islands', 'Valleys'], source: 'CET Wk 7' },
