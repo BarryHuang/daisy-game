@@ -36,10 +36,35 @@ function normalize(sentence, answer) {
     .split(/\s+/).filter(Boolean).sort().join(' ');
 }
 
+// 洩漏要連變化形一起抓：Q5 的「These ___ are called continents.」裡的
+// continents 就是 Q6 的答案 continent，只比對原形的話會漏掉。
+// 規則很粗，但課表的字就是這幾種變化，夠用。
+function stems(word) {
+  const w = word.toLowerCase();
+  const out = new Set([w]);
+  [/ies$/, /es$/, /s$/, /ed$/, /ing$/].forEach((re) => {
+    if (re.test(w)) {
+      const base = w.replace(re, '');
+      out.add(base);
+      out.add(base + 'y');  // flies -> fly
+      out.add(base + 'e');  // divided -> divide
+    }
+  });
+  return out;
+}
+
 function wordsIn(sentence) {
-  return new Set(sentence.replace('___', ' ')
-    .toLowerCase().replace(/[^a-z ]/g, ' ')
-    .split(/\s+/).filter(Boolean));
+  const out = new Set();
+  sentence.replace('___', ' ').toLowerCase().replace(/[^a-z ]/g, ' ')
+    .split(/\s+/).filter(Boolean)
+    .forEach((w) => stems(w).forEach((s) => out.add(s)));
+  return out;
+}
+
+/** 答案也要展開，'features' 要能對上句子裡的 'feature' */
+function leaksInto(answer, sentence) {
+  const bag = wordsIn(sentence);
+  return [...stems(answer)].some((s) => s.length > 2 && bag.has(s));
 }
 
 /** 逐題切塊，順序不固定（lemma 寫在 wrong 前面或後面都要抓到） */
@@ -77,7 +102,7 @@ fs.readdirSync(ROOT)
     qs.forEach((q, i) => {
       qs.forEach((other, j) => {
         if (i === j) return;
-        if (wordsIn(other.sentence).has(q.answer.toLowerCase())) {
+        if (leaksInto(q.answer, other.sentence)) {
           leaks.push(`${file}  Q${j + 1} 的句子裡有 Q${i + 1} 的答案 "${q.answer}"`);
         }
       });
