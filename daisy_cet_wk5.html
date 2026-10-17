@@ -18,8 +18,17 @@
 // CET 二上 Wk 5：planet / surface / space / divide / piece
 //                continent / natural / feature / landform / valley
 //
-// 句子全部取自課本原句（Continents and Oceans, Nancy Kelly Allen,
+// 句子有兩個來源，優先用課本原句（Continents and Oceans, Nancy Kelly Allen,
 // Rubicon Publishing, Level H）—— 她在課堂上讀過的句子，複習時認得出來。
+//
+// 原句不能用的時候改用 words.js 裡 wordExamples 的例句，那也是她在複習
+// 卡片上看過的句子，而且一個字一句、彼此不會提到對方的答案。
+//
+// 為什麼需要第二個來源：整篇課文只有八句話涵蓋得到這十個字，natural 和
+// feature 只同時出現在「Landforms are natural features on Earth.」這一句，
+// 硬要湊滿十題就只能同一句挖兩次（Wk 7 踩過一樣的坑，是女兒自己發現的）。
+// 而且課文的句子彼此一定會提到對方的字 —— 「These pieces are called
+// continents.」直接把 continent 這一題的答案印在紙上。
 startClozeQuiz({
   title: 'CET Week 5 — 選擇填空',
   subtitle: '二上 · CET Vocabulary ｜ Week 5 ｜ 10 題',
@@ -34,22 +43,24 @@ startClozeQuiz({
     { sentence: 'From ___, the water looks blue.',
       answer: 'space', wrong: ['daylight', 'shadow'], source: 'CET Wk 5' },
 
-    { sentence: 'All land on Earth is ___ into seven large pieces.',
-      answer: 'divided', lemma: 'divide', wrong: ['collected', 'invited'], source: 'CET Wk 5' },
+    // 原句「All land on Earth is ___ into seven large pieces.」裡的 pieces
+    // 就是 Q5 的答案，等於把答案印在紙上。改用單字卡的例句。
+    { sentence: '___ the cake into four.',
+      answer: 'Divide', lemma: 'divide', wrong: ['Collect', 'Invite'], source: 'CET Wk 5' },
 
-    { sentence: 'These ___ are called continents.',
-      answer: 'pieces', lemma: 'piece', wrong: ['features', 'valleys'], source: 'CET Wk 5' },
+    { sentence: 'May I have a ___ of bread?',
+      answer: 'piece', wrong: ['feature', 'valley'], source: 'CET Wk 5' },
 
     { sentence: 'An island is smaller than a ___.',
       answer: 'continent', wrong: ['valley', 'landform'], source: 'CET Wk 5' },
 
-    { sentence: 'Landforms are ___ features on Earth.',
+    { sentence: 'A canyon is not built by people. It is ___.',
       answer: 'natural', wrong: ['popular', 'strange'], source: 'CET Wk 5' },
 
-    { sentence: 'Landforms are natural ___ on Earth.',
-      answer: 'features', lemma: 'feature', wrong: ['pieces', 'planets'], source: 'CET Wk 5' },
+    { sentence: 'A long neck is its best ___.',
+      answer: 'feature', wrong: ['piece', 'planet'], source: 'CET Wk 5' },
 
-    { sentence: 'A valley is another ___.',
+    { sentence: 'A mountain is a ___.',
       answer: 'landform', wrong: ['continent', 'feature'], source: 'CET Wk 5' },
 
     { sentence: 'A canyon is a very deep ___.',

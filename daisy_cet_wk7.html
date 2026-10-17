@@ -18,8 +18,17 @@
 // CET 二上 Wk 7：bottom / strong / wave / hurricane / cause
 //                storm / grow / damage / freeze / thick
 //
-// 句子全部取自課本原句（Continents and Oceans, Nancy Kelly Allen,
+// 句子有兩個來源，優先用課本原句（Continents and Oceans, Nancy Kelly Allen,
 // Rubicon Publishing, Level H）—— 她在課堂上讀過的句子，複習時認得出來。
+//
+// 原句不能用的時候改用 words.js 裡 wordExamples 的例句，那也是她在複習
+// 卡片上看過的句子，而且一個字一句、彼此不會提到對方的答案。
+//
+// 為什麼需要第二個來源：整篇課文裡 strong 和 wave 只出現在「Strong winds
+// cause high waves.」這一句。原本三題（strong、wave、cause）都挖這一句的
+// 不同空格，十題裡三題長一樣 —— 她自己寫到第三次就發現了。
+// 課文的句子彼此也一定會提到對方的字（「Hurricanes can cause floods and
+// damage buildings.」一句就洩漏了 hurricane 和 cause 兩題的答案）。
 startClozeQuiz({
   title: 'CET Week 7 — 選擇填空',
   subtitle: '二上 · CET Vocabulary ｜ Week 7 ｜ 10 題',
@@ -28,25 +37,27 @@ startClozeQuiz({
     { sentence: 'The ___ of the ocean is called the ocean floor.',
       answer: 'bottom', wrong: ['surface', 'feature'], source: 'CET Wk 7' },
 
-    { sentence: '___ winds cause high waves.',
-      answer: 'Strong', lemma: 'strong', wrong: ['Thick', 'Salty'], source: 'CET Wk 7' },
+    { sentence: 'The wind was so ___ that we could not open the door.',
+      answer: 'strong', wrong: ['thick', 'shallow'], source: 'CET Wk 7' },
 
-    { sentence: 'Strong winds cause high ___.',
-      answer: 'waves', lemma: 'wave', wrong: ['storms', 'pieces'], source: 'CET Wk 7' },
+    { sentence: 'We watched the big ___ hit the rocks at the coast.',
+      answer: 'waves', lemma: 'wave', wrong: ['floods', 'rivers'], source: 'CET Wk 7' },
 
-    { sentence: '___ are huge storms that form over oceans.',
-      answer: 'Hurricanes', lemma: 'hurricane', wrong: ['Islands', 'Valleys'], source: 'CET Wk 7' },
+    { sentence: 'A ___ blew the roof away.',
+      answer: 'hurricane', wrong: ['island', 'canyon'], source: 'CET Wk 7' },
 
-    { sentence: 'Strong winds ___ high waves.',
+    // cause 的單字卡例句是「Storms cause big waves.」，裡面同時有 storm（Q6）
+    // 和 waves（Q3）兩個答案，換過去只是換個洞洩漏，所以這題自己寫一句。
+    { sentence: 'Heavy rain can ___ a flood.',
       answer: 'cause', wrong: ['survive', 'divide'], source: 'CET Wk 7' },
 
-    { sentence: 'Warm ocean water and wind make the ___ grow.',
+    { sentence: 'A big ___ is coming.',
       answer: 'storm', wrong: ['island', 'valley'], source: 'CET Wk 7' },
 
     { sentence: 'Giant kelp can ___ up to two feet per day.',
       answer: 'grow', wrong: ['flow', 'freeze'], source: 'CET Wk 7' },
 
-    { sentence: 'Hurricanes can cause floods and ___ buildings.',
+    { sentence: 'The flood will ___ the town.',
       answer: 'damage', wrong: ['produce', 'collect'], source: 'CET Wk 7' },
 
     { sentence: 'Cold temperatures ___ the water.',
