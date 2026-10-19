@@ -44,7 +44,8 @@ const MENU_GROUPS = [
   ]},
   { title: "給爸媽", items: [
     { href: "parent_dashboard.html", emoji: "👨‍👩‍👧", name: "學習後台" },
-    { href: "words_review.html",     emoji: "🔍", name: "注音校對" }
+    { href: "words_review.html",     emoji: "🔍", name: "注音校對" },
+    { href: "daisy_about.html",      emoji: "📣", name: "功能總覽", note: "分享給朋友看的那一頁" }
   ]}
 ];
 

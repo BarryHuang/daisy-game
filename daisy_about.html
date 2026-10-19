@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>daisy-game 功能總覽</title>
+<link rel="icon" href="icon-192.png">
+<meta name="description" content="一個爸爸用 AI 幫二年級女兒做的英文學習 App —— 功能、數字與開發過程。">
+<style>
+/* 這一頁是給大人看的（分享給朋友），不是給她玩的，所以版面走「報告」路線：
+   字級比遊戲頁小、資訊密度高、可以列印。配色沿用 App 的暖色紙感。 */
+:root{
+  --bg:#fdf8f3; --card:#fff; --ink:#2a2228; --dim:#7c6f74; --line:#efe2dd;
+  --accent:#7b1fa2; --accent2:#d63384; --ok:#2e9e5b; --warn:#c08b52;
+  --shadow:0 1px 3px rgba(60,40,45,.06),0 8px 24px rgba(60,40,45,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#191417; --card:#221c20; --ink:#f0e8ea; --dim:#a59699; --line:#332a2e;
+    --accent:#d8a0ee; --accent2:#ff9ec4; --ok:#6cd79a; --warn:#e0b482;
+    --shadow:0 1px 3px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#191417; --card:#221c20; --ink:#f0e8ea; --dim:#a59699; --line:#332a2e;
+  --accent:#d8a0ee; --accent2:#ff9ec4; --ok:#6cd79a; --warn:#e0b482;
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC','PingFang TC',
+              'Hiragino Sans CNS','Microsoft JhengHei',sans-serif;
+  background:var(--bg); color:var(--ink); line-height:1.75;
+  font-size:16px; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 72px}
+
+/* ── 頁首 ───────────────────────────────────────────── */
+.hero{padding:52px 0 30px;border-bottom:2px solid var(--line);margin-bottom:34px}
+.kicker{font-size:12.5px;letter-spacing:.14em;color:var(--accent);
+        font-weight:800;text-transform:uppercase}
+h1{font-size:clamp(28px,6.5vw,42px);line-height:1.22;margin:12px 0 0;letter-spacing:-.02em}
+h1 .em{color:var(--accent2)}
+.sub{font-size:clamp(15px,3.4vw,17.5px);color:var(--dim);margin-top:14px;max-width:46em}
+.meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:12.5px;border:1px solid var(--line);background:var(--card);
+      border-radius:999px;padding:4px 12px;color:var(--dim);white-space:nowrap}
+
+/* ── 區塊 ───────────────────────────────────────────── */
+section{margin-top:46px;scroll-margin-top:16px}
+h2{font-size:clamp(20px,4.6vw,25px);letter-spacing:-.01em;display:flex;
+   align-items:baseline;gap:10px;flex-wrap:wrap}
+h2::before{content:attr(data-n);font-size:13px;color:var(--accent);
+           font-weight:800;letter-spacing:.1em;flex:none}
+.lede{color:var(--dim);font-size:15px;margin-top:8px;max-width:48em}
+h3{font-size:16.5px;margin-top:26px}
+
+/* ── 數字磚 ─────────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));
+       gap:10px;margin-top:20px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;
+      padding:15px 14px;box-shadow:var(--shadow)}
+.stat .v{font-size:27px;font-weight:800;line-height:1.1;letter-spacing:-.02em;
+         font-variant-numeric:tabular-nums}
+.stat .v small{font-size:14px;font-weight:700;color:var(--dim);margin-left:2px}
+.stat .k{font-size:12.5px;color:var(--dim);margin-top:5px;line-height:1.45}
+
+/* ── 功能卡 ─────────────────────────────────────────── */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));
+       gap:13px;margin-top:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+      padding:18px 17px;box-shadow:var(--shadow)}
+.card .ic{font-size:23px;line-height:1}
+.card h4{font-size:16px;margin:9px 0 0}
+.card p{font-size:14px;color:var(--dim);margin-top:6px;line-height:1.65}
+.card ul{margin:10px 0 0 0;padding:0;list-style:none}
+.card li{font-size:13.5px;color:var(--dim);padding-left:15px;position:relative;
+         margin-top:5px;line-height:1.6}
+.card li::before{content:'';position:absolute;left:3px;top:.68em;width:4px;height:4px;
+                 border-radius:50%;background:var(--accent2);opacity:.65}
+.card li b{color:var(--ink);font-weight:700}
+
+/* ── 表格 ───────────────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px;
+     background:var(--card);border:1px solid var(--line);border-radius:14px;
+     overflow:hidden;box-shadow:var(--shadow)}
+.tbl th,.tbl td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);
+                vertical-align:top}
+.tbl th{font-size:12.5px;color:var(--dim);font-weight:700;letter-spacing:.03em;
+        background:color-mix(in srgb,var(--line) 32%,transparent)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td:first-child{font-weight:700;white-space:nowrap}
+.tbl code{font-size:12.5px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ── 引言 / 重點 ────────────────────────────────────── */
+.quote{border-left:3px solid var(--accent2);padding:4px 0 4px 16px;margin-top:20px;
+       font-size:15.5px;color:var(--ink)}
+.quote .who{display:block;font-size:13px;color:var(--dim);margin-top:7px;font-style:normal}
+.note{background:color-mix(in srgb,var(--warn) 11%,var(--card));
+      border:1px solid color-mix(in srgb,var(--warn) 30%,var(--line));
+      border-radius:13px;padding:14px 16px;margin-top:20px;font-size:14.5px}
+.note b{color:var(--ink)}
+
+/* ── 時間軸 ─────────────────────────────────────────── */
+.time{margin-top:22px;border-left:2px solid var(--line);padding-left:20px}
+.time .row{position:relative;padding-bottom:20px}
+.time .row:last-child{padding-bottom:0}
+.time .row::before{content:'';position:absolute;left:-26px;top:7px;width:9px;height:9px;
+                   border-radius:50%;background:var(--accent);
+                   box-shadow:0 0 0 3px var(--bg)}
+.time .when{font-size:12.5px;color:var(--accent);font-weight:800;letter-spacing:.04em}
+.time .what{font-size:14.5px;margin-top:3px}
+.time .what b{font-weight:700}
+.time .what span{color:var(--dim)}
+
+code{font-family:'SF Mono',Menlo,Consolas,monospace;font-size:13px;
+     background:color-mix(in srgb,var(--line) 48%,transparent);
+     padding:1.5px 5px;border-radius:5px}
+a{color:var(--accent)}
+.foot{margin-top:52px;padding-top:22px;border-top:1px solid var(--line);
+      font-size:13px;color:var(--dim);line-height:1.9}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  body{background:#fff}
+  .card,.stat,.tbl{box-shadow:none;break-inside:avoid}
+  section{break-inside:avoid-page}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">daisy-game · 功能總覽</div>
+  <h1>一個爸爸用 AI 幫<span class="em">二年級女兒</span>做的英文學習 App</h1>
+  <p class="sub">
+    不是示範專案，是她每天真的在用的東西。從單字、測驗、繪本到一隻要照顧的倉鼠，
+    全部離線可用、跨裝置同步。這一頁把目前涵蓋的功能整理出來。
+  </p>
+  <div class="meta">
+    <span class="chip">純靜態 HTML · 無建置流程</span>
+    <span class="chip">PWA · 離線可用</span>
+    <span class="chip">Firebase 跨裝置同步</span>
+    <span class="chip" id="chip-ver">版本載入中…</span>
+  </div>
+</header>
+
+<!-- ══ 規模 ══════════════════════════════════════════ -->
+<section id="numbers">
+  <h2 data-n="01">專案規模</h2>
+  <p class="lede">以下數字都是從實際的檔案裡數出來的，不是估計值。</p>
+  <div class="stats">
+    <div class="stat"><div class="v">44</div><div class="k">HTML 頁面</div></div>
+    <div class="stat"><div class="v">20</div><div class="k">共用 JS 模組</div></div>
+    <div class="stat"><div class="v">29,745</div><div class="k">總行數</div></div>
+    <div class="stat"><div class="v">561</div><div class="k">課表單字（不重複）</div></div>
+    <div class="stat"><div class="v">71,753</div><div class="k">字典中文詞條</div></div>
+    <div class="stat"><div class="v">~407</div><div class="k">測驗題目</div></div>
+    <div class="stat"><div class="v">12</div><div class="k">小遊戲</div></div>
+    <div class="stat"><div class="v">95</div><div class="k">commits</div></div>
+  </div>
+</section>
+
+<!-- ══ 誰在用 ════════════════════════════════════════ -->
+<section id="who">
+  <h2 data-n="02">使用者是誰</h2>
+  <p class="lede">所有設計決策的前提。不先講這個，下面的功能會看起來很隨機。</p>
+  <div class="cards">
+    <div class="card">
+      <div class="ic">👧</div>
+      <h4>七歲，雙語國際學校二年級</h4>
+      <ul>
+        <li><b>英文閱讀</b>≈ 台灣國中一年級程度</li>
+        <li><b>中文是母語</b>，口語流利</li>
+        <li>但<b>中文識字</b>只有小一升小二程度</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">💡</div>
+      <h4>核心洞察</h4>
+      <p>
+        她聽得懂「驚訝」這個詞，只是不認得那兩個字。所以
+        <b>每個中文字都標注音，就是完整解答</b>。
+      </p>
+      <p>注音不是輔助功能，它是產品本身。</p>
+    </div>
+  </div>
+  <div class="quote">
+    學校用 myON 出線上閱讀作業，而 myON 的閱讀器<b>選不起字</b> ——
+    瀏覽器擴充、bookmarklet 這類注入式方案全部無效。
+    所以只能做一個她自己打字進去查的字典。
+    <span class="who">這個限制決定了整個 App 的形狀</span>
+  </div>
+</section>
+
+<!-- ══ 單字系統 ══════════════════════════════════════ -->
+<section id="vocab">
+  <h2 data-n="03">單字系統</h2>
+  <p class="lede">整個 App 的地基。課表單字、字典、熟練度三件事互相咬合。</p>
+  <div class="cards">
+    <div class="card">
+      <div class="ic">📖</div>
+      <h4>查單字</h4>
+      <p>離線的英翻中字典，整部 CC-CEDICT 塞進瀏覽器。</p>
+      <ul>
+        <li><b>71,753</b> 個中文詞、<b>68,664</b> 個英文查詢鍵</li>
+        <li>每個中文字都有<b>直排注音</b>（台灣課本排法）</li>
+        <li><b>詞形還原</b>：打 <code>running</code> 查得到 <code>run</code>，含英式→美式拼法</li>
+        <li>查過的字自動留存，可一鍵加進單字卡</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">📒</div>
+      <h4>課表單字</h4>
+      <p>她學校實際的週單字表，一週一組。</p>
+      <ul>
+        <li><b>7</b> 個課表分類（FET Spelling / CET Vocabulary 等）</li>
+        <li><b>67</b> 個週次群組，<b>561</b> 個不重複單字</li>
+        <li><b>524</b> 個字有例句和 emoji 圖示</li>
+        <li>一個字可有多個義項，注音逐字對齊</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">📊</div>
+      <h4>熟練度追蹤</h4>
+      <p>逐字記錄答對、答錯、連續答對幾次。</p>
+      <ul>
+        <li><b>連對 3 次</b>才算「畢業」</li>
+        <li>錯中求對的不算連對 —— 沒錯就過關和錯五次才過關，差很多</li>
+        <li>算出「最該複習的字」：錯誤率 × 3 ＋ 放置天數</li>
+        <li>學期換了舊單字也不會消失</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">🃏</div>
+      <h4>單字卡 / 總表</h4>
+      <p>她自己收的字和全部課表單字的兩種檢視。</p>
+      <ul>
+        <li>單字卡：單字 → 中文 → 例句，可朗讀</li>
+        <li>總表：所有單字一覽，附熟練度</li>
+        <li>自建清單會出現在遊戲的選單裡當題庫</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 測驗 ══════════════════════════════════════════ -->
+<section id="quiz">
+  <h2 data-n="04">測驗與練習</h2>
+  <p class="lede">
+    所有測驗收在一個「練習中心」裡。選單原本平舖 19 張卷子，
+    其中 12 張長得一模一樣，而課表的 CET 排到 Wk 20 —— 線性列下去不可能收斂。
+  </p>
+  <div class="scroll">
+  <table class="tbl">
+    <thead><tr><th>類型</th><th>數量</th><th>內容</th></tr></thead>
+    <tbody>
+      <tr><td>每週填空卷</td><td>12 張 · 120 題</td>
+          <td>CET / FET 各週單字，三選一。誘答一律取自她<b>學過的</b>課表單字，而且挑同詞性的 —— 用沒學過的字當誘答，等於在考運氣</td></tr>
+      <tr><td>課文理解</td><td>2 份 · 20 題</td>
+          <td>針對課本讀本〈Continents and Oceans〉，定義、地名、數字、因果關係</td></tr>
+      <tr><td>整段克漏字</td><td>10 格</td>
+          <td>整篇文章挖空，從底下的單字庫裡挑。兩段式點選：先點空格再點字</td></tr>
+      <tr><td>聽寫克漏字</td><td>10 題</td>
+          <td>只聽句子，把缺的字<b>拼</b>出來。給首字母提示 <code>p _ _ _ _ _</code></td></tr>
+      <tr><td>期中 / 期末題庫</td><td>138 題</td>
+          <td>按學期綁定，舊題庫留著當參考但不再是預設</td></tr>
+      <tr><td>整學期測驗</td><td>3 份 · 109 題</td>
+          <td>單字（看字選意思）· 文法（be 動詞時態、複合句、連接詞，40 題）· 發音（聽音選字）</td></tr>
+      <tr><td>錯題本</td><td>動態</td>
+          <td>答錯過的字自動收進來集中重練，連對 3 次畢業。每次抽 10 題</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note">
+    <b>品質是用程式顧的，不是用眼睛。</b>
+    repo 裡有兩支檢查腳本：一支確認測驗不會把「不是單字的東西」記進熟練度
+    （閱讀理解的答案是整句話，直接記進去錯題本就會冒出一個叫 <code>seven</code> 的「單字」）；
+    另一支把空格填回答案後比對，抓出<b>兩題其實是同一句</b>和<b>答案被別題洩漏</b>。
+    後面那支是女兒自己發現 Wk 7 有三題長一樣之後才補的。
+  </div>
+</section>
+
+<!-- ══ 遊戲 ══════════════════════════════════════════ -->
+<section id="games">
+  <h2 data-n="05">遊戲</h2>
+  <p class="lede">
+    同一批單字，用十二種不同的方式考。重點不是「有很多遊戲」，
+    是<b>同一個字會以不同形式反覆出現</b> —— 看到、聽到、拼出來、在時間壓力下判斷。
+  </p>
+  <div class="cards">
+    <div class="card"><div class="ic">🎴</div><h4>翻翻樂</h4><p>配對英文和中文</p></div>
+    <div class="card"><div class="ic">🔨</div><h4>打地鼠</h4><p>聽發音敲對的字</p></div>
+    <div class="card"><div class="ic">⚔️</div><h4>弱字怪獸戰</h4><p>題庫直接接熟練度算出來的弱字</p></div>
+    <div class="card"><div class="ic">🏃</div><h4>倉鼠跑酷</h4><p>反射速度下的字義判斷</p></div>
+    <div class="card"><div class="ic">🍳</div><h4>倉鼠餐廳</h4><p>整句聽力＋食物與數量</p></div>
+    <div class="card"><div class="ic">💰</div><h4>單字推幣機</h4><p>投對格子推金幣</p></div>
+    <div class="card"><div class="ic">🕹️</div><h4>單字夾娃娃</h4><p>夾出對的那一隻</p></div>
+    <div class="card"><div class="ic">🎯</div><h4>猜單字</h4><p>Hangman</p></div>
+    <div class="card"><div class="ic">🫧</div><h4>字母重組</h4><p>打散的字母排回來</p></div>
+    <div class="card"><div class="ic">🐛</div><h4>彩虹小蟲</h4><p>貪吃蛇</p></div>
+    <div class="card"><div class="ic">🐱</div><h4>圍貓貓</h4><p>純邏輯，不考單字</p></div>
+    <div class="card"><div class="ic">✖️</div><h4>九九乘法</h4><p>看表 · 練習 · 唸給妳聽</p></div>
+  </div>
+</section>
+
+<!-- ══ 倉鼠世界 ══════════════════════════════════════ -->
+<section id="world">
+  <h2 data-n="06">倉鼠世界（獎勵層）</h2>
+  <p class="lede">
+    單字拼對了給金幣，金幣拿去養一隻倉鼠。這一層沒有任何教學功能，
+    它存在的唯一理由是<b>讓她想打開這個 App</b>。
+  </p>
+  <div class="cards">
+    <div class="card">
+      <div class="ic">🗺️</div>
+      <h4>七張地圖的橫向捲軸小世界</h4>
+      <p>不是靜態背景圖，做法接近 2D 平台遊戲。</p>
+      <ul>
+        <li>倉鼠的家（室內）· 後院 · 大公園 · 熱鬧街道 · 遊戲中心 · 遊樂園 · 沙灘</li>
+        <li><b>四層視差</b>，前景視差 1.35 會從倉鼠前面掠過</li>
+        <li>平台、重力、跳躍；走到地圖邊緣的門牌換場景</li>
+        <li>🗺️ 選單是真的手繪的一張鳥瞰地圖</li>
+        <li>時段色罩、下雨下雪；室內不下雨、夜色也比較輕</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">🎡</div>
+      <h4>遊樂園的四座設施</h4>
+      <p>設施是<b>一段演出</b>，倉鼠會真的坐上去。</p>
+      <ul>
+        <li><b>摩天輪</b>：逐幀算圓周位置，吊艙反向轉維持水平</li>
+        <li><b>旋轉木馬</b>：橢圓軌道＋越後面越小越暗，才有深度</li>
+        <li><b>咖啡杯</b>：轉盤在轉、杯子自己也在轉，走出外擺線。下車還會暈一下</li>
+        <li><b>碰碰車</b>：互相彈開、冒火花、震一下</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">🥕</div>
+      <h4>後院種菜</h4>
+      <p>種下去，<b>隔天</b>回來收成賣錢。</p>
+      <ul>
+        <li>4 種作物：紅蘿蔔 · 玉米 · 草莓 · 南瓜</li>
+        <li>用日曆天數算，不是遊戲內計時器 —— 真的要隔天</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">🐦</div>
+      <h4>會探頭的小動物朋友</h4>
+      <p>14 種動物會從場景裡冒出來，可以送禮物。</p>
+      <ul>
+        <li>4 種禮物：堅果 · 餅乾 · 緞帶 · 花束</li>
+        <li>送了會回禮</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">🏆</div>
+      <h4>每日挑戰公佈欄</h4>
+      <p>街上的佈告欄，每天換一批任務。</p>
+      <ul><li>22 種任務輪替，用日期當亂數種子</li></ul>
+    </div>
+    <div class="card">
+      <div class="ic">🔊</div>
+      <h4>音效與背景音樂</h4>
+      <p>全部自己做的，沒有版權問題。</p>
+      <ul>
+        <li><b>17 個音效</b>：用純 Python 合成 WAV（沒有 ffmpeg、沒有 numpy）</li>
+        <li><b>7 首背景音樂</b>：每張地圖一首，用 Web Audio <b>即時演奏</b>，不是音檔</li>
+        <li>也支援放真的音樂檔，放了就無縫換手</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">🎮</div>
+      <h4>遊戲中心</h4>
+      <p>一張室內地圖，擺了 12 台機台，每台連到一個遊戲頁。</p>
+      <ul>
+        <li>倉鼠會自己走過去、鑽進機台</li>
+        <li>玩完回來會彈出來慶祝一下，+3 快樂</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">💓</div>
+      <h4>養成</h4>
+      <p>飢餓、快樂、清潔三個數值，要餵食洗澡陪玩。</p>
+      <ul><li>沙灘要 500 金幣解鎖</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 讀本 ══════════════════════════════════════════ -->
+<section id="books">
+  <h2 data-n="07">繪本與課文</h2>
+  <p class="lede">
+    她在學校讀的繪本，做成可以點每一個字查意思的版本。
+  </p>
+  <div class="cards">
+    <div class="card"><div class="ic">🍂</div><h4>My Autumn Book</h4><p>逐頁、逐句、可朗讀</p></div>
+    <div class="card"><div class="ic">🌸</div><h4>Every Season</h4><p>同上</p></div>
+    <div class="card"><div class="ic">🎨</div><h4>Through Georgia's Eyes</h4><p>同上</p></div>
+    <div class="card"><div class="ic">📚</div><h4>課文複習 hub</h4><p>選課文的入口頁</p></div>
+  </div>
+  <div class="note">
+    <b>版權的處理：</b>課本讀本的全文一度放進 repo 裡，後來意識到這是有版權的內容，
+    就從 repo 移除，改成單獨的 HTML 檔案直接給家長 —— 自己家裡用沒問題，
+    放在公開的 repo 上不行。
+  </div>
+</section>
+
+<!-- ══ 家長 ══════════════════════════════════════════ -->
+<section id="parent">
+  <h2 data-n="08">給家長的部分</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="ic">👨‍👩‍👧</div>
+      <h4>學習後台</h4>
+      <ul>
+        <li>倉鼠狀態與寵物狀況</li>
+        <li>今日任務完成度</li>
+        <li><b>還沒學會的字</b>（這是重點）</li>
+        <li>她自己查過哪些字</li>
+        <li>成就解鎖進度</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic">🔍</div>
+      <h4>注音校對</h4>
+      <p>
+        注音是程式產生的，難免有錯。這一頁把全部注音攤開來讓大人逐條檢查，
+        發現錯的就進 <code>OVERRIDES</code> 修掉再重新產生。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 技術 ══════════════════════════════════════════ -->
+<section id="tech">
+  <h2 data-n="09">技術選擇</h2>
+  <p class="lede">每一個選擇都是為了「一個人要能長期維護得動」。</p>
+  <div class="scroll">
+  <table class="tbl">
+    <thead><tr><th>決定</th><th>為什麼</th></tr></thead>
+    <tbody>
+      <tr><td>純靜態 HTML<br>無建置流程</td>
+          <td>沒有 <code>package.json</code>、沒有打包、沒有 node_modules。改一行存檔重新整理就看得到。半年後回來改也不會卡在「依賴裝不起來」</td></tr>
+      <tr><td>多個獨立頁面</td>
+          <td>每個遊戲一個檔案，壞掉只會壞一個。共用的東西抽成 20 個 JS 模組</td></tr>
+      <tr><td>PWA · 離線優先</td>
+          <td>Service Worker 快取 <b>120</b> 個檔案。版本號由腳本蓋（以前手動改，忘了升版就會繼續餵舊檔案，而且完全沒有徵兆）</td></tr>
+      <tr><td>Firebase<br>Realtime Database</td>
+          <td>輸入一組「專屬通關密碼」就能在平板、手機、電腦之間同步進度。沒有帳號密碼註冊流程 —— 七歲的使用者記不住</td></tr>
+      <tr><td>資料是產生的，<br>不是手寫的</td>
+          <td><code>tools/</code> 裡有 13 支腳本：建字典、建不規則變化、產生注音、合成音效、畫世界地圖、蓋版本號、匯入單字表</td></tr>
+      <tr><td>Web Audio<br>即時演奏</td>
+          <td>背景音樂用程式合成而不是放 mp3：沒有版權問題、檔案小、而且可以依場景無縫換曲</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══ AI 的部分 ═════════════════════════════════════ -->
+<section id="ai">
+  <h2 data-n="10">這是怎麼做出來的</h2>
+  <p class="lede">
+    整個專案是和 AI 一起寫的。以下是實際的工作方式，不是行銷話術。
+  </p>
+
+  <div class="time">
+    <div class="row">
+      <div class="when">2026 · 05</div>
+      <div class="what"><b>起點</b><span> —— 一個拼字小遊戲加一隻倉鼠。想法很單純：她肯為了倉鼠去拼單字。</span></div>
+    </div>
+    <div class="row">
+      <div class="when">06 → 08</div>
+      <div class="what"><b>從遊戲長成工具</b><span> —— 加了字典（因為 myON 選不起字）、注音（因為她不認得中文字）、熟練度（因為沒人知道哪些字她其實還不會）。每一個功能都是從實際卡住的地方長出來的。</span></div>
+    </div>
+    <div class="row">
+      <div class="when">08 → 09</div>
+      <div class="what"><b>世界變大</b><span> —— 七張地圖、十二個遊戲、繪本、測驗卷、家長後台。這段是量的累積。</span></div>
+    </div>
+    <div class="row">
+      <div class="when">10</div>
+      <div class="what"><b>開始修自己的設計</b><span> —— 選單爆掉了（41 個連結）就收成練習中心；字典索引裡有 888 筆是程式亂造的詞形，掃掉；測驗卷出現重複題目，補檢查腳本。</span></div>
+    </div>
+  </div>
+
+  <h3>怎麼跟 AI 合作</h3>
+  <div class="cards">
+    <div class="card">
+      <div class="ic">🎯</div>
+      <h4>我負責「為什麼」，AI 負責「怎麼做」</h4>
+      <p>
+        我知道她卡在哪、她會喜歡什麼、哪些東西對她沒用。
+        這些 AI 不知道，而這恰好是最難的部分。
+      </p>
+    </div>
+    <div class="card">
+      <div class="ic">📝</div>
+      <h4>決策寫進註解，不寫在對話裡</h4>
+      <p>
+        「為什麼要這樣做」「以前這樣做結果踩到什麼坑」全部寫進程式註解和 README。
+        下一次開新的對話，AI 讀 repo 就接得上，不用重講一遍。
+      </p>
+    </div>
+    <div class="card">
+      <div class="ic">🔁</div>
+      <h4>一次一件事，做完就 merge</h4>
+      <p>
+        <b>46 個 Pull Request，全部 merge。</b>
+        每個 PR 只做一件事，驗證過、寫清楚改了什麼再合進去。
+      </p>
+    </div>
+    <div class="card">
+      <div class="ic">🧪</div>
+      <h4>用瀏覽器真的跑過才算數</h4>
+      <p>
+        改完用 Playwright 開真的瀏覽器截圖、點按鈕、對答案。
+        曾經有一次測試全過但畫面是空白的 ——
+        <code>style.display=''</code> 並不會讓一個 CSS 本來就 <code>display:none</code> 的元素顯示出來。
+        只有截圖抓得到。
+      </p>
+    </div>
+  </div>
+
+  <div class="quote">
+    最有價值的一次回饋不是我給的，是女兒自己發現 CET Week 7 有三題其實是同一句話。
+    查下去才知道是我自己定的規則太硬 —— 要求句子一律取自課本原句，
+    但整篇課文只有八句話涵蓋得到那十個單字。
+    <span class="who">她抓到的不是一題重複，是出卷規則本身的毛病</span>
+  </div>
+
+  <h3>老實說的部分</h3>
+  <div class="note">
+    AI 不會自己知道「七歲小孩看不懂這個按鈕」。
+    它寫得出摩天輪的三角函數，但吊艙會不會縮成一團、倉鼠坐上去會不會變成原尺寸整隻蓋住輪子，
+    要人去看才知道。<b>這個專案裡最花時間的不是寫程式，是試玩。</b>
+  </div>
+</section>
+
+<div class="foot">
+  daisy-game · 給 Daisy 的英文學習 PWA<br>
+  字典資料來自 <a href="https://www.mdbg.net/chinese/dictionary?page=cc-cedict">CC-CEDICT</a>（CC BY-SA 4.0）<br>
+  <span id="foot-ver"></span>
+</div>
+
+</div>
+
+<script src="./version.js"></script>
+<script>
+// 一定要在 version.js 之後 —— APP_VERSION 是它宣告的，
+// 擺前面的話永遠讀到 undefined，版本就一直停在「載入中…」（踩過）
+(function () {
+  var v = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : null;
+  var chip = document.getElementById('chip-ver');
+  if (chip) chip.textContent = v ? ('版本 ' + v) : '純靜態 · 無依賴';
+  var foot = document.getElementById('foot-ver');
+  if (foot && v) foot.textContent = '版本 ' + v;
+})();
+</script>
+<script src="./menu.js"></script>
+</body>
+</html>
