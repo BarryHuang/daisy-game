@@ -15,6 +15,7 @@ const LOCAL_ASSETS = [
   './cedict.js',
   './lookups.js',
   './mastery.js',
+  './calendar.js',
   './menu.js',
   './version.js',
   './wordlists.js',

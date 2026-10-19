@@ -36,7 +36,8 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `inflect.js` | 詞形還原：產生候選字形再去索引裡試。含英式→美式拼法 |
 | `lookups.js` | 記錄查過的單字。先寫 localStorage，有登入才同步雲端 |
 | `wordlists.js` | 她自己建的單字卡清單。在字典加字，會出現在 `flashcards.html` 和遊戲選單 |
-| `mastery.js` | 每個字的答對／答錯／連對次數 |
+| `mastery.js` | 每個字的答對／答錯／連對次數，加上 v2 的**間隔複習**：每個題型（see / hear / spell / use）一個 Leitner 盒，同一題型一天最多升一盒。v1 的 `isMastered` / `getWeakWords` 語意不變。第一次載入會把舊資料備份到 `daisy_mastery_v1_backup` 再遷移 |
+| `calendar.js` | 學期日曆：今天是第幾週、這週學哪一組、哪天考試、複習週要複習哪幾週。換學期改 `TERM`；放假週填進 `skipWeeks` |
 | `rewards.js` | `awardCoins()`：遊戲把金幣加進倉鼠存檔。用 transaction，因為倉鼠頁可能同時開著並整包寫回 `petData` |
 | `wordset.js` | 進遊戲時隨機挑一組單字集。`pickRandomCategory()` / `applyPendingWeek()` 各加一行，見下面第 13 條 |
 | `audio.js` | 音效（`sfx/*.wav`）與背景音樂（Web Audio 即時演奏）。`menu.js` 會自動載入，每一頁都有 |
@@ -625,6 +626,15 @@ python3 -m http.server 8123
 ```
 
 Service Worker 需要 `http://` 或 `localhost`，用 `file://` 開測不到離線功能。
+
+**改了 `calendar.js` 或 `mastery.js` 一定要跑單元測試**（零依賴，只用 node 內建的 `assert`）：
+
+```bash
+node tests/run.js
+```
+
+測的是純邏輯：週次換算（含合併週 `Wk 1&2`、放假週順延）、記憶盒的升降、
+「同一天連對三次只升一盒」、v1 資料遷移、跨裝置合併。有失敗就 exit 1。
 
 **部署前一定要跑**（`CACHE_NAME` 不再手動改）：
 
