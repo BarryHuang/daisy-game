@@ -886,3 +886,28 @@ python3 tools/fix_inflections.py             # 直接改 cedict.js
 `build_cedict.py`（CC-CEDICT → `cedict.js`）、`build_irregular.py`（不規則
 變化表）、`migrate_words.py`（`words.js` 格式遷移）。
 需要 `pypinyin`、`opencc-python-reimplemented`、`wordfreq`、`jieba`、`lemminflect`。
+
+---
+
+## v2（進行中，`/v2/`）
+
+完整規劃見 PR 描述。一句話：從「25 個選單項目的工具箱」變成「每天 10 分鐘的引導式學習」——
+App 知道這是第幾週（`calendar.js`）、哪些字快忘了（`mastery.js` 的記憶盒），自動排好今天要做的事。
+
+和 v1 **平行**：資料層共用（同一份 `daisy_mastery`、同一份 `petData`），UI 在 `/v2/` 全新建立，
+兩邊賺的金幣、練的字互相看得到。滿意之後再把根目錄的 `index.html` 轉過去。
+
+| 檔案 | 內容 |
+|---|---|
+| `v2/design.html` | P2a 設計稿：四個畫面 × 兩種風格（📖 繪本／✨ 明亮），上方工具列切換。**給 Daisy 選風格用**。🔈 語音檢查要在她的平板上開 |
+| `v2/art/hamster.svg` | 從 `daisy_hamster.html` 抽出來的同一隻倉鼠。改長相兩邊一起改 |
+| `v2/fonts/Andika-*.woff2` | SIL 的 Andika，**未修改的原檔**（OFL 1.1，見同目錄 `OFL.txt`）。`a`、`g` 是單層的，和學校教的手寫印刷體一樣。**不要子集化**：「Andika」是保留字型名稱，改過的版本不能再叫這個名字 |
+
+設計原則（兩種風格共用）：
+
+- **題型固定一個顏色**：see 天藍、hear 玫瑰、spell 柿橙、use 梅紫；完成葉綠、金幣麥黃
+- **介面上的中文全部帶注音**，而且注音要讀得到：字的四成大、和字一樣深（第一版抄 zhuyin.js 的 .36em＋淡灰，19px 的按鈕旁注音只剩 7px）
+- 每句說明旁邊都有 🔊 唸給她聽（zh-TW）
+- 主要按鈕 ≥ 64px、圖示按鈕 ≥ 48px、鍵盤鍵高 ≥ 56px；**不用下拉選單**
+- 答錯不出現紅色叉叉：輕輕搖一下，錯兩次後正確的鍵亮起來
+- 拼字用**小寫**（Andika 的單層 a/g 只有小寫才看得出差別）

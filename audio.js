@@ -19,6 +19,12 @@
   // 載兩次就會多一組解鎖監聽和第二套音樂排程，所以先擋掉。
   if (window.daisyAudio) return;
 
+  // 音檔路徑要相對於「這支 audio.js 在哪」，不是相對於頁面。
+  // 以前寫死 'sfx/'，在根目錄的頁面剛好對；v2 的頁面在 /v2/ 底下，
+  // 會去抓 /v2/sfx/xxx.wav → 404，而且 sfx() 只會安靜地回傳 false，聽不出來壞了。
+  // menu.js 是動態插入 <script> 載入這支的，currentScript 在那種情況下也有值。
+  var BASE = (document.currentScript && document.currentScript.src || '').replace(/[^\/]*$/, '');
+
   var ctx = null, master = null, sfxBus = null, musicBus = null, delayBus = null;
   var buffers = {};          // name -> AudioBuffer
   var loading = false;
@@ -84,7 +90,7 @@
     if (loading || !ctx) return;
     loading = true;
     SFX_NAMES.forEach(function (name) {
-      fetch('sfx/' + name + '.wav')
+      fetch(BASE + 'sfx/' + name + '.wav')
         .then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject(); })
         .then(function (ab) {
           return new Promise(function (res, rej) {
@@ -220,7 +226,7 @@
     var i = 0;
     var tryNext = function () {
       if (i >= TRACK_EXT.length) { trackMiss[name] = true; return null; }
-      var url = 'music/' + name + TRACK_EXT[i++];
+      var url = BASE + 'music/' + name + TRACK_EXT[i++];
       return fetch(url)
         .then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject(); })
         .then(function (ab) {
