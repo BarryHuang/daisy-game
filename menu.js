@@ -46,6 +46,11 @@ const MENU_GROUPS = [
     { href: "parent_dashboard.html", emoji: "👨‍👩‍👧", name: "學習後台" },
     { href: "words_review.html",     emoji: "🔍", name: "注音校對" },
     { href: "daisy_about.html",      emoji: "📣", name: "功能總覽", note: "分享給朋友看的那一頁" }
+  ]},
+  // v2 和 v1 平行試用：v1 完全照舊，想試新版的時候從這裡進去，v2 裡也有一顆
+  // 「回 v1」。兩邊共用同一份進度和金幣，來回切換不會掉資料。
+  { title: "試用", items: [
+    { href: "v2/", emoji: "✨", name: "v2（beta）", note: "新版介面・試用中" }
   ]}
 ];
 
