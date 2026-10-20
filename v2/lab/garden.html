@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#F3EAD8">
+<title>後院菜園（試作）</title>
+<link rel="icon" href="../../icon-192.png">
+<style>
+/* 繪本風：和小星球、v2 設計稿同一組顏色 */
+:root {
+  --paper: #FBF6EA; --surface: #FFFDF7; --surface-2: #F4ECDC;
+  --ink: #4A3F3A; --ink-2: #7A6D62; --line: #DCCDB4;
+  --leaf: #5E8A4A; --leaf-t: #E5EEDA; --wheat: #D9A53A; --wheat-t: #F7EBCB;
+  --persimmon: #BF6A35; --persimmon-t: #F8E5D6; --sky: #4F7FAB;
+  --font-zh: "PingFang TC", "Noto Sans TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* .pill 設了 display:inline-flex，會蓋過 hidden 屬性 —— 登入時該藏的「試玩」標示
+   變成一顆空膠囊留在畫面上（截圖抓到的）。所以 hidden 一律強制藏起來 */
+[hidden] { display: none !important; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font-zh); color: var(--ink);
+  background: linear-gradient(#D5E3EA 0%, #E6EDE5 34%, #F4EEDF 60%, #FBF6EA 100%);
+  -webkit-user-select: none; user-select: none; touch-action: none;
+}
+.sun { position: fixed; width: 170px; height: 170px; right: 8vw; top: 6vh; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(250,222,150,.95) 0 34%, rgba(250,222,150,.35) 52%, rgba(250,222,150,0) 70%); }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.paper { position: fixed; inset: 0; pointer-events: none; mix-blend-mode: multiply;
+  background-image:
+    radial-gradient(130% 100% at 50% 45%, rgba(0,0,0,0) 60%, rgba(120,95,70,.16) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .3 0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* 注音：字的四成、和字一樣深；一組字不折行 */
+.zh { white-space: nowrap; }
+.zh .zy-col, .zh .zy-rail b { font-size: .42em; color: inherit !important; }
+
+/* ── 上方 ─────────────────────────────────────────────────────────── */
+.hud { position: fixed; left: 0; right: 0; top: 0; display: flex; align-items: center; gap: 10px;
+       padding: calc(12px + env(safe-area-inset-top)) 16px 0; pointer-events: none; z-index: 5; }
+.hud > * { pointer-events: auto; }
+.pill { min-height: 48px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 999px;
+        background: rgba(255,253,247,.9); border: 2px solid var(--line); font-size: 20px; color: var(--ink); white-space: nowrap; }
+button.pill { font: inherit; cursor: pointer; }
+.grow { flex: 1; }
+.coins { font-weight: 700; font-variant-numeric: tabular-nums; }
+.coins.bump { animation: bump .45s; }
+@keyframes bump { 40% { transform: scale(1.18); } }
+.badge { font-size: 15px; background: var(--wheat-t); border-color: var(--wheat); }
+/* 「試玩」標示自成一行、貼在工具列下面：放在同一列的話，窄螢幕上會把金幣擠出畫面 */
+.hud .badge { position: fixed; left: 16px; top: calc(70px + env(safe-area-inset-top)); min-height: 36px; padding: 4px 12px; }
+.stats { font: 12px/1.3 ui-monospace, Menlo, monospace; color: var(--ink-2); min-height: 0; padding: 6px 10px; }
+/* 手機：上方只留「回星球」和金幣，標題和 fps 收起來，不然金幣會被擠出畫面 */
+@media (max-width: 600px) {
+  .hud .title, .hud .stats { display: none; }
+  .hud .badge { font-size: 13px; padding: 4px 10px; }
+  .hud #back .zh { display: none; }
+  .hud #back::after { content: "🪐"; }
+}
+
+/* ── 田上的標籤（跟著 3D 位置走）──────────────────────────────────────── */
+.tag { position: fixed; left: 0; top: 0; transform: translate(-50%, -100%); z-index: 3;
+       min-height: 48px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+       border-radius: 999px; border: 2px solid var(--line); background: rgba(255,253,247,.94);
+       font: inherit; font-size: 19px; color: var(--ink); cursor: pointer; white-space: nowrap; }
+.tag .em { font-size: 24px; }
+.tag.ripe { background: var(--leaf-t); border-color: var(--leaf); color: #34522a; font-weight: 700; animation: ripe 1.6s ease-in-out infinite; }
+.tag.empty { background: rgba(255,253,247,.78); color: var(--ink-2); }
+/* 前排的標籤貼在田的下方。跳動用獨立的 translate 屬性，才不會蓋掉定位用的 transform */
+.tag.below { transform: translate(-50%, 4px); }
+@keyframes ripe { 50% { translate: 0 -5px; } }
+.tag.nudge { animation: nudge .4s; }
+@keyframes nudge { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+
+/* ── 種子攤 ───────────────────────────────────────────────────────── */
+.shop-wrap { position: fixed; inset: 0; z-index: 10; display: none; align-items: flex-end; justify-content: center;
+             background: rgba(60,45,35,.28); }
+.shop-wrap.on { display: flex; }
+.shop { width: min(760px, 100%); background: var(--surface); border: 2px solid var(--line); border-bottom: 0;
+        border-radius: 26px 26px 0 0; padding: 16px 16px calc(18px + env(safe-area-inset-bottom));
+        animation: up .28s ease-out; }
+@keyframes up { from { transform: translateY(40%); opacity: .4; } }
+.shop-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 26px; font-weight: 700; }
+.shop-head .grow { flex: 1; }
+.icon-btn { min-width: 48px; min-height: 48px; border-radius: 999px; border: 2px solid var(--line); background: var(--surface);
+            font-size: 22px; display: grid; place-items: center; cursor: pointer; }
+.seeds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 560px) { .seeds { grid-template-columns: repeat(2, 1fr); } }
+.seed { min-height: 64px; border-radius: 18px; border: 2px solid var(--line); background: var(--paper);
+        padding: 12px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;
+        font: inherit; color: var(--ink); }
+.seed:active { transform: scale(.97); }
+.seed .em { font-size: 46px; line-height: 1; }
+.seed .nm { font-size: 22px; font-weight: 700; }
+.seed .meta { font-size: 17px; color: var(--ink-2); display: flex; gap: 10px; }
+.seed .price { font-size: 19px; font-weight: 700; color: #8a5a10; }
+.seed .earn { font-size: 15px; color: var(--leaf); }
+.seed.poor { opacity: .45; }
+.seed.poor .price { color: var(--persimmon); }
+
+/* ── 浮出來的字：金幣、愛心、說明 ─────────────────────────────────────── */
+.burst { position: fixed; pointer-events: none; font-size: 30px; transform: translate(-50%, -50%); z-index: 8;
+         animation: floatUp 1.2s ease-out forwards; font-weight: 700; color: #8a5a10; white-space: nowrap; }
+@keyframes floatUp { to { transform: translate(calc(-50% + var(--dx, 0px)), -170%) scale(1.25); opacity: 0; } }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+         z-index: 9; min-height: 52px; padding: 10px 20px; border-radius: 999px; background: var(--surface);
+         border: 2px solid var(--line); font-size: 20px; display: flex; align-items: center; gap: 8px;
+         transition: opacity .35s, transform .35s; white-space: nowrap; }
+.toast.hide { opacity: 0; transform: translate(-50%, 20px); pointer-events: none; }
+.toast.good { background: var(--leaf-t); border-color: var(--leaf); }
+
+.fallback { position: fixed; inset: 0; display: none; place-items: center; text-align: center; padding: 24px; font-size: 18px; line-height: 1.7; }
+@media (prefers-reduced-motion: reduce) { .burst, .tag.ripe { animation: none; } }
+</style>
+</head>
+<body>
+<div class="sun"></div>
+<canvas id="c" aria-label="後院菜園"></canvas>
+<div class="paper"></div>
+
+<div class="hud">
+  <button class="pill" id="back" aria-label="回小星球">← <span class="zh" data-zy="小星球|ㄒㄧㄠˇ ㄒㄧㄥ ㄑㄧㄡˊ"></span></button>
+  <span class="pill zh title" data-zy="後院|ㄏㄡˋ ㄩㄢˋ"></span>
+  <span class="pill badge" id="badge" hidden></span>
+  <span class="grow"></span>
+  <span class="pill stats" id="stats">—</span>
+  <span class="pill"><span aria-hidden="true">🪙</span><span class="coins" id="coins">—</span></span>
+</div>
+
+<div id="tags"></div>
+
+<div class="shop-wrap" id="shop" role="dialog" aria-label="選種子">
+  <div class="shop">
+    <div class="shop-head">
+      <span aria-hidden="true">🌱</span>
+      <span class="zh" data-zy="選種子|ㄒㄩㄢˇ ㄓㄨㄥˇ ㄗˇ"></span>
+      <button class="icon-btn" data-say="選一種種子。上面寫要幾天、要幾個金幣，還有可以賣多少。" aria-label="說明">🔊</button>
+      <span class="grow"></span>
+      <button class="icon-btn" id="shop-x" aria-label="關閉">✕</button>
+    </div>
+    <div class="seeds" id="seeds"></div>
+  </div>
+</div>
+
+<div class="toast hide" id="toast"></div>
+<div class="fallback" id="fallback">這台裝置沒辦法顯示 3D 畫面（WebGL 沒有開）。<br>請改用 Safari 或 Chrome 打開。</div>
+
+<script src="../../zhuyin.js"></script>
+<script src="../../audio.js"></script>
+<script src="../../firebase-config.js"></script>
+<script type="module">
+import { startGarden } from './garden.js';
+import { openPetStore } from './petstore.js';
+import * as F from './farm.js';
+
+const $ = (s) => document.querySelector(s);
+const zy = (zh, z) => renderZhuyin(zh, z.split(' '));
+document.querySelectorAll('[data-zy]').forEach((el) => { const [a, b] = el.dataset.zy.split('|'); el.innerHTML = zy(a, b); });
+
+// ── 聲音 ──────────────────────────────────────────────────────────────
+const A = window.daisyAudio;
+const sfx = (n) => { try { A && A.sfx(n); } catch (e) {} };
+function say(text, lang = 'zh-TW') {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text); u.lang = lang;
+  const v = speechSynthesis.getVoices().find((x) => x.lang === lang); if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+document.addEventListener('click', (e) => { const s = e.target.closest('[data-say]'); if (s) say(s.dataset.say); });
+
+function burst(p, text, n = 3) {
+  for (let i = 0; i < n; i++) {
+    const el = document.createElement('span');
+    el.className = 'burst'; el.textContent = text;
+    el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+    el.style.setProperty('--dx', ((i - (n - 1) / 2) * 30) + 'px');
+    el.style.animationDelay = (i * 90) + 'ms';
+    document.body.appendChild(el); setTimeout(() => el.remove(), 1600);
+  }
+}
+let toastT = 0;
+function toast(html, good) {
+  const t = $('#toast'); t.innerHTML = html; t.className = 'toast' + (good ? ' good' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hide'), 2600);
+}
+
+// ── 今天（菜園用裝置的本地日曆天，和 v1 一樣）─────────────────────────────
+// ?day=YYYYMMDD 只在試玩模式有效：讓人不用等到明天就看得到菜長大
+const params = new URLSearchParams(location.search);
+const today = () => (params.get('day') && store.mode === 'demo') ? +params.get('day') : F.farmDay();
+const todayStr = () => new Date().toLocaleDateString();
+
+// ── 存檔 ──────────────────────────────────────────────────────────────
+let garden = null, lastCoins = null;
+// onChange 會在 openPetStore() 還沒回傳之前就被呼叫（試玩模式是同步的），那時 const store
+// 還在暫時性死區 —— 所以 store 從參數拿，不要在 refresh 裡直接讀外面的 store
+const store = openPetStore({ onChange: (pet, s) => refresh(pet, s) });
+
+function refresh(pet, s = store) {
+  const badge = $('#badge');
+  if (s.mode === 'demo') { badge.hidden = false; badge.innerHTML = zy('試玩', 'ㄕˋ ㄨㄢˊ') + '・' + zy('不會存檔', 'ㄅㄨˋ ㄏㄨㄟˋ ㄘㄨㄣˊ ㄉㄤˇ'); }
+  else if (s.mode === 'offline') { badge.hidden = false; badge.innerHTML = zy('沒有網路', 'ㄇㄟˊ ㄧㄡˇ ㄨㄤˇ ㄌㄨˋ'); }
+  else badge.hidden = true;
+  const coins = pet ? (pet.coins || 0) : null;
+  $('#coins').textContent = coins == null ? '—' : coins.toLocaleString();
+  if (lastCoins != null && coins != null && coins !== lastCoins) { $('#coins').classList.remove('bump'); void $('#coins').offsetWidth; $('#coins').classList.add('bump'); }
+  lastCoins = coins;
+  if (!garden || !pet) return;
+  garden.syncCrops(pet, today());
+  renderTags();
+}
+
+// ── 田上的標籤 ─────────────────────────────────────────────────────────
+const tags = [0, 1, 2, 3].map((i) => {
+  const b = document.createElement('button');
+  b.className = 'tag'; b.dataset.i = i; b.hidden = true;
+  b.addEventListener('click', () => onBed(i));
+  $('#tags').appendChild(b); return b;
+});
+function renderTags() {
+  const pet = store.pet;
+  tags.forEach((b, i) => {
+    if (!pet) { b.hidden = true; return; }
+    const st = F.plotState(pet, i, today());
+    b.hidden = false;
+    b.className = 'tag' + (st.empty ? ' empty' : st.ripe ? ' ripe' : '') + (i >= 2 ? ' below' : '');
+    b.innerHTML = st.empty ? '<span class="em">🌱</span>' + zy('種菜', 'ㄓㄨㄥˋ ㄘㄞˋ')
+      : st.ripe ? '<span class="em">' + st.c.emoji + '</span>' + zy('可以收了', 'ㄎㄜˇ ㄧˇ ㄕㄡ ㄌㄜ˙') + ' ✨'
+      : '<span class="em">' + st.c.emoji + '</span>' + zy('還要', 'ㄏㄞˊ ㄧㄠˋ') + ' ' + st.left + ' ' + zy('天', 'ㄊㄧㄢ') + ' 🌙';
+  });
+}
+function placeTags() {
+  if (!garden) return;
+  tags.forEach((b, i) => {
+    const p = garden.bedScreen(i);
+    // 標籤不能超出螢幕：田在畫面邊緣時，標籤往內縮
+    const half = (b.offsetWidth || 120) / 2 + 8;
+    b.style.left = Math.max(half, Math.min(innerWidth - half, p.x)) + 'px'; b.style.top = p.y + 'px';
+    b.classList.toggle('below', p.below);
+  });
+}
+
+// ── 種子攤 ─────────────────────────────────────────────────────────────
+let shopPick = null;
+function openShop(onPick) {
+  const coins = (store.pet && store.pet.coins) || 0;
+  $('#seeds').innerHTML = Object.entries(F.CROPS).map(([k, c]) => `
+    <button class="seed${coins < c.cost ? ' poor' : ''}" data-k="${k}">
+      <span class="em">${c.emoji}</span>
+      <span class="nm zh">${renderZhuyin(c.name, c.zy)}</span>
+      <span class="meta"><span>🌙 ${c.days}</span></span>
+      <span class="price">🪙 ${c.cost}</span>
+      <span class="earn">${zy('賣', 'ㄇㄞˋ')} ${c.sell[0]}~${c.sell[1]}</span>
+    </button>`).join('');
+  shopPick = onPick;
+  $('#shop').classList.add('on');
+  sfx('door');
+}
+function closeShop(key) {
+  $('#shop').classList.remove('on');
+  const cb = shopPick; shopPick = null; cb && cb(key || null);
+}
+$('#seeds').addEventListener('click', (e) => {
+  const b = e.target.closest('.seed'); if (!b) return;
+  const c = F.CROPS[b.dataset.k];
+  if (b.classList.contains('poor')) { sfx('bump'); say('金幣不夠，' + c.name + '要' + c.cost + '個金幣。'); return; }
+  sfx('click'); closeShop(b.dataset.k);
+});
+$('#shop-x').onclick = () => closeShop(null);
+$('#shop').addEventListener('click', (e) => { if (e.target.id === 'shop') closeShop(null); });
+
+// ── 種菜、收成 ─────────────────────────────────────────────────────────
+let busy = false;
+async function onBed(i) {
+  if (busy || !store.pet) return;
+  if (store.mode === 'offline') { toast('📡 ' + zy('沒有網路', 'ㄇㄟˊ ㄧㄡˇ ㄨㄤˇ ㄌㄨˋ')); say('沒有網路，等一下再來種菜。'); return; }
+  const st = F.plotState(store.pet, i, today());
+  busy = true;
+  try {
+    if (st.empty) {
+      // 種子攤和倉鼠同時動：她挑種子的時候，倉鼠已經在走過去
+      const arrive = garden.goToBed(i);
+      const key = await new Promise((r) => openShop(r));
+      if (!key) return;
+      await arrive;
+      garden.crouch(true); sfx('eat');
+      const r = await store.mutate((pet) => F.plant(pet, i, key, today(), todayStr()));
+      setTimeout(() => garden.crouch(false), 550);
+      const c = F.CROPS[key];
+      if (r.ok) {
+        burst(garden.bedScreen(i), '🌱', 3);
+        say('種下' + c.name + '了！' + (c.days === 1 ? '明天' : c.days + '天後') + '來收。');
+        questToasts(r.quest);
+      } else {
+        sfx('bump');
+        say(r.why === 'coins' ? '金幣不夠喔。' : '現在沒辦法種，等一下再試試。');
+      }
+    } else if (!st.ripe) {
+      garden.goToBed(i);
+      const tag = tags[i]; tag.classList.remove('nudge'); void tag.offsetWidth; tag.classList.add('nudge');
+      say(st.c.name + '還要' + st.left + '天才會長大。');
+    } else {
+      await garden.goToBed(i);
+      garden.crouch(true); sfx('pop');
+      garden.popCrop(i);                     // 先讓菜跳起來；存檔失敗會再長回去
+      const r = await store.mutate((pet) => F.harvest(pet, i, today(), todayStr()));
+      setTimeout(() => garden.crouch(false), 400);
+      if (r.ok) {
+        const p = garden.bedScreen(i);
+        burst(p, st.c.emoji, 3);
+        setTimeout(() => { burst({ x: p.x, y: p.y - 30 }, '+' + r.gain + ' 🪙', 1); sfx('coin'); }, 380);
+        say(st.c.name + '賣了' + r.gain + '個金幣！');
+        if (r.levelUp) setTimeout(() => { sfx('levelup'); toast('🎉 Level ' + r.level, true); }, 1300);
+        questToasts(r.quest);
+      } else {
+        sfx('bump'); garden.syncCrops(store.pet, today());
+        say('現在沒辦法收，等一下再試試。');
+      }
+    }
+  } finally {
+    busy = false;
+    renderTags();
+  }
+}
+function questToasts(q) {
+  if (!q) return;
+  q.completed.forEach((c, k) => setTimeout(() => { sfx('success'); toast('🏆 ' + c.text + '　+' + c.reward + ' 🪙', true); }, 1500 + k * 1600));
+  if (q.allBonus) setTimeout(() => { sfx('levelup'); toast('🏆 今日挑戰全破！+' + F.QUEST_ALL_BONUS + ' 🪙', true); }, 3300);
+}
+
+// ── 開場 ──────────────────────────────────────────────────────────────
+$('#back').onclick = () => { sfx('whoosh'); location.href = 'planet.html?from=garden'; };
+const probe = document.createElement('canvas');
+if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) {
+  $('#fallback').style.display = 'grid';
+} else {
+  let touched = false, announced = false;
+  garden = startGarden($('#c'), {
+    sfx, say, burst,
+    startAt: params.get('from') === 'planet' ? 'gate' : null,
+    onBed,
+    onStall: () => { say('種子攤！點一塊空的田，就可以選種子。'); sfx('door'); },
+    onFirstTouch() { if (touched) return; touched = true; try { A && A.unlock(); } catch (e) {} },
+    onStats: (s) => { $('#stats').textContent = innerWidth < 600 ? s.fps + ' fps' : s.fps + ' fps · ' + s.calls + ' calls · ×' + s.pr; },
+    onFrame() {
+      placeTags();
+      // 進來的時候，有菜可以收就說一聲（不然她不會想到要看）
+      if (!announced && store.pet) {
+        announced = true;
+        const n = [0, 1, 2, 3].filter((i) => F.plotState(store.pet, i, today()).ripe).length;
+        if (n) setTimeout(() => { toast('🧺 ' + n + ' ' + zy('塊田可以收了', 'ㄎㄨㄞˋ ㄊㄧㄢˊ ㄎㄜˇ ㄧˇ ㄕㄡ ㄌㄜ˙'), true); say('有' + n + '塊田可以收成了！'); }, 900);
+      }
+    },
+  });
+  refresh(store.pet);
+  // 跨過午夜，田的樣子要跟著變
+  setInterval(() => refresh(store.pet), 30000);
+  window.garden = { api: garden, store, F, today };
+}
+</script>
+</body>
+</html>

@@ -58,6 +58,18 @@ button.pill { font: inherit; cursor: pointer; }
 .zh .zy-col, .zh .zy-rail b { font-size: .42em; }
 .zh { white-space: nowrap; }
 
+/* 地區的入口標籤：浮在星球上那個地區的上方，轉到背面就藏起來 */
+.region { position: fixed; left: 0; top: 0; transform: translate(-50%, -100%); z-index: 4;
+          min-height: 48px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+          border-radius: 999px; border: 2px solid #5E8A4A; background: #E5EEDA; color: #34522a;
+          font: inherit; font-size: 19px; font-weight: 700; cursor: pointer; white-space: nowrap;
+          transition: opacity .3s; }
+.region.away { opacity: 0; pointer-events: none; }
+.region .em { font-size: 22px; }
+/* 走進地區時淡成紙色，再換頁 */
+.fade { position: fixed; inset: 0; background: #FBF6EA; opacity: 0; pointer-events: none; transition: opacity .5s; z-index: 20; }
+.fade.on { opacity: 1; }
+
 /* 點倉鼠冒愛心、點花冒小花 */
 .burst { position: fixed; pointer-events: none; font-size: 30px; transform: translate(-50%, -50%);
          animation: floatUp 1.1s ease-out forwards; }
@@ -83,6 +95,15 @@ button.pill { font: inherit; cursor: pointer; }
   <span class="zh" data-zy="點地面倉鼠會走過去|ㄉㄧㄢˇ ㄉㄧˋ ㄇㄧㄢˋ ㄘㄤ ㄕㄨˇ ㄏㄨㄟˋ ㄗㄡˇ ㄍㄨㄛˋ ㄑㄩˋ"></span>
   <span aria-hidden="true">🔊</span>
 </button>
+
+<button class="region away" id="to-garden" aria-label="走進後院">
+  <span class="em" aria-hidden="true">🥕</span><span class="zh" data-zy="後院|ㄏㄡˋ ㄩㄢˋ"></span>
+</button>
+<div class="fade" id="fade"></div>
+<script>
+  // Safari 按「上一頁」會從快取直接還原這一頁，淡出的那一層還蓋著 —— 回來時拿掉
+  addEventListener('pageshow', () => document.getElementById('fade').classList.remove('on'));
+</script>
 
 <div class="fallback" id="fallback">這台裝置沒辦法顯示 3D 畫面（WebGL 沒有開）。<br>請改用 Safari 或 Chrome 打開。</div>
 
@@ -124,8 +145,22 @@ if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) {
   document.getElementById('fallback').style.display = 'grid';
 } else {
   let touched = false;
+  const from = new URLSearchParams(location.search).get('from');
+  const regionBtn = document.getElementById('to-garden');
+  regionBtn.addEventListener('click', () => { window.planet.enterRegion('garden'); });
   window.planet = startPlanet(document.getElementById('c'), {
     sfx, say, burst,
+    startAt: from,
+    onEnter(name) {
+      document.getElementById('fade').classList.add('on');
+      setTimeout(() => { location.href = name + '.html?from=planet'; }, 480);
+    },
+    onFrame() {
+      const p = window.planet && window.planet.regionScreen('garden');
+      if (!p) return;
+      regionBtn.style.left = p.x + 'px'; regionBtn.style.top = p.y + 'px';
+      regionBtn.classList.toggle('away', !p.visible);
+    },
     onFirstTouch() {
       if (touched) return; touched = true;
       try { A && A.unlock(); } catch (e) {}
