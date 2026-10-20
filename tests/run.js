@@ -418,6 +418,124 @@ describe("v1 相容性", () => {
     });
   });
 
+  // ════════════════════════════════════════════════════════════════════
+  // v2「今天」的規劃器
+  // ════════════════════════════════════════════════════════════════════
+  const PL = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/planner.js")).href);
+  const entries = new Function(fs.readFileSync(path.join(ROOT, "words.js"), "utf8") + "; return wordEntries;")();
+  // 專有名詞（Africa、Earth…）在 wordEntries 裡是大寫的 key，只用小寫查會查不到 ——
+  // 週四的模擬小考就會少考三個字。所以先用原字查，查不到再用小寫
+  const entryOf = (w) => entries[String(w)] || entries[String(w).toLowerCase()];
+  const hasMeaning = (w) => { const e = entryOf(w); return !!(e && e.s && e.s[0] && e.s[0].zh); };
+  const plan = (ymd, extra = {}) => {
+    const week = cal.currentWeek(ymd);
+    return PL.planToday(Object.assign({ ymd, week, words, lists: cal.TERM.lists,
+      scope: week.kind === "review" ? cal.reviewScope(week.n) : null, hasMeaning }, extra));
+  };
+  const types = (p) => p.stations.map((x) => x.type).join(",");
+  const lc = (arr) => arr.map((w) => String(w).toLowerCase());
+  const setOf = (list, k) => new Set(lc(words[list][k] || []));
+  const FET = cal.TERM.lists.fet, CET = cal.TERM.lists.cet;
+  const wk1to7 = new Set(cal.reviewScope(8).flatMap(({ list, key }) => lc(words[list][key])));
+  const fet1to7 = new Set(cal.reviewScope(8).filter((x) => x.list === FET).flatMap(({ list, key }) => lc(words[list][key])));
+
+  describe("「今天」的規劃器 planner.js", () => {
+    it("期中複習週（10/19，現在）：聽一聽 → 選意思 → 拼拼看 → 寶箱，每關 6 個字", () => {
+      const p = plan(20261019);
+      assert.strictEqual(types(p), "hear,see,spell,chest");
+      p.stations.slice(0, 3).forEach((s) => assert.strictEqual(s.words.length, 6, s.type));
+      assert.deepStrictEqual(p.headline.map((h) => h.zh), ["第八週", "期中複習"]);
+    });
+
+    it("複習週只出 Wk 1–7 的字；拼拼看只出 FET（拼字課）的字", () => {
+      const p = plan(20261019);
+      p.stations.slice(0, 3).forEach((s) => s.words.forEach((w) => assert.ok(wk1to7.has(w.toLowerCase()), w + " 不在 Wk 1–7")));
+      p.stations[2].words.forEach((w) => assert.ok(fet1to7.has(w.toLowerCase()), w + " 不是 FET 的字"));
+    });
+
+    it("三關的字不重複（字夠多的時候）", () => {
+      const all = plan(20261019).stations.flatMap((s) => lc(s.words));
+      assert.strictEqual(new Set(all).size, all.length);
+    });
+
+    it("同一天算兩次一模一樣；換一天順序就不一樣", () => {
+      assert.deepStrictEqual(plan(20261019), plan(20261019));
+      assert.notDeepStrictEqual(plan(20261019).stations[0].words, plan(20261020).stations[0].words);
+    });
+
+    it("到期的字排最前面：valley 的 see 今天到期，就出現在「選意思」", () => {
+      const mastery = { valley: { r: 3, w: 1, t: 1, s: 0, k: { see: { b: 2, d: 20261018, day: 20261016 } } } };
+      const p = plan(20261019, { mastery });
+      assert.strictEqual(p.stations.find((s) => s.type === "see").words[0].toLowerCase(), "valley");
+    });
+
+    it("還沒到期的字排在「沒練過」的後面", () => {
+      const mastery = {};
+      [...fet1to7].forEach((w) => { mastery[w] = { r: 5, w: 0, t: 1, s: 3, k: { spell: { b: 4, d: 20261030, day: 20261015 } } }; });
+      delete mastery["notice"];   // 只剩 notice 這個 FET 字沒練過拼寫
+      const p = plan(20261019, { mastery });
+      assert.strictEqual(p.stations.find((s) => s.type === "spell").words[0].toLowerCase(), "notice");
+    });
+
+    it("新字週週一（11/2，Wk 10）：先看新字卡，20 個新字分三天看，今天 7 張", () => {
+      const p = plan(20261102);
+      assert.strictEqual(types(p), "card,see,spell,hear,chest");
+      assert.strictEqual(p.stations[0].words.length, 7);
+      assert.deepStrictEqual(p.headline.map((h) => h.zh), ["第十週", "星期一"]);
+    });
+
+    it("★ 新字週的「拼拼看」只出本週要考的 FET 字（不被舊字擠掉）", () => {
+      const fet10 = setOf(FET, "Wk 10");
+      plan(20261102).stations.find((s) => s.type === "spell").words.forEach((w) => assert.ok(fet10.has(w.toLowerCase()), w + " 不是 Wk 10 的 FET 字"));
+    });
+
+    it("週二：昨天看過的新字不再出卡，剩下的分兩天", () => {
+      const mon = plan(20261102), seen = {};
+      mon.stations[0].words.forEach((w) => { seen[w.toLowerCase()] = 20261102; });
+      const tue = plan(20261103, { seen });
+      tue.stations[0].words.forEach((w) => assert.ok(!seen[w.toLowerCase()], w + " 昨天看過了"));
+      assert.strictEqual(tue.stations[0].words.length, Math.ceil((20 - 7) / 2));
+    });
+
+    it("「選意思」不考還沒看過卡片的新字", () => {
+      const p = plan(20261102);
+      const cards = new Set(lc(p.stations[0].words));
+      const wk10 = new Set([...setOf(FET, "Wk 10"), ...setOf(CET, "Wk 10")]);
+      p.stations.find((s) => s.type === "see").words.forEach((w) => {
+        if (wk10.has(w.toLowerCase())) assert.ok(cards.has(w.toLowerCase()), w + " 是新字但今天沒看過卡片");
+      });
+    });
+
+    it("考前一天（週四）：暖身 → 本週 FET 全部聽寫一遍", () => {
+      const p = plan(20261105);
+      assert.strictEqual(types(p), "see,test,chest");
+      const t = p.stations[1];
+      assert.strictEqual(t.dictation, true);
+      assert.deepStrictEqual(new Set(lc(t.words)), new Set([...setOf(FET, "Wk 10")].filter((w) => /^[a-z][a-z '\-]*$/.test(w))));
+      assert.deepStrictEqual(p.headline.map((h) => h.zh), ["第十週", "明天考試"]);
+    });
+
+    it("考試當天（週五）輕鬆一點；週末只複習", () => {
+      assert.strictEqual(types(plan(20261106)), "hear,see,chest");
+      assert.strictEqual(types(plan(20261107)), "see,spell,chest");
+      assert.deepStrictEqual(plan(20261106).headline.map((h) => h.zh), ["第十週", "考試加油"]);
+    });
+
+    it("沒有中文意思的字不出「選意思」和「拼拼看」", () => {
+      const p = plan(20261019, { hasMeaning: (w) => w.toLowerCase() !== "valley" && hasMeaning(w),
+        mastery: { valley: { r: 0, w: 5, t: 1, s: 0, k: { see: { b: 1, d: 20261001, day: 0 } } } } });
+      ["see", "spell"].forEach((t) => assert.ok(!lc(p.stations.find((s) => s.type === t).words).includes("valley")));
+    });
+
+    it("每一關的注音和字數一致（標題、站名）", () => {
+      for (const ymd of [20261019, 20261102, 20261105, 20261106, 20261107, 20270111]) {
+        const p = plan(ymd);
+        p.headline.forEach((h) => assert.strictEqual([...h.zh].length, h.zy.split(" ").length, ymd + " " + h.zh));
+        p.stations.forEach((s) => assert.strictEqual([...s.name].length, s.zy.split(" ").length, s.name));
+      }
+    });
+  });
+
   console.log("\n" + (failed ? "✗ " : "✓ ") + passed + " 通過" + (failed ? "，" + failed + " 失敗" : ""));
   process.exit(failed ? 1 : 0);
 })();
