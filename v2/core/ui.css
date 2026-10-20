@@ -133,6 +133,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .prompt { width: min(600px, 100%); padding: 22px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .prompt .pic { width: 120px; height: 120px; border-radius: 999px; display: grid; place-items: center; font-size: 68px; background-color: var(--ct); }
 .prompt .row { display: flex; align-items: center; gap: 12px; }
+/* 填填看：句子＋空格。空格用虛線底，填上之後變葉綠 */
+.prompt.cloze { flex-direction: row; align-items: center; gap: 14px; }
+.sentence { margin: 0; flex: 1; font-size: clamp(26px, 6.4vw, 36px); line-height: 1.5; text-align: left; }
+.hole { display: inline-block; min-width: 3.2em; height: 1.15em; vertical-align: -0.15em; margin: 0 .12em;
+        border-bottom: 4px dashed var(--c, var(--ink-2)); }
+.hole.filled { height: auto; vertical-align: baseline; min-width: 0; padding: 0 .1em; color: var(--leaf-d); font-weight: 700;
+               border-bottom: 4px solid var(--leaf); background-color: var(--leaf-t); border-radius: 6px 6px 0 0; }
 .word { font-family: var(--font-en); font-size: clamp(54px, 14vw, 88px); font-weight: 700; line-height: 1.05; }
 .meaning { font-size: clamp(38px, 9.5vw, 52px); font-weight: 700; }
 .big-ear { width: 128px; height: 128px; border-radius: 999px; font-size: 56px; display: grid; place-items: center;

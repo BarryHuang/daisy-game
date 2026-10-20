@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20261020-2210';
+const CACHE_NAME = 'daisy-20261021-0642';
 
 const LOCAL_ASSETS = [
   './',
@@ -122,7 +122,28 @@ const LOCAL_ASSETS = [
   './every_season.html',
   './georgia_eyes.html',
   './midterm_questions.js',
-  './snake_icon.svg'
+  './snake_icon.svg',
+  // v2（beta）：她從選單進 v2 之前，根目錄這支 Service Worker 已經裝好了，
+  // 所以 v2 不另開一支 —— 兩支 SW 的 scope 會疊在一起，更新時機也會各走各的。
+  // tests/run.js 會檢查 v2 底下每個要用到的檔案都列在這裡，漏了就離線打不開
+  './v2/',
+  './v2/index.html',
+  './v2/core/ui.css',
+  './v2/core/kit.js',
+  './v2/core/planner.js',
+  './v2/core/activities.js',
+  './v2/core/cloze.js',
+  './v2/fonts/Andika-Regular.woff2',
+  './v2/fonts/Andika-Bold.woff2',
+  './v2/art/hamster.svg',
+  './v2/vendor/three.module.min.js',
+  './v2/lab/book3d.js',
+  './v2/lab/planet.html',
+  './v2/lab/planet.js',
+  './v2/lab/garden.html',
+  './v2/lab/garden.js',
+  './v2/lab/farm.js',
+  './v2/lab/petstore.js'
 ];
 
 // 跨網域資源（CDN / Firebase）不放進 install 階段：任何一個失敗都會讓

@@ -422,7 +422,10 @@ describe("v1 相容性", () => {
   // v2「今天」的規劃器
   // ════════════════════════════════════════════════════════════════════
   const PL = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/planner.js")).href);
-  const entries = new Function(fs.readFileSync(path.join(ROOT, "words.js"), "utf8") + "; return wordEntries;")();
+  const CZ = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/cloze.js")).href);
+  const { wordEntries: entries, wordExamples: examples } = new Function(fs.readFileSync(path.join(ROOT, "words.js"), "utf8") + "; return { wordEntries, wordExamples };")();
+  const exampleOf = (w) => examples[w] || examples[String(w).toLowerCase()] || "";
+  const canCloze = (w) => !!CZ.clozeOf(w, exampleOf(w));
   // 專有名詞（Africa、Earth…）在 wordEntries 裡是大寫的 key，只用小寫查會查不到 ——
   // 週四的模擬小考就會少考三個字。所以先用原字查，查不到再用小寫
   const entryOf = (w) => entries[String(w)] || entries[String(w).toLowerCase()];
@@ -430,7 +433,7 @@ describe("v1 相容性", () => {
   const plan = (ymd, extra = {}) => {
     const week = cal.currentWeek(ymd);
     return PL.planToday(Object.assign({ ymd, week, words, lists: cal.TERM.lists,
-      scope: week.kind === "review" ? cal.reviewScope(week.n) : null, hasMeaning }, extra));
+      scope: week.kind === "review" ? cal.reviewScope(week.n) : null, hasMeaning, canCloze }, extra));
   };
   const types = (p) => p.stations.map((x) => x.type).join(",");
   const lc = (arr) => arr.map((w) => String(w).toLowerCase());
@@ -440,17 +443,17 @@ describe("v1 相容性", () => {
   const fet1to7 = new Set(cal.reviewScope(8).filter((x) => x.list === FET).flatMap(({ list, key }) => lc(words[list][key])));
 
   describe("「今天」的規劃器 planner.js", () => {
-    it("期中複習週（10/19，現在）：聽一聽 → 選意思 → 拼拼看 → 寶箱，每關 6 個字", () => {
+    it("期中複習週（10/19，現在）：聽一聽 → 選意思 → 填填看 → 拼拼看 → 寶箱，共 21 個字", () => {
       const p = plan(20261019);
-      assert.strictEqual(types(p), "hear,see,spell,chest");
-      p.stations.slice(0, 3).forEach((s) => assert.strictEqual(s.words.length, 6, s.type));
+      assert.strictEqual(types(p), "hear,see,use,spell,chest");
+      assert.deepStrictEqual(p.stations.slice(0, 4).map((s) => s.words.length), [5, 5, 5, 6]);
       assert.deepStrictEqual(p.headline.map((h) => h.zh), ["第八週", "期中複習"]);
     });
 
     it("複習週只出 Wk 1–7 的字；拼拼看只出 FET（拼字課）的字", () => {
       const p = plan(20261019);
-      p.stations.slice(0, 3).forEach((s) => s.words.forEach((w) => assert.ok(wk1to7.has(w.toLowerCase()), w + " 不在 Wk 1–7")));
-      p.stations[2].words.forEach((w) => assert.ok(fet1to7.has(w.toLowerCase()), w + " 不是 FET 的字"));
+      p.stations.slice(0, 4).forEach((s) => s.words.forEach((w) => assert.ok(wk1to7.has(w.toLowerCase()), w + " 不在 Wk 1–7")));
+      p.stations[3].words.forEach((w) => assert.ok(fet1to7.has(w.toLowerCase()), w + " 不是 FET 的字"));
     });
 
     it("三關的字不重複（字夠多的時候）", () => {
@@ -479,7 +482,7 @@ describe("v1 相容性", () => {
 
     it("新字週週一（11/2，Wk 10）：先看新字卡，20 個新字分三天看，今天 7 張", () => {
       const p = plan(20261102);
-      assert.strictEqual(types(p), "card,see,spell,hear,chest");
+      assert.strictEqual(types(p), "card,see,spell,hear,chest", "週一最後是聽一聽");
       assert.strictEqual(p.stations[0].words.length, 7);
       assert.deepStrictEqual(p.headline.map((h) => h.zh), ["第十週", "星期一"]);
     });
@@ -517,8 +520,34 @@ describe("v1 相容性", () => {
 
     it("考試當天（週五）輕鬆一點；週末只複習", () => {
       assert.strictEqual(types(plan(20261106)), "hear,see,chest");
-      assert.strictEqual(types(plan(20261107)), "see,spell,chest");
+      assert.strictEqual(types(plan(20261107)), "see,use,spell,chest");
       assert.deepStrictEqual(plan(20261106).headline.map((h) => h.zh), ["第十週", "考試加油"]);
+    });
+
+    it("週二、三：最後一關換成填填看，只出今天以前看過卡片的本週 CET 字", () => {
+      const seen = {};
+      plan(20261102).stations[0].words.forEach((w) => { seen[w.toLowerCase()] = 20261102; });
+      const tue = plan(20261103, { seen });
+      assert.strictEqual(types(tue), "card,see,spell,use,chest");
+      const ok = new Set([...Object.keys(seen), ...lc(tue.stations[0].words)]);
+      const cet10 = setOf(CET, "Wk 10");
+      tue.stations.find((s) => s.type === "use").words.forEach((w) => {
+        if (cet10.has(w.toLowerCase())) assert.ok(ok.has(w.toLowerCase()), w + " 還沒看過卡片");
+      });
+    });
+
+    it("填填看只出 CET 的字，而且每個都挖得出空格", () => {
+      const cetAll = new Set(Object.values(words[CET]).flat().map((w) => w.toLowerCase()));
+      for (const ymd of [20261019, 20261103, 20261107]) {
+        plan(ymd).stations.filter((s) => s.type === "use").forEach((s) => s.words.forEach((w) => {
+          assert.ok(cetAll.has(w.toLowerCase()), w + " 不是 CET 的字");
+          assert.ok(CZ.clozeOf(w, exampleOf(w)), w + " 的例句挖不出空格");
+        }));
+      }
+    });
+
+    it("沒給 canCloze（舊的呼叫方式）就不排填填看", () => {
+      assert.strictEqual(types(plan(20261019, { canCloze: undefined })), "hear,see,spell,chest");
     });
 
     it("沒有中文意思的字不出「選意思」和「拼拼看」", () => {
@@ -533,6 +562,66 @@ describe("v1 相容性", () => {
         p.headline.forEach((h) => assert.strictEqual([...h.zh].length, h.zy.split(" ").length, ymd + " " + h.zh));
         p.stations.forEach((s) => assert.strictEqual([...s.name].length, s.zy.split(" ").length, s.name));
       }
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════════════
+  // 填填看（句子填空）cloze.js
+  // ════════════════════════════════════════════════════════════════════
+  describe("填填看 cloze.js", () => {
+    it("挖原形；句首保留大寫；找不到原形（peeked）就不出", () => {
+      assert.deepStrictEqual(CZ.clozeOf("valley", "A river runs through the valley."),
+        { before: "A river runs through the ", answer: "valley", after: "." });
+      assert.strictEqual(CZ.clozeOf("ocean", "Oceans are big.") , null);
+      assert.strictEqual(CZ.clozeOf("peek", exampleOf("peek")), null);
+      assert.strictEqual(CZ.clozeOf("sea", "Seals swim in the sea.").before, "Seals swim in the ");
+      assert.strictEqual(CZ.clozeOf("cave", "Caves are dark. A cave is cool.").answer, "cave");
+      assert.strictEqual(CZ.clozeOf("Africa", "Africa is big.").answer, "Africa");
+    });
+
+    it("二上 290 個週單字，至少 280 個挖得出空格", () => {
+      const all = [FET, CET].flatMap((l) => Object.values(words[l]).flat());
+      assert.ok(all.filter(canCloze).length >= 280, String(all.filter(canCloze).length));
+    });
+
+    it("誘答：不重複、不是答案、不在句子裡；片語配片語、專有名詞配專有名詞", () => {
+      const pool = ["valley", "Valley", "river", "soil", "creature", "name after", "be known for", "Africa", "Europe", "mountain"];
+      const c = CZ.clozeOf("valley", "A river runs through the valley.");
+      for (let i = 0; i < 30; i++) {
+        const d = CZ.clozeDistractors("valley", c, pool, 2);
+        assert.strictEqual(d.length, 2);
+        assert.strictEqual(new Set(d).size, 2);
+        d.forEach((x) => assert.ok(!["valley", "Valley", "river", "name after", "be known for", "Africa", "Europe"].includes(x), x));
+      }
+      const ph = CZ.clozeOf("name after", "They name the dance after a bird.");
+      assert.strictEqual(ph, null, "片語中間夾字的不出");
+      const af = CZ.clozeDistractors("Africa", CZ.clozeOf("Africa", "Africa is big."), pool, 2);
+      assert.strictEqual(af[0], "Europe", "專有名詞先配專有名詞");
+      assert.ok(!af.includes("Africa"));
+    });
+
+    it("答案在句首：誘答也改成大寫開頭，不能一看大小寫就知道答案", () => {
+      const c = CZ.clozeOf("soil", "Soil is full of life.");
+      CZ.clozeDistractors("soil", c, ["river", "mountain", "creature"], 2).forEach((x) => assert.ok(/^[A-Z]/.test(x), x));
+    });
+
+    it("所有排得進填填看的字，誘答都湊得滿兩個", () => {
+      const cetAll = Object.values(words[CET]).flat();
+      cetAll.filter(canCloze).forEach((w) => {
+        assert.strictEqual(CZ.clozeDistractors(w, CZ.clozeOf(w, exampleOf(w)), cetAll, 2).length, 2, w);
+      });
+    });
+  });
+
+  describe("離線：v2 的檔案都在 Service Worker 的清單裡", () => {
+    it("v2 底下的頁面、程式、字型、圖都會預先快取（設計稿、授權檔除外）", () => {
+      const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
+      const listed = new Set([...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1]));
+      const walk = (d) => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true })
+        .flatMap((e) => (e.isDirectory() ? walk(d + "/" + e.name) : [d + "/" + e.name]));
+      walk("v2").filter((f) => !/design\.html$|OFL\.txt$|LICENSE$/.test(f))
+        .forEach((f) => assert.ok(listed.has(f), f + " 沒有列在 sw.js 的 LOCAL_ASSETS"));
+      listed.forEach((f) => { if (f.startsWith("v2/") && !f.endsWith("/")) assert.ok(fs.existsSync(path.join(ROOT, f)), f + " 不存在"); });
     });
   });
 
