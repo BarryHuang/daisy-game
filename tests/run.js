@@ -306,5 +306,118 @@ describe("v1 相容性", () => {
   });
 });
 
-console.log("\n" + (failed ? "✗ " : "✓ ") + passed + " 通過" + (failed ? "，" + failed + " 失敗" : ""));
-process.exit(failed ? 1 : 0);
+// ════════════════════════════════════════════════════════════════════
+// v2 後院菜園的規則（ES module，用動態 import 載入）
+// ════════════════════════════════════════════════════════════════════
+(async () => {
+  const F = await import(require("url").pathToFileURL(path.join(ROOT, "v2/lab/farm.js")).href);
+  const TODAY = "2026/10/20";      // 每日挑戰的日期字串（v1 用 toLocaleDateString）
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  describe("後院菜園 farm.js：和 v1 共用存檔", () => {
+    it("作物表和 v1 一模一樣（價錢、天數、賣價、經驗）", () => {
+      const html = fs.readFileSync(path.join(ROOT, "daisy_hamster.html"), "utf8");
+      const block = html.slice(html.indexOf("const CROPS = {"), html.indexOf("};", html.indexOf("const CROPS = {")));
+      for (const [k, c] of Object.entries(F.CROPS)) {
+        const m = new RegExp(k + ":\\s*\\{[^}]*cost:\\s*(\\d+),\\s*days:\\s*(\\d+),\\s*sell:\\s*\\[(\\d+),\\s*(\\d+)\\],\\s*exp:\\s*(\\d+)").exec(block);
+        assert.ok(m, "v1 找不到 " + k);
+        assert.deepStrictEqual([c.cost, c.days, c.sell[0], c.sell[1], c.exp], m.slice(1).map(Number), k + " 和 v1 不一樣");
+      }
+      assert.ok(/farm:\s*\[[^\]]*\]/.test(html) && html.match(/garden:[\s\S]*?farm:\s*\[([^\]]*)\]/)[1].split(",").length === F.PLOTS, "田的數量和 v1 不同");
+    });
+
+    it("讀得懂 v1 種下去的菜：v1 前天種的草莓，今天熟了", () => {
+      const v1pet = { coins: 100, farm: { "garden:2": { crop: "straw", day: 20261018 } } };
+      const st = F.plotState(v1pet, 2, 20261020);
+      assert.strictEqual(st.ripe, true);
+      assert.strictEqual(F.plotState(v1pet, 2, 20261019).left, 1);
+      assert.strictEqual(F.plotState(v1pet, 2, 20261019).stage, 1);
+      assert.strictEqual(F.plotState(v1pet, 0, 20261020).empty, true);
+    });
+
+    it("跨月、跨年的天數都對", () => {
+      assert.strictEqual(F.farmDayDiff(20261231, 20270101), 1);
+      assert.strictEqual(F.farmDayDiff(20260228, 20260301), 1);
+      assert.strictEqual(F.farmDayDiff(20261020, 20261020), 0);
+    });
+
+    it("長大的樣子：一天的菜隔天就熟；兩天的菜中間有一個「長大中」", () => {
+      const pet = { farm: { "garden:0": { crop: "carrot", day: 20261020 }, "garden:1": { crop: "pumpkin", day: 20261020 } } };
+      assert.deepStrictEqual([0, 1].map((d) => F.plotState(pet, 0, 20261020 + d).stage), [0, 2]);
+      assert.deepStrictEqual([0, 1, 2].map((d) => F.plotState(pet, 1, 20261020 + d).stage), [0, 1, 2]);
+    });
+
+    it("種菜：扣錢、寫成 v1 的格式 garden:N", () => {
+      const pet = { coins: 50, farm: {} };
+      const r = F.plant(pet, 3, "corn", 20261020, TODAY);
+      assert.strictEqual(r.ok, true);
+      assert.strictEqual(pet.coins, 36);
+      assert.deepStrictEqual(pet.farm["garden:3"], { crop: "corn", day: 20261020 });
+    });
+
+    it("錢不夠、田不是空的 → 存檔一個欄位都不動", () => {
+      const poor = { coins: 7, farm: {}, quests: null };
+      const snap = clone(poor);
+      assert.strictEqual(F.plant(poor, 0, "carrot", 20261020, TODAY).why, "coins");
+      assert.deepStrictEqual(poor, snap);
+      const busy = { coins: 999, farm: { "garden:0": { crop: "corn", day: 20261019 } } };
+      const snap2 = clone(busy);
+      assert.strictEqual(F.plant(busy, 0, "carrot", 20261020, TODAY).why, "busy");
+      assert.deepStrictEqual(busy, snap2);
+    });
+
+    it("還沒熟不能收，存檔不動", () => {
+      const pet = { coins: 10, farm: { "garden:1": { crop: "straw", day: 20261019 } } };
+      const snap = clone(pet);
+      const r = F.harvest(pet, 1, 20261020, TODAY, 0.5);
+      assert.strictEqual(r.why, "unripe"); assert.strictEqual(r.left, 1);
+      assert.deepStrictEqual(pet, snap);
+    });
+
+    it("收成：田變空、金幣在 v1 的賣價範圍內、加經驗和快樂", () => {
+      const mk = () => ({ coins: 0, exp: 0, level: 1, happiness: 98, farm: { "garden:0": { crop: "pumpkin", day: 20261018 } } });
+      const lo = mk(), hi = mk();
+      assert.strictEqual(F.harvest(lo, 0, 20261020, TODAY, 0).gain, 92);
+      assert.strictEqual(F.harvest(hi, 0, 20261020, TODAY, 0.9999).gain, 126);
+      assert.strictEqual(lo.farm["garden:0"], undefined);
+      assert.strictEqual(lo.coins, 92); assert.strictEqual(lo.exp, 28);
+      assert.strictEqual(lo.happiness, 100, "快樂度最多 100");
+    });
+
+    it("快樂度 0 的時候照 v1 的怪癖當成 50（兩邊規則要一致）", () => {
+      const pet = { coins: 0, happiness: 0, farm: { "garden:0": { crop: "carrot", day: 20261019 } } };
+      F.harvest(pet, 0, 20261020, TODAY, 0);
+      assert.strictEqual(pet.happiness, 54);
+    });
+
+    it("經驗滿 level×100 就升級、經驗歸零（v1 一樣）", () => {
+      const pet = { coins: 0, exp: 95, level: 1, farm: { "garden:0": { crop: "corn", day: 20261019 } } };
+      const r = F.harvest(pet, 0, 20261020, TODAY, 0);
+      assert.strictEqual(r.levelUp, true); assert.strictEqual(pet.level, 2); assert.strictEqual(pet.exp, 0);
+    });
+
+    it("每日挑戰：今天的「收成 1 株」完成 → 加獎勵；三件全破再加 30", () => {
+      const pet = { coins: 0, exp: 0, level: 1, farm: { "garden:0": { crop: "carrot", day: 20261019 } },
+        quests: { date: TODAY, v: 2, bonus: false, list: [
+          { id: "harvest", text: "收成 1 株菜", target: 1, current: 0, reward: 16, done: false },
+          { id: "feed", text: "餵倉鼠", target: 2, current: 2, reward: 8, done: true },
+          { id: "bath", text: "洗澡", target: 1, current: 1, reward: 6, done: true } ] } };
+      const r = F.harvest(pet, 0, 20261020, TODAY, 0);
+      assert.strictEqual(r.quest.completed.length, 1);
+      assert.strictEqual(r.quest.allBonus, true);
+      assert.strictEqual(pet.coins, 16 + 16 + 30, "賣價 16 + 挑戰 16 + 全破 30");
+      assert.strictEqual(pet.quests.bonus, true);
+    });
+
+    it("不是今天的挑戰不動（那批留給 v1 換新）", () => {
+      const pet = { coins: 50, farm: {}, quests: { date: "2026/10/19", bonus: false, list: [
+        { id: "plant", text: "種 1 株", target: 1, current: 0, reward: 10, done: false }] } };
+      F.plant(pet, 0, "carrot", 20261020, TODAY);
+      assert.strictEqual(pet.quests.list[0].current, 0);
+      assert.strictEqual(pet.coins, 42, "只扣種子錢，沒有拿到昨天挑戰的獎勵");
+    });
+  });
+
+  console.log("\n" + (failed ? "✗ " : "✓ ") + passed + " 通過" + (failed ? "，" + failed + " 失敗" : ""));
+  process.exit(failed ? 1 : 0);
+})();
