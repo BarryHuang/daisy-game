@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW" data-style="book">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF6EA">
+<title>v2 設計稿</title>
+<link rel="icon" href="../icon-192.png">
+<style>
+/* ════════════════════════════════════════════════════════════════════
+   v2 設計稿 —— 兩種風格、同一份 HTML
+   ════════════════════════════════════════════════════════════════════
+   這頁是 P2a：只有畫面、沒有接資料，讓 Daisy 實際點點看、選一個風格。
+   兩種風格共用同一份標記，差別只在 :root[data-style] 底下的 tokens 和少數
+   元件樣式 —— 這同時也是在驗證：v2 的設計系統真的是 token 驅動的，換皮
+   不用改結構。她選定之後，那一套 tokens 搬進 core/ui.css，另一套刪掉。
+
+   顏色規則（兩種風格都一樣）：
+     題型固定一個顏色，她看顏色就知道要做什麼，不用讀字
+       see 選意思 → sky ｜ hear 聽一聽 → rose ｜ spell 拼拼看 → persimmon
+       use 填句子 → plum ｜ 完成 → leaf ｜ 金幣、寶箱 → wheat
+     有色按鈕上的白字一律 ≥ 20px 粗體（WCAG 大字 3:1）。各色實測：
+       繪本 3.9–5.3、明亮 3.4–4.9；wheat 太亮，上面用墨色字（4.6 / 8.9）
+   ════════════════════════════════════════════════════════════════════ */
+
+@font-face { font-family: "Andika"; font-weight: 400; font-display: swap;
+             src: url("fonts/Andika-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Andika"; font-weight: 700; font-display: swap;
+             src: url("fonts/Andika-Bold.woff2") format("woff2"); }
+
+/* ── 共用 ───────────────────────────────────────────────────────────── */
+:root {
+  --font-en: "Andika", "Comic Neue", system-ui, sans-serif;
+  --font-zh: "PingFang TC", "Noto Sans TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+  --tap: 64px;          /* 主要按鈕的最小高度 */
+  --tap-icon: 48px;     /* 次要的圖示按鈕（🔊、✕） */
+  --gutter: 16px;
+  --chrome-h: 46px;     /* 上方設計稿工具列，正式版沒有 */
+}
+
+/* ── 繪本風：倉鼠住在一本繪本裡 ─────────────────────────────────────── */
+:root[data-style="book"] {
+  --bg: #FBF6EA;  --surface: #FFFDF7;  --surface-2: #F4ECDC;
+  --ink: #4A3F3A; --ink-2: #7A6D62;    --line: #DCCDB4;   --line-ink: #6B5D53;
+  --leaf: #5E8A4A;      --leaf-t: #E5EEDA;      --leaf-d: #4A6E3A;
+  --sky: #4F7FAB;       --sky-t: #E1EBF4;       --sky-d: #3E6589;
+  --rose: #B05A6C;      --rose-t: #F5E2E6;      --rose-d: #8E4757;
+  --persimmon: #BF6A35; --persimmon-t: #F8E5D6; --persimmon-d: #9A552A;
+  --plum: #8A5A8F;      --plum-t: #EEE2EF;      --plum-d: #6E4772;
+  --wheat: #D9A53A;     --wheat-t: #F7EBCB;     --wheat-d: #B0852A;
+  --radius: 22px; --radius-sm: 14px;
+  --title-weight: 700;
+}
+/* ── 明亮遊戲風：對照組 ─────────────────────────────────────────────── */
+:root[data-style="bright"] {
+  --bg: #F4F7FB;  --surface: #FFFFFF;  --surface-2: #EAF0F7;
+  --ink: #25283D; --ink-2: #5C6178;    --line: #D9E1EC;   --line-ink: #25283D;
+  --leaf: #2E9E3E;      --leaf-t: #DDF5DF;      --leaf-d: #1F7A2C;
+  --sky: #1A86D0;       --sky-t: #DCEFFC;       --sky-d: #0F66A3;
+  --rose: #E03E68;      --rose-t: #FCE1E8;      --rose-d: #B32950;
+  --persimmon: #E06A00; --persimmon-t: #FFE9D4; --persimmon-d: #B05200;
+  --plum: #8B4FE0;      --plum-t: #EEE3FD;      --plum-d: #6B33BD;
+  --wheat: #FFC107;     --wheat-t: #FFF3C9;     --wheat-d: #D49E00;
+  --radius: 20px; --radius-sm: 14px;
+  --title-weight: 800;
+}
+
+/* 每個上色的元件只要掛一個 .c-xxx，就拿到這組變數 */
+.c-leaf      { --c: var(--leaf);      --ct: var(--leaf-t);      --cd: var(--leaf-d);      --on: #fff; }
+.c-sky       { --c: var(--sky);       --ct: var(--sky-t);       --cd: var(--sky-d);       --on: #fff; }
+.c-rose      { --c: var(--rose);      --ct: var(--rose-t);      --cd: var(--rose-d);      --on: #fff; }
+.c-persimmon { --c: var(--persimmon); --ct: var(--persimmon-t); --cd: var(--persimmon-d); --on: #fff; }
+.c-plum      { --c: var(--plum);      --ct: var(--plum-t);      --cd: var(--plum-d);      --on: #fff; }
+.c-wheat     { --c: var(--wheat);     --ct: var(--wheat-t);     --cd: var(--wheat-d);     --on: var(--ink); }
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-zh); color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased; overflow: hidden;
+  -webkit-user-select: none; user-select: none;
+}
+/* 繪本：紙張的細顆粒。一張 160px 的雜訊磚，透明度很低，近看才看得到 */
+:root[data-style="book"] body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .35 0 0 0 0 .27 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.en { font-family: var(--font-en); }
+
+/* ── 設計稿工具列（正式版沒有）──────────────────────────────────────── */
+.chrome {
+  position: fixed; inset: 0 0 auto 0; height: var(--chrome-h); z-index: 50;
+  display: flex; align-items: center; gap: 8px; padding: 0 10px;
+  background: #2b2528; color: #f3ece6; font-size: 13px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.chrome::-webkit-scrollbar { display: none; }
+.chrome .lbl { opacity: .6; white-space: nowrap; }
+.seg { display: inline-flex; background: #463d41; border-radius: 999px; padding: 3px; flex: none; }
+.seg button { color: #e7ddd6; padding: 6px 12px; border-radius: 999px; font-size: 13px; white-space: nowrap; min-height: 32px; }
+.seg button[aria-pressed="true"] { background: #f3ece6; color: #2b2528; font-weight: 700; }
+.chrome .spacer { flex: 1; }
+
+/* ── App 外框 ───────────────────────────────────────────────────────── */
+.app { position: fixed; inset: var(--chrome-h) 0 0 0; }
+.screen { position: absolute; inset: 0; display: none; flex-direction: column; overflow: hidden; }
+.screen.on { display: flex; animation: screenIn .32s ease-out; }
+@keyframes screenIn { from { opacity: 0; transform: translateY(8px); } }
+
+/* ── 鉛筆描邊（繪本）／立體按鈕（明亮）──────────────────────────────── */
+/* 繪本的框線是一圈「被 SVG 濾鏡輕微扭曲」的線，看起來像手畫的。濾鏡只套在
+   ::after 那一圈線上，不套在元素本身 —— 套在本身的話字也會跟著抖。 */
+.sketch { position: relative; }
+:root[data-style="book"] .sketch::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  border: 2.2px solid var(--line-ink); border-radius: inherit; opacity: .8;
+  filter: url(#wobble);
+}
+/* 繪本的色塊上有斜向的色鉛筆排線 */
+:root[data-style="book"] .hatch {
+  background-image: repeating-linear-gradient(-32deg, rgba(255,255,255,.17) 0 1.6px, transparent 1.6px 5.5px);
+}
+
+.btn {
+  min-height: var(--tap); padding: 0 28px; border-radius: var(--radius);
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  background-color: var(--c, var(--ink)); color: var(--on, #fff);
+  font-size: 22px; font-weight: 700; letter-spacing: .02em;
+  transition: transform .08s, box-shadow .08s, border-width .08s;
+}
+:root[data-style="bright"] .btn {
+  border-bottom: 5px solid var(--cd, #000);
+}
+:root[data-style="bright"] .btn:active { transform: translateY(3px); border-bottom-width: 2px; }
+:root[data-style="book"] .btn:active { transform: scale(.97) rotate(-.4deg); }
+.btn.wide { width: 100%; }
+.btn.ghost { background: var(--surface); color: var(--ink); }
+:root[data-style="bright"] .btn.ghost { border: 2px solid var(--line); border-bottom-width: 5px; }
+
+.icon-btn {
+  min-width: var(--tap-icon); min-height: var(--tap-icon); border-radius: 999px;
+  display: inline-grid; place-items: center; font-size: 22px;
+  background: var(--surface); flex: none;
+}
+:root[data-style="bright"] .icon-btn { border: 2px solid var(--line); border-bottom-width: 4px; }
+.icon-btn:active { transform: scale(.94); }
+.icon-btn svg { width: 24px; height: 24px; }
+
+.card {
+  background: var(--surface); border-radius: var(--radius);
+}
+:root[data-style="bright"] .card { border: 2px solid var(--line); box-shadow: 0 4px 0 var(--line); }
+
+/* 注音是產品本身，不是裝飾。zhuyin.js 預設 .36em、v1 又用淡灰色 ——
+   第一版設計稿照抄，結果 19px 的按鈕字旁邊注音只剩 7px、灰灰的，根本看不到
+   （截圖才發現）。課本的比例大約是字的四成，顏色和字一樣深。
+   一組字也不能被折成兩行（「第十 / 週」踩過）。 */
+.zh { font-family: var(--font-zh); white-space: nowrap; }
+.zh .zy-col, .zh .zy-rail b { font-size: .42em; color: var(--ink); }
+.btn .zh .zy-col, .btn .zh .zy-rail b, .dot .zh .zy-col { color: inherit; }
+
+/* ── 上方列（每一頁共用）────────────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px var(--gutter) 6px; flex: none;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: var(--tap-icon);
+  padding: 4px 14px 4px 12px; border-radius: 999px; background: var(--surface); font-size: 22px; white-space: nowrap;
+}
+:root[data-style="bright"] .chip { border: 2px solid var(--line); }
+.chip .coin { font-family: var(--font-en); font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums; }
+.topbar .grow { flex: 1; }
+
+/* 進度條 */
+.progress { flex: 1; height: 16px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.progress i { display: block; height: 100%; width: var(--p, 30%); border-radius: inherit;
+              background-color: var(--c); transition: width .4s; }
+:root[data-style="book"] .progress { border: 2px solid var(--line); }
+
+/* ════════════════════════════════════════════════════════════════════
+   ① 今天：一條路
+   ════════════════════════════════════════════════════════════════════ */
+.trail-wrap { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+/* 手機太窄放不下「第十週 星期一」＋金幣，星期幾交給 🔊 唸 */
+@media (max-width: 480px) { .wide-only { display: none; } }
+.trail-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.trail-path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+:root[data-style="book"] .trail-path { stroke: var(--ink-2); stroke-width: 3.2; stroke-dasharray: 1 11; opacity: .7; }
+:root[data-style="bright"] .trail-path { stroke: var(--line); stroke-width: 14; }
+:root[data-style="bright"] .tree { display: none; }
+
+.station {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.station .dot {
+  width: 84px; height: 84px; border-radius: 999px; display: grid; place-items: center;
+  font-size: 38px; background-color: var(--c); color: var(--on);
+  transition: transform .15s;
+}
+.station .dot:active { transform: scale(.94); }
+:root[data-style="bright"] .station .dot { border-bottom: 6px solid var(--cd); }
+.station .name {
+  font-size: 23px; font-weight: 700; line-height: 1.2; padding: 2px 10px;
+  border-radius: 999px; background: var(--surface); white-space: nowrap;
+}
+.station.done .dot { background-color: var(--leaf); }
+:root[data-style="bright"] .station.done .dot { border-bottom-color: var(--leaf-d); }
+.station.done .dot::before { content: "✓"; font-family: var(--font-en); font-weight: 700; color: #fff; font-size: 40px; }
+.station.done .dot .em { display: none; }
+.station.later .dot { background-color: var(--surface); color: var(--ink-2); filter: saturate(.25); }
+:root[data-style="book"] .station.later .dot::after { border-style: dashed; }
+:root[data-style="bright"] .station.later .dot { border: 3px solid var(--line); border-bottom-width: 6px; }
+.station.now .dot { animation: nowPulse 1.8s ease-in-out infinite; }
+@keyframes nowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 45%, transparent); }
+  50%      { box-shadow: 0 0 0 14px color-mix(in srgb, var(--c) 0%, transparent); }
+}
+.hamster {
+  position: absolute; width: 74px; height: 74px; pointer-events: none;
+  transform: translate(-50%, -100%); animation: bob 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 3px rgba(60,40,30,.18));
+}
+@keyframes bob { 50% { transform: translate(-50%, calc(-100% - 6px)); } }
+
+/* 下方分頁列 */
+.tabbar {
+  display: flex; flex: none; gap: 6px; padding: 8px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+:root[data-style="book"] .tabbar { border-top: 2px solid var(--line); }
+:root[data-style="bright"] .tabbar { border-top: 2px solid var(--line); }
+.tab {
+  flex: 1; min-height: var(--tap); border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-size: 19px; color: var(--ink-2);
+}
+.tab .ti { font-size: 26px; line-height: 1; }
+.tab .ti img { width: 30px; height: 30px; display: block; }
+.tab[aria-current="page"] { color: var(--ink); background: var(--surface-2); font-weight: 700; }
+
+/* ════════════════════════════════════════════════════════════════════
+   ② 新字卡
+   ════════════════════════════════════════════════════════════════════ */
+.stage {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; padding: 8px var(--gutter) 16px;
+}
+.wordcard {
+  width: min(560px, 100%); padding: 26px 22px 22px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.wordcard .pic {
+  width: 132px; height: 132px; border-radius: 999px; display: grid; place-items: center;
+  font-size: 76px; background-color: var(--ct);
+}
+.word-row { display: flex; align-items: center; gap: 12px; }
+.word { font-family: var(--font-en); font-size: clamp(56px, 15vw, 84px); font-weight: 700; line-height: 1; letter-spacing: .01em; }
+.meaning { font-size: clamp(40px, 10vw, 52px); font-weight: 700; }
+.example {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: var(--radius-sm); background: var(--surface-2);
+  font-family: var(--font-en); font-size: clamp(22px, 5.6vw, 27px); line-height: 1.4;
+}
+.example b { color: var(--c); }
+.example span { flex: 1; }
+.actions { width: min(560px, 100%); }
+
+/* ════════════════════════════════════════════════════════════════════
+   ③ 拼拼看
+   ════════════════════════════════════════════════════════════════════ */
+.spell-prompt { display: flex; align-items: center; gap: 16px; padding: 14px 18px; width: min(560px, 100%); }
+.spell-prompt .pic { width: 92px; height: 92px; flex: none; border-radius: 999px;
+                     display: grid; place-items: center; font-size: 54px; background-color: var(--ct); }
+.spell-prompt .meaning { font-size: 40px; flex: 1; }
+.slots { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.slot {
+  width: clamp(42px, 11vw, 58px); height: clamp(54px, 14vw, 72px); border-radius: var(--radius-sm);
+  display: grid; place-items: center; background: var(--surface);
+  font-family: var(--font-en); font-size: clamp(34px, 9vw, 46px); font-weight: 700;
+}
+:root[data-style="book"] .slot { border-bottom: 4px solid var(--line-ink); border-radius: 6px 6px 2px 2px; background: transparent; }
+:root[data-style="bright"] .slot { border: 2px solid var(--line); border-bottom-width: 5px; }
+.slot.cur { color: var(--c); }
+:root[data-style="book"] .slot.cur { border-bottom-color: var(--c); border-bottom-width: 6px; }
+:root[data-style="bright"] .slot.cur { border-color: var(--c); }
+.slot.filled { animation: pop .25s; }
+.slots.win .slot { color: var(--leaf); }
+:root[data-style="bright"] .slots.win .slot { border-color: var(--leaf); background: var(--leaf-t); }
+:root[data-style="book"] .slots.win .slot { border-bottom-color: var(--leaf); }
+@keyframes pop { 50% { transform: scale(1.14); } }
+
+.praise { min-height: 58px; display: flex; align-items: center; justify-content: center; gap: 10px;
+          font-size: 32px; font-weight: 700; color: var(--leaf); }
+
+.keyboard { flex: none; width: 100%; max-width: 820px; margin: 0 auto;
+            padding: 6px 6px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 7px; }
+.krow { display: flex; gap: 6px; justify-content: center; }
+.key {
+  flex: 1; max-width: 72px; min-height: 58px; border-radius: 12px;
+  font-family: var(--font-en); font-size: 28px; background: var(--surface);
+  display: grid; place-items: center;
+}
+:root[data-style="book"] .key { border: 1.8px solid var(--line); box-shadow: 0 2px 0 var(--line); }
+:root[data-style="bright"] .key { border: 2px solid var(--line); border-bottom-width: 5px; font-weight: 700; }
+.key:active { transform: translateY(2px); }
+.key.nope { animation: nope .32s; }
+/* 答錯不羞辱：不變紅，只輕輕搖一下 */
+@keyframes nope { 25% { transform: translateX(-5px) rotate(-3deg); } 75% { transform: translateX(5px) rotate(3deg); } }
+/* 同一格錯兩次之後，正確的那顆鍵輕輕亮起來 */
+.key.hint { background-color: var(--leaf-t); outline: 3px solid var(--leaf); outline-offset: 1px; animation: hintGlow 1.2s ease-in-out infinite; }
+@keyframes hintGlow { 50% { outline-offset: 4px; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   ④ 寶箱
+   ════════════════════════════════════════════════════════════════════ */
+.chest-stage { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 12px var(--gutter) 20px; text-align: center; }
+.chest-title { font-size: clamp(34px, 8.5vw, 44px); font-weight: var(--title-weight); }
+.chest-scene { position: relative; width: 260px; height: 220px; }
+.chest-scene .hamster-big { position: absolute; left: -6px; bottom: 6px; width: 100px; transition: transform .4s; }
+.chest-scene.open .hamster-big { animation: hop .55s 2; }
+@keyframes hop { 40% { transform: translateY(-34px) rotate(-6deg); } }
+.chest { position: absolute; right: 8px; bottom: 0; width: 170px; height: 150px; }
+.chest .lid { transform-box: fill-box; transform-origin: 8% 100%; transition: transform .55s cubic-bezier(.3,1.6,.5,1); }
+.chest-scene.open .chest .lid { transform: rotate(-38deg) translateY(-6px); }
+.chest .glow { opacity: 0; transition: opacity .4s .15s; }
+.chest-scene.open .chest .glow { opacity: 1; }
+.fly-coin { position: absolute; font-size: 30px; left: 70%; top: 40%; pointer-events: none; animation: fly 1s ease-out forwards; }
+@keyframes fly { to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+.reward { font-family: var(--font-en); font-size: 54px; font-weight: 700; color: var(--wheat-d); font-variant-numeric: tabular-nums; min-height: 64px; }
+.streak { font-size: 22px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   iPad 橫放
+   ════════════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (min-width: 900px) {
+  :root { --gutter: 28px; }
+  .wordcard.split { width: min(920px, 100%); display: grid; grid-template-columns: 1fr 1.1fr; align-items: center; column-gap: 32px; padding: 30px 36px; }
+  .wordcard.split .left { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .wordcard.split .right { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+  .actions { width: min(920px, 100%); display: flex; justify-content: flex-end; }
+  /* 平板拿在手上離眼睛比手機遠，字要更大，不然整張卡縮在畫面中間 */
+  .wordcard.split .pic { width: 190px; height: 190px; font-size: 110px; }
+  .word { font-size: 112px; }
+  .meaning { font-size: 72px; }
+  .example { font-size: 34px; padding: 20px 22px; }
+  .spell-prompt { width: min(720px, 100%); }
+  .spell-prompt .pic { width: 120px; height: 120px; font-size: 72px; }
+  .spell-prompt .meaning { font-size: 56px; }
+  .slot { width: 76px; height: 92px; font-size: 60px; }
+  .key { min-height: 66px; font-size: 32px; }
+  .chest-scene { transform: scale(1.25); margin: 24px 0; }
+  .actions .btn.wide { width: auto; min-width: 280px; }
+}
+.left, .right { display: contents; }
+@media (orientation: landscape) and (min-width: 900px) { .left, .right { display: flex; } }
+
+/* ── 語音檢查 ───────────────────────────────────────────────────────── */
+dialog { border: 0; border-radius: 18px; padding: 20px; width: min(520px, 92vw); color: #2b2528; font-family: var(--font-zh); }
+dialog::backdrop { background: rgba(30,20,25,.5); }
+dialog h3 { font-size: 19px; margin-bottom: 6px; }
+dialog p { font-size: 14px; color: #6b5f63; line-height: 1.6; }
+.vrow { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px; border-radius: 12px; background: #f5efea; }
+.vrow .st { font-size: 22px; }
+.vrow .t { flex: 1; font-size: 15px; }
+.vrow .t small { display: block; color: #6b5f63; font-size: 12.5px; }
+.vrow button { padding: 8px 14px; border-radius: 10px; background: #2b2528; color: #fff; font-size: 14px; min-height: 40px; }
+dialog .close { margin-top: 16px; width: 100%; padding: 12px; border-radius: 12px; background: #e9e1db; font-size: 15px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- 鉛筆描邊的濾鏡：雜訊推一下線條，邊緣就不再是完美的幾何線 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="wobble" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<!-- 設計稿工具列：正式版沒有這條 -->
+<div class="chrome" role="toolbar" aria-label="設計稿控制">
+  <span class="lbl">風格</span>
+  <div class="seg" id="seg-style">
+    <button data-style="book" aria-pressed="true">📖 繪本</button>
+    <button data-style="bright" aria-pressed="false">✨ 明亮</button>
+  </div>
+  <span class="lbl">畫面</span>
+  <div class="seg" id="seg-screen">
+    <button data-go="today" aria-pressed="true">今天</button>
+    <button data-go="card" aria-pressed="false">新字</button>
+    <button data-go="spell" aria-pressed="false">拼寫</button>
+    <button data-go="chest" aria-pressed="false">寶箱</button>
+  </div>
+  <span class="spacer"></span>
+  <div class="seg"><button id="btn-voice" aria-pressed="false">🔈 語音檢查</button></div>
+  <!-- 回 v1：v2 是平行試用，隨時要回得去。進度和金幣兩邊共用 -->
+  <div class="seg"><button onclick="location.href='../daisy_hamster.html'">← 回 v1</button></div>
+</div>
+
+<main class="app">
+
+  <!-- ① 今天 ─────────────────────────────────────────────────────── -->
+  <section class="screen on" data-screen="today" aria-label="今天">
+    <div class="topbar">
+      <button class="chip sketch" data-say="今天是第十週，星期一。今天有四關，走到最後可以開寶箱。">
+        <span class="zh" data-zy="第十週|ㄉㄧˋ ㄕˊ ㄓㄡ"></span>
+        <span class="zh wide-only" style="color:var(--ink-2)" data-zy="星期一|ㄒㄧㄥ ㄑㄧˊ ㄧ"></span>
+        <span aria-hidden="true">🔊</span>
+      </button>
+      <span class="grow"></span>
+      <span class="chip sketch"><span aria-hidden="true">🪙</span><span class="coin" id="coins-today">1,240</span></span>
+    </div>
+    <div class="trail-wrap" id="trail"></div>
+    <nav class="tabbar">
+      <button class="tab" aria-current="page"><span class="ti">🛤️</span><span class="zh" data-zy="今天|ㄐㄧㄣ ㄊㄧㄢ"></span></button>
+      <button class="tab"><span class="ti"><img src="art/hamster.svg" alt=""></span><span class="zh" data-zy="倉鼠|ㄘㄤ ㄕㄨˇ"></span></button>
+      <button class="tab"><span class="ti">📚</span><span class="zh" data-zy="書架|ㄕㄨ ㄐㄧㄚˋ"></span></button>
+    </nav>
+  </section>
+
+  <!-- ② 新字卡 ───────────────────────────────────────────────────── -->
+  <section class="screen c-sky" data-screen="card" aria-label="看新字">
+    <div class="topbar">
+      <button class="icon-btn sketch" data-go="today" aria-label="回到今天">✕</button>
+      <div class="progress sketch"><i class="hatch" style="--p:25%"></i></div>
+      <button class="icon-btn sketch" data-say="看新字。聽一聽，看一看，記住它。" aria-label="說明">🔊</button>
+    </div>
+    <div class="stage">
+      <div class="wordcard card sketch split">
+        <div class="left">
+          <div class="pic">⛈️</div>
+          <div class="word-row">
+            <span class="word">storm</span>
+            <button class="icon-btn sketch" data-en="storm" aria-label="唸 storm">🔊</button>
+          </div>
+        </div>
+        <div class="right">
+          <div class="meaning zh" data-zy="暴風雨|ㄅㄠˋ ㄈㄥ ㄩˇ"></div>
+          <div class="example">
+            <span>A big <b>storm</b> is coming.</span>
+            <button class="icon-btn sketch" data-en="A big storm is coming." aria-label="唸例句">🔊</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn wide sketch hatch c-sky" data-go="spell">
+          <span class="zh" data-zy="下一個|ㄒㄧㄚˋ ㄧ ㄍㄜ˙"></span><span aria-hidden="true">→</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 拼拼看 ───────────────────────────────────────────────────── -->
+  <section class="screen c-persimmon" data-screen="spell" aria-label="拼拼看">
+    <div class="topbar">
+      <button class="icon-btn sketch" data-go="today" aria-label="回到今天">✕</button>
+      <div class="progress sketch"><i class="hatch" style="--p:40%"></i></div>
+      <button class="icon-btn sketch" data-say="拼拼看。聽英文，把它拼出來。" aria-label="說明">🔊</button>
+    </div>
+    <div class="stage" style="justify-content:space-evenly; gap:10px">
+      <div class="spell-prompt card sketch">
+        <div class="pic">🏝️</div>
+        <div class="meaning zh" data-zy="島嶼|ㄉㄠˇ ㄩˇ"></div>
+        <button class="icon-btn sketch" data-en="island" aria-label="唸 island">🔊</button>
+      </div>
+      <div class="slots" id="slots"></div>
+      <div class="praise" id="praise" aria-live="polite"></div>
+    </div>
+    <div class="keyboard" id="keyboard"></div>
+  </section>
+
+  <!-- ④ 寶箱 ─────────────────────────────────────────────────────── -->
+  <section class="screen c-wheat" data-screen="chest" aria-label="寶箱">
+    <div class="topbar">
+      <button class="icon-btn sketch" data-go="today" aria-label="回到今天">✕</button>
+      <span class="grow"></span>
+      <span class="chip sketch"><span aria-hidden="true">🪙</span><span class="coin" id="coins-chest">1,240</span></span>
+    </div>
+    <div class="chest-stage">
+      <button class="chest-title zh" data-say="今天完成了！" data-zy="今天完成了|ㄐㄧㄣ ㄊㄧㄢ ㄨㄢˊ ㄔㄥˊ ㄌㄜ˙"></button>
+      <div class="chest-scene" id="chest-scene">
+        <img class="hamster-big" src="art/hamster.svg" alt="">
+        <svg class="chest" viewBox="0 0 170 150" aria-hidden="true">
+          <ellipse class="glow" cx="85" cy="70" rx="70" ry="34" fill="var(--wheat-t)"/>
+          <g stroke="var(--line-ink)" stroke-width="3" stroke-linejoin="round">
+            <rect x="14" y="70" width="142" height="74" rx="10" fill="var(--wheat)"/>
+            <rect x="14" y="96" width="142" height="12" fill="var(--wheat-d)"/>
+            <rect x="74" y="88" width="22" height="28" rx="5" fill="var(--surface)"/>
+            <g class="lid">
+              <path d="M14 72 V54 Q14 22 85 22 Q156 22 156 54 V72 Z" fill="var(--wheat)"/>
+              <path d="M40 30 Q40 60 40 72 M130 30 Q130 60 130 72" fill="none" stroke="var(--wheat-d)" stroke-width="10"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="reward" id="reward" aria-live="polite"></div>
+      <div class="streak card sketch c-persimmon" style="background:var(--ct)">
+        <span aria-hidden="true">🔥</span><span class="zh" data-zy="連續五天|ㄌㄧㄢˊ ㄒㄩˋ ㄨˇ ㄊㄧㄢ"></span>
+      </div>
+      <div class="actions" style="display:flex; flex-direction:column; gap:12px; margin-top:6px">
+        <button class="btn wide sketch hatch c-wheat" id="btn-open">
+          <span aria-hidden="true">🎁</span><span class="zh" data-zy="打開寶箱|ㄉㄚˇ ㄎㄞ ㄅㄠˇ ㄒㄧㄤ"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="voice-dlg">
+  <h3>🔈 語音檢查</h3>
+  <p>v2 的每一句說明都會用中文唸給她聽，英文單字用英文唸。
+     請在<b>她平常用的那台平板</b>上打開這一頁，看兩種語音是不是都有。</p>
+  <div id="voice-rows"></div>
+  <button class="close" onclick="this.closest('dialog').close()">關閉</button>
+</dialog>
+
+<script src="../zhuyin.js"></script>
+<script src="../audio.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $  = (s, el) => (el || document).querySelector(s);
+  const $$ = (s, el) => [...(el || document).querySelectorAll(s)];
+
+  // ── 介面上的中文全部帶注音 ────────────────────────────────────────
+  // README 的核心洞察：她聽得懂、只是讀不懂中文字。所以連按鈕上的字也要有
+  // 注音。寫法是 data-zy="中文|注音 注音 注音"，一個字對一組。
+  $$('[data-zy]').forEach((el) => {
+    const [zh, zy] = el.dataset.zy.split('|');
+    el.innerHTML = renderZhuyin(zh, zy.split(' '));
+  });
+
+  // ── 聲音 ────────────────────────────────────────────────────────
+  const A = window.daisyAudio;
+  const sfx = (n) => { try { A && A.sfx(n); } catch (e) {} };
+  let voices = [];
+  const loadVoices = () => { voices = (window.speechSynthesis && speechSynthesis.getVoices()) || []; };
+  loadVoices();
+  if (window.speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices;
+  const pick = (lang) => voices.find((v) => v.lang === lang)
+    || voices.find((v) => v.lang.replace('_', '-').startsWith(lang.split('-')[0] + '-' + (lang.split('-')[1] || '')))
+    || voices.find((v) => v.lang.startsWith(lang.split('-')[0]));
+  function say(text, lang) {
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang; const v = pick(lang); if (v) u.voice = v;
+    u.rate = lang.startsWith('en') ? .85 : .95;
+    speechSynthesis.speak(u);
+  }
+  document.addEventListener('pointerdown', () => { try { A && A.unlock(); } catch (e) {} }, { once: true });
+  document.addEventListener('click', (e) => {
+    const s = e.target.closest('[data-say]'); if (s) { sfx('click'); say(s.dataset.say, 'zh-TW'); }
+    const en = e.target.closest('[data-en]'); if (en) { sfx('click'); say(en.dataset.en, 'en-US'); }
+  });
+
+  // ── 工具列：換風格、換畫面 ────────────────────────────────────────
+  const root = document.documentElement;
+  function setStyle(s) {
+    root.dataset.style = s;
+    $$('#seg-style button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.style === s));
+    $('meta[name=theme-color]').content = s === 'book' ? '#FBF6EA' : '#F4F7FB';
+    try { localStorage.setItem('daisy2_design_style', s); } catch (e) {}
+    drawTrail();
+  }
+  $$('#seg-style button').forEach((b) => b.onclick = () => setStyle(b.dataset.style));
+
+  function go(name) {
+    $$('.screen').forEach((s) => s.classList.toggle('on', s.dataset.screen === name));
+    $$('#seg-screen button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.go === name));
+    if (name === 'today') drawTrail();
+    if (name === 'spell') resetSpell();
+    if (name === 'chest') resetChest();
+  }
+  document.addEventListener('click', (e) => {
+    const g = e.target.closest('[data-go]'); if (g) { if (!g.closest('.chrome')) sfx('whoosh'); go(g.dataset.go); }
+  });
+
+  // ════════════════════════════════════════════════════════════════
+  // ① 今天：一條路
+  // ════════════════════════════════════════════════════════════════
+  // 以 Wk 10 週一為例（新字週，四種題型都會出現）。
+  const STATIONS = [
+    { zy: '看新字|ㄎㄢˋ ㄒㄧㄣ ㄗˋ', em: '📖', c: 'sky',       say: '看新字',  state: 'done',  go: 'card' },
+    { zy: '聽一聽|ㄊㄧㄥ ㄧ ㄊㄧㄥ',  em: '👂', c: 'rose',      say: '聽一聽',  state: 'now',   go: 'card' },
+    { zy: '拼拼看|ㄆㄧㄣ ㄆㄧㄣ ㄎㄢˋ', em: '✏️', c: 'persimmon', say: '拼拼看',  state: 'later', go: 'spell' },
+    { zy: '填句子|ㄊㄧㄢˊ ㄐㄩˋ ㄗ˙', em: '🧩', c: 'plum',      say: '填句子',  state: 'later', go: 'card' },
+    { zy: '寶箱|ㄅㄠˇ ㄒㄧㄤ',        em: '🎁', c: 'wheat',     say: '寶箱',    state: 'later', go: 'chest' },
+  ];
+
+  /** 直放是由上往下的 S 形，橫放是由左往右的波浪 */
+  function stationPoints(w, h) {
+    const n = STATIONS.length, land = w > h * 1.15;
+    return STATIONS.map((_, i) => {
+      const t = i / (n - 1);
+      return land
+        ? { x: w * (.1 + .8 * t), y: h * (.5 + (i % 2 ? .17 : -.17)) }
+        : { x: w * (.5 + (i % 2 ? .23 : -.23) * (i === n - 1 ? 0 : 1)), y: h * (.1 + .78 * t) };
+    });
+  }
+  /** 穿過所有點的平滑曲線（每段用中點當控制點） */
+  function smoothPath(p, land) {
+    let d = `M${p[0].x},${p[0].y}`;
+    for (let i = 1; i < p.length; i++) {
+      const a = p[i - 1], b = p[i];
+      d += land
+        ? ` C${(a.x + b.x) / 2},${a.y} ${(a.x + b.x) / 2},${b.y} ${b.x},${b.y}`
+        : ` C${a.x},${(a.y + b.y) / 2} ${b.x},${(a.y + b.y) / 2} ${b.x},${b.y}`;
+    }
+    return d;
+  }
+  /** 繪本風的小樹叢：像世界地圖那樣一叢一叢的點。位置用固定種子，每次畫都一樣 */
+  function trees(w, h, pts) {
+    let x = 7, out = '';
+    const rnd = () => (x = (x * 9301 + 49297) % 233280) / 233280;
+    for (let k = 0; k < 22; k++) {
+      const cx = rnd() * w, cy = rnd() * h;
+      if (pts.some((p) => Math.hypot(p.x - cx, p.y - cy) < 78)) continue;   // 別擋到站
+      const r = 7 + rnd() * 9;
+      out += `<g class="tree" opacity=".85">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--leaf-t)" stroke="var(--leaf)" stroke-width="1.4" filter="url(#wobble)"/>
+        <circle cx="${cx + r * .8}" cy="${cy + r * .35}" r="${r * .7}" fill="var(--leaf-t)" stroke="var(--leaf)" stroke-width="1.4" filter="url(#wobble)"/>
+        <line x1="${cx + r * .3}" y1="${cy + r}" x2="${cx + r * .3}" y2="${cy + r * 1.6}" stroke="var(--ink-2)" stroke-width="1.6"/>
+      </g>`;
+    }
+    return out;
+  }
+  function drawTrail() {
+    const box = $('#trail'); if (!box || !box.offsetParent) return;
+    const w = box.clientWidth, h = box.clientHeight, land = w > h * 1.15;
+    const pts = stationPoints(w, h);
+    box.innerHTML =
+      `<svg class="trail-svg" viewBox="0 0 ${w} ${h}" aria-hidden="true">
+         ${trees(w, h, pts)}
+         <path class="trail-path" d="${smoothPath(pts, land)}"/>
+       </svg>` +
+      STATIONS.map((s, i) => `
+        <div class="station ${s.state} c-${s.c}" style="left:${pts[i].x}px; top:${pts[i].y}px">
+          <button class="dot sketch hatch" data-go="${s.go}" data-say="${s.say}" aria-label="${s.say}">
+            <span class="em">${s.em}</span>
+          </button>
+          <span class="name zh">${renderZhuyin(...(([a, b]) => [a, b.split(' ')])(s.zy.split('|')))}</span>
+        </div>`).join('') +
+      (() => {
+        const i = STATIONS.findIndex((s) => s.state === 'now'), p = pts[i];
+        return `<img class="hamster" src="art/hamster.svg" alt="" style="left:${p.x + (land ? 0 : (i % 2 ? -78 : 78))}px; top:${p.y - (land ? 46 : 0)}px">`;
+      })();
+  }
+  addEventListener('resize', drawTrail);
+
+  // ════════════════════════════════════════════════════════════════
+  // ③ 拼拼看：小寫，跟學校教的手寫印刷體一樣（Andika 的 a、g 是單層的）
+  // ════════════════════════════════════════════════════════════════
+  const TARGET = 'island';
+  let idx = 0, misses = 0;
+  function resetSpell() {
+    idx = 0; misses = 0;
+    $('#slots').className = 'slots';
+    $('#slots').innerHTML = [...TARGET].map((_, i) => `<div class="slot${i ? '' : ' cur'}"></div>`).join('');
+    $('#praise').innerHTML = '';
+    $$('.key').forEach((k) => k.classList.remove('hint'));
+  }
+  $('#keyboard').innerHTML = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'].map((r) =>
+    `<div class="krow">${[...r].map((ch) => `<button class="key" data-k="${ch}">${ch}</button>`).join('')}</div>`).join('');
+  $('#keyboard').addEventListener('click', (e) => {
+    const k = e.target.closest('.key'); if (!k || idx >= TARGET.length) return;
+    const slots = $$('.slot');
+    if (k.dataset.k === TARGET[idx]) {
+      sfx('pop');
+      $$('.key').forEach((x) => x.classList.remove('hint'));
+      slots[idx].textContent = TARGET[idx]; slots[idx].classList.remove('cur'); slots[idx].classList.add('filled');
+      idx++; misses = 0;
+      if (idx < TARGET.length) slots[idx].classList.add('cur');
+      else win();
+    } else {
+      // 答錯不羞辱：鍵輕輕搖一下、軟軟的一聲，不變紅
+      sfx('bump');
+      k.classList.remove('nope'); void k.offsetWidth; k.classList.add('nope');
+      if (++misses >= 2) $(`.key[data-k="${TARGET[idx]}"]`).classList.add('hint');
+    }
+  });
+  function win() {
+    $('#slots').classList.add('win');
+    sfx('success');
+    $('#praise').innerHTML = '<span aria-hidden="true">✨</span>' + renderZhuyin('拼對了', ['ㄆㄧㄣ', 'ㄉㄨㄟˋ', 'ㄌㄜ˙']) + '<span aria-hidden="true">✨</span>';
+    setTimeout(() => say('拼對了！', 'zh-TW'), 250);
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // ④ 寶箱
+  // ════════════════════════════════════════════════════════════════
+  let opened = false;
+  function resetChest() {
+    opened = false;
+    $('#chest-scene').classList.remove('open');
+    $('#reward').textContent = '';
+    $('#coins-chest').textContent = '1,240';
+    $('#btn-open').innerHTML = '<span aria-hidden="true">🎁</span>' + renderZhuyin('打開寶箱', ['ㄉㄚˇ', 'ㄎㄞ', 'ㄅㄠˇ', 'ㄒㄧㄤ']);
+    // 要拿掉屬性，不能設成空字串：全頁的 [data-go] 委派會把 "" 當成畫面名稱，
+    // go('') 會把四個畫面全部藏起來
+    delete $('#btn-open').dataset.go;
+  }
+  $('#btn-open').addEventListener('click', (e) => {
+    if (opened) return;
+    e.stopPropagation(); opened = true;
+    const scene = $('#chest-scene');
+    scene.classList.add('open'); sfx('levelup');
+    for (let i = 0; i < 12; i++) {
+      const c = document.createElement('span');
+      c.className = 'fly-coin'; c.textContent = '🪙';
+      c.style.setProperty('--dx', (Math.random() * 220 - 110) + 'px');
+      c.style.setProperty('--dy', (-60 - Math.random() * 130) + 'px');
+      c.style.setProperty('--r', (Math.random() * 360) + 'deg');
+      c.style.animationDelay = (i * 45) + 'ms';
+      scene.appendChild(c); setTimeout(() => c.remove(), 1600);
+    }
+    // 金幣慢慢數上去
+    let n = 0; const add = 60, base = 1240;
+    const tick = () => {
+      n = Math.min(add, n + 3);
+      $('#reward').textContent = '+' + n;
+      $('#coins-chest').textContent = (base + n).toLocaleString();
+      if (n % 9 === 0) sfx('coin');
+      if (n < add) requestAnimationFrame(tick);
+    };
+    setTimeout(tick, 350);
+    setTimeout(() => say('拿到六十個金幣！', 'zh-TW'), 500);
+    const b = $('#btn-open');
+    setTimeout(() => {
+      b.innerHTML = '<img src="art/hamster.svg" alt="" style="width:30px">' + renderZhuyin('去找倉鼠玩', ['ㄑㄩˋ', 'ㄓㄠˇ', 'ㄘㄤ', 'ㄕㄨˇ', 'ㄨㄢˊ']);
+      b.dataset.go = 'today';
+    }, 1300);
+  });
+
+  // ── 語音檢查 ────────────────────────────────────────────────────
+  $('#btn-voice').onclick = () => {
+    loadVoices();
+    const row = (lang, label, sample) => {
+      const v = pick(lang);
+      const ok = !!v;
+      return `<div class="vrow"><span class="st">${ok ? '✅' : '⚠️'}</span>
+        <span class="t">${label}<small>${ok ? v.name + '（' + v.lang + '）' : '這台裝置找不到 ' + lang + ' 的語音'}</small></span>
+        <button data-test="${lang}|${sample}">試聽</button></div>`;
+    };
+    $('#voice-rows').innerHTML = !window.speechSynthesis
+      ? '<div class="vrow"><span class="st">⚠️</span><span class="t">這個瀏覽器不支援語音合成</span></div>'
+      : row('zh-TW', '中文說明（台灣國語）', '拼拼看。聽英文，把它拼出來。') + row('en-US', '英文單字', 'A big storm is coming.')
+        + `<p style="margin-top:12px">共找到 ${voices.length} 個語音。⚠️ 的話，v2 會改用預錄的音檔（約 20 句說明）。</p>`;
+    $('#voice-dlg').showModal();
+  };
+  $('#voice-rows').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-test]'); if (!b) return;
+    const [lang, text] = b.dataset.test.split('|'); say(text, lang);
+  });
+
+  // ── 開場 ────────────────────────────────────────────────────────
+  let saved = null; try { saved = localStorage.getItem('daisy2_design_style'); } catch (e) {}
+  setStyle(saved === 'bright' ? 'bright' : 'book');
+  const want = (location.hash || '').slice(1);
+  go(['today', 'card', 'spell', 'chest'].includes(want) ? want : 'today');
+})();
+</script>
+</body>
+</html>

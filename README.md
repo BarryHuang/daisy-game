@@ -36,7 +36,8 @@ Realtime Database 跨裝置同步，倉鼠寵物當獎勵層。
 | `inflect.js` | 詞形還原：產生候選字形再去索引裡試。含英式→美式拼法 |
 | `lookups.js` | 記錄查過的單字。先寫 localStorage，有登入才同步雲端 |
 | `wordlists.js` | 她自己建的單字卡清單。在字典加字，會出現在 `flashcards.html` 和遊戲選單 |
-| `mastery.js` | 每個字的答對／答錯／連對次數 |
+| `mastery.js` | 每個字的答對／答錯／連對次數，加上 v2 的**間隔複習**：每個題型（see / hear / spell / use）一個 Leitner 盒，同一題型一天最多升一盒。v1 的 `isMastered` / `getWeakWords` 語意不變。第一次載入會把舊資料備份到 `daisy_mastery_v1_backup` 再遷移 |
+| `calendar.js` | 學期日曆：今天是第幾週、這週學哪一組、哪天考試、複習週要複習哪幾週。換學期改 `TERM`；放假週填進 `skipWeeks` |
 | `rewards.js` | `awardCoins()`：遊戲把金幣加進倉鼠存檔。用 transaction，因為倉鼠頁可能同時開著並整包寫回 `petData` |
 | `wordset.js` | 進遊戲時隨機挑一組單字集。`pickRandomCategory()` / `applyPendingWeek()` 各加一行，見下面第 13 條 |
 | `audio.js` | 音效（`sfx/*.wav`）與背景音樂（Web Audio 即時演奏）。`menu.js` 會自動載入，每一頁都有 |
@@ -626,6 +627,15 @@ python3 -m http.server 8123
 
 Service Worker 需要 `http://` 或 `localhost`，用 `file://` 開測不到離線功能。
 
+**改了 `calendar.js` 或 `mastery.js` 一定要跑單元測試**（零依賴，只用 node 內建的 `assert`）：
+
+```bash
+node tests/run.js
+```
+
+測的是純邏輯：週次換算（含合併週 `Wk 1&2`、放假週順延）、記憶盒的升降、
+「同一天連對三次只升一盒」、v1 資料遷移、跨裝置合併。有失敗就 exit 1。
+
 **部署前一定要跑**（`CACHE_NAME` 不再手動改）：
 
 ```bash
@@ -876,3 +886,28 @@ python3 tools/fix_inflections.py             # 直接改 cedict.js
 `build_cedict.py`（CC-CEDICT → `cedict.js`）、`build_irregular.py`（不規則
 變化表）、`migrate_words.py`（`words.js` 格式遷移）。
 需要 `pypinyin`、`opencc-python-reimplemented`、`wordfreq`、`jieba`、`lemminflect`。
+
+---
+
+## v2（進行中，`/v2/`）
+
+完整規劃見 PR 描述。一句話：從「25 個選單項目的工具箱」變成「每天 10 分鐘的引導式學習」——
+App 知道這是第幾週（`calendar.js`）、哪些字快忘了（`mastery.js` 的記憶盒），自動排好今天要做的事。
+
+和 v1 **平行**：資料層共用（同一份 `daisy_mastery`、同一份 `petData`），UI 在 `/v2/` 全新建立，
+兩邊賺的金幣、練的字互相看得到。滿意之後再把根目錄的 `index.html` 轉過去。
+
+| 檔案 | 內容 |
+|---|---|
+| `v2/design.html` | P2a 設計稿：四個畫面 × 兩種風格（📖 繪本／✨ 明亮），上方工具列切換。**給 Daisy 選風格用**。🔈 語音檢查要在她的平板上開 |
+| `v2/art/hamster.svg` | 從 `daisy_hamster.html` 抽出來的同一隻倉鼠。改長相兩邊一起改 |
+| `v2/fonts/Andika-*.woff2` | SIL 的 Andika，**未修改的原檔**（OFL 1.1，見同目錄 `OFL.txt`）。`a`、`g` 是單層的，和學校教的手寫印刷體一樣。**不要子集化**：「Andika」是保留字型名稱，改過的版本不能再叫這個名字 |
+
+設計原則（兩種風格共用）：
+
+- **題型固定一個顏色**：see 天藍、hear 玫瑰、spell 柿橙、use 梅紫；完成葉綠、金幣麥黃
+- **介面上的中文全部帶注音**，而且注音要讀得到：字的四成大、和字一樣深（第一版抄 zhuyin.js 的 .36em＋淡灰，19px 的按鈕旁注音只剩 7px）
+- 每句說明旁邊都有 🔊 唸給她聽（zh-TW）
+- 主要按鈕 ≥ 64px、圖示按鈕 ≥ 48px、鍵盤鍵高 ≥ 56px；**不用下拉選單**
+- 答錯不出現紅色叉叉：輕輕搖一下，錯兩次後正確的鍵亮起來
+- 拼字用**小寫**（Andika 的單層 a/g 只有小寫才看得出差別）

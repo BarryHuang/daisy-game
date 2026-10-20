@@ -606,6 +606,10 @@
 
     <script src="words.js"></script>
     <script src="./wordlists.js"></script>
+    <!-- 拼字是她每天的正事，也是 FET 實際在考的能力，但這頁以前沒載 mastery.js：
+         拼了幾百個字，錯題本和學習後台一筆都沒收到；書櫃那段「一半機率抽弱字」
+         因為 typeof getWeakWords 永遠是 undefined，也從來沒執行過。 -->
+    <script src="./mastery.js"></script>
     <script src="midterm_questions.js"></script>
     <script src="final_questions.js"></script>
     <script src="exams.js"></script>
@@ -2101,7 +2105,9 @@
                 let w = null;
                 if (Math.random() < 0.5 && typeof getWeakWords === 'function') {
                     const weak = getWeakWords(12, pool) || [];
-                    if (weak.length) w = weak[Math.floor(Math.random() * weak.length)];
+                    // getWeakWords 回傳的是 { word, score, … } 物件，不是字串。這段以前
+                    // 因為沒載 mastery.js 從來沒跑到，一接上就會唸出 [object Object]
+                    if (weak.length) w = weak[Math.floor(Math.random() * weak.length)].word;
                 }
                 if (!w) w = pool[Math.floor(Math.random() * pool.length)];
 
@@ -4045,6 +4051,9 @@
         let targetLetters = [];
         let currentIndex = 0; // 單字拼到哪
         let mistakeCount = 0; // 這一題按錯幾次
+        // 這一題用了幾次提示。只給熟練度用：獎勵還是看 mistakeCount（不改她熟悉的
+        // 星星規則），但整個字都靠提示填完的話，不能算她會拼。
+        let hintCount = 0;
         
         const catS = document.getElementById('cat');
         const wkS = document.getElementById('week');
@@ -4266,6 +4275,7 @@
             targetLetters = currentWord.split('');
             currentIndex = 0;
             mistakeCount = 0; // 每題重置錯誤次數
+            hintCount = 0;
             msg.textContent = "聽發音並拼出單字吧！";
             msg.style.color = "var(--primary)";
             
@@ -4366,6 +4376,7 @@
             updatePetUI();
             
             recordMistake(currentWord); // 使用提示也算不熟
+            hintCount++;
             
             const expectedLetter = targetLetters[currentIndex];
             const btn = document.getElementById(`key-${expectedLetter}`);
@@ -4387,6 +4398,10 @@
         }
 
         function wordCleared() {
+            // 第四個參數是題型。現在的 mastery.js 會忽略它，v2 的記憶模型會用它
+            // 把「拼得出來」和「認得出來」分開記。
+            if (typeof recordAttempt === 'function')
+                recordAttempt(currentWord, true, mistakeCount + hintCount, 'spell');
             const reward = Math.max(1, 3 - mistakeCount);
             const stars = mistakeCount === 0 ? '⭐⭐⭐' : (mistakeCount === 1 ? '⭐⭐' : '⭐');
             
