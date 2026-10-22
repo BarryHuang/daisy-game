@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20261022-0844';
+const CACHE_NAME = 'daisy-20261022-0848';
 
 const LOCAL_ASSETS = [
   './',
@@ -16,6 +16,8 @@ const LOCAL_ASSETS = [
   './lookups.js',
   './mastery.js',
   './calendar.js',
+  './pos.js',
+  './daisy_paper.html',
   './menu.js',
   './version.js',
   './wordlists.js',
@@ -135,6 +137,7 @@ const LOCAL_ASSETS = [
   './v2/core/planner.js',
   './v2/core/activities.js',
   './v2/core/cloze.js',
+  './v2/core/papers.js',
   './v2/fonts/Andika-Regular.woff2',
   './v2/fonts/Andika-Bold.woff2',
   './v2/art/hamster.svg',

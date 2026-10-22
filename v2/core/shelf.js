@@ -66,3 +66,31 @@ export function hrefOf(item, words) {
   const base = '../' + item.href;
   return item.set && words && words.length ? base + '?set=' + words.map(encodeURIComponent).join(',') : base;
 }
+
+// ── 考卷 ──────────────────────────────────────────────────────────────
+// 有手工卷（課本原句出的）就用手工卷；沒有就用 daisy_paper.html 自動出一張
+export const HANDMADE = {
+  fet: { 'Wk 1': 'daisy_fet_wk1.html', 'Wk 2': 'daisy_fet_wk2.html', 'Wk 3': 'daisy_fet_wk3.html',
+         'Wk 4': 'daisy_fet_wk4.html', 'Wk 5': 'daisy_fet_wk5.html', 'Wk 6': 'daisy_fet_wk6.html' },
+  cet: { 'Wk 1&2': 'daisy_cet_wk1.html', 'Wk 3': 'daisy_cet_wk3.html', 'Wk 4': 'daisy_cet_wk4.html',
+         'Wk 5': 'daisy_cet_wk5.html', 'Wk 6': 'daisy_cet_wk6.html', 'Wk 7': 'daisy_cet_wk7.html' },
+};
+
+/**
+ * 到第 n 週為止的考卷，新的在前面。FET 和 CET 同一週排在一起。
+ *   words  words.js 的 words；lists  calendar.js 的 TERM.lists
+ */
+export function papersUpTo(n, words, lists) {
+  const out = [];
+  for (const c of ['fet', 'cet']) {
+    for (const wk of Object.keys(words[lists[c]] || {})) {
+      const ns = (wk.match(/\d+/g) || []).map(Number);
+      if (!ns.length || Math.min(...ns) > n) continue;
+      const hand = HANDMADE[c][wk];
+      out.push({ wk, c, sort: Math.max(...ns), em: c === 'fet' ? '✏️' : '📗',
+        en: (c === 'fet' ? 'FET ' : 'CET ') + wk, auto: !hand,
+        href: hand || 'daisy_paper.html?c=' + c + '&wk=' + encodeURIComponent(wk) });
+    }
+  }
+  return out.sort((a, b) => b.sort - a.sort || (a.c < b.c ? -1 : 1));
+}

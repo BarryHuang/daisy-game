@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>每週選擇填空（自動出題）</title>
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="./mastery.js"></script>
+<script src="./rewards.js"></script>
+<script src="./words.js"></script>
+<script src="./pos.js"></script>
+<script src="./calendar.js"></script>
+<script src="./cloze_quiz.js"></script>
+</head>
+<body>
+<script type="module">
+// 沒有手工卷的週，用單字卡例句自動出一張（v2/core/papers.js）。
+//   daisy_paper.html?c=fet&wk=Wk%2010
+// 同一週每次出的卷子一樣：重新整理不會換題。
+import { makePaper } from './v2/core/papers.js';
+
+const q = new URLSearchParams(location.search);
+const course = q.get('c') === 'cet' ? 'cet' : 'fet';
+const list = TERM.lists[course];
+const weeks = Object.keys(words[list] || {});
+const wk = weeks.includes(q.get('wk')) ? q.get('wk') : weeks[0];
+const label = (course === 'fet' ? 'FET' : 'CET') + ' ' + wk;
+const exampleOf = (w) => wordExamples[w] || wordExamples[w.toLowerCase()] || '';
+const posOf = (w) => wordPos[w] || wordPos[w.toLowerCase()];
+
+const paper = makePaper({
+  list: words[list][wk], pool: Object.values(words[list]).flat(),
+  exampleOf, posOf, seed: course + ':' + wk, source: label,
+});
+document.title = label + ' 選擇填空';
+startClozeQuiz({
+  title: label.replace('Wk', 'Week') + ' — 選擇填空',
+  subtitle: list + ' ｜ ' + wk + ' ｜ ' + paper.questions.length + ' 題 ｜ 例句出題',
+  accent: course === 'fet' ? '#9A552A' : '#3E6589',
+  questions: paper.questions,
+});
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>

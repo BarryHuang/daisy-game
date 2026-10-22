@@ -663,6 +663,74 @@ describe("v1 相容性", () => {
     });
   });
 
+  const PA = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/papers.js")).href);
+  const { wordPos } = require(path.join(ROOT, "pos.js"));
+  const posOf = (w) => wordPos[w] || wordPos[String(w).toLowerCase()];
+  const paperOf = (c, wk) => {
+    const list = cal.TERM.lists[c];
+    return PA.makePaper({ list: words[list][wk], pool: Object.values(words[list]).flat(), exampleOf, posOf, seed: c + ":" + wk, source: wk });
+  };
+  const allPapers = ["fet", "cet"].flatMap((c) => Object.keys(words[cal.TERM.lists[c]]).map((wk) => ({ c, wk, p: paperOf(c, wk) })));
+
+  describe("自動出卷 papers.js ＋ 詞性 pos.js", () => {
+    it("這學期每個字都有詞性", () => {
+      const all = [FET, CET].flatMap((l) => Object.values(words[l]).flat());
+      const ok = new Set(["n", "v", "adj", "adv", "prep", "prop", "phr"]);
+      all.forEach((w) => assert.ok(ok.has(posOf(w)), w + " 沒有詞性"));
+    });
+
+    it("每一週都出得了卷：至少 8 題、0 重複", () => {
+      allPapers.forEach(({ c, wk, p }) => {
+        assert.ok(p.questions.length >= 8, c + " " + wk + " 只有 " + p.questions.length + " 題");
+        assert.deepStrictEqual(PA.auditPaper(p.questions).dupes, [], c + " " + wk);
+      });
+    });
+
+    it("洩漏（某題答案出現在別題句子裡）全學期最多 2 處", () => {
+      const leaks = allPapers.flatMap(({ c, wk, p }) => PA.auditPaper(p.questions).leaks.map((l) => c + " " + wk + "：" + l));
+      assert.ok(leaks.length <= 2, leaks.join("\n"));
+    });
+
+    it("每題兩個誘答：不重複、不是答案、不在句子裡；同詞性的有就用同詞性", () => {
+      allPapers.forEach(({ c, wk, p }) => p.questions.forEach((q) => {
+        const tag = c + " " + wk + " " + q.answer;
+        assert.strictEqual(q.wrong.length, 2, tag);
+        assert.strictEqual(new Set(q.wrong.map((w) => w.toLowerCase())).size, 2, tag);
+        q.wrong.forEach((w) => {
+          assert.notStrictEqual(w.toLowerCase(), q.answer.toLowerCase(), tag);
+          assert.ok(!PA.leaksInto(w, q.sentence), tag + "：" + w + " 在句子裡");
+        });
+        assert.ok(q.sentence.includes("___"), tag);
+        const pool = Object.values(words[cal.TERM.lists[c]]).flat();
+        const same = new Set(pool.filter((w) => posOf(w) === posOf(q.lemma)).map((w) => w.toLowerCase()));
+        if (same.size >= 6) q.wrong.forEach((w) => assert.strictEqual(posOf(w), posOf(q.lemma), tag + "：" + w));
+      }));
+    });
+
+    it("a ／ an 後面的空格：誘答的母音對得上（不然一看冠詞就知道）", () => {
+      allPapers.forEach(({ p }) => p.questions.forEach((q) => {
+        const before = q.sentence.split("___")[0];
+        if (/\ban\s*$/i.test(before)) q.wrong.forEach((w) => assert.match(w, /^[aeiou]/i, q.sentence + " " + w));
+        if (/\ba\s*$/i.test(before) && posOf(q.lemma) === "n") q.wrong.forEach((w) => assert.doesNotMatch(w, /^[aeiou]/i, q.sentence + " " + w));
+      }));
+    });
+
+    it("同一週每次出的一樣；答案在句首時誘答也大寫", () => {
+      assert.deepStrictEqual(paperOf("fet", "Wk 10"), paperOf("fet", "Wk 10"));
+      allPapers.forEach(({ p }) => p.questions.filter((q) => q.sentence.startsWith("___")).forEach((q) =>
+        q.wrong.forEach((w) => assert.match(w, /^[A-Z]/, q.sentence + " " + w))));
+    });
+
+    it("書架的考卷：有手工卷用手工卷，其他自動出；到第 8 週只列到 Wk 7", () => {
+      const ps = SH.papersUpTo(8, words, cal.TERM.lists);
+      assert.ok(ps.every((x) => !/1[0-9]|20/.test(x.wk)), ps.map((x) => x.wk).join(","));
+      assert.strictEqual(ps.find((x) => x.c === "cet" && x.wk === "Wk 7").href, "daisy_cet_wk7.html");
+      assert.strictEqual(ps.find((x) => x.c === "fet" && x.wk === "Wk 7").href, "daisy_paper.html?c=fet&wk=Wk%207");
+      Object.values(SH.HANDMADE).forEach((m) => Object.values(m).forEach((f) => assert.ok(fs.existsSync(path.join(ROOT, f)), f)));
+      assert.strictEqual(ps[0].sort, 7, "新的在前面");
+    });
+  });
+
   describe("離線：v2 的檔案都在 Service Worker 的清單裡", () => {
     it("v2 底下的頁面、程式、字型、圖都會預先快取（設計稿、授權檔除外）", () => {
       const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
