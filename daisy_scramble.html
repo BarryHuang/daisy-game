@@ -265,7 +265,7 @@
                 // 檢查是否拼完了
                 if(currentIndex >= targetLetters.length) {
                     if (typeof recordAttempt === 'function')
-                        recordAttempt(currentWord, true, wrongTaps);
+                        recordAttempt(currentWord, true, wrongTaps, 'spell');
                     document.getElementById('message').textContent = "Daisy 太強了！🎉";
                     snd('levelup', 800, 'sine', 0.1); // 高音提示過關
                     triggerConfetti();

@@ -401,9 +401,10 @@
             const secs = (Date.now() - shift.start) / 1000;
             const c = document.getElementById('customer');
             const msg = document.getElementById('message');
-            // 訂單裡的每個字都記一次，聽懂整句才算會
+            // 訂單裡的每個字都記一次，聽懂整句才算會。
+            // 「🙈 只用聽的」才算聽力（hear）；看得到英文句子和中文時是認字（see）
             shift.order.picks.forEach(p => {
-                if (typeof recordAttempt === 'function') recordAttempt(p.item.en, ok, ok ? 0 : 1);
+                if (typeof recordAttempt === 'function') recordAttempt(p.item.en, ok, ok ? 0 : 1, hideText ? 'hear' : 'see');
             });
 
             if (ok) {

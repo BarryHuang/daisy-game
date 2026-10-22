@@ -359,7 +359,8 @@
       if (ok) right++;
       // 餵給熟練度系統：倉鼠的書櫃和幾個遊戲都會optionally拿弱字當題庫
       if (typeof recordAttempt === 'function') {
-        try { recordAttempt(q.lemma, ok, ok ? 0 : 1); } catch (e) {}
+        // 聽寫（typing）練的是拼；選字填空練的是「會用」（mastery.js 的題型）
+        try { recordAttempt(q.lemma, ok, ok ? 0 : 1, cfg.mode === 'typing' ? 'spell' : 'use'); } catch (e) {}
       }
     });
     var score = Math.round(right / questions.length * 100);

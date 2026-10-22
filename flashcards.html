@@ -205,7 +205,7 @@ function flip() { flipped = true; renderCard(); }
 
 function mark(ok) {
   // 記進熟練度，家長後台和「還沒學會的字」就會反映出來
-  if (typeof recordAttempt === "function") recordAttempt(deck[pos].w, ok, ok ? 0 : 3);
+  if (typeof recordAttempt === "function") recordAttempt(deck[pos].w, ok, ok ? 0 : 3, 'see');
   if (ok) right++;
   pos++; flipped = false;
   renderCard();

@@ -230,7 +230,7 @@
       var ok = b.filled !== null && bank[b.filled] === b.answer;
       if (ok) right++;
       if (typeof recordAttempt === 'function') {
-        try { recordAttempt(b.lemma, ok, ok ? 0 : 1); } catch (e) {}
+        try { recordAttempt(b.lemma, ok, ok ? 0 : 1, 'use'); } catch (e) {}
       }
     });
     var score = Math.round(right / blanks.length * 100);

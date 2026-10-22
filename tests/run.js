@@ -613,6 +613,32 @@ describe("v1 相容性", () => {
     });
   });
 
+  describe("v1 的遊戲和測驗：熟練度記在對的題型", () => {
+    // recordAttempt 的第四個參數 skill 沒帶就是 'see'。以前所有遊戲都沒帶，結果
+    // 猜單字、字母重組（在拼）、每週測驗卷（在用）全被記成「看得懂」，
+    // v2 的小徑以為她從沒練過拼和用，同一批字一直排
+    const files = fs.readdirSync(ROOT).filter((f) => /\.(html|js)$/.test(f) && f !== "mastery.js");
+    const calls = files.flatMap((f) => {
+      const src = fs.readFileSync(path.join(ROOT, f), "utf8");
+      return [...src.matchAll(/recordAttempt\(([^;]*?)\)\s*(?:;|\})/g)].map((m) => ({ f, args: m[1] }));
+    });
+    const topLevelArgs = (s) => { let d = 0, n = 1; for (const c of s) { if ("([{".includes(c)) d++; else if (")]}".includes(c)) d--; else if (c === "," && d === 0) n++; } return n; };
+
+    it("每一個呼叫都寫明題型（不靠預設值）", () => {
+      assert.ok(calls.length >= 20, "只找到 " + calls.length + " 個呼叫");
+      calls.forEach(({ f, args }) => assert.strictEqual(topLevelArgs(args), 4, f + "：recordAttempt(" + args + ")"));
+    });
+
+    it("題型對得上遊戲在考什麼", () => {
+      const skillOf = (f) => calls.filter((c) => c.f === f).map((c) => c.args.split(",").slice(3).join(",").trim());
+      for (const f of ["daisy_hangman.html", "daisy_scramble.html", "daisy_hamster.html"]) skillOf(f).forEach((s) => assert.strictEqual(s, "'spell'", f));
+      skillOf("passage_cloze.js").forEach((s) => assert.strictEqual(s, "'use'"));
+      assert.match(skillOf("cloze_quiz.js")[0], /typing.*'spell'.*'use'/);
+      skillOf("daisy_runner.html").forEach((s) => assert.match(s, /listen \? 'hear' : 'see'/));
+      skillOf("daisy_restaurant.html").forEach((s) => assert.match(s, /hideText \? 'hear' : 'see'/));
+    });
+  });
+
   describe("離線：v2 的檔案都在 Service Worker 的清單裡", () => {
     it("v2 底下的頁面、程式、字型、圖都會預先快取（設計稿、授權檔除外）", () => {
       const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");

@@ -396,7 +396,7 @@
                     em.classList.add('die');
                     // 這個字整隻怪獸打完才記一次：全程沒答錯才算乾淨過關
                     if (typeof recordAttempt === 'function')
-                        recordAttempt(mon.word, true, mon.wrong);
+                        recordAttempt(mon.word, true, mon.wrong, 'see');
                     const gain = mon.boss ? 6 : 3;
                     battle.coins += gain;
                     battle.defeated.push(mon.word);
@@ -436,7 +436,7 @@
 
                 if (battle.hearts <= 0) {
                     if (typeof recordAttempt === 'function')
-                        recordAttempt(mon.word, false, mon.wrong);
+                        recordAttempt(mon.word, false, mon.wrong, 'see');
                     setTimeout(() => finish(false), 1100);
                 } else {
                     // 同一題型再問一次（選項重洗），直到答對才扣怪獸血
