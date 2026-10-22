@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20261022-0841';
+const CACHE_NAME = 'daisy-20261022-0844';
 
 const LOCAL_ASSETS = [
   './',
@@ -128,6 +128,8 @@ const LOCAL_ASSETS = [
   // tests/run.js 會檢查 v2 底下每個要用到的檔案都列在這裡，漏了就離線打不開
   './v2/',
   './v2/index.html',
+  './v2/library.html',
+  './v2/core/shelf.js',
   './v2/core/ui.css',
   './v2/core/kit.js',
   './v2/core/planner.js',

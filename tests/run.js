@@ -639,6 +639,30 @@ describe("v1 相容性", () => {
     });
   });
 
+  const SH = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/shelf.js")).href);
+  describe("書架 shelf.js", () => {
+    const items = SH.SHELVES.flatMap((s) => s.items);
+    it("每一本書都連到存在的頁面", () => {
+      items.forEach((it) => assert.ok(fs.existsSync(path.join(ROOT, it.href)), it.href));
+    });
+    it("中文名稱都有注音，而且一個字一組", () => {
+      SH.SHELVES.forEach((s) => assert.strictEqual([...s.name].length, s.zy.split(" ").length, s.name));
+      items.filter((it) => !it.en).forEach((it) => assert.strictEqual([...it.name].length, it.zy.split(" ").length, it.name));
+    });
+    it("「用今天的字玩」的遊戲都有載入 wordset.js（看得懂 ?set=）", () => {
+      items.filter((it) => it.set).forEach((it) => assert.match(fs.readFileSync(path.join(ROOT, it.href), "utf8"), /wordset\.js/, it.href));
+    });
+    it("今天的字：照小徑順序、不重複、不含寶箱；網址會編碼", () => {
+      const plan = { stations: [{ words: ["sea", "Africa"] }, { words: ["sea", "make sense"] }, { type: "chest", words: [] }] };
+      assert.deepStrictEqual(SH.todaysWords(plan), ["sea", "Africa", "make sense"]);
+      assert.deepStrictEqual(SH.todaysWords(null), []);
+      const memory = items.find((it) => it.href === "daisy_memory.html");
+      assert.strictEqual(SH.hrefOf(memory, ["sea", "make sense"]), "../daisy_memory.html?set=sea,make%20sense");
+      assert.strictEqual(SH.hrefOf(memory, []), "../daisy_memory.html");
+      assert.strictEqual(SH.hrefOf(items.find((it) => !it.set), ["sea"]), "../daisy_hamster.html");
+    });
+  });
+
   describe("離線：v2 的檔案都在 Service Worker 的清單裡", () => {
     it("v2 底下的頁面、程式、字型、圖都會預先快取（設計稿、授權檔除外）", () => {
       const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");

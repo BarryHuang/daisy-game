@@ -43,7 +43,7 @@
   <nav class="tabbar">
     <button class="tab" aria-current="page"><span class="ti">🛤️</span><span class="zh" data-zy="今天|ㄐㄧㄣ ㄊㄧㄢ"></span></button>
     <a class="tab" href="lab/planet.html"><span class="ti"><img src="art/hamster.svg" alt=""></span><span class="zh" data-zy="倉鼠|ㄘㄤ ㄕㄨˇ"></span></a>
-    <a class="tab" href="../daisy_practice.html"><span class="ti">📚</span><span class="zh" data-zy="書架|ㄕㄨ ㄐㄧㄚˋ"></span></a>
+    <a class="tab" href="library.html"><span class="ti">📚</span><span class="zh" data-zy="書架|ㄕㄨ ㄐㄧㄚˋ"></span></a>
   </nav>
 </section>
 
@@ -76,6 +76,7 @@
     <div class="reward" id="reward" aria-live="polite"></div>
     <div class="streak sketch" id="streak" hidden></div>
     <button class="btn wide sketch hatch" id="chest-btn" style="max-width:520px"></button>
+    <a class="btn wide ghost sketch" id="chest-games" href="library.html#today" style="max-width:520px" hidden></a>
   </div>
 </section>
 
@@ -304,6 +305,10 @@ function openChest() {
   const goPlay = () => {
     btn.innerHTML = '<img src="art/hamster.svg" alt="" style="width:30px">' + zy('去找倉鼠玩', 'ㄑㄩˋ ㄓㄠˇ ㄘㄤ ㄕㄨˇ ㄨㄢˊ');
     btn.onclick = () => { sfx('whoosh'); location.href = 'lab/planet.html'; };
+    // 或是用今天練過的字玩 v1 的遊戲（書架最上面那一格）
+    const g = $('#chest-games');
+    g.innerHTML = '<span aria-hidden="true">🎮</span>' + zy('用今天的字玩遊戲', 'ㄩㄥˋ ㄐㄧㄣ ㄊㄧㄢ ㄉㄜ˙ ㄗˋ ㄨㄢˊ ㄧㄡˊ ㄒㄧˋ');
+    g.hidden = preview;   // 預覽別天時，書架讀的是今天的字，對不上
     const n = streakDays();
     $('#streak').hidden = n < 2;
     $('#streak').innerHTML = '🔥 ' + zy('連續', 'ㄌㄧㄢˊ ㄒㄩˋ') + ' <span class="en">' + n + '</span> ' + zy('天', 'ㄊㄧㄢ');
