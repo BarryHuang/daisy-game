@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF6EA">
+<title>書架 · Daisy v2</title>
+<link rel="icon" href="../icon-192.png">
+<link rel="stylesheet" href="core/ui.css">
+<style>
+  .shelves { flex: 1; min-height: 0; overflow-y: auto; padding: 6px var(--gutter) 24px; display: flex; flex-direction: column; gap: 22px; }
+  .shelf { width: min(980px, 100%); margin: 0 auto; }
+  .shelf-head { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+  .shelf-head h2 { margin: 0; font-size: 26px; color: var(--cd); }
+  .shelf-head .icon-btn { min-width: 40px; min-height: 40px; font-size: 18px; }
+  .today-words { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 12px; }
+  .today-words span { font-family: var(--font-en); font-size: 17px; padding: 4px 10px; border-radius: 999px; background: var(--ct); color: var(--cd); }
+  .books { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .book { min-height: 118px; border-radius: var(--radius); background: var(--surface); display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 6px; padding: 12px 8px; text-decoration: none; color: var(--ink);
+          border-top: 8px solid var(--c); }
+  .book:active { transform: scale(.97) rotate(-.4deg); }
+  .book .em { font-size: 40px; line-height: 1; }
+  .book .zh { font-size: 22px; }
+  .book .en { font-size: 18px; font-weight: 700; text-align: center; line-height: 1.2; }
+  @media (max-width: 480px) { .books { grid-template-columns: repeat(2, 1fr); } .book .zh { font-size: 20px; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="wobble" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<section class="screen on" aria-label="書架">
+  <div class="topbar">
+    <button class="chip sketch zh" style="font-size:22px" data-zy="書架|ㄕㄨ ㄐㄧㄚˋ" data-say="書架。想玩什麼，就點下去。"></button>
+    <span class="grow"></span>
+  </div>
+  <div class="shelves" id="shelves"></div>
+  <nav class="tabbar">
+    <a class="tab" href="./"><span class="ti">🛤️</span><span class="zh" data-zy="今天|ㄐㄧㄣ ㄊㄧㄢ"></span></a>
+    <a class="tab" href="lab/planet.html"><span class="ti"><img src="art/hamster.svg" alt=""></span><span class="zh" data-zy="倉鼠|ㄘㄤ ㄕㄨˇ"></span></a>
+    <button class="tab" aria-current="page"><span class="ti">📚</span><span class="zh" data-zy="書架|ㄕㄨ ㄐㄧㄚˋ"></span></button>
+  </nav>
+</section>
+
+<script src="../zhuyin.js"></script>
+<script src="../words.js"></script>
+<script src="../calendar.js"></script>
+<script type="module">
+import { SHELVES, todaysWords, hrefOf, papersUpTo } from './core/shelf.js';
+import { $, $$, zy, say } from './core/kit.js';
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('../sw.js').catch(() => {});
+
+// 今天小徑上的字（「今天」頁第一次打開時排好、存起來的那一份）
+let plan = null;
+try { plan = (JSON.parse(localStorage.getItem('daisy2_today_' + taipeiDay())) || {}).plan; } catch (e) {}
+const today = todaysWords(plan);
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// 考卷：到這週為止每一週一張（有手工卷用手工卷，沒有就自動出），新的在前面
+const papers = {
+  id: 'papers', name: '考卷', zy: 'ㄎㄠˇ ㄐㄩㄢˋ', color: 'rose', say: '考卷。每一週一張，寫寫看。',
+  items: papersUpTo(Math.max(1, currentWeek(taipeiDay()).n), words, TERM.lists),
+};
+const shelves = [SHELVES[0], papers, ...SHELVES.slice(1)].filter((sh) => sh.items.length);
+
+$('#shelves').innerHTML = shelves.map((sh) => {
+  // 今天還沒打開過小徑：這一格就是普通的單字遊戲（照 v1 的方式抽一組字），不鎖
+  const isToday = sh.id === 'today';
+  const name = isToday && !today.length ? { name: '單字遊戲', zy: 'ㄉㄢ ㄗˋ ㄧㄡˊ ㄒㄧˋ', say: '單字遊戲。' } : sh;
+  return `<section class="shelf c-${sh.color}" id="${sh.id}">
+    <div class="shelf-head"><h2 class="zh">${zy(name.name, name.zy)}</h2>
+      <button class="icon-btn sketch" data-say="${esc(name.say)}" aria-label="唸出來">🔊</button></div>
+    ${isToday && today.length ? `<div class="today-words">${today.slice(0, 12).map((w) => `<span>${esc(w)}</span>`).join('')}${today.length > 12 ? `<span>+${today.length - 12}</span>` : ''}</div>` : ''}
+    <div class="books">${sh.items.map((it) => `
+      <a class="book sketch" href="${esc(hrefOf(it, isToday ? today : null))}">
+        <span class="em" aria-hidden="true">${it.em}</span>
+        ${it.en ? `<span class="en">${esc(it.en)}</span>` : `<span class="zh">${zy(it.name, it.zy)}</span>`}
+      </a>`).join('')}</div>
+  </section>`;
+}).join('');
+
+$$('[data-zy]').forEach((el) => { const [a, b] = el.dataset.zy.split('|'); el.innerHTML = zy(a, b); });
+document.addEventListener('click', (e) => { const s = e.target.closest('[data-say]'); if (s) say(s.dataset.say); });
+if (location.hash) { const t = $(location.hash); if (t) t.scrollIntoView(); }
+</script>
+</body>
+</html>

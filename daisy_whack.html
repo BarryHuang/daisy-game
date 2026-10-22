@@ -367,7 +367,7 @@
                 if (combo > 0 && combo % 5 === 0) { gain += 3; splash(h, '🔥'); }
                 coinsEarned += gain;
                 if (typeof recordAttempt === 'function')
-                    recordAttempt(current.word, true, wrongThisRound);
+                    recordAttempt(current.word, true, wrongThisRound, 'see');
                 updateStats();
 
                 document.getElementById('message').textContent =
@@ -391,7 +391,7 @@
                     current.done = true;
                     clearTimeout(cycleTimer);
                     if (typeof recordAttempt === 'function')
-                        recordAttempt(current.word, false, wrongThisRound);
+                        recordAttempt(current.word, false, wrongThisRound, 'see');
                     document.getElementById('message').textContent = `答案是 ${current.word}，再加油！`;
                     speak(current.word);
                     roundTimer = setTimeout(() => {

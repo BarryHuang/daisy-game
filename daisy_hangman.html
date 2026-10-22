@@ -177,7 +177,7 @@
                     document.querySelectorAll('.key').forEach(k=>k.disabled=true);
                     triggerConfetti();
                     // err 是猜錯幾次：沒錯就過關和錯五次才過關，熟練度差很多
-                    if (typeof recordAttempt === 'function') recordAttempt(current, true, err);
+                    if (typeof recordAttempt === 'function') recordAttempt(current, true, err, 'spell');
                     
                     // 答對後自動唸一次加深印象
                     setTimeout(() => speakWord(), 500);
@@ -190,7 +190,7 @@
                 
                 // 檢查是否失敗
                 if(err>=6) {
-                    if (typeof recordAttempt === 'function') recordAttempt(current, false, err);
+                    if (typeof recordAttempt === 'function') recordAttempt(current, false, err, 'spell');
                     const msg = document.getElementById('message');
                     msg.textContent = "答案是: " + current;
                     msg.style.color = "#dc3545";

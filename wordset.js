@@ -26,6 +26,33 @@ if (typeof words !== "undefined")
   for (const [cat, weeks] of Object.entries(words))
     for (const wk of Object.keys(weeks || {})) WORDSET_POOL.push([cat, wk]);
 
+// ── 指定字組：網址帶 ?set=word1,word2,…（v2 的「用今天的字玩」）─────────
+// 進來就直接玩這組字，不抽籤。這組字放在自己的類別裡、不進抽籤池，
+// 所以「再玩一次」會留在這組（shuffleWordSet 對池子外的類別就是這樣處理的）。
+// 沒帶 ?set 時什麼都不做，v1 的行為完全不變。
+const SET_CATEGORY = "🌟 今天的字", SET_WEEK = "今天";
+const SET_WORDS = (() => {
+  try {
+    const raw = new URLSearchParams(location.search).get("set");
+    if (!raw) return null;
+    const list = [...new Set(raw.split(",").map((w) => w.trim()).filter(Boolean))].slice(0, 40);
+    return list.length ? list : null;
+  } catch (e) { return null; }
+})();
+if (SET_WORDS && typeof words !== "undefined") {
+  words[SET_CATEGORY] = { [SET_WEEK]: SET_WORDS };
+  // 回 v2 的按鈕：她是從 v2 的書架來的，玩完要回得去
+  const addBack = () => {
+    if (document.getElementById("ws-back")) return;
+    const a = document.createElement("a");
+    a.id = "ws-back"; a.href = "v2/library.html"; a.textContent = "✨ 回書架";
+    a.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:9999;padding:12px 18px;border-radius:999px;"
+      + "background:#5E8A4A;color:#fff;font:700 18px system-ui,sans-serif;text-decoration:none;box-shadow:0 3px 10px rgba(0,0,0,.2)";
+    document.body.appendChild(a);
+  };
+  if (document.body) addBack(); else document.addEventListener("DOMContentLoaded", addBack);
+}
+
 function setPick(catSelect, cat, wk) {
   catSelect.value = cat;
   // 類別名稱對不上任何 <option> 時 value 會變成空字串，遊戲就找不到字了
@@ -35,6 +62,7 @@ function setPick(catSelect, cat, wk) {
 }
 
 function pickRandomCategory(catSelect) {
+  if (SET_WORDS && catSelect && setPick(catSelect, SET_CATEGORY, SET_WEEK)) return;
   if (!catSelect || !catSelect.options.length || !WORDSET_POOL.length) return;
   const [cat, wk] = WORDSET_POOL[Math.floor(Math.random() * WORDSET_POOL.length)];
   setPick(catSelect, cat, wk);

@@ -470,7 +470,7 @@
             coinsEarned += gain;
             gotThisGame.push(dollFace(got.word));
             if (typeof recordAttempt === 'function')
-                recordAttempt(current.word, true, wrongThisRound);
+                recordAttempt(current.word, true, wrongThisRound, 'see');
             const isNew = keepPrize(got.word);
             updateStats();
 
@@ -514,7 +514,7 @@
             if (wrongThisRound >= 2) {
                 current.done = true;
                 if (typeof recordAttempt === 'function')
-                    recordAttempt(current.word, false, wrongThisRound);
+                    recordAttempt(current.word, false, wrongThisRound, 'see');
                 const hit = dolls.find(d => d.word === current.word);
                 if (hit) hit.el.style.outline = '3px solid #40c057';
                 say(`答案是 ${current.word}（${current.m.zh}），下一題再夾！`);

@@ -326,7 +326,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',Arial,sans-seri
     // 立刻記熟練度。連到第三次的在結算畫面報喜
     var before = 0;
     try { before = (readMastery()[String(q.word).toLowerCase()] || {}).s || 0; } catch (e) {}
-    if (typeof recordAttempt === 'function') recordAttempt(q.word, ok, ok ? 0 : 1);
+    if (typeof recordAttempt === 'function') recordAttempt(q.word, ok, ok ? 0 : 1, 'see');
     if (ok && before === MASTER_AT - 1) graduated.push(q.word);
 
     setTimeout(function () {
