@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>英文期中考複習清單</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one notebook column — progress header, then CET / FET sections of tickable rows; word lists fold open under vocab rows */
+:root{
+  --paper:#fbfaf6; --card:#ffffff; --ink:#1f2a37; --muted:#667085; --rule:#e6e2d6;
+  --cet:#0f7b6c; --cet-soft:#e3f3ef; --fet:#c2502d; --fet-soft:#fbe9e2;
+  --pencil:#f2b705; --done:#2f8f4e;
+  --display:"Baloo 2","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#15181d; --card:#1d2128; --ink:#e8e6df; --muted:#9aa3b0; --rule:#2c313a;
+  --cet:#4cc3ad; --cet-soft:#1b302c; --fet:#f08a66; --fet-soft:#36231d;
+  --pencil:#f5c842; --done:#5cc47e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#15181d; --card:#1d2128; --ink:#e8e6df; --muted:#9aa3b0; --rule:#2c313a;
+  --cet:#4cc3ad; --cet-soft:#1b302c; --fet:#f08a66; --fet-soft:#36231d;
+  --pencil:#f5c842; --done:#5cc47e; color-scheme:dark}
+
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:720px;margin:0 auto;padding-block:64px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:28px}
+
+header{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,6vw,38px);line-height:1.1;margin:0;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:8px 14px;color:var(--muted);font-size:14px}
+.meta b{color:var(--ink);font-weight:700}
+
+.progress{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.prow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.big{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-size:18px;color:var(--muted);font-weight:600}
+.bar{height:12px;border-radius:99px;background:var(--rule);overflow:hidden;position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--cet),var(--done));border-radius:99px;transition:width .4s ease}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;font-size:14px;font-variant-numeric:tabular-nums}
+.chip.cet{background:var(--cet-soft);color:var(--cet)}
+.chip.fet{background:var(--fet-soft);color:var(--fet)}
+.chip b{font-family:var(--display);font-size:18px}
+.status{font-size:12.5px;color:var(--muted);min-height:1em}
+
+section{display:flex;flex-direction:column;gap:14px}
+.sec-head{display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--accent);padding-bottom:6px}
+.sec-head h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0;color:var(--accent)}
+.sec-head span{color:var(--muted);font-size:13.5px}
+.cet-sec{--accent:var(--cet);--soft:var(--cet-soft)}
+.fet-sec{--accent:var(--fet);--soft:var(--fet-soft)}
+
+.group{display:flex;flex-direction:column;gap:2px}
+.group h3{margin:0 0 4px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.group h3 .count{font-weight:500;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.group h3 .count.full{color:var(--done);font-weight:700}
+
+.item{background:var(--card);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.item+.item{margin-top:6px}
+.row{display:flex;align-items:flex-start;gap:12px;padding:11px 12px;cursor:pointer;user-select:none}
+.row input{position:absolute;opacity:0;pointer-events:none}
+.box{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--accent);display:grid;place-items:center;margin-top:1px;transition:background .15s}
+.box svg{width:14px;height:14px;opacity:0;transform:scale(.6);transition:all .15s}
+.row input:checked + .box{background:var(--accent)}
+.row input:checked + .box svg{opacity:1;transform:none}
+.row input:focus-visible + .box{outline:3px solid var(--pencil);outline-offset:2px}
+.txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.txt .t{font-weight:500}
+.txt .s{font-size:13px;color:var(--muted)}
+.item.is-done .t{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:2px}
+.when{font-size:12px;color:var(--done);white-space:nowrap;margin-top:3px}
+.star{color:var(--pencil);font-size:13px}
+.more{flex:none;background:none;border:1px solid var(--rule);color:var(--muted);border-radius:8px;font:inherit;font-size:12.5px;padding:3px 9px;cursor:pointer;margin-top:1px}
+.more:hover{color:var(--ink);border-color:var(--muted)}
+.more:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
+.words{border-top:1px dashed var(--rule);background:var(--soft);padding:10px 12px 12px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;font-size:14px}
+.words div{display:flex;gap:6px;align-items:baseline;min-width:0}
+.words b{font-weight:700;white-space:nowrap}
+.words span{color:var(--muted);font-size:13px}
+.note{font-size:13px;color:var(--muted);background:var(--card);border-left:3px solid var(--pencil);padding:8px 12px;border-radius:0 8px 8px 0}
+
+.ro{font-size:13px;color:var(--fet)}
+.login{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}
+.login input{font:inherit;padding:6px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink);width:9em;text-transform:uppercase}
+.login button{font:inherit;padding:6px 14px;border-radius:8px;border:0;background:var(--cet);color:#fff;cursor:pointer}
+@media (max-width:420px){.words{padding-left:12px}.big{font-size:34px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script src="./firebase-config.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Kang Chiao · Grade 2 Mainstream · 2026 Fall</div>
+    <h1>英文期中考複習清單</h1>
+    <div class="meta"><span>考試週 <b>10/26–10/30</b>（Week 9）</span><span id="countdown"></span></div>
+    <div class="progress" aria-live="polite">
+      <div class="prow"><div class="big"><span id="pDone">0</span><small> / <span id="pTotal">0</span> 項</small></div><div id="pPct" class="big" style="font-size:22px;color:var(--muted)">0%</div></div>
+      <div class="bar"><i id="pBar" style="width:0"></i></div>
+      <div class="split">
+        <div class="chip cet"><span>CET 中師</span><b id="cCet">0/0</b></div>
+        <div class="chip fet"><span>FET 外師</span><b id="cFet">0/0</b></div>
+      </div>
+      <div class="status" id="status">載入進度中…</div>
+      <form class="login" id="login" hidden><label for="code">帳號（和倉鼠遊戲同一個）</label><input id="code" autocomplete="off"><button type="submit">同步</button></form>
+    </div>
+  </header>
+  <main id="app" style="display:flex;flex-direction:column;gap:32px"></main>
+</div>
+
+<script>
+// 二上（2026 Fall）期中考 Week 1–8 的複習項目。作業和專題不列。
+const W = s => s.split("|").map(p => p.split("="));
+const DATA = [
+ {sec:"cet", name:"CET", sub:"中師課 · Conventions 2、分級讀本", groups:[
+  {title:"文法 Conventions", items:[
+   {id:"cet-g1",t:"簡單句 Simple Sentences",s:"p.1–3"},
+   {id:"cet-g2",t:"主詞 Subjects",s:"p.4–6"},
+   {id:"cet-g3",t:"述語 Predicates",s:"p.7–9"},
+   {id:"cet-g4",t:"合句 Compound Sentences",s:"p.10–12 · and / but / or"},
+   {id:"cet-g5",t:"句子種類與句尾標點",s:"p.13–15 · . ? !"},
+   {id:"cet-g6",t:"單數與複數名詞",s:"p.21–23 · -s / -es"},
+   {id:"cet-g7",t:"文法複習頁",s:"p.16–20、36",star:1}]},
+  {title:"單字 Vocabulary", items:[
+   {id:"cet-v12",t:"W1–2 單字",s:"The Great Sphinx Mystery",w:W("visit=拜訪、參觀|huge=巨大的|reply=回覆|holiday=假期|souvenir=紀念品|booth=攤位|rush=衝、趕|outside=在外面|upset=難過的|thought=想法")},
+   {id:"cet-v3",t:"W3 單字",s:"The Great Sphinx Mystery",w:W("hang=懸掛|know=知道|believe=相信|only=唯一的|suspect=嫌疑犯|lead=帶領|shocked=震驚的|disappear=消失|symbol=符號、象徵|cover=覆蓋")},
+   {id:"cet-v4",t:"W4 單字",s:"The Great Sphinx Mystery",w:W("notice=注意到|busy=忙碌的|flour=麵粉|worried=擔心的|forgive=原諒|solve=解決|nod=點頭|stealing=偷竊|month=月份|fair=公平的")},
+   {id:"cet-v5",t:"W5 單字",s:"Continents and Oceans",w:W("planet=行星|surface=表面|space=太空|divide=分開|piece=一塊|continent=洲、大陸|natural=自然的|feature=特徵|landform=地形|valley=山谷")},
+   {id:"cet-v6",t:"W6 單字",s:"Continents and Oceans",w:W("lie=位於|wide=寬的|island=島|flow=流動|popular=受歡迎的|survive=存活|salty=鹹的|human=人類|produce=生產|breathe=呼吸")},
+   {id:"cet-v7",t:"W7 單字",s:"Continents and Oceans",w:W("bottom=底部|strong=強壯的|wave=波浪|hurricane=颶風|cause=造成|storm=暴風雨|grow=生長|damage=損壞|freeze=結冰|thick=厚的")}]},
+  {title:"分級讀本 Leveled Readers", items:[
+   {id:"cet-r1",t:"The Great Sphinx Mystery",s:"推理故事 · p.3–16"},
+   {id:"cet-r2",t:"Continents and Oceans",s:"資訊文章 · p.3–16"}]}
+ ]},
+ {sec:"fet", name:"FET", sub:"外師課 · myView 2.1", groups:[
+  {title:"拼字單字 Spelling（要會拼）", items:[
+   {id:"fet-v1",t:"W1 單字",s:"Boxes of Blooms",w:W("shadow=影子|meeting=會議、聚會|scurry=急忙小步跑|flutter=拍動、飄動|nod=點頭|colorful=色彩繽紛的|plant=種植|garden=花園|landlord=房東|window box=窗台花箱")},
+   {id:"fet-v2",t:"W2 單字",s:"Boxes of Blooms",w:W("soil=土壤|elevator=電梯|important=重要的|pour=倒（液體）|hang=懸掛|invite=邀請|bloom=開花|scent=香味|joy=喜悅|admire=欣賞")},
+   {id:"fet-v3",t:"W3 單字",s:"Ocean Treasures",w:W("backyard=後院|daylight=日光|seaweed=海草|snapshot=快照|bright=明亮的|gasp=倒抽一口氣|wink=眨眼|arrive=抵達|seagull=海鷗|steep=陡峭的")},
+   {id:"fet-v4",t:"W4 單字",s:"Ocean Treasures",w:W("notice=注意到|explain=解釋|shallow=淺的|critter=小動物|collect=收集|cell phone=手機|creature=生物|hermit crab=寄居蟹|explore=探索|pleasure=樂趣")},
+   {id:"fet-v5",t:"W5 單字",s:"You Can't Climb a Cactus",w:W("excited=興奮的|favorite=最喜歡的|tour=參觀|guide=導覽員|explore=探索|different=不同的|strange=奇怪的|empty=空的|cactus=仙人掌|climb=爬")},
+   {id:"fet-v6",t:"W6 單字",s:"You Can't Climb a Cactus",w:W("desert=沙漠|vulture=禿鷹|glass=玻璃|lizard=蜥蜴|crawl=爬行|match=配對|fun fact=有趣小知識|lead=帶領|assistant=助手|decide=決定")},
+   {id:"fet-v7",t:"W7 複習字",s:"從前面幾週挑出的重點字",star:1,w:W("meeting=會議|plant=種植|hang=懸掛|scent=香味|snapshot=快照|daylight=日光|collect=收集|pleasure=樂趣|strange=奇怪的|match=配對")}]},
+  {title:"課文 Reading", items:[
+   {id:"fet-r1",t:"Boxes of Blooms",s:"p.62–79"},
+   {id:"fet-r2",t:"Ocean Treasures",s:"p.24–41"},
+   {id:"fet-r3",t:"You Can't Climb a Cactus",s:"p.168–183"}]},
+  {title:"閱讀理解 Comprehension", items:[
+   {id:"fet-c0",t:"寫實小說的特色 Realistic Fiction",s:"p.56–57、18–19、162–163"},
+   {id:"fet-c1",t:"角色 Characters",s:"p.85 · 主角是誰？是什麼樣的人？"},
+   {id:"fet-c2",t:"場景 Setting",s:"p.47 · 故事在哪裡、什麼時候發生？"},
+   {id:"fet-c3",t:"情節 Plot",s:"p.189 · 開頭、經過、結尾"}]},
+  {title:"自然發音 Phonics", items:[
+   {id:"fet-p1",t:"長母音／短母音",s:"cap → cape、hop → hope"},
+   {id:"fet-p2",t:"長母音 CVCe",s:"cake、bike、home、cute"},
+   {id:"fet-p3",t:"押韻字 Rhyming Words",s:"cat / hat / bat"},
+   {id:"fet-p4",t:"子音混合 Blends",s:"bl、cr、st、sp、tr…"},
+   {id:"fet-p5",t:"二合字母 ch / sh / wh / th / ph",s:"chip、ship、when、this、phone"},
+   {id:"fet-p6",t:"三合字母 tch",s:"catch、match"}]}
+ ]}
+];
+const ALL = DATA.flatMap(s => s.groups.flatMap(g => g.items.map(i => ({...i, sec:s.sec}))));
+
+let done = {};
+const $ = id => document.getElementById(id);
+const check = '<svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = d => { const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(d || ""); return m ? `${+m[1]}/${+m[2]} 完成` : "已完成"; };
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+
+function build(){
+  $("app").innerHTML = DATA.map(s => `
+   <section class="${s.sec}-sec">
+    <div class="sec-head"><h2>${s.name}</h2><span>${esc(s.sub)}</span></div>
+    ${s.groups.map((g,gi) => `
+     <div class="group">
+      <h3>${esc(g.title)} <span class="count" data-g="${s.sec}-${gi}"></span></h3>
+      ${g.items.map(i => `
+       <div class="item" id="it-${i.id}">
+        <label class="row">
+         <input type="checkbox" id="cb-${i.id}" data-id="${i.id}">
+         <span class="box" aria-hidden="true">${check}</span>
+         <span class="txt"><span class="t">${esc(i.t)}${i.star?' <span class="star">★ 重點</span>':''}</span><span class="s">${esc(i.s)}</span></span>
+         <span class="when" id="wh-${i.id}"></span>
+         ${i.w ? `<button class="more" type="button" data-toggle="${i.id}" aria-expanded="false">單字</button>` : ""}
+        </label>
+        ${i.w ? `<div class="words" id="wd-${i.id}" hidden>${i.w.map(([e,c]) => `<div><b>${esc(e)}</b><span>${esc(c)}</span></div>`).join("")}</div>` : ""}
+       </div>`).join("")}
+     </div>`).join("")}
+   </section>`).join("") + `<div class="note">作業（My Field Trip、A Great Corner in School）和專題（Stories That Bloom）不在這份清單裡。</div>`;
+
+  $("app").addEventListener("change", e => {
+    const id = e.target.dataset.id; if (!id) return;
+    if (e.target.checked) done[id] = today(); else delete done[id];
+    render(); save(id);
+  });
+  $("app").addEventListener("click", e => {
+    const b = e.target.closest("[data-toggle]"); if (!b) return;
+    e.preventDefault();
+    const box = $("wd-" + b.dataset.toggle); box.hidden = !box.hidden;
+    b.setAttribute("aria-expanded", String(!box.hidden)); b.textContent = box.hidden ? "單字" : "收起";
+  });
+}
+
+function render(){
+  for (const i of ALL){
+    const on = !!done[i.id];
+    $("cb-"+i.id).checked = on;
+    $("it-"+i.id).classList.toggle("is-done", on);
+    $("wh-"+i.id).textContent = on ? fmt(done[i.id]) : "";
+  }
+  DATA.forEach(s => s.groups.forEach((g,gi) => {
+    const n = g.items.filter(i => done[i.id]).length, el = document.querySelector(`[data-g="${s.sec}-${gi}"]`);
+    el.textContent = n === g.items.length ? `${n}/${n} 完成 ✓` : `${n}/${g.items.length}`;
+    el.classList.toggle("full", n === g.items.length);
+  }));
+  const n = ALL.filter(i => done[i.id]).length, pct = Math.round(n / ALL.length * 100);
+  $("pDone").textContent = n; $("pTotal").textContent = ALL.length; $("pPct").textContent = pct + "%";
+  $("pBar").style.width = pct + "%";
+  for (const k of ["cet","fet"]){
+    const xs = ALL.filter(i => i.sec === k);
+    $("c" + k[0].toUpperCase() + k.slice(1)).textContent = `${xs.filter(i => done[i.id]).length}/${xs.length}`;
+  }
+}
+
+function countdown(){
+  const start = new Date(2026, 9, 26), now = new Date(); now.setHours(0,0,0,0);
+  const d = Math.round((start - now) / 864e5);
+  $("countdown").innerHTML = d > 0 ? `還有 <b>${d}</b> 天進入考試週` : d >= -4 ? `<b>考試週進行中</b>，加油！` : `期中考已結束`;
+}
+
+// 進度存在 Firebase 的 users/<帳號>/midtermChecklist/<項目> = "YYYY-MM-DD"。
+// 一項一筆寫入，爸爸媽媽同時在兩台手機勾也不會互相蓋掉。
+const LS_KEY = "daisy_midterm_checklist";
+// 2026-10-23 已經唸完的部分。雲端還沒有任何紀錄時寫進去一次。
+const SEED_DATE = "2026-10-23";
+const SEED_IDS = ["cet-g1","cet-g2","cet-g3","cet-g4","cet-g5","cet-g6","cet-g7","cet-v12","cet-v7"];
+
+function lsLoad(){ try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch (e) { return null; } }
+function lsSave(){ try { localStorage.setItem(LS_KEY, JSON.stringify(done)); } catch (e) {} }
+function savedCode(){ try { return (localStorage.getItem("daisy_hamster_user") || "").trim().toUpperCase(); } catch (e) { return ""; } }
+
+function save(id){
+  lsSave();
+  if (!ref) { $("status").textContent = "還沒登入，進度只存在這台裝置"; return; }
+  $("status").textContent = "儲存中…";
+  const p = done[id] ? ref.child(id).set(done[id]) : ref.child(id).remove();
+  p.then(() => { $("status").textContent = "已儲存 ✓ 另一台手機會自動更新"; })
+   .catch(() => { $("status").textContent = "儲存失敗，請檢查網路後再勾一次"; });
+}
+
+async function connect(code){
+  const fdb = await getFirebaseDb();
+  if (!fdb) { $("status").textContent = "連不上雲端，進度先存在這台裝置"; return; }
+  ref = fdb.ref("users/" + code + "/midtermChecklist");
+  $("login").hidden = true;
+  ref.on("value", snap => {
+    const v = snap.val();
+    if (v === null) {
+      const seed = {}; SEED_IDS.forEach(k => { seed[k] = SEED_DATE; });
+      ref.set(seed);
+      return;
+    }
+    done = {...v}; lsSave(); render();
+    $("status").textContent = `帳號 ${code} · 進度已同步 ✓`;
+  }, () => { $("status").textContent = "讀不到雲端進度，進度先存在這台裝置"; });
+}
+
+function setupLogin(){
+  $("login").hidden = false;
+  $("status").textContent = "輸入帳號後，兩台手機的進度會同步";
+  $("login").addEventListener("submit", e => {
+    e.preventDefault();
+    const code = $("code").value.trim().toUpperCase();
+    if (!code) return;
+    try { localStorage.setItem("daisy_hamster_user", code); } catch (err) {}
+    connect(code);
+  });
+}
+
+let ref = null;
+build();
+done = lsLoad() || {};
+render(); countdown();
+const code = savedCode();
+if (code) connect(code); else setupLogin();
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
