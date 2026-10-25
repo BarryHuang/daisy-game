@@ -14,10 +14,7 @@ const MENU_GROUPS = [
     { href: "wordbook.html", emoji: "📒", name: "單字總表", note: "所有單字・看熟練度" }
   ]},
   { title: "讀故事", items: [
-    { href: "story_hub.html",   emoji: "📚", name: "課文複習" },
-    { href: "autumn_book.html", emoji: "🍂", name: "My Autumn Book" },
-    { href: "every_season.html",emoji: "🌸", name: "Every Season" },
-    { href: "georgia_eyes.html",emoji: "🎨", name: "Through Georgia's Eyes" }
+    { href: "story_hub.html",   emoji: "📚", name: "課文複習" }
   ]},
   { title: "玩遊戲", items: [
     { href: "daisy_memory.html",   emoji: "🎴", name: "翻翻樂", note: "配對英文和中文" },
@@ -52,6 +49,12 @@ const MENU_GROUPS = [
   // 「回 v1」。兩邊共用同一份進度和金幣，來回切換不會掉資料。
   { title: "試用", items: [
     { href: "v2/", emoji: "✨", name: "v2（beta）", note: "新版介面・試用中" }
+  ]},
+  // 一上的課文。二上已經不考，檔案留著，放到最下面
+  { title: "小一課文（舊）", items: [
+    { href: "autumn_book.html", emoji: "🍂", name: "My Autumn Book" },
+    { href: "every_season.html",emoji: "🌸", name: "Every Season" },
+    { href: "georgia_eyes.html",emoji: "🎨", name: "Through Georgia's Eyes" }
   ]}
 ];
 
