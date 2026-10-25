@@ -68,6 +68,17 @@
             gap: 20px;
         }
 
+        /* ===== 小一課文（舊）：收起來，要用再打開 ===== */
+        /* details 不一定吃 flex gap，卡片間距用 margin */
+        .old-books .story-card + .story-card { margin-top: 20px; }
+        .old-books summary {
+            cursor: pointer;
+            color: #888;
+            font-size: 0.95rem;
+            padding: 6px 4px;
+        }
+        .old-books[open] summary { margin-bottom: 12px; }
+
         /* ===== STORY CARD ===== */
         .story-card {
             background: white;
@@ -192,6 +203,10 @@
         <div class="card-btn btn-purple">查一下 ▶</div>
     </a>
 
+    <!-- 一上的課文，二上已經不用了；檔案保留，收在這裡 -->
+    <details class="old-books">
+    <summary>📦 小一課文（舊）</summary>
+
     <!-- Card 1: My Autumn Book -->
     <a class="story-card" href="autumn_book.html">
         <div class="card-stripe stripe-orange"></div>
@@ -242,6 +257,7 @@
         </div>
         <div class="card-btn btn-green">開始 ▶</div>
     </a>
+    </details>
 
 </div>
 
