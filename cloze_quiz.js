@@ -350,9 +350,10 @@
     var speakBtn = e.target.closest('.q-speak');
     if (speakBtn) {
       var q = questions[+speakBtn.dataset.i];
-      // 作答前唸完整句子會直接把答案講出來，所以空格先唸成 "blank"。
+      // 作答前唸完整句子會直接把答案講出來，所以空格跳過不唸，只用逗號停頓一下
+      // （以前唸成 "blank"，她會以為那也是句子的一部分）。
       // 閱讀理解的題目沒有空格，split 不會切到東西，整句照唸。
-      speak(q.sentence.split(BLANK).join(submitted ? ' ' + q.answer + ' ' : ' blank '));
+      speak(q.sentence.split(BLANK).join(submitted ? ' ' + q.answer + ' ' : ', '));
       return;
     }
     var replay = e.target.closest('[data-play]');
