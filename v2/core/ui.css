@@ -15,6 +15,11 @@
 
 @font-face { font-family: "Andika"; font-weight: 400; font-display: swap; src: url("../fonts/Andika-Regular.woff2") format("woff2"); }
 @font-face { font-family: "Andika"; font-weight: 700; font-display: swap; src: url("../fonts/Andika-Bold.woff2") format("woff2"); }
+/* 中文：justfont 的 jf open 粉圓（圓體，和 Andika 一樣是給孩子看的圓潤字形；SIL OFL 1.1）。
+   用未修改的原檔：「open huninn / huninn」是保留字型名稱，裁字或轉檔就不能再叫這個名字（同 Andika）。
+   只有一個字重，粗體由瀏覽器合成。4.9 MB，不放進 sw.js 的預先快取：只在打開 v2 時才下載，
+   之後由 Service Worker 順手快取（v1 的使用者不用多下載）。 */
+@font-face { font-family: "jf open huninn"; font-weight: 400; font-display: swap; src: url("../fonts/jf-openhuninn-2.1.ttf") format("truetype"); }
 
 :root {
   --bg: #FBF6EA;  --surface: #FFFDF7;  --surface-2: #F4ECDC;
@@ -28,7 +33,7 @@
   --radius: 22px; --radius-sm: 14px;
   --tap: 64px; --tap-icon: 48px; --gutter: 16px;
   --font-en: "Andika", "Comic Neue", system-ui, sans-serif;
-  --font-zh: "PingFang TC", "Noto Sans TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+  --font-zh: "jf open huninn", "PingFang TC", "Noto Sans TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
 }
 .c-leaf      { --c: var(--leaf);      --ct: var(--leaf-t);      --cd: var(--leaf-d);      --on: #fff; }
 .c-sky       { --c: var(--sky);       --ct: var(--sky-t);       --cd: var(--sky-d);       --on: #fff; }
@@ -51,6 +56,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 /* 注音：字的四成、和字一樣深；一組字不折行 */
 .zh { font-family: var(--font-zh); white-space: nowrap; }
+/* zhuyin.js 注入的樣式把 .zy（帶注音的字）寫死成 PingFang —— 它是 v1 v2 共用的，不改它，
+   在這裡用比較高的優先權讓注音字跟著 v2 的字型（不然粉圓只會出現在沒有注音的字上） */
+body .zy { font-family: var(--font-zh); }
 .zh .zy-col, .zh .zy-rail b { font-size: .42em; color: inherit !important; }
 
 /* ── 鉛筆描邊、排線 ─────────────────────────────────────────────────── */

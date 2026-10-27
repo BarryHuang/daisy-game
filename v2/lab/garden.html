@@ -7,13 +7,17 @@
 <title>後院菜園（試作）</title>
 <link rel="icon" href="../../icon-192.png">
 <style>
+/* 中文字型和 core/ui.css 一樣（jf open 粉圓，說明見那裡） */
+@font-face { font-family: "jf open huninn"; font-weight: 400; font-display: swap; src: url("../fonts/jf-openhuninn-2.1.ttf") format("truetype"); }
+/* zhuyin.js 把帶注音的字寫死成 PingFang；這裡讓它跟著頁面的字型 */
+body .zy { font-family: var(--font-zh); }
 /* 繪本風：和小星球、v2 設計稿同一組顏色 */
 :root {
   --paper: #FBF6EA; --surface: #FFFDF7; --surface-2: #F4ECDC;
   --ink: #4A3F3A; --ink-2: #7A6D62; --line: #DCCDB4;
   --leaf: #5E8A4A; --leaf-t: #E5EEDA; --wheat: #D9A53A; --wheat-t: #F7EBCB;
   --persimmon: #BF6A35; --persimmon-t: #F8E5D6; --sky: #4F7FAB;
-  --font-zh: "PingFang TC", "Noto Sans TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+  --font-zh: "jf open huninn", "PingFang TC", "Noto Sans TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 /* .pill 設了 display:inline-flex，會蓋過 hidden 屬性 —— 登入時該藏的「試玩」標示

@@ -902,6 +902,7 @@ App 知道這是第幾週（`calendar.js`）、哪些字快忘了（`mastery.js`
 | `v2/design.html` | P2a 設計稿：四個畫面 × 兩種風格（📖 繪本／✨ 明亮），上方工具列切換。**給 Daisy 選風格用**。🔈 語音檢查要在她的平板上開 |
 | `v2/art/hamster.svg` | 從 `daisy_hamster.html` 抽出來的同一隻倉鼠。改長相兩邊一起改 |
 | `v2/fonts/Andika-*.woff2` | SIL 的 Andika，**未修改的原檔**（OFL 1.1，見同目錄 `OFL.txt`）。`a`、`g` 是單層的，和學校教的手寫印刷體一樣。**不要子集化**：「Andika」是保留字型名稱，改過的版本不能再叫這個名字 |
+| `v2/fonts/jf-openhuninn-2.1.ttf` | 中文字型 justfont **jf open 粉圓**（圓體，SIL OFL 1.1，見 `OFL-jf-openhuninn.txt`）。和 Andika 一樣是**未修改的原檔**：「open huninn / huninn」是保留字型名稱，裁字或轉檔就不能再叫這個名字。注音和聲調符號都有，v2 用到的 1,216 個中文字也都有。只有一個字重，粗體由瀏覽器合成。4.9 MB，**不放進 `sw.js` 的預先快取**（不然每次改版連只用 v1 的人都要重新下載），打開 v2 時才下載、由 SW 順手快取。`zhuyin.js` 會把帶注音的字寫死成 PingFang，v2 的 CSS 用 `body .zy` 蓋過去（v1 不受影響） |
 
 設計原則（兩種風格共用）：
 
