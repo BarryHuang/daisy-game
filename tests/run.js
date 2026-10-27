@@ -732,12 +732,14 @@ describe("v1 相容性", () => {
   });
 
   describe("離線：v2 的檔案都在 Service Worker 的清單裡", () => {
-    it("v2 底下的頁面、程式、字型、圖都會預先快取（設計稿、授權檔除外）", () => {
+    // 中文字型（4.9 MB 的 .ttf）刻意不預先快取：只在打開 v2 時才下載，由 SW 順手快取，
+    // 不然每次改版，連只用 v1 的人都要重新下載一次
+    it("v2 底下的頁面、程式、字型、圖都會預先快取（設計稿、授權檔、中文字型除外）", () => {
       const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
       const listed = new Set([...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1]));
       const walk = (d) => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true })
         .flatMap((e) => (e.isDirectory() ? walk(d + "/" + e.name) : [d + "/" + e.name]));
-      walk("v2").filter((f) => !/design\.html$|OFL\.txt$|LICENSE$/.test(f))
+      walk("v2").filter((f) => !/design\.html$|OFL[^/]*\.txt$|LICENSE$|\.ttf$/.test(f))
         .forEach((f) => assert.ok(listed.has(f), f + " 沒有列在 sw.js 的 LOCAL_ASSETS"));
       listed.forEach((f) => { if (f.startsWith("v2/") && !f.endsWith("/")) assert.ok(fs.existsSync(path.join(ROOT, f)), f + " 不存在"); });
     });
