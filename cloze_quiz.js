@@ -14,6 +14,15 @@
 //                                             // 熟練度會被拆成兩個不同的字
 //     wrong: ['explain', 'collect'],
 //     source: 'CET Wk 4' }
+//
+// 題庫模式（可以考很多次、每次題目不一樣）：把 questions 換成
+//   startClozeQuiz({ ..., pool: [...], count: 10, poolKey: 'fet_cactus' })
+// pool 裡每一題多兩個欄位：
+//   part: 'A'                // 題目屬於哪一段。抽題時各段輪流抽，不會十題都考開頭
+//   sentence: ['問法一', '問法二']   // 可以給好幾種問法，每次隨機挑一種
+// wrong 可以給超過兩個，每次隨機挑兩個當誘答，選項組合也會變。
+// 抽過的題目記在 localStorage，下一次優先考還沒考過的，全部考過一輪才重來。
+// 題庫模式只有標了 lemma 的題目會記進單字熟練度，整句答案不會混進單字表。
 
 (function () {
   'use strict';
@@ -197,11 +206,48 @@
       word ? word : '<span class="q-blank">?</span>');
   }
 
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+  function loadSeen() {
+    try { return JSON.parse(localStorage.getItem('daisy_pool_seen_' + cfg.poolKey)) || []; }
+    catch (e) { return []; }
+  }
+  function saveSeen(ids) {
+    try { localStorage.setItem('daisy_pool_seen_' + cfg.poolKey, JSON.stringify(ids)); } catch (e) {}
+  }
+
+  /** 從題庫抽 count 題：先抽沒考過的，各段輪流抽，最後照課文順序排 */
+  function drawFromPool() {
+    var n = Math.min(cfg.count || 10, cfg.pool.length);
+    var seen = loadSeen();
+    var fresh = cfg.pool.filter(function (q) { return seen.indexOf(q.id) < 0; });
+    if (fresh.length < n) { seen = []; fresh = cfg.pool.slice(); }
+
+    var byPart = {}, parts = [];
+    shuffle(fresh).forEach(function (q) {
+      var k = q.part || '-';
+      if (!byPart[k]) { byPart[k] = []; parts.push(k); }
+      byPart[k].push(q);
+    });
+    parts = shuffle(parts);
+    var out = [];
+    while (out.length < n) {
+      parts.forEach(function (k) { if (out.length < n && byPart[k].length) out.push(byPart[k].shift()); });
+    }
+    saveSeen(seen.concat(out.map(function (q) { return q.id; })));
+    return out.sort(function (a, b) { return cfg.pool.indexOf(a) - cfg.pool.indexOf(b); });
+  }
+
   function build() {
-    return cfg.questions.map(function (q) {
+    var src = cfg.pool ? drawFromPool() : cfg.questions;
+    return src.map(function (q) {
+      // 聽寫卷沒有 wrong
+      var wrong = q.wrong || [];
+      if (wrong.length > 2) wrong = shuffle(wrong).slice(0, 2);
       return {
-        sentence: q.sentence, answer: q.answer, lemma: q.lemma || q.answer,
-        source: q.source, options: shuffle([q.answer].concat(q.wrong))
+        sentence: Array.isArray(q.sentence) ? pick(q.sentence) : q.sentence,
+        answer: q.answer, lemma: q.lemma || (cfg.pool ? null : q.answer),
+        source: q.source, options: shuffle([q.answer].concat(wrong))
       };
     });
   }
@@ -230,8 +276,8 @@
     +     '<div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>'
     +   '</div>'
     +   '<p class="instr">' + esc(cfg.instr || '每題選一個字填進空格。')
-    +     '共 ' + cfg.questions.length + ' 題，每題 '
-    +     (100 / cfg.questions.length).toFixed(0) + ' 分。</p>'
+    +     '共 ' + questions.length + ' 題，每題 '
+    +     (100 / questions.length).toFixed(0) + ' 分。</p>'
     +   '<div id="questions-container"></div>'
     + '</div>'
     + '<div id="result-screen"><div class="result-card">'
@@ -241,7 +287,8 @@
     +   '<div class="result-msg" id="result-msg"></div>'
     +   '<div class="result-sub" id="result-sub"></div>'
     +   '<button class="result-btn btn-review" id="btn-review">查看詳解</button>'
-    +   '<button class="result-btn btn-reset" id="btn-reset">重新作答</button>'
+    +   '<button class="result-btn btn-reset" id="btn-reset">'
+    +     (cfg.pool ? '再考一次（換新題目）' : '重新作答') + '</button>'
     + '</div></div>'
     + '<div id="submit-area"><button id="submit-btn" disabled>交卷</button></div>';
     document.body.appendChild(root);
@@ -303,9 +350,10 @@
     var speakBtn = e.target.closest('.q-speak');
     if (speakBtn) {
       var q = questions[+speakBtn.dataset.i];
-      // 作答前唸完整句子會直接把答案講出來，所以空格先唸成 "blank"。
+      // 作答前唸完整句子會直接把答案講出來，所以空格跳過不唸，只用逗號停頓一下
+      // （以前唸成 "blank"，她會以為那也是句子的一部分）。
       // 閱讀理解的題目沒有空格，split 不會切到東西，整句照唸。
-      speak(q.sentence.split(BLANK).join(submitted ? ' ' + q.answer + ' ' : ' blank '));
+      speak(q.sentence.split(BLANK).join(submitted ? ' ' + q.answer + ' ' : ', '));
       return;
     }
     var replay = e.target.closest('[data-play]');
@@ -358,7 +406,7 @@
       var ok = isRight(answers[i], q.answer);
       if (ok) right++;
       // 餵給熟練度系統：倉鼠的書櫃和幾個遊戲都會optionally拿弱字當題庫
-      if (typeof recordAttempt === 'function') {
+      if (q.lemma && typeof recordAttempt === 'function') {
         // 聽寫（typing）練的是拼；選字填空練的是「會用」（mastery.js 的題型）
         try { recordAttempt(q.lemma, ok, ok ? 0 : 1, cfg.mode === 'typing' ? 'spell' : 'use'); } catch (e) {}
       }

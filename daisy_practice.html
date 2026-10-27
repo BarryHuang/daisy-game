@@ -115,6 +115,9 @@ section{margin-top:26px}
     { ic: '🧩', href: 'daisy_cet_cloze.html',     t: '選擇克漏字',   d: '整段挖空，從單字庫裡挑' },
     { ic: '🎧', href: 'daisy_cet_dictation.html', t: '聽寫克漏字',   d: '聽句子，把缺的字拼出來' },
   ];
+  var FET_READER = [
+    { ic: '🌵', href: 'daisy_fet_read_cactus.html', t: "You Can't Climb a Cactus 閱讀測驗", d: '每次 10 題・考很多次題目都會換' },
+  ];
   var EXAMS = [
     { ic: '✏️', href: 'daisy_vocab_final.html',        t: '單字測驗', d: '整學期單字・看字選意思' },
     { ic: '📝', href: 'daisy_grammar_final.html',      t: '文法測驗', d: '整學期文法' },
@@ -192,6 +195,9 @@ section{margin-top:26px}
     html += '<section><div class="sec-head"><h2>課文練習</h2>'
           +   '<span class="hint">Continents and Oceans</span></div>'
           + rows(READER) + '</section>'
+          + '<section><div class="sec-head"><h2>FET 課文練習</h2>'
+          +   '<span class="hint">myView 2.1</span></div>'
+          + rows(FET_READER) + '</section>'
           + '<section><div class="sec-head"><h2>整學期測驗</h2></div>'
           + rows(EXAMS) + '</section>'
           + '<div class="foot">想查單字或看所有單字的熟練度？<br>'
