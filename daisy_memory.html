@@ -301,7 +301,7 @@
                 if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0.15), 110);
                 // 配對前為這個字翻錯過幾次，會影響「乾淨過關」的連對紀錄
                 if (typeof recordAttempt === 'function')
-                    recordAttempt(data.word, true, miss[data.word] || 0);
+                    recordAttempt(data.word, true, miss[data.word] || 0, 'see');
                 updateStats();
                 if (matchedPairs === totalPairs) setTimeout(finish, 500);
             } else {

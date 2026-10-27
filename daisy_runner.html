@@ -395,7 +395,7 @@
                 run.speed = Math.min(430, run.speed + 12);
                 if (snd('success', 760, 'sine', 0.1)) setTimeout(() => playTone(1040, 'sine', 0.12), 90);
                 puff('✨', run.lane);
-                if (typeof recordAttempt === 'function') recordAttempt(g.word, true, 0);
+                if (typeof recordAttempt === 'function') recordAttempt(g.word, true, 0, g.listen ? 'hear' : 'see');
 
                 if (run.combo > 0 && run.combo % 3 === 0) {
                     run.dash = 5;
@@ -417,7 +417,7 @@
                 hamster.classList.remove('crash'); void hamster.offsetWidth;
                 hamster.classList.add('crash');
                 puff('💥', run.lane);
-                if (typeof recordAttempt === 'function') recordAttempt(g.word, false, 1);
+                if (typeof recordAttempt === 'function') recordAttempt(g.word, false, 1, g.listen ? 'hear' : 'see');
                 document.getElementById('message').textContent = `是「${g.word}」！`;
                 speak(g.word);
             }

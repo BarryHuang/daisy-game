@@ -422,7 +422,10 @@ describe("v1 相容性", () => {
   // v2「今天」的規劃器
   // ════════════════════════════════════════════════════════════════════
   const PL = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/planner.js")).href);
-  const entries = new Function(fs.readFileSync(path.join(ROOT, "words.js"), "utf8") + "; return wordEntries;")();
+  const CZ = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/cloze.js")).href);
+  const { wordEntries: entries, wordExamples: examples } = new Function(fs.readFileSync(path.join(ROOT, "words.js"), "utf8") + "; return { wordEntries, wordExamples };")();
+  const exampleOf = (w) => examples[w] || examples[String(w).toLowerCase()] || "";
+  const canCloze = (w) => !!CZ.clozeOf(w, exampleOf(w));
   // 專有名詞（Africa、Earth…）在 wordEntries 裡是大寫的 key，只用小寫查會查不到 ——
   // 週四的模擬小考就會少考三個字。所以先用原字查，查不到再用小寫
   const entryOf = (w) => entries[String(w)] || entries[String(w).toLowerCase()];
@@ -430,7 +433,7 @@ describe("v1 相容性", () => {
   const plan = (ymd, extra = {}) => {
     const week = cal.currentWeek(ymd);
     return PL.planToday(Object.assign({ ymd, week, words, lists: cal.TERM.lists,
-      scope: week.kind === "review" ? cal.reviewScope(week.n) : null, hasMeaning }, extra));
+      scope: week.kind === "review" ? cal.reviewScope(week.n) : null, hasMeaning, canCloze }, extra));
   };
   const types = (p) => p.stations.map((x) => x.type).join(",");
   const lc = (arr) => arr.map((w) => String(w).toLowerCase());
@@ -440,17 +443,17 @@ describe("v1 相容性", () => {
   const fet1to7 = new Set(cal.reviewScope(8).filter((x) => x.list === FET).flatMap(({ list, key }) => lc(words[list][key])));
 
   describe("「今天」的規劃器 planner.js", () => {
-    it("期中複習週（10/19，現在）：聽一聽 → 選意思 → 拼拼看 → 寶箱，每關 6 個字", () => {
+    it("期中複習週（10/19，現在）：聽一聽 → 選意思 → 填填看 → 拼拼看 → 寶箱，共 21 個字", () => {
       const p = plan(20261019);
-      assert.strictEqual(types(p), "hear,see,spell,chest");
-      p.stations.slice(0, 3).forEach((s) => assert.strictEqual(s.words.length, 6, s.type));
+      assert.strictEqual(types(p), "hear,see,use,spell,chest");
+      assert.deepStrictEqual(p.stations.slice(0, 4).map((s) => s.words.length), [5, 5, 5, 6]);
       assert.deepStrictEqual(p.headline.map((h) => h.zh), ["第八週", "期中複習"]);
     });
 
     it("複習週只出 Wk 1–7 的字；拼拼看只出 FET（拼字課）的字", () => {
       const p = plan(20261019);
-      p.stations.slice(0, 3).forEach((s) => s.words.forEach((w) => assert.ok(wk1to7.has(w.toLowerCase()), w + " 不在 Wk 1–7")));
-      p.stations[2].words.forEach((w) => assert.ok(fet1to7.has(w.toLowerCase()), w + " 不是 FET 的字"));
+      p.stations.slice(0, 4).forEach((s) => s.words.forEach((w) => assert.ok(wk1to7.has(w.toLowerCase()), w + " 不在 Wk 1–7")));
+      p.stations[3].words.forEach((w) => assert.ok(fet1to7.has(w.toLowerCase()), w + " 不是 FET 的字"));
     });
 
     it("三關的字不重複（字夠多的時候）", () => {
@@ -479,7 +482,7 @@ describe("v1 相容性", () => {
 
     it("新字週週一（11/2，Wk 10）：先看新字卡，20 個新字分三天看，今天 7 張", () => {
       const p = plan(20261102);
-      assert.strictEqual(types(p), "card,see,spell,hear,chest");
+      assert.strictEqual(types(p), "card,see,spell,hear,chest", "週一最後是聽一聽");
       assert.strictEqual(p.stations[0].words.length, 7);
       assert.deepStrictEqual(p.headline.map((h) => h.zh), ["第十週", "星期一"]);
     });
@@ -517,8 +520,34 @@ describe("v1 相容性", () => {
 
     it("考試當天（週五）輕鬆一點；週末只複習", () => {
       assert.strictEqual(types(plan(20261106)), "hear,see,chest");
-      assert.strictEqual(types(plan(20261107)), "see,spell,chest");
+      assert.strictEqual(types(plan(20261107)), "see,use,spell,chest");
       assert.deepStrictEqual(plan(20261106).headline.map((h) => h.zh), ["第十週", "考試加油"]);
+    });
+
+    it("週二、三：最後一關換成填填看，只出今天以前看過卡片的本週 CET 字", () => {
+      const seen = {};
+      plan(20261102).stations[0].words.forEach((w) => { seen[w.toLowerCase()] = 20261102; });
+      const tue = plan(20261103, { seen });
+      assert.strictEqual(types(tue), "card,see,spell,use,chest");
+      const ok = new Set([...Object.keys(seen), ...lc(tue.stations[0].words)]);
+      const cet10 = setOf(CET, "Wk 10");
+      tue.stations.find((s) => s.type === "use").words.forEach((w) => {
+        if (cet10.has(w.toLowerCase())) assert.ok(ok.has(w.toLowerCase()), w + " 還沒看過卡片");
+      });
+    });
+
+    it("填填看只出 CET 的字，而且每個都挖得出空格", () => {
+      const cetAll = new Set(Object.values(words[CET]).flat().map((w) => w.toLowerCase()));
+      for (const ymd of [20261019, 20261103, 20261107]) {
+        plan(ymd).stations.filter((s) => s.type === "use").forEach((s) => s.words.forEach((w) => {
+          assert.ok(cetAll.has(w.toLowerCase()), w + " 不是 CET 的字");
+          assert.ok(CZ.clozeOf(w, exampleOf(w)), w + " 的例句挖不出空格");
+        }));
+      }
+    });
+
+    it("沒給 canCloze（舊的呼叫方式）就不排填填看", () => {
+      assert.strictEqual(types(plan(20261019, { canCloze: undefined })), "hear,see,spell,chest");
     });
 
     it("沒有中文意思的字不出「選意思」和「拼拼看」", () => {
@@ -533,6 +562,184 @@ describe("v1 相容性", () => {
         p.headline.forEach((h) => assert.strictEqual([...h.zh].length, h.zy.split(" ").length, ymd + " " + h.zh));
         p.stations.forEach((s) => assert.strictEqual([...s.name].length, s.zy.split(" ").length, s.name));
       }
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════════════
+  // 填填看（句子填空）cloze.js
+  // ════════════════════════════════════════════════════════════════════
+  describe("填填看 cloze.js", () => {
+    it("挖原形；句首保留大寫；找不到原形（peeked）就不出", () => {
+      assert.deepStrictEqual(CZ.clozeOf("valley", "A river runs through the valley."),
+        { before: "A river runs through the ", answer: "valley", after: "." });
+      assert.strictEqual(CZ.clozeOf("ocean", "Oceans are big.") , null);
+      assert.strictEqual(CZ.clozeOf("peek", exampleOf("peek")), null);
+      assert.strictEqual(CZ.clozeOf("sea", "Seals swim in the sea.").before, "Seals swim in the ");
+      assert.strictEqual(CZ.clozeOf("cave", "Caves are dark. A cave is cool.").answer, "cave");
+      assert.strictEqual(CZ.clozeOf("Africa", "Africa is big.").answer, "Africa");
+    });
+
+    it("二上 290 個週單字，至少 280 個挖得出空格", () => {
+      const all = [FET, CET].flatMap((l) => Object.values(words[l]).flat());
+      assert.ok(all.filter(canCloze).length >= 280, String(all.filter(canCloze).length));
+    });
+
+    it("誘答：不重複、不是答案、不在句子裡；片語配片語、專有名詞配專有名詞", () => {
+      const pool = ["valley", "Valley", "river", "soil", "creature", "name after", "be known for", "Africa", "Europe", "mountain"];
+      const c = CZ.clozeOf("valley", "A river runs through the valley.");
+      for (let i = 0; i < 30; i++) {
+        const d = CZ.clozeDistractors("valley", c, pool, 2);
+        assert.strictEqual(d.length, 2);
+        assert.strictEqual(new Set(d).size, 2);
+        d.forEach((x) => assert.ok(!["valley", "Valley", "river", "name after", "be known for", "Africa", "Europe"].includes(x), x));
+      }
+      const ph = CZ.clozeOf("name after", "They name the dance after a bird.");
+      assert.strictEqual(ph, null, "片語中間夾字的不出");
+      const af = CZ.clozeDistractors("Africa", CZ.clozeOf("Africa", "Africa is big."), pool, 2);
+      assert.strictEqual(af[0], "Europe", "專有名詞先配專有名詞");
+      assert.ok(!af.includes("Africa"));
+    });
+
+    it("答案在句首：誘答也改成大寫開頭，不能一看大小寫就知道答案", () => {
+      const c = CZ.clozeOf("soil", "Soil is full of life.");
+      CZ.clozeDistractors("soil", c, ["river", "mountain", "creature"], 2).forEach((x) => assert.ok(/^[A-Z]/.test(x), x));
+    });
+
+    it("所有排得進填填看的字，誘答都湊得滿兩個", () => {
+      const cetAll = Object.values(words[CET]).flat();
+      cetAll.filter(canCloze).forEach((w) => {
+        assert.strictEqual(CZ.clozeDistractors(w, CZ.clozeOf(w, exampleOf(w)), cetAll, 2).length, 2, w);
+      });
+    });
+  });
+
+  describe("v1 的遊戲和測驗：熟練度記在對的題型", () => {
+    // recordAttempt 的第四個參數 skill 沒帶就是 'see'。以前所有遊戲都沒帶，結果
+    // 猜單字、字母重組（在拼）、每週測驗卷（在用）全被記成「看得懂」，
+    // v2 的小徑以為她從沒練過拼和用，同一批字一直排
+    const files = fs.readdirSync(ROOT).filter((f) => /\.(html|js)$/.test(f) && f !== "mastery.js");
+    const calls = files.flatMap((f) => {
+      const src = fs.readFileSync(path.join(ROOT, f), "utf8");
+      return [...src.matchAll(/recordAttempt\(([^;]*?)\)\s*(?:;|\})/g)].map((m) => ({ f, args: m[1] }));
+    });
+    const topLevelArgs = (s) => { let d = 0, n = 1; for (const c of s) { if ("([{".includes(c)) d++; else if (")]}".includes(c)) d--; else if (c === "," && d === 0) n++; } return n; };
+
+    it("每一個呼叫都寫明題型（不靠預設值）", () => {
+      assert.ok(calls.length >= 20, "只找到 " + calls.length + " 個呼叫");
+      calls.forEach(({ f, args }) => assert.strictEqual(topLevelArgs(args), 4, f + "：recordAttempt(" + args + ")"));
+    });
+
+    it("題型對得上遊戲在考什麼", () => {
+      const skillOf = (f) => calls.filter((c) => c.f === f).map((c) => c.args.split(",").slice(3).join(",").trim());
+      for (const f of ["daisy_hangman.html", "daisy_scramble.html", "daisy_hamster.html"]) skillOf(f).forEach((s) => assert.strictEqual(s, "'spell'", f));
+      skillOf("passage_cloze.js").forEach((s) => assert.strictEqual(s, "'use'"));
+      assert.match(skillOf("cloze_quiz.js")[0], /typing.*'spell'.*'use'/);
+      skillOf("daisy_runner.html").forEach((s) => assert.match(s, /listen \? 'hear' : 'see'/));
+      skillOf("daisy_restaurant.html").forEach((s) => assert.match(s, /hideText \? 'hear' : 'see'/));
+    });
+  });
+
+  const SH = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/shelf.js")).href);
+  describe("書架 shelf.js", () => {
+    const items = SH.SHELVES.flatMap((s) => s.items);
+    it("每一本書都連到存在的頁面", () => {
+      items.forEach((it) => assert.ok(fs.existsSync(path.join(ROOT, it.href)), it.href));
+    });
+    it("中文名稱都有注音，而且一個字一組", () => {
+      SH.SHELVES.forEach((s) => assert.strictEqual([...s.name].length, s.zy.split(" ").length, s.name));
+      items.filter((it) => !it.en).forEach((it) => assert.strictEqual([...it.name].length, it.zy.split(" ").length, it.name));
+    });
+    it("「用今天的字玩」的遊戲都有載入 wordset.js（看得懂 ?set=）", () => {
+      items.filter((it) => it.set).forEach((it) => assert.match(fs.readFileSync(path.join(ROOT, it.href), "utf8"), /wordset\.js/, it.href));
+    });
+    it("今天的字：照小徑順序、不重複、不含寶箱；網址會編碼", () => {
+      const plan = { stations: [{ words: ["sea", "Africa"] }, { words: ["sea", "make sense"] }, { type: "chest", words: [] }] };
+      assert.deepStrictEqual(SH.todaysWords(plan), ["sea", "Africa", "make sense"]);
+      assert.deepStrictEqual(SH.todaysWords(null), []);
+      const memory = items.find((it) => it.href === "daisy_memory.html");
+      assert.strictEqual(SH.hrefOf(memory, ["sea", "make sense"]), "../daisy_memory.html?set=sea,make%20sense");
+      assert.strictEqual(SH.hrefOf(memory, []), "../daisy_memory.html");
+      assert.strictEqual(SH.hrefOf(items.find((it) => !it.set), ["sea"]), "../daisy_hamster.html");
+    });
+  });
+
+  const PA = await import(require("url").pathToFileURL(path.join(ROOT, "v2/core/papers.js")).href);
+  const { wordPos } = require(path.join(ROOT, "pos.js"));
+  const posOf = (w) => wordPos[w] || wordPos[String(w).toLowerCase()];
+  const paperOf = (c, wk) => {
+    const list = cal.TERM.lists[c];
+    return PA.makePaper({ list: words[list][wk], pool: Object.values(words[list]).flat(), exampleOf, posOf, seed: c + ":" + wk, source: wk });
+  };
+  const allPapers = ["fet", "cet"].flatMap((c) => Object.keys(words[cal.TERM.lists[c]]).map((wk) => ({ c, wk, p: paperOf(c, wk) })));
+
+  describe("自動出卷 papers.js ＋ 詞性 pos.js", () => {
+    it("這學期每個字都有詞性", () => {
+      const all = [FET, CET].flatMap((l) => Object.values(words[l]).flat());
+      const ok = new Set(["n", "v", "adj", "adv", "prep", "prop", "phr"]);
+      all.forEach((w) => assert.ok(ok.has(posOf(w)), w + " 沒有詞性"));
+    });
+
+    it("每一週都出得了卷：至少 8 題、0 重複", () => {
+      allPapers.forEach(({ c, wk, p }) => {
+        assert.ok(p.questions.length >= 8, c + " " + wk + " 只有 " + p.questions.length + " 題");
+        assert.deepStrictEqual(PA.auditPaper(p.questions).dupes, [], c + " " + wk);
+      });
+    });
+
+    it("洩漏（某題答案出現在別題句子裡）全學期最多 2 處", () => {
+      const leaks = allPapers.flatMap(({ c, wk, p }) => PA.auditPaper(p.questions).leaks.map((l) => c + " " + wk + "：" + l));
+      assert.ok(leaks.length <= 2, leaks.join("\n"));
+    });
+
+    it("每題兩個誘答：不重複、不是答案、不在句子裡；同詞性的有就用同詞性", () => {
+      allPapers.forEach(({ c, wk, p }) => p.questions.forEach((q) => {
+        const tag = c + " " + wk + " " + q.answer;
+        assert.strictEqual(q.wrong.length, 2, tag);
+        assert.strictEqual(new Set(q.wrong.map((w) => w.toLowerCase())).size, 2, tag);
+        q.wrong.forEach((w) => {
+          assert.notStrictEqual(w.toLowerCase(), q.answer.toLowerCase(), tag);
+          assert.ok(!PA.leaksInto(w, q.sentence), tag + "：" + w + " 在句子裡");
+        });
+        assert.ok(q.sentence.includes("___"), tag);
+        const pool = Object.values(words[cal.TERM.lists[c]]).flat();
+        const same = new Set(pool.filter((w) => posOf(w) === posOf(q.lemma)).map((w) => w.toLowerCase()));
+        if (same.size >= 6) q.wrong.forEach((w) => assert.strictEqual(posOf(w), posOf(q.lemma), tag + "：" + w));
+      }));
+    });
+
+    it("a ／ an 後面的空格：誘答的母音對得上（不然一看冠詞就知道）", () => {
+      allPapers.forEach(({ p }) => p.questions.forEach((q) => {
+        const before = q.sentence.split("___")[0];
+        if (/\ban\s*$/i.test(before)) q.wrong.forEach((w) => assert.match(w, /^[aeiou]/i, q.sentence + " " + w));
+        if (/\ba\s*$/i.test(before) && posOf(q.lemma) === "n") q.wrong.forEach((w) => assert.doesNotMatch(w, /^[aeiou]/i, q.sentence + " " + w));
+      }));
+    });
+
+    it("同一週每次出的一樣；答案在句首時誘答也大寫", () => {
+      assert.deepStrictEqual(paperOf("fet", "Wk 10"), paperOf("fet", "Wk 10"));
+      allPapers.forEach(({ p }) => p.questions.filter((q) => q.sentence.startsWith("___")).forEach((q) =>
+        q.wrong.forEach((w) => assert.match(w, /^[A-Z]/, q.sentence + " " + w))));
+    });
+
+    it("書架的考卷：有手工卷用手工卷，其他自動出；到第 8 週只列到 Wk 7", () => {
+      const ps = SH.papersUpTo(8, words, cal.TERM.lists);
+      assert.ok(ps.every((x) => !/1[0-9]|20/.test(x.wk)), ps.map((x) => x.wk).join(","));
+      assert.strictEqual(ps.find((x) => x.c === "cet" && x.wk === "Wk 7").href, "daisy_cet_wk7.html");
+      assert.strictEqual(ps.find((x) => x.c === "fet" && x.wk === "Wk 7").href, "daisy_paper.html?c=fet&wk=Wk%207");
+      Object.values(SH.HANDMADE).forEach((m) => Object.values(m).forEach((f) => assert.ok(fs.existsSync(path.join(ROOT, f)), f)));
+      assert.strictEqual(ps[0].sort, 7, "新的在前面");
+    });
+  });
+
+  describe("離線：v2 的檔案都在 Service Worker 的清單裡", () => {
+    it("v2 底下的頁面、程式、字型、圖都會預先快取（設計稿、授權檔除外）", () => {
+      const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
+      const listed = new Set([...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1]));
+      const walk = (d) => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true })
+        .flatMap((e) => (e.isDirectory() ? walk(d + "/" + e.name) : [d + "/" + e.name]));
+      walk("v2").filter((f) => !/design\.html$|OFL\.txt$|LICENSE$/.test(f))
+        .forEach((f) => assert.ok(listed.has(f), f + " 沒有列在 sw.js 的 LOCAL_ASSETS"));
+      listed.forEach((f) => { if (f.startsWith("v2/") && !f.endsWith("/")) assert.ok(fs.existsSync(path.join(ROOT, f)), f + " 不存在"); });
     });
   });
 

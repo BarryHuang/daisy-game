@@ -858,7 +858,7 @@
                 good++; combo++;
                 if (snd('success', 700, 'sine', 0.12)) setTimeout(() => playTone(1000, 'sine', 0.15), 110);
                 if (typeof recordAttempt === 'function')
-                    recordAttempt(current.word, true, wrongThisRound);
+                    recordAttempt(current.word, true, wrongThisRound, 'see');
 
                 // 答對拿到的是「投幣的權利」，投在哪由她自己抓時機。
                 // 兩枚（沒錯過才有第二枚）：幣堆是單層的，投一枚大概只推得掉一枚。
@@ -887,7 +887,7 @@
                 if (wrongThisRound >= 2) {
                     current.done = true;
                     if (typeof recordAttempt === 'function')
-                        recordAttempt(current.word, false, wrongThisRound);
+                        recordAttempt(current.word, false, wrongThisRound, 'see');
                     say('答案是 ' + current.word + '，這題沒有硬幣，再加油！');
                     speak(current.word);
                     slotsEl.querySelectorAll('.slot').forEach(b => b.classList.add('dead'));

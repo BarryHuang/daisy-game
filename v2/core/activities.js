@@ -1,4 +1,4 @@
-// activities.js — 小徑上的每一關：看新字、聽一聽、選意思、拼拼看（含小考）
+// activities.js — 小徑上的每一關：看新字、聽一聽、選意思、填填看、拼拼看（含小考）
 //
 //   runStation(host, station, ctx) → Promise<{ aborted, right, total }>
 //
@@ -11,11 +11,13 @@
 //   但第二次不記 —— 看過答案之後再答對，不能算她會了，不然記憶盒會被灌水。
 
 import { $, $$, zy, meaningOf, meaningHTML, emojiOf, exampleOf, say, speakEn, sfx, shuffle } from './kit.js';
+import { clozeOf, clozeDistractors } from './cloze.js';
 
 const HELP = {
   card:  '看新字。聽一聽，看一看，記住它。',
   hear:  '聽一聽。聽英文，選出你聽到的字。',
   see:   '選意思。這個英文是什麼意思？',
+  use:   '填填看。句子裡少了一個字，選出對的那一個。',
   spell: '拼拼看。聽英文，把它拼出來。',
   test:  '小考。只聽聲音，把字拼出來。',
 };
@@ -116,6 +118,38 @@ export function runStation(host, station, ctx) {
       });
     }
 
+    // ── 填填看（句子填空）─────────────────────────────────────────────
+    // 🔊 唸句子時，空格唸成停頓，不唸答案；答完再把整句唸一次
+    function use(item) {
+      const w = item.w, c = clozeOf(w, exampleOf(w));
+      if (!c) { answered++; setBar(); return next(); }   // 規劃器只排有例句的字，保險起見
+      const sentence = c.before + c.answer + c.after;
+      const opts = shuffle([c.answer, ...clozeDistractors(w, c, ctx.distractors, 2)]);
+      const holed = c.before + ' … ' + c.after;
+      stage.innerHTML = `
+        <div class="prompt card sketch cloze">
+          <p class="sentence en">${c.before}<span class="hole" data-hole></span>${c.after}</p>
+          <button class="icon-btn sketch" data-say-en="${holed.replace(/"/g, '&quot;')}" aria-label="唸句子">🔊</button>
+        </div>
+        <div class="options">${opts.map((o) => `<button class="opt en sketch" data-o="${o.replace(/"/g, '&quot;')}">${o}</button>`).join('')}</div>`;
+      speakEn(holed);
+      let done = false;
+      $$('.opt', stage).forEach((b) => b.onclick = () => {
+        if (done) return; done = true;
+        const ok = b.dataset.o === c.answer;
+        answer(item, ok, 0);
+        const hole = $('[data-hole]', stage);
+        hole.textContent = c.answer; hole.classList.add('filled');
+        const rightBtn = $$('.opt', stage).find((x) => x.dataset.o === c.answer);
+        rightBtn.classList.add('right');
+        $$('.opt', stage).forEach((x) => { if (x !== rightBtn && x !== b) x.classList.add('fade'); });
+        if (ok) sfx('success'); else { b.classList.add('wrong'); sfx('bump'); }
+        // 整句唸完再換下一題：句子長短不一，用字數估時間
+        setTimeout(() => speakEn(sentence), ok ? 200 : 300);
+        setTimeout(next, 1400 + sentence.split(/\s+/).length * 330);
+      });
+    }
+
     // ── 拼拼看（小考 = 只有聲音，沒有圖和中文）──────────────────────────
     function spell(item) {
       const w = item.w, dict = !!station.dictation;
@@ -166,7 +200,7 @@ export function runStation(host, station, ctx) {
       });
     }
 
-    const RENDER = { card, hear: (i) => options(i, 'hear'), see: (i) => options(i, 'see'), spell, test: spell };
+    const RENDER = { card, hear: (i) => options(i, 'hear'), see: (i) => options(i, 'see'), use, spell, test: spell };
     // 用 onclick 指定、不用 addEventListener：host 每一關都重用，addEventListener 會
     // 一關疊一個，玩到第三關點一下 🔊 會連唸三次
     host.onclick = (e) => { const s = e.target.closest('[data-say-en]'); if (s) speakEn(s.dataset.sayEn); };

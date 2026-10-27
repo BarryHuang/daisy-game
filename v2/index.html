@@ -43,7 +43,7 @@
   <nav class="tabbar">
     <button class="tab" aria-current="page"><span class="ti">🛤️</span><span class="zh" data-zy="今天|ㄐㄧㄣ ㄊㄧㄢ"></span></button>
     <a class="tab" href="lab/planet.html"><span class="ti"><img src="art/hamster.svg" alt=""></span><span class="zh" data-zy="倉鼠|ㄘㄤ ㄕㄨˇ"></span></a>
-    <a class="tab" href="../daisy_practice.html"><span class="ti">📚</span><span class="zh" data-zy="書架|ㄕㄨ ㄐㄧㄚˋ"></span></a>
+    <a class="tab" href="library.html"><span class="ti">📚</span><span class="zh" data-zy="書架|ㄕㄨ ㄐㄧㄚˋ"></span></a>
   </nav>
 </section>
 
@@ -76,6 +76,7 @@
     <div class="reward" id="reward" aria-live="polite"></div>
     <div class="streak sketch" id="streak" hidden></div>
     <button class="btn wide sketch hatch" id="chest-btn" style="max-width:520px"></button>
+    <a class="btn wide ghost sketch" id="chest-games" href="library.html#today" style="max-width:520px" hidden></a>
   </div>
 </section>
 
@@ -91,7 +92,8 @@
 <script type="module">
 import { planToday } from './core/planner.js';
 import { runStation } from './core/activities.js';
-import { $, $$, zy, meaningOf, say, sfx, unlockAudio, award, loginCode } from './core/kit.js';
+import { $, $$, zy, meaningOf, exampleOf, say, sfx, unlockAudio, award as payCoins, loginCode } from './core/kit.js';
+import { clozeOf } from './core/cloze.js';
 
 // 一關 5 金幣、寶箱 40：整條小徑走完 55–60 枚，比 v1 拼十個字（20–30）或任何
 // 一個每日挑戰（6–16）都多 —— 「做完今日任務」要明顯是賺最多的方式
@@ -103,8 +105,16 @@ document.addEventListener('pointerdown', unlockAudio, { once: true });
 
 // ── 今天（台北時間）。?date=YYYYMMDD 可以預覽別天的小徑 ──────────────────
 const params = new URLSearchParams(location.search);
-const ymd = params.get('date') ? +params.get('date') : taipeiDay();
-const KEY = 'daisy2_today_' + ymd, SEEN = 'daisy2_seen';
+// 離線：註冊根目錄那支 Service Worker（和 v1 是同一支、同一個 scope，不會多一支）。
+// 平常她是從 v1 選單進來的，已經裝好了；直接開 /v2/ 的書籤也要能離線
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('../sw.js').catch(() => {});
+
+const preview = !!params.get('date');
+const ymd = preview ? +params.get('date') : taipeiDay();
+// 預覽另存一份、不發金幣：不然爸爸先預覽明天、走完一遍，她明天打開就全打勾了，
+// 換日期預覽也能一直刷寶箱
+const KEY = (preview ? 'daisy2_preview_' : 'daisy2_today_') + ymd, SEEN = 'daisy2_seen';
+const award = (n) => (preview ? Promise.resolve(false) : payCoins(n));
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
@@ -132,6 +142,7 @@ function makePlan() {
     scope: week.kind === 'review' ? reviewScope(week.n) : null,
     mastery: readMastery(), seen: read(SEEN, {}),
     hasMeaning: (w) => !!meaningOf(w),
+    canCloze: (w) => !!clozeOf(w, exampleOf(w)),
   });
 }
 
@@ -294,6 +305,10 @@ function openChest() {
   const goPlay = () => {
     btn.innerHTML = '<img src="art/hamster.svg" alt="" style="width:30px">' + zy('去找倉鼠玩', 'ㄑㄩˋ ㄓㄠˇ ㄘㄤ ㄕㄨˇ ㄨㄢˊ');
     btn.onclick = () => { sfx('whoosh'); location.href = 'lab/planet.html'; };
+    // 或是用今天練過的字玩 v1 的遊戲（書架最上面那一格）
+    const g = $('#chest-games');
+    g.innerHTML = '<span aria-hidden="true">🎮</span>' + zy('用今天的字玩遊戲', 'ㄩㄥˋ ㄐㄧㄣ ㄊㄧㄢ ㄉㄜ˙ ㄗˋ ㄨㄢˊ ㄧㄡˊ ㄒㄧˋ');
+    g.hidden = preview;   // 預覽別天時，書架讀的是今天的字，對不上
     const n = streakDays();
     $('#streak').hidden = n < 2;
     $('#streak').innerHTML = '🔥 ' + zy('連續', 'ㄌㄧㄢˊ ㄒㄩˋ') + ' <span class="en">' + n + '</span> ' + zy('天', 'ㄊㄧㄢ');
@@ -340,7 +355,10 @@ async function boot() {
   if (!state.plan) { state.plan = makePlan(); save(); }
   distractors = termWords(currentWeek(ymd));
   // 只留最近兩週的小徑紀錄
-  try { Object.keys(localStorage).filter((k) => k.startsWith('daisy2_today_') && +k.slice(13) < addDays(ymd, -14)).forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+  try {
+    Object.keys(localStorage).filter((k) => (k.startsWith('daisy2_today_') && +k.slice(13) < addDays(ymd, -14))
+      || (k.startsWith('daisy2_preview_') && k !== KEY)).forEach((k) => localStorage.removeItem(k));
+  } catch (e) {}
   renderHeadline();
   drawTrail();
   window.today = { state, ymd, play, openChest };

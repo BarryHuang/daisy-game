@@ -9,7 +9,7 @@
 // 輸入全部由呼叫端傳進來（日曆、課表、記憶盒…），所以可以在 node 裡測。
 
 /** 一關做幾個字。一關大約 2–3 分鐘，整條小徑約 10 分鐘 */
-export const SIZES = { hear: 6, see: 6, spell: 6, card: 8, test: 10 };
+export const SIZES = { hear: 6, see: 6, spell: 6, use: 5, card: 8, test: 10 };
 
 /** 同一天每次算出來都一樣、換一天就不一樣的雜湊（排序打平手時用） */
 function hash(s) {
@@ -76,7 +76,8 @@ const STATION = {
   hear:  { skill: 'hear',  name: '聽一聽', zy: 'ㄊㄧㄥ ㄧ ㄊㄧㄥ',      em: '👂', color: 'rose' },
   see:   { skill: 'see',   name: '選意思', zy: 'ㄒㄩㄢˇ ㄧˋ ㄙ˙',      em: '👀', color: 'sky' },
   spell: { skill: 'spell', name: '拼拼看', zy: 'ㄆㄧㄣ ㄆㄧㄣ ㄎㄢˋ',    em: '✏️', color: 'persimmon' },
-  test:  { skill: 'spell', name: '小考',   zy: 'ㄒㄧㄠˇ ㄎㄠˇ',          em: '📝', color: 'plum' },
+  use:   { skill: 'use',   name: '填填看', zy: 'ㄊㄧㄢˊ ㄊㄧㄢˊ ㄎㄢˋ',  em: '🧩', color: 'plum' },
+  test:  { skill: 'spell', name: '小考',   zy: 'ㄒㄧㄠˇ ㄎㄠˇ',          em: '📝', color: 'persimmon' },
   chest: { skill: null,    name: '寶箱',   zy: 'ㄅㄠˇ ㄒㄧㄤ',           em: '🎁', color: 'wheat' },
 };
 function station(type, words, extra) {
@@ -123,10 +124,12 @@ function headline(week) {
  *   mastery   mastery.js 的 readMastery()
  *   seen      看過的新字卡 { word: ymd }
  *   hasMeaning(word)  這個字有沒有中文意思（沒有的不能出「選意思」和「拼拼看」）
+ *   canCloze(word)    這個字能不能出「填填看」（例句裡有它的原形，見 cloze.js）；
+ *                     省略就不排填填看
  *
  * 回傳 { ymd, kind, headline, stations: [{ id, type, skill, words, name, zy, em, color }] }
  */
-export function planToday({ ymd, week, words, lists, scope, mastery = {}, seen = {}, hasMeaning = () => true }) {
+export function planToday({ ymd, week, words, lists, scope, mastery = {}, seen = {}, hasMeaning = () => true, canCloze = () => false }) {
   const ctx = { ymd, mastery };
   const listOf = (list, k) => (k && words[list] && words[list][k]) || [];
   const isNew = (w) => !seen[key(w)] && !mastery[key(w)];
@@ -146,6 +149,7 @@ export function planToday({ ymd, week, words, lists, scope, mastery = {}, seen =
   const avoid = new Set();
   const stations = [];
   const meaningful = (arr) => arr.filter(hasMeaning);
+  const clozable = (arr) => arr.filter(canCloze);
 
   if (week.kind === 'review' || week.kind === 'none') {
     // 複習週：從範圍內挑到期的、最弱的字，三種題型各一關
@@ -153,13 +157,19 @@ export function planToday({ ymd, week, words, lists, scope, mastery = {}, seen =
       ? scope.flatMap(({ list, key: k }) => listOf(list, k).map((w) => ({ w, fet: list === lists.fet })))
       : learnedSoFar();
     const all = pool.map((x) => x.w), fet = pool.filter((x) => x.fet).map((x) => x.w);
-    stations.push(station('hear', pick(all, 'hear', SIZES.hear, ctx, avoid)));
-    stations.push(station('see', pick(meaningful(all), 'see', SIZES.see, ctx, avoid)));
+    const cet = pool.filter((x) => !x.fet).map((x) => x.w);
+    // 有填填看的話，聽一聽和選意思各少一個，整條小徑還是 10 分鐘左右
+    const cl = clozable(cet).length ? 1 : 0;
+    stations.push(station('hear', pick(all, 'hear', SIZES.hear - cl, ctx, avoid)));
+    stations.push(station('see', pick(meaningful(all), 'see', SIZES.see - cl, ctx, avoid)));
+    // 填填看出 CET（字彙課）的字：CET 要「認得、也會用」，FET 練的是拼
+    if (cl) stations.push(station('use', pick(clozable(cet), 'use', SIZES.use, ctx, avoid)));
     stations.push(station('spell', pick(meaningful(fet).filter(spellable), 'spell', SIZES.spell, ctx, avoid)));
   } else {
     const fetWeek = listOf(lists.fet, week.fetKey), cetWeek = listOf(lists.cet, week.cetKey);
     const thisWeek = [...fetWeek, ...cetWeek];
     const everything = learnedSoFar().map((x) => x.w);
+    const cetEverything = () => learnedSoFar().filter((x) => !x.fet).map((x) => x.w);
 
     if (week.weekday <= 3) {
       // 週一到週三：新字分三天看完，再練
@@ -171,7 +181,13 @@ export function planToday({ ymd, week, words, lists, scope, mastery = {}, seen =
       const introduced = meaningful(thisWeek).filter((w) => !isNew(w) || unseen.slice(0, nCards).includes(w));
       stations.push(station('see', pickPreferring(introduced, meaningful(everything), 'see', SIZES.see, ctx, avoid)));
       stations.push(station('spell', pickPreferring(meaningful(fetWeek).filter(spellable), meaningful(everything).filter(spellable), 'spell', SIZES.spell, ctx, avoid)));
-      stations.push(station('hear', pickPreferring(thisWeek, everything, 'hear', SIZES.hear - 1, ctx, avoid)));
+      // 週一最後聽一聽；週二、三改成填填看（新字至少看過一次卡、選過一次意思了）
+      const introducedCet = clozable(cetWeek).filter((w) => introduced.includes(w));
+      if (week.weekday >= 2 && introducedCet.length) {
+        stations.push(station('use', pickPreferring(introducedCet, clozable(cetEverything()), 'use', SIZES.use, ctx, avoid)));
+      } else {
+        stations.push(station('hear', pickPreferring(thisWeek, everything, 'hear', SIZES.hear - 1, ctx, avoid)));
+      }
     } else if (week.isTestEve) {
       // 考前一天：先暖身，再把本週所有拼字聽寫一遍
       stations.push(station('see', pick(meaningful(thisWeek), 'see', 5, ctx, avoid)));
@@ -182,7 +198,8 @@ export function planToday({ ymd, week, words, lists, scope, mastery = {}, seen =
       stations.push(station('see', pick(meaningful(everything), 'see', 5, ctx, avoid)));
     } else {
       // 週末：只複習到期的、最弱的
-      stations.push(station('see', pick(meaningful(everything), 'see', SIZES.see, ctx, avoid)));
+      stations.push(station('see', pick(meaningful(everything), 'see', SIZES.see - 1, ctx, avoid)));
+      stations.push(station('use', pick(clozable(cetEverything()), 'use', SIZES.use, ctx, avoid)));
       const fetAll = learnedSoFar().filter((x) => x.fet).map((x) => x.w);
       stations.push(station('spell', pick(meaningful(fetAll).filter(spellable), 'spell', 5, ctx, avoid)));
     }
