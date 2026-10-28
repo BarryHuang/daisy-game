@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3e8ff">
+<title>Daisy 的倉鼠學英文</title>
+<link rel="icon" href="../icon-192.png">
+<link rel="stylesheet" href="core/theme.css">
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- 左邊選單：iPad 橫放常駐，手機收成抽屜 -->
+  <nav class="nav" id="nav" aria-label="選單">
+    <div class="nav-head" id="nav-head" title="長按 2 秒：家長區">
+      <img src="../v2/art/hamster.svg" alt="倉鼠">
+      <div class="who">
+        <span class="coins" id="coins" hidden><span aria-hidden="true">🪙</span><span id="coins-n">—</span></span>
+        <button class="badge" id="demo" hidden></button>
+      </div>
+    </div>
+    <div id="nav-items"></div>
+    <div class="nav-foot"><span id="ver"></span><a href="../daisy_hamster.html">回 v1</a></div>
+  </nav>
+  <div class="nav-shade" id="nav-shade"></div>
+  <button class="nav-btn" id="nav-btn" aria-label="選單" aria-expanded="false">☰</button>
+
+  <main class="main" id="main"></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="../zhuyin.js"></script>
+<script src="../version.js"></script>
+<script src="../firebase-config.js"></script>
+<script type="module">
+import { SECTIONS, PARENT, parseRoute, routeOf } from './core/nav.js';
+import { openPetStore } from '../v2/lab/petstore.js';
+import { say } from './core/speech.js';
+
+const $ = (s, el) => (el || document).querySelector(s);
+const zy = (zh, z) => renderZhuyin(zh, String(z).split(' '));
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => {});
+$('#ver').textContent = typeof APP_VERSION !== 'undefined' ? 'v3 · ' + APP_VERSION : 'v3';
+
+// ── 左邊選單 ──────────────────────────────────────────────────────────
+$('#nav-items').innerHTML = SECTIONS.map((s) => `
+  <a class="nav-item c-${s.color}" href="${routeOf(s)}" data-sec="${s.id}">
+    <span class="em" aria-hidden="true">${s.em}</span><span class="zh">${zy(s.name, s.zy)}</span>
+  </a>`).join('');
+
+const app = $('#app');
+const setNav = (open) => { app.classList.toggle('nav-open', open); $('#nav-btn').setAttribute('aria-expanded', open); };
+$('#nav-btn').onclick = () => setNav(!app.classList.contains('nav-open'));
+$('#nav-shade').onclick = () => setNav(false);
+$('#nav').addEventListener('click', (e) => { if (e.target.closest('a')) setNav(false); });
+
+// 家長區：長按倉鼠 2 秒（她誤點不會進去）
+let pressT = 0;
+const head = $('#nav-head');
+head.addEventListener('pointerdown', () => { head.classList.add('pressing'); pressT = setTimeout(() => { head.classList.remove('pressing'); setNav(false); location.hash = '#parent'; }, 2000); });
+['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => head.addEventListener(ev, () => { head.classList.remove('pressing'); clearTimeout(pressT); }));
+head.addEventListener('contextmenu', (e) => e.preventDefault());
+
+// ── 金幣（和 v1 同一份存檔，v1 那邊賺的這裡馬上看得到）────────────────
+let shown = null;
+const store = openPetStore({ onChange(pet, st) {
+  if (st.mode === 'demo') {
+    $('#demo').hidden = false; $('#demo').textContent = '試玩中';
+    $('#coins').hidden = true; return;
+  }
+  $('#demo').hidden = true;
+  if (!pet) return;
+  const n = pet.coins || 0;
+  $('#coins').hidden = false;
+  if (shown != null && n !== shown) { const c = $('#coins'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
+  shown = n; $('#coins-n').textContent = n.toLocaleString();
+} });
+$('#demo').onclick = () => toast('還沒登入：到「倉鼠世界」輸入通關密碼，金幣才存得起來');
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 3200);
+}
+
+// ── 內容區 ────────────────────────────────────────────────────────────
+// 還沒用 v3 重做的功能，先用 iframe 打開 v1 那一頁。v1 的檔案一個字都不改：
+// 載入完之後，把那一頁自己的 ☰ 選單藏起來（同網域的 iframe 可以這樣做），
+// 不然畫面上會有兩套選單。
+const HIDE_IN_V1 = '#dm-btn,#dm-panel,#dm-backdrop,.dm-back,#ws-back{display:none!important}'
+  + '.tabbar,.corner{display:none!important}';          // v2/today.html 的下方分頁和「v1」角標
+function embed(frame) {
+  try {
+    const doc = frame.contentDocument;
+    if (!doc || doc.getElementById('v3-embed')) return;
+    const st = doc.createElement('style'); st.id = 'v3-embed'; st.textContent = HIDE_IN_V1;
+    (doc.head || doc.documentElement).appendChild(st);
+  } catch (e) { /* 不同網域就算了 */ }
+}
+
+function render() {
+  const r = parseRoute(location.hash);
+  const sec = r.section;
+  document.querySelectorAll('.nav-item').forEach((a) => { if (a.dataset.sec === sec.id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  const main = $('#main');
+  main.className = 'main c-' + sec.color;
+
+  if (r.page) {
+    // 一個 v1 頁面：大區（倉鼠世界、今日任務）滿版；區裡的項目上面多一條「回到這一區」
+    const bar = r.item ? `<div class="page-head"><a class="back-btn" href="${routeOf(sec)}">← ${zy(sec.name, sec.zy)}</a>
+        <span class="em" aria-hidden="true">${r.item.em}</span>
+        <h1>${r.item.en ? esc(r.item.en) : zy(r.item.name, r.item.zy)}</h1></div>` : '';
+    main.innerHTML = bar + `<div class="frame-wrap"><div class="loading" aria-hidden="true">🐹</div>
+      <iframe title="${esc(r.item ? (r.item.name || r.item.en) : sec.name)}" src="../${r.page}" allow="autoplay"></iframe></div>`;
+    const f = $('iframe', main);
+    // 盡早藏 v1 的選單（DOMContentLoaded 就藏，不等圖片載完），load 時再補一次
+    const early = setInterval(() => { try { if (f.contentDocument && f.contentDocument.readyState !== 'loading') { embed(f); } } catch (e) {} }, 50);
+    f.addEventListener('load', () => { clearInterval(early); embed(f); const l = $('.loading', main); if (l) l.remove(); });
+    return;
+  }
+
+  // 一區的首頁：一格一格的大按鈕
+  main.innerHTML = `
+    <div class="page-head"><span class="em" aria-hidden="true">${sec.em}</span><h1>${zy(sec.name, sec.zy)}</h1>
+      <button class="say-btn" data-say="${esc(sec.say)}" aria-label="唸出來">🔊</button></div>
+    <div class="scroll"><div class="tiles">${sec.items.map((it) => `
+      <a class="tile" href="${routeOf(sec, it)}">
+        <span class="em" aria-hidden="true">${it.em}</span>
+        ${it.en ? `<span class="en">${esc(it.en)}</span>` : `<span class="zh">${zy(it.name, it.zy)}</span>`}
+      </a>`).join('')}</div></div>`;
+}
+document.addEventListener('click', (e) => { const s = e.target.closest('[data-say]'); if (s) say(s.dataset.say); });
+window.addEventListener('hashchange', render);
+render();
+
+window.v3 = { store, parseRoute, PARENT };
+</script>
+</body>
+</html>
