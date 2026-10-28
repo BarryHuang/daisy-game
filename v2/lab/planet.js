@@ -77,7 +77,7 @@ function placeOn(obj, dir, yaw = 0, sink = 0.02) {
   obj.rotateY(yaw);
   return obj;
 }
-const dirFrom = (lat, lon) => {
+export const dirFrom = (lat, lon) => {
   const a = THREE.MathUtils.degToRad(lat), b = THREE.MathUtils.degToRad(lon);
   return new THREE.Vector3(Math.cos(a) * Math.sin(b), Math.sin(a), Math.cos(a) * Math.cos(b));
 };
@@ -124,16 +124,31 @@ export function startPlanet(canvas, hooks = {}) {
   const interactive = [];
   const house = placeOn(makeHouse(), dirFrom(18, 8), 0.1); world.add(house); interactive.push(house);
   const HOUSE_DOOR = dirFrom(12.5, 8.6);
-  const GARDEN = dirFrom(10, -22);
-  const garden = placeOn(makeGardenPatch(), GARDEN, -0.3); garden.scale.setScalar(1.4); world.add(garden); interactive.push(garden);
-  // 倉鼠站在菜園「旁邊」而不是正前方：站太近的話，她會擋住菜園，
-  // 浮在菜園上的「後院」標籤又剛好蓋住她的臉（截圖抓到的）
-  const REGIONS = { garden: { obj: garden, stand: dirFrom(9, -11.5) } };
+  // 地區：預設只有後院（v2 的小星球）。v3 傳 hooks.regions 進來，放 v1 倉鼠世界的 7 個區域：
+  //   { name, make() → 3D 物件, at: [lat, lon], stand: [lat, lon], yaw, scale }
+  //   name 是 'home' 時不用 make，就是這棟小屋；點小屋會走進「家」
+  // 倉鼠站在入口「旁邊」而不是正前方：站太近的話，她會擋住入口，
+  // 浮在上面的標籤又剛好蓋住她的臉（截圖抓到的）
+  const regionList = hooks.regions || [{ name: 'garden', make: makeGardenPatch, at: [10, -22], stand: [9, -11.5], yaw: -0.3, scale: 1.4 }];
+  const REGIONS = {};
+  for (const rg of regionList) {
+    if (rg.name === 'home') { house.userData.kind = 'home'; REGIONS.home = { obj: house, stand: HOUSE_DOOR }; continue; }
+    const make = rg.make || (rg.name === 'garden' ? makeGardenPatch : null);   // 後院用這支自己的菜園
+    const obj = placeOn(make(), dirFrom(...rg.at), rg.yaw || 0);
+    obj.scale.setScalar(rg.scale || 1);
+    obj.userData.kind = rg.name;
+    world.add(obj); interactive.push(obj);
+    REGIONS[rg.name] = { obj, stand: dirFrom(...rg.stand) };
+  }
+  // 地區附近不放樹、石頭、香菇、零散的花，免得擋住入口
+  const spots = regionList.filter((rg) => rg.at).map((rg) => dirFrom(...rg.at));
+  // （只在傳了 hooks.regions 時才清；v2 的小星球維持原樣）
+  const clear = hooks.regions ? (d) => spots.every((sp) => sp.angleTo(d) > 0.24) : () => true;
 
   const trees = [
     [36, -28, 1.05, 0], [8, -42, 0.85, 1], [-22, 30, 1.15, 2], [52, 40, 0.9, 3], [-6, 95, 1.0, 1],
     [30, 150, 1.1, 0], [-40, -110, 0.95, 2], [65, -120, 0.8, 3], [-58, 20, 0.9, 0], [10, -160, 1.0, 1],
-  ].map(([la, lo, s, t], i) => {
+  ].filter(([la, lo]) => clear(dirFrom(la, lo))).map(([la, lo, s, t], i) => {
     const tr = placeOn(makeTree(s, t), dirFrom(la, lo), i * 1.3); world.add(tr); interactive.push(tr); return tr;
   });
 
@@ -148,12 +163,12 @@ export function startPlanet(canvas, hooks = {}) {
     const near = k < 12 ? dirFrom(6 + jit(1) * 9, -12 + jit(2) * 16) :
                  k < 22 ? POND.clone().add(new THREE.Vector3(Math.sin(k * 2.3), Math.cos(k * 1.7), Math.sin(k)).multiplyScalar(0.12)) :
                  dirFrom(((k * 47) % 140) - 70, (k * 83) % 360);
-    if (near.angleTo(POND) < 0.4) continue;
+    if (near.angleTo(POND) < 0.4 || !clear(near)) continue;
     const f = placeOn(makeFlower(fi++), near, k); world.add(f); interactive.push(f); flowerSpots.push(f);
   }
-  [[-10, 60, 1.2], [42, -70, 0.9], [-30, -40, 1.4], [20, 110, 1.0], [-50, 140, 1.1]].forEach(([la, lo, s]) =>
+  [[-10, 60, 1.2], [42, -70, 0.9], [-30, -40, 1.4], [20, 110, 1.0], [-50, 140, 1.1]].filter(([la, lo]) => clear(dirFrom(la, lo))).forEach(([la, lo, s]) =>
     world.add(placeOn(makeRock(s), dirFrom(la, lo), la)));
-  [[-15, -20], [-17, -16], [25, 70], [-35, 75], [-36, 79]].forEach(([la, lo]) =>
+  [[-15, -20], [-17, -16], [25, 70], [-35, 75], [-36, 79]].filter(([la, lo]) => clear(dirFrom(la, lo))).forEach(([la, lo]) =>
     world.add(placeOn(makeMushroom(), dirFrom(la, lo), lo)));
 
   // 小草叢：三片細葉一叢，撒滿星球。全部合成一個幾何，整顆星球的草只要畫兩次
@@ -276,7 +291,7 @@ export function startPlanet(canvas, hooks = {}) {
     if (kind === 'hamster') { hamJump(); return; }
     if (kind === 'tree') { wobble(obj.userData.crown, 1.0); hooks.sfx && hooks.sfx('pop'); dropLeaves(obj); }
     if (kind === 'flower') { wobble(obj.userData.head, 1.4); hooks.sfx && hooks.sfx('sparkle'); hooks.burst && hooks.burst(project(obj, 0.4), '✿'); }
-    if (kind === 'garden') { enter('garden'); return; }
+    if (REGIONS[kind]) { wobble(obj, 0.25); enter(kind); return; }
     if (kind === 'house') {
       wobble(obj, 0.25); hooks.sfx && hooks.sfx('door');
       walkTo(HOUSE_DOOR, () => { hooks.say && hooks.say('到家了！'); hamJump(); });
@@ -322,20 +337,26 @@ export function startPlanet(canvas, hooks = {}) {
    */
   let entering = null;
   function enter(name) {
-    if (entering) return;
+    // 走在路上又點了別的地區 → 改去新的那一區（她改變主意時，第二下不能沒反應）。
+    // 已經到門口、鏡頭在拉近了（arrived）就不再改
+    if (entering && (entering.name === name || entering.arrived)) return;
     const R0 = REGIONS[name]; if (!R0) return;
-    entering = name;
+    const trip = entering = { name, arrived: false };
     hooks.sfx && hooks.sfx('whoosh');
     walkTo(R0.stand, () => {
+      if (entering !== trip) return;
+      trip.arrived = true;
       cam.lastTouch = -1e9;          // 鏡頭立刻跟上倉鼠
       cam.tZoom = 0.5;
       hooks.sfx && hooks.sfx('door');
-      setTimeout(() => hooks.onEnter && hooks.onEnter(name), 750);
+      setTimeout(() => { if (entering === trip) hooks.onEnter && hooks.onEnter(name); }, 750);
     });
   }
   function enterRegion(name) { enter(name); }
 
   function walkTo(dir, onArrive) {
+    // 走去某一區的路上她點了地面 → 這趟不進去了
+    if (!onArrive && entering && !entering.arrived) entering = null;
     hamState.target = dir.clone().normalize();
     hamState.onArrive = onArrive || null;
     hamState.idle = 0;
@@ -402,6 +423,8 @@ export function startPlanet(canvas, hooks = {}) {
       if (l.m.position.y < 0.05) { l.m.parent.remove(l.m); leaves.splice(i, 1); }
     }
     clouds.rotation.y += dt * 0.025;
+    // 地區自己的小動畫（例如摩天輪會轉）
+    for (const k in REGIONS) { const o = REGIONS[k].obj; o.userData.tick && o.userData.tick(dt, t); }
 
     // 鏡頭：放手 2.5 秒後，慢慢轉到看得到倉鼠的角度
     if (performance.now() - cam.lastTouch > 2500) {
@@ -432,13 +455,17 @@ export function startPlanet(canvas, hooks = {}) {
     get pixelRatioCap() { return stage.pixelRatioCap; },
     walkTo: (lat, lon) => walkTo(dirFrom(lat, lon)),
     enterRegion,
+    regions: () => Object.keys(REGIONS),
+    /** 結束進場動畫（例如這一區還沒開，就留在星球上） */
+    cancelEnter() { entering = null; cam.tZoom = 0.86; },
     /** 地區入口的螢幕座標；轉到星球背面（看不到）的時候 visible 是 false */
     regionScreen(name) {
       const o = REGIONS[name].obj;
       const wp = o.getWorldPosition(new THREE.Vector3());
       const toCam = camera.position.clone().sub(wp).normalize();
       const p = project(o, 0.75);
-      return Object.assign(p, { visible: wp.clone().normalize().dot(toCam) > 0.25 && !entering });
+      // 走在路上標籤還在（可以改點別區）；到門口、鏡頭拉近時才收起來
+      return Object.assign(p, { visible: wp.clone().normalize().dot(toCam) > 0.25 && !(entering && entering.arrived) });
     },
     jump: hamJump,
     ham, hamState,

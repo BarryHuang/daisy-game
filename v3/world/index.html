@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#bfe6ff">
+<title>倉鼠世界</title>
+<link rel="icon" href="../../icon-192.png">
+<link rel="stylesheet" href="../core/theme.css">
+<style>
+/* 倉鼠世界：v3 的首頁。3D 小星球（v2 的引擎），換成可愛風（book3d.js 的 applyTheme('cute')）。
+   天空是明亮的藍到粉紅，跟 v1 遊戲頁的漸層同一個方向，只是更飽和 */
+html, body { height: 100%; overflow: hidden; }
+body { background: linear-gradient(#9fdcff 0%, #c9ecff 40%, #f3e2ff 75%, #ffe3f1 100%);
+       -webkit-user-select: none; user-select: none; touch-action: none; }
+.sun { position: fixed; width: 130px; height: 130px; right: 7vw; top: 7vh; border-radius: 50%; pointer-events: none;
+       background: radial-gradient(circle, #fff7b0 0 36%, rgba(255,226,94,.55) 52%, rgba(255,226,94,0) 70%); }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* 上方：右邊一顆「拼字冒險」（v1 的倉鼠頁：拼字、商店、照顧倉鼠都在那裡）。
+   左上角留給 v3 殼的 ☰（手機） */
+.hud { position: fixed; top: calc(10px + env(safe-area-inset-top)); right: 14px; display: flex; gap: 10px; z-index: 5; }
+.pill { min-height: 52px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 18px; border-radius: 999px; border: 0;
+        background: #fff; color: var(--grape); font-weight: 700; font-size: 19px; box-shadow: 0 4px 12px rgba(123,31,162,.18); white-space: nowrap; }
+.pill:active { transform: scale(.96); }
+.pill .em { font-size: 24px; }
+.hint { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 5; transition: opacity .6s; }
+.hint.gone { opacity: 0; pointer-events: none; }
+
+/* 地區的標籤：浮在地標上方，轉到背面就藏起來。每一區一個糖果色 */
+.region { position: fixed; left: 0; top: 0; transform: translate(-50%, -100%); z-index: 4; min-height: 48px;
+          display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px 5px 10px; border-radius: 999px;
+          border: 3px solid #fff; color: #fff; font-weight: 700; font-size: 19px; white-space: nowrap;
+          box-shadow: 0 4px 10px rgba(0,0,0,.15); transition: opacity .3s; background: var(--rc); }
+.region.away { opacity: 0; pointer-events: none; }
+.region .em { font-size: 22px; }
+.region .zy-col, .region .zy-rail b { color: #fff !important; }
+.region:active { transform: translate(-50%, -100%) scale(.95); }
+.fade { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .45s; z-index: 20; }
+.fade.on { opacity: 1; }
+.burst { position: fixed; pointer-events: none; font-size: 30px; transform: translate(-50%, -50%); z-index: 6; animation: floatUp 1.1s ease-out forwards; }
+@keyframes floatUp { to { transform: translate(calc(-50% + var(--dx)), -150%) scale(1.3); opacity: 0; } }
+.fallback { position: fixed; inset: 0; display: none; place-items: center; text-align: center; padding: 24px; font-size: 19px; line-height: 1.7; }
+.toast { z-index: 8; }
+@media (max-width: 600px) { .pill { font-size: 17px; padding: 6px 14px; } .region { font-size: 17px; } }
+@media (prefers-reduced-motion: reduce) { .burst { animation: none; display: none; } }
+</style>
+</head>
+<body>
+<div class="sun"></div>
+<canvas id="c" aria-label="倉鼠世界：點地面倉鼠會走過去，點地區的牌子就走進去"></canvas>
+
+<div class="hud">
+  <button class="pill" id="classic"><span class="em" aria-hidden="true">🐹</span><span data-zy="拼字冒險|ㄆㄧㄣ ㄗˋ ㄇㄠˋ ㄒㄧㄢˇ"></span></button>
+</div>
+<button class="pill hint" id="hint" data-say="點地面，倉鼠會走過去。點牌子，就走進那一區。拖曳可以轉星球。">
+  <span data-zy="點牌子就能走進去|ㄉㄧㄢˇ ㄆㄞˊ ㄗ˙ ㄐㄧㄡˋ ㄋㄥˊ ㄗㄡˇ ㄐㄧㄣˋ ㄑㄩˋ"></span><span aria-hidden="true">🔊</span>
+</button>
+<div id="labels"></div>
+<div class="fade" id="fade"></div>
+<div class="toast" id="toast" hidden></div>
+<div class="fallback" id="fallback">這台裝置沒辦法顯示 3D 畫面（WebGL 沒有開）。<br>請改用 Safari 或 Chrome 打開，<br>或點右上角的「拼字冒險」。</div>
+<script>addEventListener('pageshow', () => document.getElementById('fade').classList.remove('on'));</script>
+
+<script src="../../zhuyin.js"></script>
+<script src="../../audio.js"></script>
+<script type="module">
+import { applyTheme } from '../../v2/lab/book3d.js';
+import { startPlanet } from '../../v2/lab/planet.js';
+import { REGIONS } from './landmarks.js';
+import { say } from '../core/speech.js';
+
+applyTheme('cute');          // 一定要在建場景之前
+
+const $ = (s) => document.querySelector(s);
+const zy = (zh, z) => renderZhuyin(zh, String(z).split(' '));
+document.querySelectorAll('[data-zy]').forEach((el) => { const [a, b] = el.dataset.zy.split('|'); el.innerHTML = zy(a, b); });
+document.addEventListener('click', (e) => { const s = e.target.closest('[data-say]'); if (s) say(s.dataset.say); });
+const A = window.daisyAudio;
+const sfx = (n) => { try { A && A.sfx(n); } catch (e) {} };
+
+/** 在 v3 殼裡（iframe）就換殼的網址；單獨打開這一頁就整頁換 */
+function go(hash) {
+  if (window.parent !== window) window.parent.location.hash = hash;
+  else location.href = '../' + hash;
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 3400);
+}
+
+// 每一區：名字、注音、顏色、走進去之後做什麼
+//   home    → v1 的倉鼠頁（拼字冒險、商店、照顧倉鼠都在那裡）
+//   garden  → 3D 後院（可愛風）
+//   arcade  → v3 的遊戲中心
+//   其他    → 3D 版還在蓋（v3 計畫的 P6），先說一聲；v1 的那一區在「拼字冒險」裡走得到
+const INFO = {
+  home:   { em: '🏠', zh: '家',       zy: 'ㄐㄧㄚ',              c: '#ff6b9a', go: () => go('#world/daisy_hamster.html') },
+  garden: { em: '🥕', zh: '後院',     zy: 'ㄏㄡˋ ㄩㄢˋ',          c: '#4cbf4c', go: () => { location.href = '../../v2/lab/garden.html?theme=cute&from=v3'; } },
+  park:   { em: '🌳', zh: '公園',     zy: 'ㄍㄨㄥ ㄩㄢˊ',          c: '#2eaf7d' },
+  street: { em: '🏘️', zh: '街道',     zy: 'ㄐㄧㄝ ㄉㄠˋ',          c: '#ff9f43' },
+  arcade: { em: '🎮', zh: '遊戲中心', zy: 'ㄧㄡˊ ㄒㄧˋ ㄓㄨㄥ ㄒㄧㄣ', c: '#9b5de5', go: () => go('#games') },
+  fair:   { em: '🎡', zh: '遊樂園',   zy: 'ㄧㄡˊ ㄌㄜˋ ㄩㄢˊ',      c: '#ff5d8f' },
+  beach:  { em: '🏖️', zh: '沙灘',     zy: 'ㄕㄚ ㄊㄢ',            c: '#3fa9f5' },
+};
+
+$('#classic').onclick = () => { sfx('whoosh'); go('#world/daisy_hamster.html'); };
+
+const probe = document.createElement('canvas');
+if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) {
+  $('#fallback').style.display = 'grid';
+} else {
+  // 地區的標籤
+  const labels = {};
+  for (const rg of REGIONS) {
+    const i = INFO[rg.name];
+    const b = document.createElement('button');
+    b.className = 'region away'; b.style.setProperty('--rc', i.c);
+    b.setAttribute('aria-label', '走進' + i.zh);
+    b.innerHTML = `<span class="em" aria-hidden="true">${i.em}</span><span>${zy(i.zh, i.zy)}</span>`;
+    b.onclick = () => window.world.enterRegion(rg.name);
+    $('#labels').appendChild(b); labels[rg.name] = b;
+  }
+
+  function burst(p, ch) {
+    for (let k = 0; k < 3; k++) {
+      const el = document.createElement('span'); el.className = 'burst'; el.textContent = ch;
+      el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; el.style.setProperty('--dx', ((k - 1) * 26) + 'px');
+      el.style.animationDelay = (k * 90) + 'ms'; document.body.appendChild(el); setTimeout(() => el.remove(), 1400);
+    }
+  }
+
+  let touched = false;
+  window.world = startPlanet($('#c'), {
+    regions: REGIONS,
+    sfx, say, burst,
+    startAt: new URLSearchParams(location.search).get('from'),
+    onEnter(name) {
+      const i = INFO[name];
+      if (!i.go) {
+        // 還沒蓋好的區：留在星球上，倉鼠跳一下
+        say(i.zh + '還在蓋，快好了！先去拼字冒險玩吧。');
+        toast(i.em + ' ' + i.zh + '的 3D 還在蓋 —— 右上角「拼字冒險」裡走得到');
+        window.world.cancelEnter(); window.world.jump();
+        return;
+      }
+      $('#fade').classList.add('on');
+      setTimeout(() => i.go(), 420);
+    },
+    onFrame() {
+      if (!window.world) return;
+      for (const name in labels) {
+        const p = window.world.regionScreen(name);
+        const b = labels[name];
+        b.style.left = p.x + 'px'; b.style.top = p.y + 'px';
+        b.classList.toggle('away', !p.visible);
+      }
+    },
+    onFirstTouch() {
+      if (touched) return; touched = true;
+      try { A && A.unlock(); } catch (e) {}
+      setTimeout(() => $('#hint').classList.add('gone'), 4000);
+    },
+  });
+}
+</script>
+</body>
+</html>

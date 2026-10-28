@@ -21,7 +21,7 @@ function it(name, fn) {
 
 (async () => {
   const N = await import(pathToFileURL(path.join(V3, "core/nav.js")).href);
-  const items = N.ALL.flatMap((s) => (s.items || []).map((it) => ({ s, it })));
+  const items = N.ALL.flatMap((s) => [...(s.items || []), ...(s.extra || [])].map((it) => ({ s, it })));
 
   describe("選單與路由 nav.js", () => {
     it("6 區出現在選單上，家長區不在（要長按才進得去）", () => {
@@ -53,7 +53,8 @@ function it(name, fn) {
 
     it("路由：空的 → 倉鼠世界；一區 → 大按鈕；區裡的頁面 → 打開那一頁", () => {
       assert.strictEqual(N.parseRoute("").section.id, "world");
-      assert.strictEqual(N.parseRoute("").page, "daisy_hamster.html");
+      assert.strictEqual(N.parseRoute("").page, "v3/world/index.html");
+      assert.strictEqual(N.parseRoute("#world/daisy_hamster.html").item.name, "拼字冒險", "v1 的倉鼠頁從小星球的「家」進去");
       const g = N.parseRoute("#games");
       assert.strictEqual(g.section.id, "games"); assert.strictEqual(g.page, null);
       const m = N.parseRoute("#games/daisy_memory.html?set=sea,make%20sense");
@@ -66,6 +67,55 @@ function it(name, fn) {
       assert.strictEqual(N.parseRoute("#games/../../etc/passwd").page, null);
       assert.strictEqual(N.parseRoute("#games/daisy_hamster.html").page, null, "倉鼠頁不在遊戲中心裡");
       assert.strictEqual(N.parseRoute("#nope").section.id, "world");
+    });
+  });
+
+  const B = await import(pathToFileURL(path.join(ROOT, "v2/lab/book3d.js")).href);
+  const L = await import(pathToFileURL(path.join(V3, "world/landmarks.js")).href);
+  describe("可愛風 3D（book3d.js 的主題）", () => {
+    const hex = (n) => n.toString(16);
+    it("預設是繪本主題，v2 畫出來不變（調色盤、排線、紙紋、描邊都是原本的數字）", () => {
+      assert.strictEqual(B.currentTheme, "book");
+      assert.strictEqual(hex(B.P.grass[0]), "b7cd8f");
+      assert.strictEqual(B.sharedUniforms.uHatchScale.value, 1);
+      assert.strictEqual(B.sharedUniforms.uGrain.value, 1);
+      assert.strictEqual(B.sharedUniforms.uShadeMix.value, 0.5);
+      assert.strictEqual(B.sharedUniforms.uShadeDark.value, 0.8);
+    });
+    it("換成可愛風：糖果色、沒有排線和紙紋；別的模組登記的調色盤也跟著換", () => {
+      const C = B.themable("garden", { carrot: 0xd9772f, soil: 0x86603f });
+      B.applyTheme("cute");
+      assert.strictEqual(hex(B.P.grass[0]), "8ee05a");
+      assert.strictEqual(hex(B.P.roof), "ff6b9a");
+      assert.strictEqual(B.sharedUniforms.uHatchScale.value, 0);
+      assert.strictEqual(B.sharedUniforms.uGrain.value, 0);
+      assert.strictEqual(hex(C.carrot), "ff8a2a");
+      B.applyTheme("book");
+      assert.strictEqual(hex(B.P.grass[0]), "b7cd8f", "換回繪本要完全還原");
+      assert.strictEqual(hex(C.carrot), "d9772f");
+      assert.strictEqual(B.sharedUniforms.uHatchScale.value, 1);
+    });
+    it("小星球上的 7 區，順序和 v1 倉鼠世界一樣（daisy_hamster.html 的 MAP_ORDER）", () => {
+      const src = fs.readFileSync(path.join(ROOT, "daisy_hamster.html"), "utf8");
+      const order = JSON.parse(src.match(/const MAP_ORDER = (\[[^\]]+\])/)[1].replace(/'/g, '"'));
+      assert.deepStrictEqual(L.REGIONS.map((r) => r.name), order);
+    });
+    it("每個新地標都建得出來（家用小屋、後院用菜園，不用另外做）", () => {
+      // blob()（地上的影子）用 canvas 畫貼圖；node 沒有，給一個什麼都不做的替身
+      global.document = global.document || { createElement: () => ({ getContext: () => ({
+        createRadialGradient: () => ({ addColorStop() {} }), fillRect() {}, fillStyle: "" }) }) };
+      L.REGIONS.filter((r) => r.make).forEach((r) => { const g = r.make(); assert.ok(g.children.length > 0, r.name); });
+      const fair = L.makeFair(); const before = fair.children[1].rotation.z;
+      fair.userData.tick(1); assert.ok(fair.children[1].rotation.z > before, "摩天輪會轉");
+    });
+    it("地標之間、地標和倉鼠站的位置都不重疊", () => {
+      const d2r = Math.PI / 180;
+      const dir = ([la, lo]) => [Math.cos(la * d2r) * Math.sin(lo * d2r), Math.sin(la * d2r), Math.cos(la * d2r) * Math.cos(lo * d2r)];
+      const ang = (a, b) => Math.acos(Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2])) / d2r;
+      const spots = [[18, 8], ...L.REGIONS.filter((r) => r.at).map((r) => r.at)];
+      for (let i = 0; i < spots.length; i++) for (let j = i + 1; j < spots.length; j++)
+        assert.ok(ang(dir(spots[i]), dir(spots[j])) > 25, spots[i] + " 和 " + spots[j] + " 太近");
+      L.REGIONS.filter((r) => r.at).forEach((r) => { const a = ang(dir(r.at), dir(r.stand)); assert.ok(a > 6 && a < 16, r.name + " 站的位置 " + a.toFixed(1) + "°"); });
     });
   });
 
