@@ -13,8 +13,9 @@ export const SECTIONS = [
   { id: 'world', em: '🏠', name: '倉鼠世界', zy: 'ㄘㄤ ㄕㄨˇ ㄕˋ ㄐㄧㄝˋ', color: 'grape',
     say: '倉鼠世界。去找倉鼠玩。', page: 'v3/world/index.html',
     extra: [{ page: 'daisy_hamster.html', em: '🐹', name: '拼字冒險', zy: 'ㄆㄧㄣ ㄗˋ ㄇㄠˋ ㄒㄧㄢˇ' }] },
+  // 今日任務：v3 自己畫（module 是相對 v3/index.html 的路徑，路由到這一區時載入、呼叫 mount(main)）
   { id: 'tasks', em: '⭐', name: '今日任務', zy: 'ㄐㄧㄣ ㄖˋ ㄖㄣˋ ㄨˋ', color: 'sun',
-    say: '今日任務。今天要練的字，都排好了。', page: 'v2/today.html' },
+    say: '今日任務。今天要練的字，都排好了。', module: './tasks/tasks.js' },
   { id: 'games', em: '🎮', name: '遊戲中心', zy: 'ㄧㄡˊ ㄒㄧˋ ㄓㄨㄥ ㄒㄧㄣ', color: 'tangerine',
     say: '遊戲中心。想玩哪一個？',
     items: [
@@ -81,7 +82,7 @@ export function parseRoute(hash) {
   const want = rest.join('/');
   const item = want && [...(sec.items || []), ...(sec.extra || [])].find((it) => it.page === want.split('?')[0]);
   if (item) return { section: sec, page: want, item };
-  if (!sec.items) return { section: sec, page: sec.page, item: null };
+  if (!sec.items) return { section: sec, page: sec.page || null, item: null };
   return { section: sec, page: null, item: null };
 }
 
