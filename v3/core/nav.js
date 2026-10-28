@@ -8,8 +8,11 @@
 // 中文名稱一律帶注音（一個字一組）。
 
 export const SECTIONS = [
+  // 倉鼠世界：v3 的 3D 小星球（可愛風）。v1 的倉鼠頁（拼字冒險、商店、照顧倉鼠）
+  // 從小星球的「家」或右上角的「拼字冒險」進去，所以放在 extra（可以走得到，但不另外列一格）
   { id: 'world', em: '🏠', name: '倉鼠世界', zy: 'ㄘㄤ ㄕㄨˇ ㄕˋ ㄐㄧㄝˋ', color: 'grape',
-    say: '倉鼠世界。去找倉鼠玩。', page: 'daisy_hamster.html' },
+    say: '倉鼠世界。去找倉鼠玩。', page: 'v3/world/index.html',
+    extra: [{ page: 'daisy_hamster.html', em: '🐹', name: '拼字冒險', zy: 'ㄆㄧㄣ ㄗˋ ㄇㄠˋ ㄒㄧㄢˇ' }] },
   { id: 'tasks', em: '⭐', name: '今日任務', zy: 'ㄐㄧㄣ ㄖˋ ㄖㄣˋ ㄨˋ', color: 'sun',
     say: '今日任務。今天要練的字，都排好了。', page: 'v2/today.html' },
   { id: 'games', em: '🎮', name: '遊戲中心', zy: 'ㄧㄡˊ ㄒㄧˋ ㄓㄨㄥ ㄒㄧㄣ', color: 'tangerine',
@@ -76,7 +79,7 @@ export function parseRoute(hash) {
   const [id, ...rest] = raw.split('/');
   const sec = sectionById(id) || SECTIONS[0];
   const want = rest.join('/');
-  const item = want && (sec.items || []).find((it) => it.page === want.split('?')[0]);
+  const item = want && [...(sec.items || []), ...(sec.extra || [])].find((it) => it.page === want.split('?')[0]);
   if (item) return { section: sec, page: want, item };
   if (!sec.items) return { section: sec, page: sec.page, item: null };
   return { section: sec, page: null, item: null };

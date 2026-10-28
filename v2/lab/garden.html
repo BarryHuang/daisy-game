@@ -117,6 +117,23 @@ button.pill { font: inherit; cursor: pointer; }
 
 .fallback { position: fixed; inset: 0; display: none; place-items: center; text-align: center; padding: 24px; font-size: 18px; line-height: 1.7; }
 @media (prefers-reduced-motion: reduce) { .burst, .tag.ripe { animation: none; } }
+
+/* ── 可愛風（?theme=cute，v3 從倉鼠世界進來）：v1 的鮮豔遊戲風 ─────────────── */
+body.cute { --ink: #3c3b47; --ink-2: #6b6880; --line: #e3d7f5; --leaf: #2e9e6a; --leaf-t: #e3f7ec;
+  --font-zh: 'Comic Sans MS', 'Chalkboard SE', 'PingFang TC', 'Noto Sans TC', sans-serif;
+  background: linear-gradient(#9fdcff 0%, #c9ecff 40%, #f3e2ff 75%, #ffe3f1 100%); }
+body.cute .zy { font-family: 'PingFang TC', 'Noto Sans TC', sans-serif; }
+body.cute .paper { display: none; }
+body.cute .stats { display: none; }           /* fps 是試作時量平板用的，v3 不給她看 */
+body.cute .sun { background: radial-gradient(circle, #fff7b0 0 36%, rgba(255,226,94,.55) 52%, rgba(255,226,94,0) 70%); }
+body.cute .pill, body.cute .tag, body.cute .toast { background: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(123,31,162,.16); font-weight: 700; }
+body.cute #back { color: #7b1fa2; }
+body.cute .tag.ripe { background: #e3f7ec; border-color: #2e9e6a; color: #1f6e48; }
+body.cute .shop { background: #fff; border: 0; box-shadow: 0 -8px 24px rgba(80,40,120,.18); }
+body.cute .seed { background: #faf6ff; border-color: #e3d7f5; }
+/* 在 v3 裡（手機、iPad 直放）：左上角是 v3 的 ☰，工具列往右讓 */
+@media (max-width: 899px) { body.in-v3 .hud { padding-left: 70px; } body.in-v3 .hud .badge { left: 70px; } }
+@media (max-width: 600px) { body.in-v3 .hud #back::after { content: "🏠"; } }
 </style>
 </head>
 <body>
@@ -157,7 +174,17 @@ button.pill { font: inherit; cursor: pointer; }
 <script type="module">
 import { startGarden } from './garden.js';
 import { openPetStore } from './petstore.js';
+import { applyTheme } from './book3d.js';
 import * as F from './farm.js';
+
+// ?theme=cute：v3 的可愛風（糖果色、沒有色鉛筆排線）。一定要在建場景之前換
+const fromV3 = new URLSearchParams(location.search).get('from') === 'v3';
+if (new URLSearchParams(location.search).get('theme') === 'cute') { applyTheme('cute'); document.body.classList.add('cute'); }
+if (fromV3) {
+  document.querySelector('#back .zh').dataset.zy = '倉鼠世界|ㄘㄤ ㄕㄨˇ ㄕˋ ㄐㄧㄝˋ';
+  document.querySelector('#back').setAttribute('aria-label', '回倉鼠世界');
+  document.body.classList.add('in-v3');
+}
 
 const $ = (s) => document.querySelector(s);
 const zy = (zh, z) => renderZhuyin(zh, z.split(' '));
@@ -336,7 +363,7 @@ function questToasts(q) {
 }
 
 // ── 開場 ──────────────────────────────────────────────────────────────
-$('#back').onclick = () => { sfx('whoosh'); location.href = 'planet.html?from=garden'; };
+$('#back').onclick = () => { sfx('whoosh'); location.href = fromV3 ? '../../v3/world/index.html?from=garden' : 'planet.html?from=garden'; };
 const probe = document.createElement('canvas');
 if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) {
   $('#fallback').style.display = 'grid';
@@ -344,7 +371,7 @@ if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) {
   let touched = false, announced = false;
   garden = startGarden($('#c'), {
     sfx, say, burst,
-    startAt: params.get('from') === 'planet' ? 'gate' : null,
+    startAt: (params.get('from') === 'planet' || fromV3) ? 'gate' : null,
     onBed,
     onStall: () => { say('種子攤！點一塊空的田，就可以選種子。'); sfx('door'); },
     onFirstTouch() { if (touched) return; touched = true; try { A && A.unlock(); } catch (e) {} },

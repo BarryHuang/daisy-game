@@ -39,6 +39,69 @@ export const P = {
 const SHADOW_TINT = new THREE.Color(0x6e6a9e);  // 暗面混進去的冷紫
 
 // ════════════════════════════════════════════════════════════════════
+// 主題：同一套零件，換調色盤和筆觸
+// ════════════════════════════════════════════════════════════════════
+// book（預設）＝ v2 的繪本：色鉛筆排線、紙的顆粒、冷紫的暗面、墨色描邊。
+// cute ＝ v3 的可愛風：糖果色、沒有排線和顆粒、暗面是淡淡的紫粉、細一點的紫褐描邊。
+//
+// 要在建場景「之前」呼叫 applyTheme()：顏色在建模型時寫進頂點色和材質。
+// 預設值和改這支之前寫死的數字一模一樣，所以沒呼叫的 v2 頁面畫出來不變。
+// 其他模組自己的調色盤（例如 garden.js 的 C）用 themable() 登記，換主題時一起換。
+const BOOK_LOOK = { hatch: 1, grain: 1, shadeMix: 0.50, shadeDark: 0.80, rim: 0.22, line: 1, shadow: 0x6e6a9e };
+const THEMES = {
+  book: { look: BOOK_LOOK, P: null, extra: {} },
+  cute: {
+    look: { hatch: 0, grain: 0, shadeMix: 0.38, shadeDark: 0.90, rim: 0.30, line: 0.8, shadow: 0xa98cf0 },
+    P: {
+      ink: 0x6b3f6e,
+      grass: [0x8ee05a, 0x79d14a, 0xa7ec74, 0x66c23e],
+      path: 0xffe3a3, dirt: 0xe0a072, trunk: 0xb07042,
+      leaf: [0x5fd35a, 0x48c24f, 0x86e070, 0x55cc6a],
+      roof: 0xff6b9a, wall: 0xfff7ea, door: 0x9b5de5, window: 0x8fd8ff,
+      rock: 0xd9d0ee, water: 0x4fc3ff, cloud: 0xffffff,
+      flower: [0xff5d8f, 0xffc93c, 0x9b5de5, 0x3fc5f0, 0xffffff],
+      mushroom: 0xff4d6d, stem: 0xfff1d6,
+    },
+    extra: {
+      garden: {
+        soil: 0x9a6a46, soilDark: 0x7c5236, plank: 0xd08a52, plankDark: 0xa86a3c,
+        sprout: 0x6fd85a, leaf: 0x4cc44f, leafLight: 0x8ae36c,
+        carrot: 0xff8a2a, corn: 0xffd23f, cornHusk: 0x9be36a, straw: 0xff5a5a, pumpkin: 0xff9b30,
+        stall: 0xfff7ea, awning: 0xff6b9a, shirt: 0x4fa3ff, sack: 0xf3d9a4, can: 0x5cc8ff,
+      },
+    },
+  },
+};
+const BOOK_P = JSON.parse(JSON.stringify(P));
+const registry = {};            // themable() 登記的調色盤：{ 名字: { obj, book } }
+export let currentTheme = 'book';
+let lineScale = 1;
+
+/** 讓其他模組的調色盤也跟著主題換：const C = themable('garden', { soil: … }) */
+export function themable(name, obj) {
+  registry[name] = { obj, book: JSON.parse(JSON.stringify(obj)) };
+  const t = THEMES[currentTheme].extra[name];
+  if (t) Object.assign(obj, t);
+  return obj;
+}
+
+/** 換主題（'book' 或 'cute'）。在建任何模型之前呼叫 */
+export function applyTheme(name) {
+  const th = THEMES[name]; if (!th) return;
+  currentTheme = name;
+  Object.assign(P, JSON.parse(JSON.stringify(BOOK_P)), th.P || {});
+  for (const [k, r] of Object.entries(registry)) Object.assign(r.obj, JSON.parse(JSON.stringify(r.book)), th.extra[k] || {});
+  const L = th.look;
+  sharedUniforms.uHatchScale.value = L.hatch;
+  sharedUniforms.uGrain.value = L.grain;
+  sharedUniforms.uShadeMix.value = L.shadeMix;
+  sharedUniforms.uShadeDark.value = L.shadeDark;
+  sharedUniforms.uRim.value = L.rim;
+  SHADOW_TINT.set(L.shadow);
+  lineScale = L.line;
+}
+
+// ════════════════════════════════════════════════════════════════════
 // 繪本材質
 // ════════════════════════════════════════════════════════════════════
 export const sharedUniforms = {
@@ -47,6 +110,12 @@ export const sharedUniforms = {
   uPixelRatio: { value: 1 },
   uResolution: { value: new THREE.Vector2(1, 1) },
   uTime: { value: 0 },
+  // 主題（applyTheme 會改）。預設值 = 繪本，和原本寫死在 shader 裡的數字一樣
+  uHatchScale: { value: BOOK_LOOK.hatch },
+  uGrain: { value: BOOK_LOOK.grain },
+  uShadeMix: { value: BOOK_LOOK.shadeMix },
+  uShadeDark: { value: BOOK_LOOK.shadeDark },
+  uRim: { value: BOOK_LOOK.rim },
 };
 
 const BOOK_VS = /* glsl */`
@@ -72,6 +141,11 @@ const BOOK_FS = /* glsl */`
   uniform vec3 uShadowTint;
   uniform float uPixelRatio;
   uniform float uHatch;
+  uniform float uHatchScale;
+  uniform float uGrain;
+  uniform float uShadeMix;
+  uniform float uShadeDark;
+  uniform float uRim;
   varying vec3 vN;
   varying vec3 vView;
   varying vec3 vColor;
@@ -92,7 +166,7 @@ const BOOK_FS = /* glsl */`
 
     // ① 兩階明暗：交界留一點點柔和的過渡，不要硬切成卡通的兩色
     float lit = smoothstep(-0.12, 0.28, ndl);
-    vec3 shade = base * mix(vec3(1.0), uShadowTint, 0.50) * 0.80;
+    vec3 shade = base * mix(vec3(1.0), uShadowTint, uShadeMix) * uShadeDark;
     vec3 col = mix(shade, base, lit);
     col += base * 0.08 * smoothstep(0.55, 1.0, ndl);            // 亮面再亮一點點
 
@@ -102,14 +176,14 @@ const BOOK_FS = /* glsl */`
     float h1 = lines(fc, normalize(vec2(1.0, 1.15)), 5.5, 0.22);
     float h2 = lines(fc, normalize(vec2(1.0, -0.9)), 6.5, 0.18);
     float deep = smoothstep(-0.05, -0.55, ndl);
-    col *= 1.0 - uHatch * (h1 * dark * 0.20 + h2 * deep * 0.16);
+    col *= 1.0 - uHatch * uHatchScale * (h1 * dark * 0.20 + h2 * deep * 0.16);
 
     // 邊緣一點暖色的回光，把輪廓和背景分開
     float rim = pow(1.0 - max(dot(n, v), 0.0), 3.0);
-    col = mix(col, vec3(1.0, 0.96, 0.88), rim * 0.22 * lit);
+    col = mix(col, vec3(1.0, 0.96, 0.88), rim * uRim * lit);
 
     // 紙的顆粒：每個像素一點點亮度差
-    col *= 0.97 + 0.05 * hash(floor(fc));
+    col *= 1.0 + uGrain * (0.05 * hash(floor(fc)) - 0.03);
 
     gl_FragColor = vec4(col, 1.0);
     #include <colorspace_fragment>
@@ -189,7 +263,7 @@ function outlineMat(width) {
     uniforms: {
       uResolution: sharedUniforms.uResolution,
       uPixelRatio: sharedUniforms.uPixelRatio,
-      uWidth: { value: width },
+      uWidth: { value: width * lineScale },
       uSeed: { value: (seedCounter++ * 1.618) % 10 },
       uInk: { value: new THREE.Color(P.ink) },
     },

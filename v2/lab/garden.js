@@ -7,7 +7,7 @@
 // 和小星球同一個世界，只是鏡頭湊近了。
 
 import { THREE, P, sharedUniforms, inked, mergeParts, blob, makeTree, makeHouse, makeFlower, makeRock,
-         makeMushroom, makeCloud, makeHamster, animateHamster, createWobbler, createStage, screenOf } from './book3d.js';
+         makeMushroom, makeCloud, makeHamster, animateHamster, createWobbler, createStage, screenOf, themable } from './book3d.js';
 import * as F from './farm.js';
 
 const G = 34;                                      // 地面那顆大球的半徑
@@ -19,12 +19,13 @@ const BED_W = 2.6, BED_D = 2.0;
 /** 倉鼠站在田的前面（靠鏡頭那一側）照顧它 */
 const standOf = (i) => new THREE.Vector3(BEDS[i][0], 0, BEDS[i][1] + BED_D / 2 + 0.45);
 
-const C = {
+// 用 themable 登記：v3 換成可愛風時，菜園的顏色跟著換（book3d.js 的 applyTheme）
+const C = themable('garden', {
   soil: 0x86603f, soilDark: 0x6f4f34, plank: 0xb08560, plankDark: 0x8a6448,
   sprout: 0x7aa35a, leaf: 0x5e8a4a, leafLight: 0x86ab62,
   carrot: 0xd9772f, corn: 0xe9c24a, cornHusk: 0x9cbf6a, straw: 0xc9504a, pumpkin: 0xd6893a,
   stall: 0xfbf1dc, awning: 0xbf6a35, shirt: 0x4f7fab, sack: 0xe6cf9a, can: 0x6f9cc4,
-};
+});
 
 // ════════════════════════════════════════════════════════════════════
 // 地面
