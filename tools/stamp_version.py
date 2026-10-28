@@ -49,9 +49,19 @@ const APP_VERSION = "{version}";
         sys.exit("sw.js: 找不到 CACHE_NAME")
     io.open(sw_path, "w", encoding="utf-8").write(new_sw)
 
+    # v3 有自己的 Service Worker（scope /v3/），同一個時間蓋章
+    v3_path = ROOT / "v3" / "sw.js"
+    if v3_path.exists():
+        v3 = io.open(v3_path, encoding="utf-8").read()
+        new_v3, n = re.subn(r"const CACHE_NAME = '[^']*';",
+                            f"const CACHE_NAME = 'daisy-v3-{slug}';", v3, count=1)
+        if n != 1:
+            sys.exit("v3/sw.js: 找不到 CACHE_NAME")
+        io.open(v3_path, "w", encoding="utf-8").write(new_v3)
+
     print(f"版本 {version}（台北時間）")
     print("  version.js 已更新")
-    print(f"  sw.js CACHE_NAME -> daisy-{slug}")
+    print(f"  sw.js CACHE_NAME -> daisy-{slug}（v3/sw.js -> daisy-v3-{slug}）")
     if git("status", "--porcelain"):
         print("  提醒：記得把 version.js 和 sw.js 一起 commit")
 
