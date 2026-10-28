@@ -97,6 +97,23 @@ function it(name, fn) {
       assert.strictEqual(hex(C.carrot), "d9772f");
       assert.strictEqual(B.sharedUniforms.uHatchScale.value, 1);
     });
+    it("精緻可愛風：標準材質、真的影子、沒有描邊、圓角方塊、不用假影子；換回來完全還原", () => {
+      global.document = global.document || { createElement: () => ({ getContext: () => ({
+        createRadialGradient: () => ({ addColorStop() {} }), fillRect() {}, fillStyle: "" }) }) };
+      B.applyTheme("polish");
+      const g = B.inked(B.box(1, 1, 1), 0xffffff);
+      assert.strictEqual(g.children.length, 1, "沒有描邊那一層");
+      assert.strictEqual(g.children[0].material.type, "MeshStandardMaterial");
+      assert.ok(g.children[0].castShadow && g.children[0].receiveShadow);
+      assert.ok(B.box(1, 1, 1).getAttribute("position").count > 24, "圓角方塊的頂點比一般方塊（24 個）多");
+      assert.strictEqual(B.blob(1).visible, false, "有真的影子就不畫假的");
+      B.applyTheme("book");
+      const h = B.inked(B.box(1, 1, 1), 0xffffff);
+      assert.strictEqual(h.children.length, 2, "繪本有描邊");
+      assert.strictEqual(h.children[1].material.type, "ShaderMaterial");
+      assert.strictEqual(B.box(1, 1, 1).getAttribute("position").count, 24, "一般方塊");
+      assert.strictEqual(B.blob(1).visible, true);
+    });
     it("小星球上的 7 區，順序和 v1 倉鼠世界一樣（daisy_hamster.html 的 MAP_ORDER）", () => {
       const src = fs.readFileSync(path.join(ROOT, "daisy_hamster.html"), "utf8");
       const order = JSON.parse(src.match(/const MAP_ORDER = (\[[^\]]+\])/)[1].replace(/'/g, '"'));

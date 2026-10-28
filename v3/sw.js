@@ -10,7 +10,7 @@
 // 要根治得改根目錄那支（只刪 daisy- 開頭、非 v3 的），等 v3 取代 v1 時再一起改。
 //
 // CACHE_NAME 由 tools/stamp_version.py 蓋章（和根目錄那支同一個時間）。
-const CACHE_NAME = 'daisy-v3-20261028-1843';
+const CACHE_NAME = 'daisy-v3-20261029-0059';
 
 // tests/v3.js 會檢查 v3 底下每個要用到的檔案都列在這裡
 const PRECACHE = [
@@ -33,6 +33,7 @@ const PRECACHE = [
   '../v2/lab/book3d.js',
   '../v2/lab/planet.js',
   '../v2/vendor/three.module.min.js',
+  '../v2/vendor/RoundedBoxGeometry.js',
   '../audio.js',
   '../words.js',
   '../calendar.js',

@@ -51,6 +51,8 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 <canvas id="c" aria-label="倉鼠世界：點地面倉鼠會走過去，點地區的牌子就走進去"></canvas>
 
 <div class="hud">
+  <!-- 試作：可愛風 ／ 精緻可愛風（真的陰影、電影調色、圓角）並排比較，選定之後拿掉 -->
+  <button class="pill" id="look"></button>
   <button class="pill" id="classic"><span class="em" aria-hidden="true">🐹</span><span data-zy="拼字冒險|ㄆㄧㄣ ㄗˋ ㄇㄠˋ ㄒㄧㄢˇ"></span></button>
 </div>
 <button class="pill hint" id="hint" data-say="點地面，倉鼠會走過去。點牌子，就走進那一區。拖曳可以轉星球。">
@@ -70,7 +72,12 @@ import { startPlanet } from '../../v2/lab/planet.js';
 import { REGIONS } from './landmarks.js';
 import { say } from '../core/speech.js';
 
-applyTheme('cute');          // 一定要在建場景之前
+// 一定要在建場景之前。?look=polish（或上次選的）→ 精緻可愛風；預設可愛風
+const LOOKS = { cute: { em: '🍬', zh: '可愛', zy: 'ㄎㄜˇ ㄞˋ' }, polish: { em: '✨', zh: '精緻', zy: 'ㄐㄧㄥ ㄓˋ' } };
+let LOOK = new URLSearchParams(location.search).get('look');
+if (!LOOKS[LOOK]) { try { LOOK = localStorage.getItem('v3_look'); } catch (e) {} }
+if (!LOOKS[LOOK]) LOOK = 'cute';
+applyTheme(LOOK);
 
 const $ = (s) => document.querySelector(s);
 const zy = (zh, z) => renderZhuyin(zh, String(z).split(' '));
@@ -96,7 +103,7 @@ function toast(msg) {
 //   其他    → 3D 版還在蓋（v3 計畫的 P6），先說一聲；v1 的那一區在「拼字冒險」裡走得到
 const INFO = {
   home:   { em: '🏠', zh: '家',       zy: 'ㄐㄧㄚ',              c: '#ff6b9a', go: () => go('#world/daisy_hamster.html') },
-  garden: { em: '🥕', zh: '後院',     zy: 'ㄏㄡˋ ㄩㄢˋ',          c: '#4cbf4c', go: () => { location.href = '../../v2/lab/garden.html?theme=cute&from=v3'; } },
+  garden: { em: '🥕', zh: '後院',     zy: 'ㄏㄡˋ ㄩㄢˋ',          c: '#4cbf4c', go: () => { location.href = '../../v2/lab/garden.html?theme=' + LOOK + '&from=v3'; } },
   park:   { em: '🌳', zh: '公園',     zy: 'ㄍㄨㄥ ㄩㄢˊ',          c: '#2eaf7d' },
   street: { em: '🏘️', zh: '街道',     zy: 'ㄐㄧㄝ ㄉㄠˋ',          c: '#ff9f43' },
   arcade: { em: '🎮', zh: '遊戲中心', zy: 'ㄧㄡˊ ㄒㄧˋ ㄓㄨㄥ ㄒㄧㄣ', c: '#9b5de5', go: () => go('#games') },
@@ -105,6 +112,15 @@ const INFO = {
 };
 
 $('#classic').onclick = () => { sfx('whoosh'); go('#world/daisy_hamster.html'); };
+// 換風格：顯示的是「按了會換成哪一種」
+{
+  const other = LOOK === 'cute' ? 'polish' : 'cute', o = LOOKS[other];
+  $('#look').innerHTML = `<span class="em" aria-hidden="true">${o.em}</span><span>${zy(o.zh, o.zy)}</span>`;
+  $('#look').onclick = () => {
+    try { localStorage.setItem('v3_look', other); } catch (e) {}
+    location.href = 'index.html?look=' + other;
+  };
+}
 
 const probe = document.createElement('canvas');
 if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) {

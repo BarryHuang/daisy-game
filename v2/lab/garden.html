@@ -179,7 +179,9 @@ import * as F from './farm.js';
 
 // ?theme=cute：v3 的可愛風（糖果色、沒有色鉛筆排線）。一定要在建場景之前換
 const fromV3 = new URLSearchParams(location.search).get('from') === 'v3';
-if (new URLSearchParams(location.search).get('theme') === 'cute') { applyTheme('cute'); document.body.classList.add('cute'); }
+// ?theme=polish：精緻可愛風（真的陰影、電影調色、圓角方塊）。兩種都用 v3 的鮮豔介面（.cute）
+const theme = new URLSearchParams(location.search).get('theme');
+if (theme === 'cute' || theme === 'polish') { applyTheme(theme); document.body.classList.add('cute'); }
 if (fromV3) {
   document.querySelector('#back .zh').dataset.zy = '倉鼠世界|ㄘㄤ ㄕㄨˇ ㄕˋ ㄐㄧㄝˋ';
   document.querySelector('#back').setAttribute('aria-label', '回倉鼠世界');
@@ -363,7 +365,7 @@ function questToasts(q) {
 }
 
 // ── 開場 ──────────────────────────────────────────────────────────────
-$('#back').onclick = () => { sfx('whoosh'); location.href = fromV3 ? '../../v3/world/index.html?from=garden' : 'planet.html?from=garden'; };
+$('#back').onclick = () => { sfx('whoosh'); location.href = fromV3 ? '../../v3/world/index.html?from=garden&look=' + (theme || 'cute') : 'planet.html?from=garden'; };
 const probe = document.createElement('canvas');
 if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) {
   $('#fallback').style.display = 'grid';

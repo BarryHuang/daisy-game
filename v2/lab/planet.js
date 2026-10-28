@@ -14,7 +14,7 @@
 // 光源跟著鏡頭走（固定在畫面左上方），所以不管轉到哪一面都是亮的那一面。
 
 import { THREE, P, sharedUniforms, inked, mergeParts, blob, makeTree, makeHouse, makeFlower, makeRock,
-         makeMushroom, makePond, makeCloud, makeHamster, animateHamster, createWobbler, createStage } from './book3d.js';
+         makeMushroom, makePond, makeCloud, makeHamster, animateHamster, createWobbler, createStage, box as roundBox } from './book3d.js';
 
 const R = 5;                 // 星球半徑
 
@@ -90,7 +90,7 @@ export const dirFrom = (lat, lon) => {
 // ════════════════════════════════════════════════════════════════════
 /** 後院：四小塊田 + 一個插著紅蘿蔔的木牌。進去之後是 garden.html 的大場景 */
 function makeGardenPatch() {
-  const box = (sx, sy, sz) => new THREE.BoxGeometry(sx, sy, sz);
+  const box = (sx, sy, sz) => roundBox(sx, sy, sz);
   const parts = [];
   [[-0.2, -0.16], [0.2, -0.16], [-0.2, 0.18], [0.2, 0.18]].forEach(([x, z]) => {
     parts.push({ geo: box(0.34, 0.08, 0.26), color: 0xb08560, pos: [x, 0.04, z] });

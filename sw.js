@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daisy-20261028-1843';
+const CACHE_NAME = 'daisy-20261029-0059';
 
 const LOCAL_ASSETS = [
   './',
@@ -145,6 +145,7 @@ const LOCAL_ASSETS = [
   './v2/fonts/Andika-Bold.woff2',
   './v2/art/hamster.svg',
   './v2/vendor/three.module.min.js',
+  './v2/vendor/RoundedBoxGeometry.js',
   './v2/lab/book3d.js',
   './v2/lab/planet.html',
   './v2/lab/planet.js',

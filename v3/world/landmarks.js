@@ -7,9 +7,9 @@
 // 每個地標都是基本形狀拼起來、合成一個幾何（mergeParts），整個地標只要兩次 draw call。
 // 顏色寫在這裡（糖果色），不跟著調色盤走 —— 地標本來就要各自好認。
 
-import { THREE, inked, mergeParts, blob } from '../../v2/lab/book3d.js';
+import { THREE, inked, mergeParts, blob, box as roundBox } from '../../v2/lab/book3d.js';
 
-const box = (x, y, z) => new THREE.BoxGeometry(x, y, z);
+const box = (x, y, z) => roundBox(x, y, z);   // 精緻可愛風是圓角方塊
 const cyl = (rt, rb, h, n = 12) => new THREE.CylinderGeometry(rt, rb, h, n);
 const sph = (r, d = 1) => new THREE.IcosahedronGeometry(r, d);
 const group = (parts, line = 1.3) => {

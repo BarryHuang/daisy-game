@@ -11,6 +11,7 @@
 // 光源固定在畫面左上方（view space），轉到哪一面都是亮的。
 
 import * as THREE from '../vendor/three.module.min.js';
+import { RoundedBoxGeometry } from '../vendor/RoundedBoxGeometry.js';
 export { THREE };
 
 // ── 調色盤：和 v2 設計稿的繪本風同一組 ─────────────────────────────────
@@ -48,8 +49,34 @@ const SHADOW_TINT = new THREE.Color(0x6e6a9e);  // 暗面混進去的冷紫
 // 預設值和改這支之前寫死的數字一模一樣，所以沒呼叫的 v2 頁面畫出來不變。
 // 其他模組自己的調色盤（例如 garden.js 的 C）用 themable() 登記，換主題時一起換。
 const BOOK_LOOK = { hatch: 1, grain: 1, shadeMix: 0.50, shadeDark: 0.80, rim: 0.22, line: 1, shadow: 0x6e6a9e };
+// polish ＝「精緻可愛風」：不用自己的卡通著色，改用 three.js 的標準材質（霧面）＋ 真的柔和陰影
+// ＋ 暖主光／冷補光／天光 ＋ 電影調色（ACES）＋ 淡淡的霧 ＋ 圓角方塊；沒有描邊。
+// 參考的是「用基本形狀拼、靠光線和顏色取勝」的作法（和 three.js 官方範例同一套標準技術）。
+const POLISH_P = {
+  ink: 0x5b4a5e,
+  grass: [0x96da76, 0x84cd63, 0xabe58b, 0x79c35e],   // ACES 會吃掉一點飽和度，草地先調鮮一點
+  path: 0xf7e3c3, dirt: 0xdcae86, trunk: 0xa97b5c,
+  leaf: [0x6fc56c, 0x5db561, 0x8ad37f, 0x66bc74],
+  roof: 0xf4807c, wall: 0xfff7ee, door: 0x9a85d8, window: 0xaee0f7,
+  rock: 0xddd6cb, water: 0x7fcdea, cloud: 0xffffff,
+  flower: [0xf4807c, 0xffd47e, 0xb7a1de, 0x7fcdea, 0xffffff],
+  mushroom: 0xf4807c, stem: 0xfff3e2,
+};
 const THEMES = {
   book: { look: BOOK_LOOK, P: null, extra: {} },
+  polish: {
+    look: { hatch: 0, grain: 0, shadeMix: 0.38, shadeDark: 0.90, rim: 0.30, line: 0, shadow: 0xa98cf0,
+            pbr: true, round: true, fog: 0xf1e8f4 },
+    P: POLISH_P,
+    extra: {
+      garden: {
+        soil: 0x9c7152, soilDark: 0x80593f, plank: 0xd59a6a, plankDark: 0xb07b51,
+        sprout: 0x7fd36b, leaf: 0x5cbb5f, leafLight: 0x92da7f,
+        carrot: 0xff9446, corn: 0xffd65c, cornHusk: 0xa5df7a, straw: 0xf47c7c, pumpkin: 0xffa24a,
+        stall: 0xfff7ee, awning: 0xf4807c, shirt: 0x6fa8e8, sack: 0xf1dcb0, can: 0x7fcdea,
+      },
+    },
+  },
   cute: {
     look: { hatch: 0, grain: 0, shadeMix: 0.38, shadeDark: 0.90, rim: 0.30, line: 0.8, shadow: 0xa98cf0 },
     P: {
@@ -76,6 +103,13 @@ const BOOK_P = JSON.parse(JSON.stringify(P));
 const registry = {};            // themable() 登記的調色盤：{ 名字: { obj, book } }
 export let currentTheme = 'book';
 let lineScale = 1;
+let look = BOOK_LOOK;
+
+/** 方塊：精緻可愛風用圓角方塊（邊角一點點圓，玩具感就出來了），其他主題用一般方塊 */
+export function box(x, y, z) {
+  if (!look.round) return new THREE.BoxGeometry(x, y, z);
+  return new RoundedBoxGeometry(x, y, z, 2, Math.min(x, y, z) * 0.22);
+}
 
 /** 讓其他模組的調色盤也跟著主題換：const C = themable('garden', { soil: … }) */
 export function themable(name, obj) {
@@ -92,6 +126,7 @@ export function applyTheme(name) {
   Object.assign(P, JSON.parse(JSON.stringify(BOOK_P)), th.P || {});
   for (const [k, r] of Object.entries(registry)) Object.assign(r.obj, JSON.parse(JSON.stringify(r.book)), th.extra[k] || {});
   const L = th.look;
+  look = L;
   sharedUniforms.uHatchScale.value = L.hatch;
   sharedUniforms.uGrain.value = L.grain;
   sharedUniforms.uShadeMix.value = L.shadeMix;
@@ -190,7 +225,11 @@ const BOOK_FS = /* glsl */`
   }
 `;
 
-export function bookMat(hex, { hatch = 1, vertexColors = false } = {}) {
+export function bookMat(hex, { hatch = 1, vertexColors = false, glow = 0 } = {}) {
+  // 精緻可愛風：three.js 的標準材質，霧面（像陶土、木頭玩具），收得到真的影子。
+  // glow：自己發一點光（雲用：背光那一面不然會變灰灰的）
+  if (look.pbr) return new THREE.MeshStandardMaterial({ color: hex, vertexColors, roughness: 0.82, metalness: 0,
+    emissive: glow ? 0xfff6ee : 0x000000, emissiveIntensity: glow });
   return new THREE.ShaderMaterial({
     uniforms: {
       ...sharedUniforms,
@@ -299,12 +338,14 @@ export function mergeParts(parts) {
 }
 
 /** 一個繪本風物件 = 著色的本體 + 一圈墨線 */
-export function inked(geo, hex, { line = 1.6, hatch = 1, vertexColors = false } = {}) {
+export function inked(geo, hex, { line = 1.6, hatch = 1, vertexColors = false, glow = 0 } = {}) {
   addOutlineNormals(geo);
   const g = new THREE.Group();
-  const body = new THREE.Mesh(geo, bookMat(hex, { hatch, vertexColors }));
-  const edge = new THREE.Mesh(geo, outlineMat(line));
-  g.add(edge, body);
+  const body = new THREE.Mesh(geo, bookMat(hex, { hatch, vertexColors, glow }));
+  if (look.pbr) { body.castShadow = true; body.receiveShadow = true; }
+  // 描邊粗細 0 的主題（精緻可愛風）就不畫描邊，也省一半的 draw call
+  if (lineScale > 0) g.add(new THREE.Mesh(geo, outlineMat(line)));
+  g.add(body);
   g.userData.body = body;
   return g;
 }
@@ -322,6 +363,7 @@ export function blob(radius) {
   const m = new THREE.Mesh(new THREE.CircleGeometry(radius, 24),
     new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false }));
   m.rotation.x = -Math.PI / 2; m.position.y = 0.025;
+  m.visible = !look.pbr;          // 有真的影子時，不用這塊假的
   return m;
 }
 
@@ -342,15 +384,15 @@ export function makeTree(scale = 1, tint = 0) {
 
 export function makeHouse() {
   const h = new THREE.Group();
-  const wall = inked(new THREE.BoxGeometry(1.1, 0.8, 0.95), P.wall, { line: 1.8 });
+  const wall = inked(box(1.1, 0.8, 0.95), P.wall, { line: 1.8 });
   wall.position.y = 0.4;
   const roof = inked(new THREE.ConeGeometry(0.92, 0.75, 4), P.roof, { line: 1.8 });
   roof.position.y = 1.15; roof.rotation.y = Math.PI / 4;
-  const door = inked(new THREE.BoxGeometry(0.3, 0.46, 0.05), P.door, { line: 1.2 });
+  const door = inked(box(0.3, 0.46, 0.05), P.door, { line: 1.2 });
   door.position.set(0, 0.24, 0.49);
   const win = inked(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 20), P.window, { line: 1.2, hatch: 0 });
   win.rotation.x = Math.PI / 2; win.position.set(0.32, 0.52, 0.49);
-  const chimney = inked(new THREE.BoxGeometry(0.16, 0.34, 0.16), P.roof, { line: 1.4 });
+  const chimney = inked(box(0.16, 0.34, 0.16), P.roof, { line: 1.4 });
   chimney.position.set(-0.28, 1.32, -0.1);
   h.add(wall, roof, door, win, chimney, blob(1.0));
   h.userData = { kind: 'house' };
@@ -404,7 +446,8 @@ export function makeCloud() {
   const c = new THREE.Group();
   c.add(inked(mergeParts([[0, 0, 0, 0.55], [0.55, -0.08, 0.05, 0.42], [-0.55, -0.1, 0, 0.4], [0.2, 0.25, -0.05, 0.4]]
     .map(([x, y, z, r]) => ({ geo: new THREE.IcosahedronGeometry(r, 3), color: P.cloud, pos: [x, y, z], scale: [1, 0.72, 1] }))),
-    0xffffff, { line: 1.6, hatch: 0.5, vertexColors: true }));
+    0xffffff, { line: 1.6, hatch: 0.5, vertexColors: true, glow: 0.45 }));
+  c.traverse((o) => { o.castShadow = false; });       // 雲的影子打在星球上像髒污
   return c;
 }
 
@@ -529,9 +572,18 @@ export function createWobbler() {
  *   update(dt, t)        每一幀
  *   onStats({fps,...})   每秒一次
  */
-export function createStage(canvas, camera, { onResize, onStats } = {}) {
+export function createStage(canvas, camera, { onResize, onStats, shadowExtent = 9 } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setClearColor(0x000000, 0);
+  // 精緻可愛風：真的柔和陰影、電影調色。光源在 start() 裡加
+  const pbr = !!look.pbr;
+  let rig = null;
+  if (pbr) {
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+  }
   const PR_STEPS = [2, 1.5, 1.25];
   let prCap = Math.min(window.devicePixelRatio || 1, 2);
   function resize() {
@@ -553,9 +605,11 @@ export function createStage(canvas, camera, { onResize, onStats } = {}) {
     renderer,
     get pixelRatioCap() { return prCap; },
     start(scene, update) {
+      if (pbr) rig = addLightRig(scene, look.fog, shadowExtent);
       renderer.setAnimationLoop(() => {
         const dt = Math.min(clock.getDelta(), 0.05);
         update && update(dt, clock.elapsedTime);
+        if (rig) rig.follow(camera);
         renderer.render(scene, camera);
         const now = performance.now();
         frames++; fpsT += (now - lastReal) / 1000; lastReal = now;
@@ -568,6 +622,35 @@ export function createStage(canvas, camera, { onResize, onStats } = {}) {
           frames = 0; fpsT = 0;
         }
       });
+    },
+  };
+}
+
+/**
+ * 精緻可愛風的燈：暖色的太陽（投影子）＋ 淡藍的補光 ＋ 天光（天空色／地面色），
+ * 亮的地方暖、暗的地方冷。太陽跟著鏡頭走，固定在畫面左上方 —— 小星球轉到哪一面都是亮的
+ * （和繪本著色器的 uLightView 同一個方向）。霧的遠近也跟著鏡頭距離調，只讓星球的遠端淡一點。
+ */
+function addLightRig(scene, fogColor, extent) {
+  const hemi = new THREE.HemisphereLight(0xf2f7ff, 0xb59a86, 1.25);
+  const sun = new THREE.DirectionalLight(0xfff0dc, 2.6);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  Object.assign(sun.shadow.camera, { left: -extent, right: extent, top: extent, bottom: -extent, near: 1, far: 80 });
+  sun.shadow.bias = -0.0008;
+  sun.shadow.normalBias = 0.02;
+  sun.shadow.radius = 3;
+  const fill = new THREE.DirectionalLight(0xc4d8ff, 0.45);
+  scene.add(hemi, sun, sun.target, fill, fill.target);
+  if (fogColor != null) scene.fog = new THREE.Fog(fogColor, 10, 60);
+  const v = new THREE.Vector3(), up = new THREE.Vector3();
+  return {
+    follow(camera) {
+      v.copy(sharedUniforms.uLightView.value).applyQuaternion(camera.quaternion);
+      sun.position.copy(v).multiplyScalar(40);
+      fill.position.set(-v.x, v.y * 0.3, -v.z).multiplyScalar(30);
+      hemi.position.copy(up.set(0, 1, 0).applyQuaternion(camera.quaternion));
+      if (scene.fog) { const d = camera.position.length(); scene.fog.near = d * 1.0; scene.fog.far = d * 3.0; }
     },
   };
 }
