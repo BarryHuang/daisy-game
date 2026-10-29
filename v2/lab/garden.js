@@ -7,7 +7,7 @@
 // 和小星球同一個世界，只是鏡頭湊近了。
 
 import { THREE, P, sharedUniforms, inked, mergeParts, blob, makeTree, makeHouse, makeFlower, makeRock,
-         makeMushroom, makeCloud, makeHamster, animateHamster, createWobbler, createStage, screenOf, themable } from './book3d.js';
+         makeMushroom, makeCloud, makeHamster, animateHamster, createWobbler, createStage, screenOf, themable, box as roundBox } from './book3d.js';
 import * as F from './farm.js';
 
 const G = 34;                                      // 地面那顆大球的半徑
@@ -71,7 +71,7 @@ const on = (obj, x, z, yaw = 0, sink = 0.02) => { obj.position.set(x, gy(x, z) -
 function makeBed(i) {
   const g = new THREE.Group();
   const w = BED_W, d = BED_D, h = 0.3, t = 0.14;
-  const box = (sx, sy, sz) => new THREE.BoxGeometry(sx, sy, sz);
+  const box = (sx, sy, sz) => roundBox(sx, sy, sz);
   g.add(inked(mergeParts([
     { geo: box(w, h, t), color: C.plank, pos: [0, h / 2, -d / 2] },
     { geo: box(w, h, t), color: C.plank, pos: [0, h / 2, d / 2] },
@@ -174,7 +174,7 @@ function makeCrop(crop, stage, top) {
 // ════════════════════════════════════════════════════════════════════
 function makeStall() {
   const s = new THREE.Group();
-  const box = (sx, sy, sz) => new THREE.BoxGeometry(sx, sy, sz);
+  const box = (sx, sy, sz) => roundBox(sx, sy, sz);
   const parts = [
     { geo: box(2.0, 0.12, 0.9), color: C.plank, pos: [0, 0.82, 0] },
     { geo: box(1.9, 0.76, 0.08), color: C.stall, pos: [0, 0.4, 0.38] },
@@ -199,7 +199,7 @@ function makeScarecrow() {
   body.add(inked(mergeParts([
     { geo: new THREE.CylinderGeometry(0.06, 0.07, 2.0, 8), color: C.plankDark, pos: [0, 1.0, 0] },
     { geo: new THREE.CylinderGeometry(0.05, 0.05, 1.6, 8), color: C.plankDark, pos: [0, 1.35, 0], rot: [0, 0, Math.PI / 2] },
-    { geo: new THREE.BoxGeometry(0.75, 0.62, 0.32), color: C.shirt, pos: [0, 1.22, 0] },
+    { geo: roundBox(0.75, 0.62, 0.32), color: C.shirt, pos: [0, 1.22, 0] },
     { geo: ico(0.28, 2), color: C.sack, pos: [0, 1.85, 0] },
     { geo: new THREE.CylinderGeometry(0.5, 0.5, 0.04, 20), color: C.plank, pos: [0, 2.08, 0] },
     { geo: new THREE.ConeGeometry(0.26, 0.32, 14), color: C.plank, pos: [0, 2.24, 0] },
@@ -226,7 +226,7 @@ function makeCan() {
 }
 
 function makeFence() {
-  const parts = [], box = (sx, sy, sz) => new THREE.BoxGeometry(sx, sy, sz);
+  const parts = [], box = (sx, sy, sz) => roundBox(sx, sy, sz);
   const runs = [[[-3.2, -6.4], [7.4, -6.4]], [[7.4, -6.4], [7.4, 3.6]], [[-7.6, -1.0], [-7.6, 4.4]]];
   for (const [[ax, az], [bx, bz]] of runs) {
     const len = Math.hypot(bx - ax, bz - az), n = Math.round(len / 1.15), yaw = Math.atan2(bx - ax, bz - az);

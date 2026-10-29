@@ -31,6 +31,8 @@ function it(name, fn) {
 
     it("每一個要打開的頁面都存在", () => {
       N.ALL.filter((s) => s.page).forEach((s) => assert.ok(fs.existsSync(path.join(ROOT, s.page)), s.page));
+      N.ALL.filter((s) => s.module).forEach((s) => assert.ok(fs.existsSync(path.join(V3, s.module)), s.module));
+      N.ALL.forEach((s) => assert.ok(s.page || s.module || s.items, s.id + " 沒有內容"));
       items.forEach(({ it }) => assert.ok(fs.existsSync(path.join(ROOT, it.page)), it.page));
     });
 
@@ -95,6 +97,23 @@ function it(name, fn) {
       assert.strictEqual(hex(C.carrot), "d9772f");
       assert.strictEqual(B.sharedUniforms.uHatchScale.value, 1);
     });
+    it("精緻可愛風：標準材質、真的影子、沒有描邊、圓角方塊、不用假影子；換回來完全還原", () => {
+      global.document = global.document || { createElement: () => ({ getContext: () => ({
+        createRadialGradient: () => ({ addColorStop() {} }), fillRect() {}, fillStyle: "" }) }) };
+      B.applyTheme("polish");
+      const g = B.inked(B.box(1, 1, 1), 0xffffff);
+      assert.strictEqual(g.children.length, 1, "沒有描邊那一層");
+      assert.strictEqual(g.children[0].material.type, "MeshStandardMaterial");
+      assert.ok(g.children[0].castShadow && g.children[0].receiveShadow);
+      assert.ok(B.box(1, 1, 1).getAttribute("position").count > 24, "圓角方塊的頂點比一般方塊（24 個）多");
+      assert.strictEqual(B.blob(1).visible, false, "有真的影子就不畫假的");
+      B.applyTheme("book");
+      const h = B.inked(B.box(1, 1, 1), 0xffffff);
+      assert.strictEqual(h.children.length, 2, "繪本有描邊");
+      assert.strictEqual(h.children[1].material.type, "ShaderMaterial");
+      assert.strictEqual(B.box(1, 1, 1).getAttribute("position").count, 24, "一般方塊");
+      assert.strictEqual(B.blob(1).visible, true);
+    });
     it("小星球上的 7 區，順序和 v1 倉鼠世界一樣（daisy_hamster.html 的 MAP_ORDER）", () => {
       const src = fs.readFileSync(path.join(ROOT, "daisy_hamster.html"), "utf8");
       const order = JSON.parse(src.match(/const MAP_ORDER = (\[[^\]]+\])/)[1].replace(/'/g, '"'));
@@ -116,6 +135,23 @@ function it(name, fn) {
       for (let i = 0; i < spots.length; i++) for (let j = i + 1; j < spots.length; j++)
         assert.ok(ang(dir(spots[i]), dir(spots[j])) > 25, spots[i] + " 和 " + spots[j] + " 太近");
       L.REGIONS.filter((r) => r.at).forEach((r) => { const a = ang(dir(r.at), dir(r.stand)); assert.ok(a > 6 && a < 16, r.name + " 站的位置 " + a.toFixed(1) + "°"); });
+    });
+  });
+
+  describe("今日任務 tasks.js", () => {
+    const src = fs.readFileSync(path.join(V3, "tasks/tasks.js"), "utf8");
+    it("「用今天的字玩」的 6 個遊戲都看得懂 ?set=（有載入 wordset.js），也都在遊戲中心裡", () => {
+      const list = JSON.parse(src.match(/SET_GAMES = (\[[^\]]+\])/)[1].replace(/'/g, '"'));
+      assert.strictEqual(list.length, 6);
+      const games = N.sectionById("games").items.map((it) => it.page);
+      list.forEach((f) => {
+        assert.match(fs.readFileSync(path.join(ROOT, f), "utf8"), /wordset\.js/, f);
+        assert.ok(games.includes(f), f + " 不在遊戲中心");
+      });
+    });
+    it("和 v2 存在同一個地方（在 v2 做過的不會不見），金幣：一關 5、寶箱 40", () => {
+      assert.match(src, /'daisy2_today_'/); assert.match(src, /'daisy2_seen'/);
+      assert.match(src, /REWARD = \{ station: 5, chest: 40 \}/);
     });
   });
 
