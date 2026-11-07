@@ -48,6 +48,7 @@ export const SECTIONS = [
   { id: 'stories', em: '📚', name: '故事', zy: 'ㄍㄨˋ ㄕˋ', color: 'rose',
     say: '故事。讀課文和繪本。',
     items: [
+      { page: 'lesson_hub.html',   em: '🏫', name: '課文教學', zy: 'ㄎㄜˋ ㄨㄣˊ ㄐㄧㄠˋ ㄒㄩㄝˊ' },
       { page: 'story_hub.html',    em: '📚', name: '課文複習', zy: 'ㄎㄜˋ ㄨㄣˊ ㄈㄨˋ ㄒㄧˊ' },
       { page: 'autumn_book.html',  em: '🍂', en: 'My Autumn Book' },
       { page: 'every_season.html', em: '🌸', en: 'Every Season' },
