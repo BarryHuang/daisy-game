@@ -14,6 +14,7 @@ const MENU_GROUPS = [
     { href: "wordbook.html", emoji: "📒", name: "單字總表", note: "所有單字・看熟練度" }
   ]},
   { title: "讀故事", items: [
+    { href: "lesson_hub.html",  emoji: "🏫", name: "課文教學", note: "逐句帶讀・唸給妳聽" },
     { href: "story_hub.html",   emoji: "📚", name: "課文複習" }
   ]},
   { title: "玩遊戲", items: [
