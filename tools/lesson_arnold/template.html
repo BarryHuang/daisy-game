@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🍎 The Seasons of Arnold's Apple Tree</title>
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!--
+  The Seasons of Arnold's Apple Tree（Gail Gibbons，myView 2.1 p.299–321，FET Wk 13–14）學習單。
+  版面照 lesson_home_prairie.html（媽媽做的那份）：故事快覽 → 逐句精讀 → 文法小偵探 →
+  單字探險 → 挑戰。差別是這份是手寫的單檔 HTML，不是打包過的 React，資料在最下面的 DATA。
+  這個檔由 tools/lesson_arnold/build.py 產生（資料在 data.py，注音用 tools/zhuyin_build.py），
+  要改內容就改資料再重建，不要直接改這個檔。
+-->
+<style>
+:root{
+  --bg:#fffaf0; --card:#ffffff; --ink:#4a3b2a; --muted:#8a7a66; --line:#f1e6d3;
+  --orange:#fb8c00; --orange-d:#e65100; --orange-soft:#fff1de;
+  --green:#43a047; --green-soft:#e8f5e9; --apple:#e53935; --apple-soft:#ffebee;
+  --spring:#ec407a; --summer:#43a047; --fall:#ef6c00; --winter:#1e88e5; --tree:#8d6e63;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC",sans-serif;
+  background-image:radial-gradient(#f3e4c6 1px,transparent 1px);background-size:22px 22px;
+  -webkit-text-size-adjust:100%;}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 80px}
+.en{font-family:"Baloo 2","Noto Sans TC",sans-serif}
+h2{font-size:20px;font-weight:900;margin:34px 0 14px;display:flex;align-items:center;gap:8px}
+button{font-family:inherit;cursor:pointer}
+
+/* ── 頁首 ── */
+.top{position:sticky;top:0;z-index:20;background:linear-gradient(90deg,#fde3e7,#e8f5e9 45%,#fff3e0 75%,#e3f2fd);
+  border-bottom:1px solid var(--line);padding:12px 16px 12px 70px}
+.top h1{margin:0;font-size:20px;line-height:1.25;font-weight:900}
+.top .sub{display:inline-block;margin-top:6px;font-size:12px;background:#fffc;border-radius:999px;padding:3px 10px;color:var(--muted)}
+.tip{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-top:18px;box-shadow:0 4px 14px #0000000a;font-size:14px;line-height:1.75}
+.tip .ic{flex:0 0 40px;height:40px;border-radius:50%;background:#fff8d6;display:grid;place-items:center;font-size:20px}
+.tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:700;margin:0 2px}
+.tag.base{background:#fff1de;color:#a65b00}.tag.book{background:#e8f5e9;color:#2e7d32}
+.tag.fet{background:#fde3e7;color:#ad1457}
+.voice{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 4px 14px #0000000a}
+.voice summary{list-style:none;padding:14px 16px;font-weight:700;display:flex;align-items:center;gap:8px;cursor:pointer}
+.voice summary::-webkit-details-marker{display:none}
+.voice summary small{font-weight:400;color:var(--muted);margin-left:auto;font-size:12px}
+.voice .body{padding:0 16px 16px;display:grid;gap:10px;font-size:14px}
+.voice select,.voice input{width:100%;font-size:15px;padding:8px;border-radius:12px;border:1px solid var(--line);background:#fff}
+
+/* ── 故事快覽 ── */
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.mcard{position:relative;overflow:hidden;text-align:left;border:0;border-radius:22px;padding:16px;min-height:150px;
+  background:var(--soft);box-shadow:0 4px 14px #0000000d;color:var(--ink)}
+.mcard .em{font-size:28px}.mcard .t{font-weight:900;font-size:17px;margin-top:6px}
+.mcard .e{font-size:12px;color:var(--muted)}.mcard .d{font-size:13px;margin-top:6px;line-height:1.5}
+.mcard .r{display:inline-block;margin-top:10px;background:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+.mcard .bg{position:absolute;right:-6px;bottom:-12px;font-size:64px;opacity:.13}
+.cycle{margin-top:14px;text-align:center;font-size:14px;color:var(--muted);background:#fff;border-radius:18px;padding:10px;border:1px dashed var(--line)}
+
+/* ── 逐句精讀 ── */
+.bar{position:sticky;top:var(--toph,74px);z-index:10;background:var(--bg);padding:8px 0;display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.bar h2{margin:0;flex:1 1 auto;white-space:nowrap}
+.bar .tog{padding:5px 10px;font-size:13px}
+.tog{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;color:var(--ink)}
+.tog.on{background:var(--green-soft);border-color:#c8e6c9}
+.legend{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 14px;font-size:13px;line-height:2}
+.sec{margin:22px 0 10px;border-radius:16px;padding:10px 14px;font-weight:900;background:var(--soft);display:flex;justify-content:space-between;align-items:center;scroll-margin-top:130px}
+.sec small{font-weight:700;color:var(--muted)}
+.sent{display:grid;grid-template-columns:44px 1fr;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;margin-bottom:12px;box-shadow:0 3px 10px #0000000a}
+.sent.playing{outline:3px solid #ffcc80}
+.num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:var(--soft);font-size:15px}
+.say{margin-top:8px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:16px}
+.en-line{font-size:18px;line-height:1.85}
+.zh-line{margin-top:6px;font-size:16px;line-height:1.9;color:#5d4a36}
+.zh-line .zy{font-size:17px;margin-right:.04em}
+body.hide-zh .zh-line{filter:blur(6px);cursor:pointer;user-select:none}
+body.hide-zh .zh-line.peek{filter:none}
+body.no-zy .zy-rail{display:none}
+.hl{border:0;font:inherit;font-weight:700;padding:0 8px;border-radius:999px;background:var(--orange);color:#fff;line-height:1.6;display:inline-block;margin:1px 0}
+.hl.seen{background:transparent;color:var(--orange-d);padding:0 1px;text-decoration:underline dotted 2px;text-underline-offset:4px}
+.hl.fet::after{content:"⭐";font-size:11px;vertical-align:super;margin-left:1px}
+.chips{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid #f3dfbf;background:#fffaf0;border-radius:999px;padding:2px 10px;font-size:13px;color:#7a5a2f}
+.fetbar{margin-top:8px;font-size:12px;color:#ad1457}
+
+/* ── 文法 ── */
+.gram{background:linear-gradient(160deg,#fff8e1,#f1f8e9);border-radius:26px;padding:16px;border:1px solid var(--line)}
+.gitem{background:#ffffffd9;border-radius:18px;padding:14px;margin-bottom:12px;border:1px solid var(--line);line-height:1.8;font-size:15px}
+.gitem:last-child{margin-bottom:0}
+.gitem h3{margin:0 0 6px;font-size:16px}
+
+/* ── 單字探險 ── */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.f{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px;color:var(--ink)}
+.f.on{background:#3b2f22;color:#fff;border-color:#3b2f22}
+.stat{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px}
+.stat span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.wc{text-align:left;border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;color:var(--ink);position:relative}
+.wc.learned{background:#f1f8e9;border-color:#c5e1a5}
+.wc .w{font-family:"Baloo 2",sans-serif;font-size:19px;font-weight:800;line-height:1.2}
+.wc .k{font-size:12px;color:var(--muted)}
+.wc .m{margin-top:6px;font-size:15px}
+.wc .b{position:absolute;top:8px;right:8px;font-size:11px}
+
+/* ── 單字卡（彈出）── */
+.mask{position:fixed;inset:0;background:#3b2f2266;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:50;display:none;align-items:flex-end;justify-content:center;padding:12px}
+.mask.show{display:flex}
+.card{width:100%;max-width:560px;max-height:88vh;overflow:auto;background:#fff;border-radius:26px;padding:18px;box-shadow:0 10px 40px #0003;animation:up .22s ease}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.card .x{float:right;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fffaf0;font-size:16px}
+.card .word{font-family:"Baloo 2",sans-serif;font-size:30px;font-weight:800;margin-top:8px}
+.card .kk{font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-size:15px;margin-left:6px;font-weight:400}
+.card .mean{font-size:22px;font-weight:900;margin:4px 0 12px}
+.card .box{border-radius:16px;padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.75;border:1px solid var(--line)}
+.box.src{background:#fffaf0}.box.src i{display:block;font-size:16px;color:#5d4a36}
+.box.diff{background:#f1f8e9;border-color:#dcedc8}.box.how{background:#fff8e1;border-color:#ffecb3}
+.card .acts{display:flex;gap:10px;margin-top:6px}
+.card .play{flex:1;border:0;border-radius:999px;background:#3b2f22;color:#fff;font-weight:700;padding:12px;font-size:15px}
+.card .got{border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:700;padding:12px 16px;font-size:15px}
+.card .got.on{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* ── 挑戰 ── */
+.chal{background:#fff;border:1px solid var(--line);border-radius:26px;padding:18px;text-align:center}
+.chal .ev{font-size:46px;margin:6px 0}
+.chal .q{font-size:19px;font-weight:700;line-height:1.5;min-height:58px}
+.seasons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.seasons button{border:0;border-radius:16px;padding:12px 4px;font-weight:800;font-size:14px;color:#fff}
+.seasons button .s{display:block;font-size:22px}
+.chal .fb{min-height:26px;margin-top:10px;font-weight:700}
+.chal .go{margin-top:6px;border:0;border-radius:999px;background:var(--orange);color:#fff;font-weight:800;padding:12px 24px;font-size:16px}
+.prog{height:8px;background:#f3e9d9;border-radius:999px;overflow:hidden;margin:6px 0 4px}
+.prog div{height:100%;background:linear-gradient(90deg,var(--spring),var(--summer),var(--fall),var(--winter));width:0;transition:width .3s}
+.extra{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:12px}
+.extra div{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;font-size:14px;line-height:1.7}
+.extra b{display:block;font-size:16px;margin-bottom:4px}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:40px}
+@media (max-width:420px){.en-line{font-size:17px}.top h1{font-size:18px}}
+</style>
+<script src="./zhuyin.js"></script>
+</head>
+<body>
+<div class="top" id="top">
+  <h1>🍎 The Seasons of Arnold's Apple Tree — 阿諾的蘋果樹四季</h1>
+  <span class="sub">37 句課文學習單，附 KK 音標（給媽媽）、中文＋注音（給女兒）・FET Wk 13–14・蘋果樹四季風</span>
+</div>
+
+<div class="wrap">
+  <div class="tip"><div class="ic">💡</div><div>
+    <b>給媽媽的小提醒：</b>每張單字卡都會標 <span class="tag base">原形</span> 和 <span class="tag book">課本寫法</span>，例如
+    <b>leaves</b> 是 <b>leaf</b> 的複數、<b>watches</b> 是 <b>watch</b> 加 es。KK 音標幫媽媽唸對，中文＋注音幫女兒秒懂。
+    有 ⭐ 的是 <span class="tag fet">FET Wk 13・14 拼字單字</span>，這兩週的二十個字都在這一課裡（只有 slowly 課文沒有出現，放在單字探險最後）。
+  </div></div>
+
+  <details class="voice" id="voice">
+    <summary>🎧 語音設定（選男聲更好聽）▶ <small>David / Mark / Alex 是溫柔男聲</small></summary>
+    <div class="body">
+      <label>聲音<select id="voiceSel"></select></label>
+      <label>速度：<span id="rateVal"></span><input type="range" id="rate" min="0.5" max="1.2" step="0.05"></label>
+      <button class="tog" id="voiceTest">🔊 試聽：Arnold climbs up high into the branches of the apple tree.</button>
+    </div>
+  </details>
+
+  <h2>📖 故事快覽 Story Map</h2>
+  <div class="map" id="map"></div>
+  <div class="cycle">🌸 春 → ☀️ 夏 → 🍎 秋 → ⛄ 冬 → 🌸 又是春天！蘋果樹陪阿諾過完一整年</div>
+
+  <section id="read">
+  <div class="bar" id="bar">
+    <h2>✨ 逐句精讀 <span class="en" style="font-size:15px;color:var(--muted)">37 句</span></h2>
+    <button class="tog on" id="tZh">👁️ 中文 開</button>
+    <button class="tog on" id="tZy">ㄅ 注音 開</button>
+  </div>
+  <div class="legend">
+    🟠 <span class="hl">橘色底</span>：新單字，點開看卡片<br>
+    🟠 <span class="hl seen">橘色字白底</span>：前面已經出現過的單字，點了一樣看得到卡片<br>
+    ⭐ 右上角有星星：FET Wk 13・14 的拼字單字
+  </div>
+  <div id="sents"></div>
+  </section>
+
+  <h2>🔍 文法小偵探 Grammar Detective</h2>
+  <div class="gram" id="gram"></div>
+
+  <h2>🌳 單字探險 <span class="en" id="wcount"></span></h2>
+  <div class="filters" id="filters"></div>
+  <div class="stat"><span id="learnedStat"></span><span>點卡片看詳細・點 ☐ 我會了 打勾</span></div>
+  <div class="wgrid" id="wgrid"></div>
+
+  <h2>🏆 四季挑戰 Seasons Challenge</h2>
+  <div class="chal" id="chal"></div>
+  <div class="extra">
+    <div><b>🗣️ 唸給媽媽聽</b>挑一個季節，把那一段的句子唸給媽媽聽。卡住的字點橘色字聽發音。</div>
+    <div><b>✍️ 拼拼看 ⭐</b>媽媽唸 FET 單字（swing、shelter、armful…），妳拼出來，再點卡片對答案。</div>
+    <div><b>🎨 我的樹</b>如果妳也有一棵樹，春夏秋冬妳會和它一起做什麼？用英文說一句：In spring, I ___.</div>
+  </div>
+
+  <footer>🍎 The Seasons of Arnold's Apple Tree 學習單・蘋果樹四季風・37 句・<span id="fcount"></span>・媽媽的 KK ＋ 女兒的注音</footer>
+</div>
+
+<div class="mask" id="mask"><div class="card" id="card"></div></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+(function () {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('arnold_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('arnold_' + k, JSON.stringify(v)); } catch (e) {} },
+  };
+  const SEC = {}; DATA.sections.forEach((s) => { SEC[s.id] = s; });
+  const WORD = {}; DATA.words.forEach((w) => { WORD[w.id] = w; });
+  const soft = (c) => c + '22';
+  const zyHtml = (zh, z) => (typeof renderZhuyin === 'function' ? renderZhuyin(zh, z) : esc(zh));
+  let learned = new Set(store.get('learned', []));
+
+  // ── 語音 ──
+  const synth = window.speechSynthesis;
+  let voices = [];
+  let rate = store.get('rate', 0.8);
+  function loadVoices() {
+    if (!synth) return;
+    voices = synth.getVoices().filter((v) => /^en/i.test(v.lang));
+    const pref = store.get('voice', '');
+    const sel = $('#voiceSel');
+    sel.innerHTML = voices.map((v) => '<option value="' + esc(v.name) + '">' + esc(v.name + ' (' + v.lang + ')') + '</option>').join('')
+      || '<option>（這台裝置沒有英文語音）</option>';
+    const guess = voices.find((v) => v.name === pref) || voices.find((v) => /David|Mark|Alex|Daniel/.test(v.name)) || voices.find((v) => /en-US/i.test(v.lang));
+    if (guess) sel.value = guess.name;
+  }
+  function say(text, onend) {
+    if (!synth) return;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\s*\.\s*\.\s*\./g, '…'));
+    const v = voices.find((x) => x.name === $('#voiceSel').value);
+    if (v) u.voice = v; else u.lang = 'en-US';
+    u.rate = rate;
+    if (onend) u.onend = u.onerror = onend;
+    synth.speak(u);
+  }
+  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+  $('#voiceSel').onchange = (e) => store.set('voice', e.target.value);
+  $('#rate').value = rate; $('#rateVal').textContent = rate + 'x';
+  $('#rate').oninput = (e) => { rate = +e.target.value; $('#rateVal').textContent = rate + 'x'; store.set('rate', rate); };
+  $('#voiceTest').onclick = () => say(DATA.sentences[0].en);
+
+  // ── 故事快覽 ──
+  $('#map').innerHTML = DATA.sections.map((s) =>
+    '<button class="mcard" style="--soft:' + soft(s.color) + '" data-go="' + s.id + '">'
+    + '<div class="em">' + s.emoji + '</div><div class="t">' + esc(s.zh) + '</div>'
+    + '<div class="e en">' + esc(s.en) + '</div><div class="d">' + esc(s.desc) + '</div>'
+    + '<span class="r">第' + s.range[0] + '-' + s.range[1] + '句</span><div class="bg">' + s.emoji + '</div></button>').join('');
+  $('#map').onclick = (e) => { const b = e.target.closest('[data-go]'); if (b) document.getElementById('sec-' + b.dataset.go).scrollIntoView({ behavior: 'smooth' }); };
+
+  // ── 逐句精讀 ──
+  function markSentence(s, seen) {
+    // 依課本寫法在句子裡標出單字；同一個字第一次出現是橘底，之後是橘字
+    let html = esc(s.en);
+    const marks = [];
+    s.w.forEach((id) => {
+      const w = WORD[id]; const t = esc(w.t);
+      const i = html.indexOf(t);
+      if (i < 0) return;
+      const cls = 'hl' + (seen.has(id) ? ' seen' : '') + (w.fet ? ' fet' : '');
+      const tok = '\u0000' + marks.length + '\u0000';
+      marks.push('<button class="' + cls + '" data-w="' + esc(id) + '">' + t + '</button>');
+      html = html.slice(0, i) + tok + html.slice(i + t.length);
+      seen.add(id);
+    });
+    return html.replace(/\u0000(\d+)\u0000/g, (m, n) => marks[+n]);
+  }
+  (function renderSentences() {
+    const seen = new Set();
+    let html = '', cur = '';
+    DATA.sentences.forEach((s) => {
+      if (s.sec !== cur) {
+        cur = s.sec; const sec = SEC[cur];
+        html += '<div class="sec" id="sec-' + cur + '" style="--soft:' + soft(sec.color) + '">'
+          + '<span>' + cur + '. ' + esc(sec.zh) + ' ' + sec.emoji + '</span><small>第' + sec.range[0] + '-' + sec.range[1] + '句</small></div>';
+      }
+      const sec = SEC[s.sec];
+      const fet = s.w.filter((id) => WORD[id].fet).map((id) => WORD[id].b);
+      html += '<div class="sent" id="s' + s.n + '" style="--soft:' + soft(sec.color) + '">'
+        + '<div><div class="num">' + s.n + '</div><button class="say" data-say="' + s.n + '" aria-label="唸這一句">🔊</button></div>'
+        + '<div><div class="en-line en">' + markSentence(s, seen) + '</div>'
+        + '<div class="zh-line">' + zyHtml(s.zh, s.z) + '</div>'
+        + (s.w.length ? '<div class="chips">' + s.w.map((id) => '<span class="chip">' + esc(WORD[id].t) + '</span>').join('') + '</div>' : '')
+        + (fet.length ? '<div class="fetbar">⭐ FET 單字：' + fet.map(esc).join('、') + '</div>' : '')
+        + '</div></div>';
+    });
+    $('#sents').innerHTML = html;
+  })();
+  $('#sents').onclick = (e) => {
+    const w = e.target.closest('[data-w]'); if (w) return openCard(w.dataset.w);
+    const b = e.target.closest('[data-say]');
+    if (b) {
+      const s = DATA.sentences[b.dataset.say - 1]; const el = $('#s' + s.n);
+      document.querySelectorAll('.sent.playing').forEach((x) => x.classList.remove('playing'));
+      el.classList.add('playing');
+      return say(s.en, () => el.classList.remove('playing'));
+    }
+    const zh = e.target.closest('.zh-line'); if (zh) zh.classList.toggle('peek');
+  };
+
+  // 中文／注音開關
+  function setTog(btn, on, label) { btn.classList.toggle('on', on); btn.textContent = label + (on ? ' 開' : ' 關'); }
+  let zhOn = store.get('zh', true), zyOn = store.get('zy', true);
+  function applyTogs() {
+    document.body.classList.toggle('hide-zh', !zhOn); document.body.classList.toggle('no-zy', !zyOn);
+    setTog($('#tZh'), zhOn, '👁️ 中文'); setTog($('#tZy'), zyOn, 'ㄅ 注音');
+  }
+  $('#tZh').onclick = () => { zhOn = !zhOn; store.set('zh', zhOn); document.querySelectorAll('.peek').forEach((x) => x.classList.remove('peek')); applyTogs(); };
+  $('#tZy').onclick = () => { zyOn = !zyOn; store.set('zy', zyOn); applyTogs(); };
+  applyTogs();
+  const setTop = () => document.documentElement.style.setProperty('--toph', $('#top').offsetHeight + 'px');
+  setTop(); addEventListener('resize', setTop);
+
+  // ── 文法 ──
+  $('#gram').innerHTML = DATA.grammar.map((g) => '<div class="gitem"><h3>' + esc(g[0]) + '</h3>' + g[1] + '</div>').join('');
+
+  // ── 單字卡 ──
+  let openId = null;
+  function openCard(id) {
+    const w = WORD[id]; openId = id;
+    const s = w.s ? DATA.sentences[w.s - 1] : null;
+    const sec = w.sec ? SEC[w.sec] : null;
+    $('#card').innerHTML =
+      '<button class="x" data-x aria-label="關閉">✕</button>'
+      + '<span class="tag base">原形 ' + esc(w.b) + '</span><span class="tag book">課本 ' + esc(w.t) + '</span>'
+      + (w.fet ? '<span class="tag fet">⭐ FET ' + esc(w.fet) + '</span>' : '')
+      + (sec ? '<span class="tag" style="background:' + soft(sec.color) + '">' + sec.emoji + ' ' + w.sec + '</span>' : '')
+      + '<div class="word">' + esc(w.b) + '<span class="kk">' + esc(w.kb) + '</span></div>'
+      + (w.t.toLowerCase() !== w.b.toLowerCase() ? '<div class="kk" style="margin:0 0 4px">課本寫法 <b>' + esc(w.t) + '</b> ' + esc(w.kt) + '</div>' : '')
+      + '<div class="mean">' + zyHtml(w.zh, w.z) + '</div>'
+      + (s ? '<div class="box src"><b>課文原句 第' + s.n + '句</b><i class="en">"' + esc(s.en) + '"</i>' + esc(s.zh) + '</div>'
+           : '<div class="box src"><b>課文裡沒有這個字</b>FET 單字表上有，所以一起放進來。</div>')
+      + '<div class="box diff">🔄 <b>原形 vs 課本寫法：</b>' + esc(w.diff) + '</div>'
+      + '<div class="box how">💡 <b>記憶小技巧：</b>' + esc(w.tip) + '</div>'
+      + '<div class="acts"><button class="play" data-play>🔊 聽發音 ' + esc(w.kb) + '</button>'
+      + (s ? '<button class="got" data-ps>📖 聽原句</button>' : '')
+      + '<button class="got' + (learned.has(id) ? ' on' : '') + '" data-got>' + (learned.has(id) ? '✅ 我會了' : '☐ 我會了') + '</button></div>';
+    $('#mask').classList.add('show');
+    say(w.b);
+  }
+  function closeCard() { $('#mask').classList.remove('show'); openId = null; }
+  $('#mask').onclick = (e) => {
+    if (e.target === $('#mask') || e.target.closest('[data-x]')) return closeCard();
+    const w = WORD[openId]; if (!w) return;
+    if (e.target.closest('[data-play]')) say(w.b);
+    if (e.target.closest('[data-ps]')) say(DATA.sentences[w.s - 1].en);
+    const g = e.target.closest('[data-got]');
+    if (g) {
+      learned.has(openId) ? learned.delete(openId) : learned.add(openId);
+      store.set('learned', [...learned]);
+      g.classList.toggle('on', learned.has(openId)); g.textContent = learned.has(openId) ? '✅ 我會了' : '☐ 我會了';
+      renderWords();
+    }
+  };
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCard(); });
+
+  // ── 單字探險 ──
+  let filter = 'all';
+  const FILTERS = [['all', '全部']].concat(DATA.sections.map((s) => [s.id, s.emoji + ' ' + s.id]), [['fet', '⭐ FET'], ['todo', '還沒會']]);
+  function renderWords() {
+    const list = DATA.words.filter((w) => filter === 'all' || w.sec === filter || (filter === 'fet' && w.fet) || (filter === 'todo' && !learned.has(w.id)));
+    $('#filters').innerHTML = FILTERS.map((f) => {
+      const n = DATA.words.filter((w) => f[0] === 'all' || w.sec === f[0] || (f[0] === 'fet' && w.fet) || (f[0] === 'todo' && !learned.has(w.id))).length;
+      return '<button class="f' + (filter === f[0] ? ' on' : '') + '" data-f="' + f[0] + '">' + esc(f[1]) + ' ' + n + '</button>';
+    }).join('');
+    $('#wgrid').innerHTML = list.map((w) =>
+      '<button class="wc' + (learned.has(w.id) ? ' learned' : '') + '" data-w="' + esc(w.id) + '">'
+      + '<span class="b">' + (learned.has(w.id) ? '✅' : '') + (w.fet ? '⭐' : '') + '</span>'
+      + '<div class="w">' + esc(w.b) + '</div><div class="k">' + esc(w.kb) + (w.s ? '・第' + w.s + '句' : '・課文沒有') + '</div>'
+      + '<div class="m">' + zyHtml(w.zh, w.z) + '</div></button>').join('');
+    const nl = DATA.words.filter((w) => learned.has(w.id)).length;
+    $('#learnedStat').textContent = '已學會 ' + nl + ' / ' + DATA.words.length;
+    $('#wcount').textContent = DATA.words.length + ' Words';
+    $('#fcount').textContent = DATA.words.length + ' 字';
+  }
+  $('#filters').onclick = (e) => { const b = e.target.closest('[data-f]'); if (b) { filter = b.dataset.f; renderWords(); } };
+  $('#wgrid').onclick = (e) => { const b = e.target.closest('[data-w]'); if (b) openCard(b.dataset.w); };
+  renderWords();
+
+  // ── 四季挑戰：這件事發生在哪個季節？ ──
+  const SEAS = [['spring', '🌸', 'Spring', '#ec407a'], ['summer', '☀️', 'Summer', '#43a047'], ['fall', '🍎', 'Fall', '#ef6c00'], ['winter', '⛄', 'Winter', '#1e88e5']];
+  let round = [], idx = 0, score = 0, locked = false;
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function startChal() {
+    round = shuffle(DATA.events.slice()).slice(0, 8); idx = 0; score = 0; showQ();
+  }
+  function showQ() {
+    locked = false;
+    if (idx >= round.length) {
+      const best = Math.max(store.get('best', 0), score); store.set('best', best);
+      $('#chal').innerHTML = '<div class="ev">' + (score === round.length ? '🏆' : score >= 6 ? '🌟' : '🍏') + '</div>'
+        + '<div class="q">答對 ' + score + ' / ' + round.length + ' 題！' + (score === round.length ? '四季小專家！' : '再玩一次會更厲害喔') + '</div>'
+        + '<div class="fb">最高紀錄 ' + best + ' / 8</div><button class="go" data-start>再玩一次</button>';
+      return;
+    }
+    const ev = round[idx];
+    $('#chal').innerHTML = '<div class="prog"><div style="width:' + (idx / round.length * 100) + '%"></div></div>'
+      + '<div style="font-size:13px;color:var(--muted)">第 ' + (idx + 1) + ' / ' + round.length + ' 題・這件事發生在哪個季節？</div>'
+      + '<div class="ev">' + ev[0] + '</div><div class="q en">' + esc(ev[1]) + ' <button class="tog" data-sayq>🔊</button></div>'
+      + '<div class="seasons">' + SEAS.map((s) => '<button data-s="' + s[0] + '" style="background:' + s[3] + '"><span class="s">' + s[1] + '</span>' + s[2] + '</button>').join('') + '</div>'
+      + '<div class="fb" id="fb"></div>';
+  }
+  $('#chal').onclick = (e) => {
+    if (e.target.closest('[data-start]')) return startChal();
+    if (e.target.closest('[data-sayq]')) return say(round[idx][1]);
+    const b = e.target.closest('[data-s]'); if (!b || locked) return;
+    locked = true;
+    const ev = round[idx]; const ok = b.dataset.s === ev[2];
+    if (ok) score++;
+    const right = SEAS.find((s) => s[0] === ev[2]);
+    $('#fb').innerHTML = ok ? '✅ 答對了！' : '❌ 是 ' + right[1] + ' ' + right[2] + ' 喔';
+    $('#fb').style.color = ok ? 'var(--green)' : 'var(--apple)';
+    say(ok ? 'Yes! ' + right[2] + '!' : 'It is ' + right[2] + '.');
+    setTimeout(() => { idx++; showQ(); }, ok ? 900 : 1700);
+  };
+  $('#chal').innerHTML = '<div class="ev">🌸☀️🍎⛄</div><div class="q">課文裡的事，發生在哪個季節？<br><small style="font-weight:400;color:var(--muted)">每次 8 題，看句子選季節</small></div><button class="go" data-start>開始挑戰</button>';
+})();
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
