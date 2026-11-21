@@ -784,6 +784,24 @@ startClozeQuiz({
 CSS 的 `none` —— 畫面整片空白，而且**測試如果只檢查 `style.display` 會驗不出來**
 （行內屬性是 `''`，確實不等於 `'none'`）。要用 `getComputedStyle()`。
 
+## 課文教學（`lesson_hub.html` / `lesson_*.html`）
+
+逐句帶讀的課文學習單（不是測驗）：故事快覽 → 逐句精讀（🔊、中文＋注音可開關、
+橘色單字點開看單字卡）→ 文法小偵探 → 單字探險（☐ 我會了）→ 小挑戰。
+KK 音標給媽媽，中文＋注音給她。
+
+| 頁面 | 課文 | 怎麼來的 |
+|---|---|---|
+| `lesson_dancing_around.html` | Dancing Around（CET Wk 10–13） | 媽媽做的，打包好的 React 原檔照放 |
+| `lesson_home_prairie.html` | A Home on the Prairie（FET Wk 10–12） | 同上 |
+| `lesson_arnold_apple_tree.html` | The Seasons of Arnold's Apple Tree（FET Wk 13–14） | 照上面那份的版面手寫，由 `tools/lesson_arnold/build.py` 產生 |
+
+Arnold 那份的內容全在 `tools/lesson_arnold/data.py`（37 句、譯文、72 張單字卡、
+文法、季節挑戰），版面在 `template.html`。改完跑
+`python3 tools/lesson_arnold/build.py --zy` 重建，`--zy` 會把所有注音印出來給人工校對
+—— pypinyin 讀「長出來」會讀成 ㄔㄤˊ，這種破音字要加到 `build.py` 的 `FIX`。
+FET Wk 13 的 slowly 課文沒有出現，單字卡放在單字探險最後並註明。
+
 ## CET 課文練習（`daisy_cet_read*` / `daisy_cet_cloze` / `daisy_cet_dictation`）
 
 **CET Wk 5/6/7 的課文**是同一篇讀本（*Continents and Oceans*, Nancy Kelly

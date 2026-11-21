@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🍎 The Seasons of Arnold's Apple Tree</title>
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!--
+  The Seasons of Arnold's Apple Tree（Gail Gibbons，myView 2.1 p.299–321，FET Wk 13–14）學習單。
+  版面照 lesson_home_prairie.html（媽媽做的那份）：故事快覽 → 逐句精讀 → 文法小偵探 →
+  單字探險 → 挑戰。差別是這份是手寫的單檔 HTML，不是打包過的 React，資料在最下面的 DATA。
+  這個檔由 tools/lesson_arnold/build.py 產生（資料在 data.py，注音用 tools/zhuyin_build.py），
+  要改內容就改資料再重建，不要直接改這個檔。
+-->
+<style>
+:root{
+  --bg:#fffaf0; --card:#ffffff; --ink:#4a3b2a; --muted:#8a7a66; --line:#f1e6d3;
+  --orange:#fb8c00; --orange-d:#e65100; --orange-soft:#fff1de;
+  --green:#43a047; --green-soft:#e8f5e9; --apple:#e53935; --apple-soft:#ffebee;
+  --spring:#ec407a; --summer:#43a047; --fall:#ef6c00; --winter:#1e88e5; --tree:#8d6e63;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC",sans-serif;
+  background-image:radial-gradient(#f3e4c6 1px,transparent 1px);background-size:22px 22px;
+  -webkit-text-size-adjust:100%;}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 80px}
+.en{font-family:"Baloo 2","Noto Sans TC",sans-serif}
+h2{font-size:20px;font-weight:900;margin:34px 0 14px;display:flex;align-items:center;gap:8px}
+button{font-family:inherit;cursor:pointer}
+
+/* ── 頁首 ── */
+.top{position:sticky;top:0;z-index:20;background:linear-gradient(90deg,#fde3e7,#e8f5e9 45%,#fff3e0 75%,#e3f2fd);
+  border-bottom:1px solid var(--line);padding:12px 16px 12px 70px}
+.top h1{margin:0;font-size:20px;line-height:1.25;font-weight:900}
+.top .sub{display:inline-block;margin-top:6px;font-size:12px;background:#fffc;border-radius:999px;padding:3px 10px;color:var(--muted)}
+.tip{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-top:18px;box-shadow:0 4px 14px #0000000a;font-size:14px;line-height:1.75}
+.tip .ic{flex:0 0 40px;height:40px;border-radius:50%;background:#fff8d6;display:grid;place-items:center;font-size:20px}
+.tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:700;margin:0 2px}
+.tag.base{background:#fff1de;color:#a65b00}.tag.book{background:#e8f5e9;color:#2e7d32}
+.tag.fet{background:#fde3e7;color:#ad1457}
+.voice{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 4px 14px #0000000a}
+.voice summary{list-style:none;padding:14px 16px;font-weight:700;display:flex;align-items:center;gap:8px;cursor:pointer}
+.voice summary::-webkit-details-marker{display:none}
+.voice summary small{font-weight:400;color:var(--muted);margin-left:auto;font-size:12px}
+.voice .body{padding:0 16px 16px;display:grid;gap:10px;font-size:14px}
+.voice select,.voice input{width:100%;font-size:15px;padding:8px;border-radius:12px;border:1px solid var(--line);background:#fff}
+
+/* ── 故事快覽 ── */
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.mcard{position:relative;overflow:hidden;text-align:left;border:0;border-radius:22px;padding:16px;min-height:150px;
+  background:var(--soft);box-shadow:0 4px 14px #0000000d;color:var(--ink)}
+.mcard .em{font-size:28px}.mcard .t{font-weight:900;font-size:17px;margin-top:6px}
+.mcard .e{font-size:12px;color:var(--muted)}.mcard .d{font-size:13px;margin-top:6px;line-height:1.5}
+.mcard .r{display:inline-block;margin-top:10px;background:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+.mcard .bg{position:absolute;right:-6px;bottom:-12px;font-size:64px;opacity:.13}
+.cycle{margin-top:14px;text-align:center;font-size:14px;color:var(--muted);background:#fff;border-radius:18px;padding:10px;border:1px dashed var(--line)}
+
+/* ── 逐句精讀 ── */
+.bar{position:sticky;top:var(--toph,74px);z-index:10;background:var(--bg);padding:8px 0;display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.bar h2{margin:0;flex:1 1 auto;white-space:nowrap}
+.bar .tog{padding:5px 10px;font-size:13px}
+.tog{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;color:var(--ink)}
+.tog.on{background:var(--green-soft);border-color:#c8e6c9}
+.legend{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 14px;font-size:13px;line-height:2}
+.sec{margin:22px 0 10px;border-radius:16px;padding:10px 14px;font-weight:900;background:var(--soft);display:flex;justify-content:space-between;align-items:center;scroll-margin-top:130px}
+.sec small{font-weight:700;color:var(--muted)}
+.sent{display:grid;grid-template-columns:44px 1fr;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;margin-bottom:12px;box-shadow:0 3px 10px #0000000a}
+.sent.playing{outline:3px solid #ffcc80}
+.num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:var(--soft);font-size:15px}
+.say{margin-top:8px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:16px}
+.en-line{font-size:18px;line-height:1.85}
+.zh-line{margin-top:6px;font-size:16px;line-height:1.9;color:#5d4a36}
+.zh-line .zy{font-size:17px;margin-right:.04em}
+body.hide-zh .zh-line{filter:blur(6px);cursor:pointer;user-select:none}
+body.hide-zh .zh-line.peek{filter:none}
+body.no-zy .zy-rail{display:none}
+.hl{border:0;font:inherit;font-weight:700;padding:0 8px;border-radius:999px;background:var(--orange);color:#fff;line-height:1.6;display:inline-block;margin:1px 0}
+.hl.seen{background:transparent;color:var(--orange-d);padding:0 1px;text-decoration:underline dotted 2px;text-underline-offset:4px}
+.hl.fet::after{content:"⭐";font-size:11px;vertical-align:super;margin-left:1px}
+.chips{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid #f3dfbf;background:#fffaf0;border-radius:999px;padding:2px 10px;font-size:13px;color:#7a5a2f}
+.fetbar{margin-top:8px;font-size:12px;color:#ad1457}
+
+/* ── 文法 ── */
+.gram{background:linear-gradient(160deg,#fff8e1,#f1f8e9);border-radius:26px;padding:16px;border:1px solid var(--line)}
+.gitem{background:#ffffffd9;border-radius:18px;padding:14px;margin-bottom:12px;border:1px solid var(--line);line-height:1.8;font-size:15px}
+.gitem:last-child{margin-bottom:0}
+.gitem h3{margin:0 0 6px;font-size:16px}
+
+/* ── 單字探險 ── */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.f{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px;color:var(--ink)}
+.f.on{background:#3b2f22;color:#fff;border-color:#3b2f22}
+.stat{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px}
+.stat span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.wc{text-align:left;border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;color:var(--ink);position:relative}
+.wc.learned{background:#f1f8e9;border-color:#c5e1a5}
+.wc .w{font-family:"Baloo 2",sans-serif;font-size:19px;font-weight:800;line-height:1.2}
+.wc .k{font-size:12px;color:var(--muted)}
+.wc .m{margin-top:6px;font-size:15px}
+.wc .b{position:absolute;top:8px;right:8px;font-size:11px}
+
+/* ── 單字卡（彈出）── */
+.mask{position:fixed;inset:0;background:#3b2f2266;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:50;display:none;align-items:flex-end;justify-content:center;padding:12px}
+.mask.show{display:flex}
+.card{width:100%;max-width:560px;max-height:88vh;overflow:auto;background:#fff;border-radius:26px;padding:18px;box-shadow:0 10px 40px #0003;animation:up .22s ease}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.card .x{float:right;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fffaf0;font-size:16px}
+.card .word{font-family:"Baloo 2",sans-serif;font-size:30px;font-weight:800;margin-top:8px}
+.card .kk{font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-size:15px;margin-left:6px;font-weight:400}
+.card .mean{font-size:22px;font-weight:900;margin:4px 0 12px}
+.card .box{border-radius:16px;padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.75;border:1px solid var(--line)}
+.box.src{background:#fffaf0}.box.src i{display:block;font-size:16px;color:#5d4a36}
+.box.diff{background:#f1f8e9;border-color:#dcedc8}.box.how{background:#fff8e1;border-color:#ffecb3}
+.card .acts{display:flex;gap:10px;margin-top:6px}
+.card .play{flex:1;border:0;border-radius:999px;background:#3b2f22;color:#fff;font-weight:700;padding:12px;font-size:15px}
+.card .got{border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:700;padding:12px 16px;font-size:15px}
+.card .got.on{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* ── 挑戰 ── */
+.chal{background:#fff;border:1px solid var(--line);border-radius:26px;padding:18px;text-align:center}
+.chal .ev{font-size:46px;margin:6px 0}
+.chal .q{font-size:19px;font-weight:700;line-height:1.5;min-height:58px}
+.seasons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.seasons button{border:0;border-radius:16px;padding:12px 4px;font-weight:800;font-size:14px;color:#fff}
+.seasons button .s{display:block;font-size:22px}
+.chal .fb{min-height:26px;margin-top:10px;font-weight:700}
+.chal .go{margin-top:6px;border:0;border-radius:999px;background:var(--orange);color:#fff;font-weight:800;padding:12px 24px;font-size:16px}
+.prog{height:8px;background:#f3e9d9;border-radius:999px;overflow:hidden;margin:6px 0 4px}
+.prog div{height:100%;background:linear-gradient(90deg,var(--spring),var(--summer),var(--fall),var(--winter));width:0;transition:width .3s}
+.extra{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:12px}
+.extra div{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;font-size:14px;line-height:1.7}
+.extra b{display:block;font-size:16px;margin-bottom:4px}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:40px}
+@media (max-width:420px){.en-line{font-size:17px}.top h1{font-size:18px}}
+</style>
+<script src="./zhuyin.js"></script>
+</head>
+<body>
+<div class="top" id="top">
+  <h1>🍎 The Seasons of Arnold's Apple Tree — 阿諾的蘋果樹四季</h1>
+  <span class="sub">37 句課文學習單，附 KK 音標（給媽媽）、中文＋注音（給女兒）・FET Wk 13–14・蘋果樹四季風</span>
+</div>
+
+<div class="wrap">
+  <div class="tip"><div class="ic">💡</div><div>
+    <b>給媽媽的小提醒：</b>每張單字卡都會標 <span class="tag base">原形</span> 和 <span class="tag book">課本寫法</span>，例如
+    <b>leaves</b> 是 <b>leaf</b> 的複數、<b>watches</b> 是 <b>watch</b> 加 es。KK 音標幫媽媽唸對，中文＋注音幫女兒秒懂。
+    有 ⭐ 的是 <span class="tag fet">FET Wk 13・14 拼字單字</span>，這兩週的二十個字都在這一課裡（只有 slowly 課文沒有出現，放在單字探險最後）。
+  </div></div>
+
+  <details class="voice" id="voice">
+    <summary>🎧 語音設定（選男聲更好聽）▶ <small>David / Mark / Alex 是溫柔男聲</small></summary>
+    <div class="body">
+      <label>聲音<select id="voiceSel"></select></label>
+      <label>速度：<span id="rateVal"></span><input type="range" id="rate" min="0.5" max="1.2" step="0.05"></label>
+      <button class="tog" id="voiceTest">🔊 試聽：Arnold climbs up high into the branches of the apple tree.</button>
+    </div>
+  </details>
+
+  <h2>📖 故事快覽 Story Map</h2>
+  <div class="map" id="map"></div>
+  <div class="cycle">🌸 春 → ☀️ 夏 → 🍎 秋 → ⛄ 冬 → 🌸 又是春天！蘋果樹陪阿諾過完一整年</div>
+
+  <section id="read">
+  <div class="bar" id="bar">
+    <h2>✨ 逐句精讀 <span class="en" style="font-size:15px;color:var(--muted)">37 句</span></h2>
+    <button class="tog on" id="tZh">👁️ 中文 開</button>
+    <button class="tog on" id="tZy">ㄅ 注音 開</button>
+  </div>
+  <div class="legend">
+    🟠 <span class="hl">橘色底</span>：新單字，點開看卡片<br>
+    🟠 <span class="hl seen">橘色字白底</span>：前面已經出現過的單字，點了一樣看得到卡片<br>
+    ⭐ 右上角有星星：FET Wk 13・14 的拼字單字
+  </div>
+  <div id="sents"></div>
+  </section>
+
+  <h2>🔍 文法小偵探 Grammar Detective</h2>
+  <div class="gram" id="gram"></div>
+
+  <h2>🌳 單字探險 <span class="en" id="wcount"></span></h2>
+  <div class="filters" id="filters"></div>
+  <div class="stat"><span id="learnedStat"></span><span>點卡片看詳細・點 ☐ 我會了 打勾</span></div>
+  <div class="wgrid" id="wgrid"></div>
+
+  <h2>🏆 四季挑戰 Seasons Challenge</h2>
+  <div class="chal" id="chal"></div>
+  <div class="extra">
+    <div><b>🗣️ 唸給媽媽聽</b>挑一個季節，把那一段的句子唸給媽媽聽。卡住的字點橘色字聽發音。</div>
+    <div><b>✍️ 拼拼看 ⭐</b>媽媽唸 FET 單字（swing、shelter、armful…），妳拼出來，再點卡片對答案。</div>
+    <div><b>🎨 我的樹</b>如果妳也有一棵樹，春夏秋冬妳會和它一起做什麼？用英文說一句：In spring, I ___.</div>
+  </div>
+
+  <footer>🍎 The Seasons of Arnold's Apple Tree 學習單・蘋果樹四季風・37 句・<span id="fcount"></span>・媽媽的 KK ＋ 女兒的注音</footer>
+</div>
+
+<div class="mask" id="mask"><div class="card" id="card"></div></div>
+
+<script>
+const DATA = {"sections": [{"id": "A", "emoji": "🌳", "zh": "我的秘密基地", "en": "Arnold's secret place", "desc": "爬上蘋果樹，看到好遠好遠的地方", "range": [1, 4], "color": "#8d6e63"}, {"id": "B", "emoji": "🌸", "zh": "春天 Spring", "en": "buds, blossoms & bees", "desc": "花苞變成蘋果花，蜜蜂來採花蜜", "range": [5, 12], "color": "#ec407a"}, {"id": "C", "emoji": "☀️", "zh": "夏天 Summer", "en": "tree house & shower", "desc": "蓋樹屋、樹葉遮太陽也擋雨", "range": [13, 20], "color": "#43a047"}, {"id": "D", "emoji": "🍎", "zh": "秋天 Fall", "en": "apples, pies & Halloween", "desc": "搖下紅蘋果，做蘋果派和蘋果汁", "range": [21, 30], "color": "#ef6c00"}, {"id": "E", "emoji": "⛄", "zh": "冬天 Winter", "en": "snow fort & snowman", "desc": "光禿禿的樹枝、雪堡壘，又等到春天", "range": [31, 37], "color": "#1e88e5"}], "sentences": [{"n": 1, "en": "Arnold climbs up high into the branches of the apple tree.", "zh": "阿諾爬到蘋果樹高高的樹枝上。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄆㄚˊ", "ㄉㄠˋ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ", "ㄍㄠ", "ㄍㄠ", "ㄉㄜ˙", "ㄕㄨˋ", "ㄓ", "ㄕㄤˋ", ""], "w": ["climb", "branch", "apple tree"], "sec": "A"}, {"n": 2, "en": "He can see far, far away in every direction.", "zh": "他可以看到四面八方好遠好遠的地方。", "z": ["ㄊㄚ", "ㄎㄜˇ", "ㄧˇ", "ㄎㄢˋ", "ㄉㄠˋ", "ㄙˋ", "ㄇㄧㄢˋ", "ㄅㄚ", "ㄈㄤ", "ㄏㄠˇ", "ㄩㄢˇ", "ㄏㄠˇ", "ㄩㄢˇ", "ㄉㄜ˙", "ㄉㄧˋ", "ㄈㄤ", ""], "w": ["far away", "direction"], "sec": "A"}, {"n": 3, "en": "This is Arnold's very own secret place. This is Arnold's apple tree.", "zh": "這是阿諾自己專屬的秘密基地。這是阿諾的蘋果樹。", "z": ["ㄓㄜˋ", "ㄕˋ", "ㄚ", "ㄋㄨㄛˋ", "ㄗˋ", "ㄐㄧˇ", "ㄓㄨㄢ", "ㄕㄨˇ", "ㄉㄜ˙", "ㄇㄧˋ", "ㄇㄧˋ", "ㄐㄧ", "ㄉㄧˋ", "", "ㄓㄜˋ", "ㄕˋ", "ㄚ", "ㄋㄨㄛˋ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ", ""], "w": ["very own", "secret"], "sec": "A"}, {"n": 4, "en": "Arnold's tree keeps him very busy all through the year.", "zh": "阿諾的樹讓他一整年都忙個不停。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄉㄜ˙", "ㄕㄨˋ", "ㄖㄤˋ", "ㄊㄚ", "ㄧˋ", "ㄓㄥˇ", "ㄋㄧㄢˊ", "ㄉㄡ", "ㄇㄤˊ", "ㄍㄜˋ", "ㄅㄨˋ", "ㄊㄧㄥˊ", ""], "w": ["busy", "all through the year"], "sec": "A"}, {"n": 5, "en": "It is spring.", "zh": "現在是春天。", "z": ["ㄒㄧㄢˋ", "ㄗㄞˋ", "ㄕˋ", "ㄔㄨㄣ", "ㄊㄧㄢ", ""], "w": ["spring"], "sec": "B"}, {"n": 6, "en": "Arnold watches the small buds grow on his apple tree.", "zh": "阿諾看著小小的花苞在蘋果樹上冒出來。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄎㄢˋ", "ㄓㄜ˙", "ㄒㄧㄠˇ", "ㄒㄧㄠˇ", "ㄉㄜ˙", "ㄏㄨㄚ", "ㄅㄠ", "ㄗㄞˋ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ", "ㄕㄤˋ", "ㄇㄠˋ", "ㄔㄨ", "ㄌㄞˊ", ""], "w": ["watch", "bud"], "sec": "B"}, {"n": 7, "en": "Some of the buds develop into sweet-smelling apple blossoms.", "zh": "有些花苞慢慢變成香香的蘋果花。", "z": ["ㄧㄡˇ", "ㄒㄧㄝ", "ㄏㄨㄚ", "ㄅㄠ", "ㄇㄢˋ", "ㄇㄢˋ", "ㄅㄧㄢˋ", "ㄔㄥˊ", "ㄒㄧㄤ", "ㄒㄧㄤ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄏㄨㄚ", ""], "w": ["develop into", "sweet-smelling", "blossom"], "sec": "B"}, {"n": 8, "en": "Carefully and quietly, Arnold watches bees collect nectar from the blossoms to make honey.", "zh": "阿諾小心又安靜地看著蜜蜂從花朵採花蜜來做蜂蜜。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄒㄧㄠˇ", "ㄒㄧㄣ", "ㄧㄡˋ", "ㄢ", "ㄐㄧㄥˋ", "ㄉㄜ˙", "ㄎㄢˋ", "ㄓㄜ˙", "ㄇㄧˋ", "ㄈㄥ", "ㄘㄨㄥˊ", "ㄏㄨㄚ", "ㄉㄨㄛˇ", "ㄘㄞˇ", "ㄏㄨㄚ", "ㄇㄧˋ", "ㄌㄞˊ", "ㄗㄨㄛˋ", "ㄈㄥ", "ㄇㄧˋ", ""], "w": ["carefully", "quietly", "bee", "collect", "nectar", "honey"], "sec": "B"}, {"n": 9, "en": "Arnold makes a swing for his apple tree.", "zh": "阿諾幫他的蘋果樹做了一個鞦韆。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄅㄤ", "ㄊㄚ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ", "ㄗㄨㄛˋ", "ㄌㄜ˙", "ㄧˊ", "ㄍㄜˋ", "ㄑㄧㄡ", "ㄑㄧㄢ", ""], "w": ["swing"], "sec": "B"}, {"n": 10, "en": "He weaves an apple-blossom wreath and hangs it from a branch.", "zh": "他編了一個蘋果花花圈，掛在樹枝上。", "z": ["ㄊㄚ", "ㄅㄧㄢ", "ㄌㄜ˙", "ㄧˊ", "ㄍㄜˋ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄏㄨㄚ", "ㄏㄨㄚ", "ㄑㄩㄢ", "", "ㄍㄨㄚˋ", "ㄗㄞˋ", "ㄕㄨˋ", "ㄓ", "ㄕㄤˋ", ""], "w": ["weave", "wreath", "hang"], "sec": "B"}, {"n": 11, "en": "Arnold picks an armful of apple blossoms and brings it to his family.", "zh": "阿諾摘了滿滿一大把蘋果花，帶回去給家人。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄓㄞ", "ㄌㄜ˙", "ㄇㄢˇ", "ㄇㄢˇ", "ㄧˊ", "ㄉㄚˋ", "ㄅㄚˇ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄏㄨㄚ", "", "ㄉㄞˋ", "ㄏㄨㄟˊ", "ㄑㄩˋ", "ㄍㄟˇ", "ㄐㄧㄚ", "ㄖㄣˊ", ""], "w": ["pick", "armful", "bring"], "sec": "B"}, {"n": 12, "en": "They make a flower arrangement together.", "zh": "他們一起插花。", "z": ["ㄊㄚ", "ㄇㄣ˙", "ㄧˋ", "ㄑㄧˇ", "ㄔㄚ", "ㄏㄨㄚ", ""], "w": ["flower arrangement"], "sec": "B"}, {"n": 13, "en": "It is summer.", "zh": "現在是夏天。", "z": ["ㄒㄧㄢˋ", "ㄗㄞˋ", "ㄕˋ", "ㄒㄧㄚˋ", "ㄊㄧㄢ", ""], "w": ["summer"], "sec": "C"}, {"n": 14, "en": "Arnold's apple tree has big, green leaves that rustle in the wind.", "zh": "阿諾的蘋果樹長出又大又綠的葉子，在風中沙沙作響。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ", "ㄓㄤˇ", "ㄔㄨ", "ㄧㄡˋ", "ㄉㄚˋ", "ㄧㄡˋ", "ㄌㄩˋ", "ㄉㄜ˙", "ㄧㄝˋ", "ㄗ˙", "", "ㄗㄞˋ", "ㄈㄥ", "ㄓㄨㄥ", "ㄕㄚ", "ㄕㄚ", "ㄗㄨㄛˋ", "ㄒㄧㄤˇ", ""], "w": ["leaf", "rustle"], "sec": "C"}, {"n": 15, "en": "Arnold builds a tree house.", "zh": "阿諾蓋了一間樹屋。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄍㄞˋ", "ㄌㄜ˙", "ㄧˋ", "ㄐㄧㄢ", "ㄕㄨˋ", "ㄨ", ""], "w": ["build", "tree house"], "sec": "C"}, {"n": 16, "en": "His apple tree shades him from the hot summer sun.", "zh": "他的蘋果樹幫他擋住夏天熱熱的太陽。", "z": ["ㄊㄚ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ", "ㄅㄤ", "ㄊㄚ", "ㄉㄤˇ", "ㄓㄨˋ", "ㄒㄧㄚˋ", "ㄊㄧㄢ", "ㄖㄜˋ", "ㄖㄜˋ", "ㄉㄜ˙", "ㄊㄞˋ", "ㄧㄤˊ", ""], "w": ["shade"], "sec": "C"}, {"n": 17, "en": "The green leaves shelter him during a summer shower.", "zh": "夏天下陣雨的時候，綠色的葉子幫他遮雨。", "z": ["ㄒㄧㄚˋ", "ㄊㄧㄢ", "ㄒㄧㄚˋ", "ㄓㄣˋ", "ㄩˇ", "ㄉㄜ˙", "ㄕˊ", "ㄏㄡˋ", "", "ㄌㄩˋ", "ㄙㄜˋ", "ㄉㄜ˙", "ㄧㄝˋ", "ㄗ˙", "ㄅㄤ", "ㄊㄚ", "ㄓㄜ", "ㄩˇ", ""], "w": ["shelter", "during", "shower"], "sec": "C"}, {"n": 18, "en": "Arnold watches small apples begin to grow from where the blossoms used to be. They grow bigger, bigger . . .", "zh": "阿諾看著小蘋果從原本開花的地方長出來。它們越長越大、越長越大……", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄎㄢˋ", "ㄓㄜ˙", "ㄒㄧㄠˇ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄘㄨㄥˊ", "ㄩㄢˊ", "ㄅㄣˇ", "ㄎㄞ", "ㄏㄨㄚ", "ㄉㄜ˙", "ㄉㄧˋ", "ㄈㄤ", "ㄓㄤˇ", "ㄔㄨ", "ㄌㄞˊ", "", "ㄊㄚ", "ㄇㄣ˙", "ㄩㄝˋ", "ㄓㄤˇ", "ㄩㄝˋ", "ㄉㄚˋ", "", "ㄩㄝˋ", "ㄓㄤˇ", "ㄩㄝˋ", "ㄉㄚˋ", "", ""], "w": ["used to", "bigger"], "sec": "C"}, {"n": 19, "en": "and bigger.", "zh": "……越長越大。", "z": ["", "", "ㄩㄝˋ", "ㄓㄤˇ", "ㄩㄝˋ", "ㄉㄚˋ", ""], "w": [], "sec": "C"}, {"n": 20, "en": "With some of the big, green apples, Arnold does a juggling act for his tree friend.", "zh": "阿諾拿幾顆又大又綠的蘋果，為他的樹朋友表演拋接雜耍。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄋㄚˊ", "ㄐㄧˇ", "ㄎㄜ", "ㄧㄡˋ", "ㄉㄚˋ", "ㄧㄡˋ", "ㄌㄩˋ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "", "ㄨㄟˋ", "ㄊㄚ", "ㄉㄜ˙", "ㄕㄨˋ", "ㄆㄥˊ", "ㄧㄡˇ", "ㄅㄧㄠˇ", "ㄧㄢˇ", "ㄆㄠ", "ㄐㄧㄝ", "ㄗㄚˊ", "ㄕㄨㄚˇ", ""], "w": ["juggle"], "sec": "C"}, {"n": 21, "en": "It is fall.", "zh": "現在是秋天。", "z": ["ㄒㄧㄢˋ", "ㄗㄞˋ", "ㄕˋ", "ㄑㄧㄡ", "ㄊㄧㄢ", ""], "w": ["fall"], "sec": "D"}, {"n": 22, "en": "Arnold's apple tree now has big, red, tasty apples.", "zh": "阿諾的蘋果樹現在結滿了又大又紅、好好吃的蘋果。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ", "ㄒㄧㄢˋ", "ㄗㄞˋ", "ㄐㄧㄝˊ", "ㄇㄢˇ", "ㄌㄜ˙", "ㄧㄡˋ", "ㄉㄚˋ", "ㄧㄡˋ", "ㄏㄨㄥˊ", "", "ㄏㄠˇ", "ㄏㄠˇ", "ㄔ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", ""], "w": ["tasty"], "sec": "D"}, {"n": 23, "en": "The green leaves have turned golden. They drift to the ground.", "zh": "綠色的葉子變成了金黃色，輕輕飄落到地上。", "z": ["ㄌㄩˋ", "ㄙㄜˋ", "ㄉㄜ˙", "ㄧㄝˋ", "ㄗ˙", "ㄅㄧㄢˋ", "ㄔㄥˊ", "ㄌㄜ˙", "ㄐㄧㄣ", "ㄏㄨㄤˊ", "ㄙㄜˋ", "", "ㄑㄧㄥ", "ㄑㄧㄥ", "ㄆㄧㄠ", "ㄌㄨㄛˋ", "ㄉㄠˋ", "ㄉㄧˋ", "ㄕㄤˋ", ""], "w": ["turn", "golden", "drift"], "sec": "D"}, {"n": 24, "en": "Arnold gathers some of the leaves and brings them up to his tree house to make a soft floor to lie on.", "zh": "阿諾收集一些葉子，帶到樹屋上，鋪成可以躺的軟軟地板。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄕㄡ", "ㄐㄧˊ", "ㄧˋ", "ㄒㄧㄝ", "ㄧㄝˋ", "ㄗ˙", "", "ㄉㄞˋ", "ㄉㄠˋ", "ㄕㄨˋ", "ㄨ", "ㄕㄤˋ", "", "ㄆㄨˋ", "ㄔㄥˊ", "ㄎㄜˇ", "ㄧˇ", "ㄊㄤˇ", "ㄉㄜ˙", "ㄖㄨㄢˇ", "ㄖㄨㄢˇ", "ㄉㄧˋ", "ㄅㄢˇ", ""], "w": ["gather", "lie on"], "sec": "D"}, {"n": 25, "en": "Arnold shakes the branches and red apples fall to the ground.", "zh": "阿諾搖一搖樹枝，紅蘋果就掉到地上。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄧㄠˊ", "ㄧˋ", "ㄧㄠˊ", "ㄕㄨˋ", "ㄓ", "", "ㄏㄨㄥˊ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄐㄧㄡˋ", "ㄉㄧㄠˋ", "ㄉㄠˋ", "ㄉㄧˋ", "ㄕㄤˋ", ""], "w": ["shake"], "sec": "D"}, {"n": 26, "en": "He puts them in a basket and takes them home.", "zh": "他把蘋果放進籃子裡，帶回家。", "z": ["ㄊㄚ", "ㄅㄚˇ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄈㄤˋ", "ㄐㄧㄣˋ", "ㄌㄢˊ", "ㄗ˙", "ㄌㄧˇ", "", "ㄉㄞˋ", "ㄏㄨㄟˊ", "ㄐㄧㄚ", ""], "w": ["basket"], "sec": "D"}, {"n": 27, "en": "Arnold and his family make apple pies with apples from Arnold's apple tree.", "zh": "阿諾和家人用阿諾那棵樹的蘋果做蘋果派。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄏㄜˊ", "ㄐㄧㄚ", "ㄖㄣˊ", "ㄩㄥˋ", "ㄚ", "ㄋㄨㄛˋ", "ㄋㄚˋ", "ㄎㄜ", "ㄕㄨˋ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄗㄨㄛˋ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄆㄞˋ", ""], "w": ["apple pie"], "sec": "D"}, {"n": 28, "en": "They put the rest of the apples into a cider press and make fresh apple cider.", "zh": "他們把剩下的蘋果放進榨汁機，做成新鮮的蘋果汁。", "z": ["ㄊㄚ", "ㄇㄣ˙", "ㄅㄚˇ", "ㄕㄥˋ", "ㄒㄧㄚˋ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄈㄤˋ", "ㄐㄧㄣˋ", "ㄓㄚˋ", "ㄓ", "ㄐㄧ", "", "ㄗㄨㄛˋ", "ㄔㄥˊ", "ㄒㄧㄣ", "ㄒㄧㄢ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄓ", ""], "w": ["the rest of", "cider press", "fresh"], "sec": "D"}, {"n": 29, "en": "On Halloween Day, Arnold decorates some of the biggest apples.", "zh": "萬聖節那天，阿諾把幾顆最大的蘋果裝飾起來。", "z": ["ㄨㄢˋ", "ㄕㄥˋ", "ㄐㄧㄝˊ", "ㄋㄚˋ", "ㄊㄧㄢ", "", "ㄚ", "ㄋㄨㄛˋ", "ㄅㄚˇ", "ㄐㄧˇ", "ㄎㄜ", "ㄗㄨㄟˋ", "ㄉㄚˋ", "ㄉㄜ˙", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄓㄨㄤ", "ㄕˋ", "ㄑㄧˇ", "ㄌㄞ˙", ""], "w": ["Halloween", "decorate", "biggest"], "sec": "D"}, {"n": 30, "en": "They glow in the moonlight under his tree on Halloween night.", "zh": "萬聖節晚上，它們在樹下的月光裡發出亮光。", "z": ["ㄨㄢˋ", "ㄕㄥˋ", "ㄐㄧㄝˊ", "ㄨㄢˇ", "ㄕㄤ˙", "", "ㄊㄚ", "ㄇㄣ˙", "ㄗㄞˋ", "ㄕㄨˋ", "ㄒㄧㄚˋ", "ㄉㄜ˙", "ㄩㄝˋ", "ㄍㄨㄤ", "ㄌㄧˇ", "ㄈㄚ", "ㄔㄨ", "ㄌㄧㄤˋ", "ㄍㄨㄤ", ""], "w": ["glow", "moonlight"], "sec": "D"}, {"n": 31, "en": "It is winter.", "zh": "現在是冬天。", "z": ["ㄒㄧㄢˋ", "ㄗㄞˋ", "ㄕˋ", "ㄉㄨㄥ", "ㄊㄧㄢ", ""], "w": ["winter"], "sec": "E"}, {"n": 32, "en": "Snow falls. It is quiet. The branches of Arnold's apple tree are bare.", "zh": "下雪了。四周靜悄悄的。阿諾蘋果樹的樹枝光禿禿的。", "z": ["ㄒㄧㄚˋ", "ㄒㄩㄝˇ", "ㄌㄜ˙", "", "ㄙˋ", "ㄓㄡ", "ㄐㄧㄥˋ", "ㄑㄧㄠ", "ㄑㄧㄠ", "ㄉㄜ˙", "", "ㄚ", "ㄋㄨㄛˋ", "ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ", "ㄉㄜ˙", "ㄕㄨˋ", "ㄓ", "ㄍㄨㄤ", "ㄊㄨ", "ㄊㄨ", "ㄉㄜ˙", ""], "w": ["quiet", "bare"], "sec": "E"}, {"n": 33, "en": "Arnold hangs strings of popcorn and berries on them for the winter birds to eat.", "zh": "阿諾在樹枝上掛了一串串爆米花和莓果，給冬天的小鳥吃。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄗㄞˋ", "ㄕㄨˋ", "ㄓ", "ㄕㄤˋ", "ㄍㄨㄚˋ", "ㄌㄜ˙", "ㄧˊ", "ㄔㄨㄢˋ", "ㄔㄨㄢˋ", "ㄅㄠˋ", "ㄇㄧˇ", "ㄏㄨㄚ", "ㄏㄜˊ", "ㄇㄟˊ", "ㄍㄨㄛˇ", "", "ㄍㄟˇ", "ㄉㄨㄥ", "ㄊㄧㄢ", "ㄉㄜ˙", "ㄒㄧㄠˇ", "ㄋㄧㄠˇ", "ㄔ", ""], "w": ["string", "popcorn", "berry"], "sec": "E"}, {"n": 34, "en": "He builds a snow fort around the bottom of his tree.", "zh": "他在樹的底部周圍蓋了一座雪堡壘。", "z": ["ㄊㄚ", "ㄗㄞˋ", "ㄕㄨˋ", "ㄉㄜ˙", "ㄉㄧˇ", "ㄅㄨˋ", "ㄓㄡ", "ㄨㄟˊ", "ㄍㄞˋ", "ㄌㄜ˙", "ㄧˊ", "ㄗㄨㄛˋ", "ㄒㄩㄝˇ", "ㄅㄠˇ", "ㄌㄟˇ", ""], "w": ["fort", "bottom"], "sec": "E"}, {"n": 35, "en": "Arnold builds a snowman to keep him and his tree company during the winter.", "zh": "阿諾堆了一個雪人，在冬天陪伴他和他的樹。", "z": ["ㄚ", "ㄋㄨㄛˋ", "ㄉㄨㄟ", "ㄌㄜ˙", "ㄧˊ", "ㄍㄜˋ", "ㄒㄩㄝˇ", "ㄖㄣˊ", "", "ㄗㄞˋ", "ㄉㄨㄥ", "ㄊㄧㄢ", "ㄆㄟˊ", "ㄅㄢˋ", "ㄊㄚ", "ㄏㄜˊ", "ㄊㄚ", "ㄉㄜ˙", "ㄕㄨˋ", ""], "w": ["snowman", "company"], "sec": "E"}, {"n": 36, "en": "The snow melts away.", "zh": "雪融化不見了。", "z": ["ㄒㄩㄝˇ", "ㄖㄨㄥˊ", "ㄏㄨㄚˋ", "ㄅㄨˊ", "ㄐㄧㄢˋ", "ㄌㄜ˙", ""], "w": ["melt"], "sec": "E"}, {"n": 37, "en": "It is spring again. . . .", "zh": "又是春天了……", "z": ["ㄧㄡˋ", "ㄕˋ", "ㄔㄨㄣ", "ㄊㄧㄢ", "ㄌㄜ˙", "", ""], "w": ["again"], "sec": "E"}], "words": [{"id": "climb", "t": "climbs", "b": "climb", "kb": "[klaɪm]", "kt": "[klaɪmz]", "zh": "爬", "z": ["ㄆㄚˊ"], "diff": "climbs 是 climb 的三單：Arnold 只有一個人，動詞後面加 s", "tip": "climb 的 b 不發音，唸 [klaɪm]", "fet": "", "s": 1, "sec": "A"}, {"id": "branch", "t": "branches", "b": "branch", "kb": "[bræntʃ]", "kt": "[ˋbræntʃɪz]", "zh": "樹枝", "z": ["ㄕㄨˋ", "ㄓ"], "diff": "branches 是 branch 的複數，ch 結尾要加 es", "tip": "大樹幹分出去的一枝一枝就是 branch", "fet": "Wk 14", "s": 1, "sec": "A"}, {"id": "apple tree", "t": "apple tree", "b": "apple tree", "kb": "[ˋæpḷ tri]", "kt": "[ˋæpḷ tri]", "zh": "蘋果樹", "z": ["ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄕㄨˋ"], "diff": "原形就是課本的樣子", "tip": "apple 蘋果 + tree 樹，這整課的主角！", "fet": "", "s": 1, "sec": "A"}, {"id": "far away", "t": "far, far away", "b": "far away", "kb": "[fɑr əˋwe]", "kt": "[fɑr fɑr əˋwe]", "zh": "很遠的地方", "z": ["ㄏㄣˇ", "ㄩㄢˇ", "ㄉㄜ˙", "ㄉㄧˋ", "ㄈㄤ"], "diff": "課本說了兩次 far：far, far away，表示超級遠", "tip": "far 遠 + away 離開，遠遠的地方", "fet": "", "s": 2, "sec": "A"}, {"id": "direction", "t": "direction", "b": "direction", "kb": "[dəˋrɛkʃən]", "kt": "[dəˋrɛkʃən]", "zh": "方向", "z": ["ㄈㄤ", "ㄒㄧㄤˋ"], "diff": "in every direction 往每一個方向", "tip": "東南西北都是 direction，in every direction 就是四面八方", "fet": "", "s": 2, "sec": "A"}, {"id": "very own", "t": "very own", "b": "very own", "kb": "[ˋvɛrɪ on]", "kt": "[ˋvɛrɪ on]", "zh": "完全屬於自己的", "z": ["ㄨㄢˊ", "ㄑㄩㄢˊ", "ㄕㄨˇ", "ㄩˊ", "ㄗˋ", "ㄐㄧˇ", "ㄉㄜ˙"], "diff": "my very own 比 my own 更強調「完全是我的」", "tip": "own 自己的，very own 是「只屬於我一個人的」", "fet": "", "s": 3, "sec": "A"}, {"id": "secret", "t": "secret", "b": "secret", "kb": "[ˋsikrɪt]", "kt": "[ˋsikrɪt]", "zh": "秘密的", "z": ["ㄇㄧˋ", "ㄇㄧˋ", "ㄉㄜ˙"], "diff": "secret place 秘密基地", "tip": "secret 秘密，只有自己知道的事", "fet": "", "s": 3, "sec": "A"}, {"id": "busy", "t": "busy", "b": "busy", "kb": "[ˋbɪzɪ]", "kt": "[ˋbɪzɪ]", "zh": "忙碌的", "z": ["ㄇㄤˊ", "ㄌㄨˋ", "ㄉㄜ˙"], "diff": "keeps him very busy 讓他很忙", "tip": "u 唸成 [ɪ]，busy 唸 [ˋbɪzɪ]，CET Wk 4 學過", "fet": "", "s": 4, "sec": "A"}, {"id": "all through the year", "t": "all through the year", "b": "all through the year", "kb": "[ɔl θru ðə jɪr]", "kt": "[ɔl θru ðə jɪr]", "zh": "一整年", "z": ["ㄧˋ", "ㄓㄥˇ", "ㄋㄧㄢˊ"], "diff": "片語，要一起記", "tip": "through 從頭到尾，從年頭忙到年尾", "fet": "", "s": 4, "sec": "A"}, {"id": "spring", "t": "spring", "b": "spring", "kb": "[sprɪŋ]", "kt": "[sprɪŋ]", "zh": "春天", "z": ["ㄔㄨㄣ", "ㄊㄧㄢ"], "diff": "原形就是課本的樣子", "tip": "spring 也是「彈簧」，春天萬物彈起來長大", "fet": "", "s": 5, "sec": "B"}, {"id": "watch", "t": "watches", "b": "watch", "kb": "[wɑtʃ]", "kt": "[ˋwɑtʃɪz]", "zh": "看、觀察", "z": ["ㄎㄢˋ", "", "ㄍㄨㄢ", "ㄔㄚˊ"], "diff": "watches 是 watch 的三單，ch 結尾加 es", "tip": "watch 是專心看一段時間；手錶也叫 watch", "fet": "", "s": 6, "sec": "B"}, {"id": "bud", "t": "buds", "b": "bud", "kb": "[bʌd]", "kt": "[bʌdz]", "zh": "花苞", "z": ["ㄏㄨㄚ", "ㄅㄠ"], "diff": "buds 是 bud 的複數", "tip": "bud 是還沒打開的小花苞，春天最先冒出來", "fet": "", "s": 6, "sec": "B"}, {"id": "develop into", "t": "develop into", "b": "develop into", "kb": "[dɪˋvɛləp ˋɪntu]", "kt": "[dɪˋvɛləp ˋɪntu]", "zh": "慢慢變成", "z": ["ㄇㄢˋ", "ㄇㄢˋ", "ㄅㄧㄢˋ", "ㄔㄥˊ"], "diff": "片語：develop + into", "tip": "develop 發展，develop into 慢慢長成另一個樣子", "fet": "", "s": 7, "sec": "B"}, {"id": "sweet-smelling", "t": "sweet-smelling", "b": "sweet-smelling", "kb": "[ˋswit ˋsmɛlɪŋ]", "kt": "[ˋswit ˋsmɛlɪŋ]", "zh": "聞起來香香的", "z": ["ㄨㄣˊ", "ㄑㄧˇ", "ㄌㄞ˙", "ㄒㄧㄤ", "ㄒㄧㄤ", "ㄉㄜ˙"], "diff": "sweet + smelling 用 - 連起來變一個形容詞", "tip": "sweet 甜的 + smelling 聞起來，聞起來甜甜香香的", "fet": "", "s": 7, "sec": "B"}, {"id": "blossom", "t": "blossoms", "b": "blossom", "kb": "[ˋblɑsəm]", "kt": "[ˋblɑsəmz]", "zh": "（果樹的）花", "z": ["", "ㄍㄨㄛˇ", "ㄕㄨˋ", "ㄉㄜ˙", "", "ㄏㄨㄚ"], "diff": "blossoms 是 blossom 的複數", "tip": "blossom 是果樹開的花，apple blossom 蘋果花", "fet": "", "s": 7, "sec": "B"}, {"id": "carefully", "t": "Carefully", "b": "carefully", "kb": "[ˋkɛrfəlɪ]", "kt": "[ˋkɛrfəlɪ]", "zh": "小心地", "z": ["ㄒㄧㄠˇ", "ㄒㄧㄣ", "ㄉㄜ˙"], "diff": "Carefully 大寫是因為在句首", "tip": "care 小心 + ful + ly。課本解釋：in a way that is paying close attention 很專心地注意", "fet": "Wk 13", "s": 8, "sec": "B"}, {"id": "quietly", "t": "quietly", "b": "quietly", "kb": "[ˋkwaɪətlɪ]", "kt": "[ˋkwaɪətlɪ]", "zh": "安靜地", "z": ["ㄢ", "ㄐㄧㄥˋ", "ㄉㄜ˙"], "diff": "quiet 安靜的 + ly 變成「安靜地」", "tip": "課本解釋：in a way that does not make noise 不發出聲音", "fet": "Wk 13", "s": 8, "sec": "B"}, {"id": "bee", "t": "bees", "b": "bee", "kb": "[bi]", "kt": "[biz]", "zh": "蜜蜂", "z": ["ㄇㄧˋ", "ㄈㄥ"], "diff": "bees 是 bee 的複數", "tip": "bee 嗡嗡嗡，和字母 B 唸起來一樣", "fet": "", "s": 8, "sec": "B"}, {"id": "collect", "t": "collect", "b": "collect", "kb": "[kəˋlɛkt]", "kt": "[kəˋlɛkt]", "zh": "收集", "z": ["ㄕㄡ", "ㄐㄧˊ"], "diff": "原形就是課本的樣子（watches bees collect…）", "tip": "FET Wk 4 學過！蜜蜂 collect 花蜜", "fet": "", "s": 8, "sec": "B"}, {"id": "nectar", "t": "nectar", "b": "nectar", "kb": "[ˋnɛktɚ]", "kt": "[ˋnɛktɚ]", "zh": "花蜜", "z": ["ㄏㄨㄚ", "ㄇㄧˋ"], "diff": "原形就是課本的樣子", "tip": "課本的小框框說：nectar 是花裡面甜甜的汁", "fet": "", "s": 8, "sec": "B"}, {"id": "honey", "t": "honey", "b": "honey", "kb": "[ˋhʌnɪ]", "kt": "[ˋhʌnɪ]", "zh": "蜂蜜", "z": ["ㄈㄥ", "ㄇㄧˋ"], "diff": "原形就是課本的樣子", "tip": "o 唸 [ʌ]；honey 也可以叫心愛的人「親愛的」", "fet": "Wk 14", "s": 8, "sec": "B"}, {"id": "swing", "t": "swing", "b": "swing", "kb": "[swɪŋ]", "kt": "[swɪŋ]", "zh": "鞦韆", "z": ["ㄑㄧㄡ", "ㄑㄧㄢ"], "diff": "原形就是課本的樣子", "tip": "swing 也可以當動詞「盪」：坐在 swing 上 swing", "fet": "Wk 13", "s": 9, "sec": "B"}, {"id": "weave", "t": "weaves", "b": "weave", "kb": "[wiv]", "kt": "[wivz]", "zh": "編織", "z": ["ㄅㄧㄢ", "ㄓ"], "diff": "weaves 是 weave 的三單", "tip": "weave 像編辮子一樣，把東西交叉編起來", "fet": "", "s": 10, "sec": "B"}, {"id": "wreath", "t": "wreath", "b": "wreath", "kb": "[riθ]", "kt": "[riθ]", "zh": "花圈", "z": ["ㄏㄨㄚ", "ㄑㄩㄢ"], "diff": "原形就是課本的樣子", "tip": "w 不發音！唸 [riθ]。聖誕節掛在門上的圈圈也是 wreath", "fet": "", "s": 10, "sec": "B"}, {"id": "hang", "t": "hangs", "b": "hang", "kb": "[hæŋ]", "kt": "[hæŋz]", "zh": "掛", "z": ["ㄍㄨㄚˋ"], "diff": "hangs 是 hang 的三單", "tip": "CET Wk 3 和 FET Wk 2 都學過 hang", "fet": "", "s": 10, "sec": "B"}, {"id": "pick", "t": "picks", "b": "pick", "kb": "[pɪk]", "kt": "[pɪks]", "zh": "摘", "z": ["ㄓㄞ"], "diff": "picks 是 pick 的三單", "tip": "pick 摘水果、摘花；也有「挑選」的意思", "fet": "Wk 13", "s": 11, "sec": "B"}, {"id": "armful", "t": "armful", "b": "armful", "kb": "[ˋɑrmˌfʊl]", "kt": "[ˋɑrmˌfʊl]", "zh": "一大把（滿滿一懷）", "z": ["ㄧˊ", "ㄉㄚˋ", "ㄅㄚˇ", "", "ㄇㄢˇ", "ㄇㄢˇ", "ㄧˋ", "ㄏㄨㄞˊ", ""], "diff": "an armful of… 滿滿一抱的…", "tip": "arm 手臂 + ful 滿滿的，兩隻手抱得滿滿的", "fet": "Wk 14", "s": 11, "sec": "B"}, {"id": "bring", "t": "brings", "b": "bring", "kb": "[brɪŋ]", "kt": "[brɪŋz]", "zh": "帶來", "z": ["ㄉㄞˋ", "ㄌㄞˊ"], "diff": "brings 是 bring 的三單", "tip": "bring A to B 把 A 帶去給 B", "fet": "", "s": 11, "sec": "B"}, {"id": "flower arrangement", "t": "flower arrangement", "b": "flower arrangement", "kb": "[ˋflaʊɚ əˋrendʒmənt]", "kt": "[ˋflaʊɚ əˋrendʒmənt]", "zh": "插花", "z": ["ㄔㄚ", "ㄏㄨㄚ"], "diff": "片語，要一起記", "tip": "arrange 排列，把花排得漂漂亮亮就是插花", "fet": "", "s": 12, "sec": "B"}, {"id": "summer", "t": "summer", "b": "summer", "kb": "[ˋsʌmɚ]", "kt": "[ˋsʌmɚ]", "zh": "夏天", "z": ["ㄒㄧㄚˋ", "ㄊㄧㄢ"], "diff": "原形就是課本的樣子", "tip": "summer 有兩個 m", "fet": "", "s": 13, "sec": "C"}, {"id": "leaf", "t": "leaves", "b": "leaf", "kb": "[lif]", "kt": "[livz]", "zh": "葉子", "z": ["ㄧㄝˋ", "ㄗ˙"], "diff": "leaves 是 leaf 的複數：f 變 v 再加 es", "tip": "leaf → leaves，和 knife → knives 一樣", "fet": "", "s": 14, "sec": "C"}, {"id": "rustle", "t": "rustle", "b": "rustle", "kb": "[ˋrʌsḷ]", "kt": "[ˋrʌsḷ]", "zh": "沙沙作響", "z": ["ㄕㄚ", "ㄕㄚ", "ㄗㄨㄛˋ", "ㄒㄧㄤˇ"], "diff": "原形就是課本的樣子（leaves that rustle）", "tip": "t 不發音！課本解釋：兩個東西摩擦發出的輕輕聲音", "fet": "Wk 13", "s": 14, "sec": "C"}, {"id": "build", "t": "builds", "b": "build", "kb": "[bɪld]", "kt": "[bɪldz]", "zh": "蓋、建造", "z": ["ㄍㄞˋ", "", "ㄐㄧㄢˋ", "ㄗㄠˋ"], "diff": "builds 是 build 的三單", "tip": "u 不發音，唸 [bɪld]", "fet": "", "s": 15, "sec": "C"}, {"id": "tree house", "t": "tree house", "b": "tree house", "kb": "[ˋtri ˌhaʊs]", "kt": "[ˋtri ˌhaʊs]", "zh": "樹屋", "z": ["ㄕㄨˋ", "ㄨ"], "diff": "原形就是課本的樣子", "tip": "tree 樹 + house 房子，蓋在樹上的房子", "fet": "Wk 13", "s": 15, "sec": "C"}, {"id": "shade", "t": "shades", "b": "shade", "kb": "[ʃed]", "kt": "[ʃedz]", "zh": "遮蔭、擋住陽光", "z": ["ㄓㄜ", "ㄧㄣ", "", "ㄉㄤˇ", "ㄓㄨˋ", "ㄧㄤˊ", "ㄍㄨㄤ"], "diff": "shades 是 shade 的三單", "tip": "shade 是樹蔭；shade him from the sun 幫他擋太陽", "fet": "Wk 13", "s": 16, "sec": "C"}, {"id": "shelter", "t": "shelter", "b": "shelter", "kb": "[ˋʃɛltɚ]", "kt": "[ˋʃɛltɚ]", "zh": "遮蔽、保護", "z": ["ㄓㄜ", "ㄅㄧˋ", "", "ㄅㄠˇ", "ㄏㄨˋ"], "diff": "原形就是課本的樣子（leaves shelter him，leaves 是複數所以不加 s）", "tip": "shelter 可以是「躲雨的地方」，也可以是「幫…遮風擋雨」", "fet": "Wk 14", "s": 17, "sec": "C"}, {"id": "during", "t": "during", "b": "during", "kb": "[ˋdjʊrɪŋ]", "kt": "[ˋdjʊrɪŋ]", "zh": "在…的時候", "z": ["ㄗㄞˋ", "", "ㄉㄜ˙", "ㄕˊ", "ㄏㄡˋ"], "diff": "原形就是課本的樣子", "tip": "during the winter 在冬天的時候", "fet": "", "s": 17, "sec": "C"}, {"id": "shower", "t": "shower", "b": "shower", "kb": "[ˋʃaʊɚ]", "kt": "[ˋʃaʊɚ]", "zh": "陣雨", "z": ["ㄓㄣˋ", "ㄩˇ"], "diff": "原形就是課本的樣子", "tip": "shower 是淋浴，也是一下子就停的陣雨", "fet": "Wk 14", "s": 17, "sec": "C"}, {"id": "used to", "t": "used to", "b": "used to", "kb": "[ˋjustə]", "kt": "[ˋjustə]", "zh": "以前曾經", "z": ["ㄧˇ", "ㄑㄧㄢˊ", "ㄘㄥˊ", "ㄐㄧㄥ"], "diff": "where the blossoms used to be 以前開花的地方", "tip": "used to 唸起來像 [ˋjustə]，s 唸 [s] 不唸 [z]", "fet": "", "s": 18, "sec": "C"}, {"id": "bigger", "t": "bigger", "b": "big", "kb": "[bɪg]", "kt": "[ˋbɪgɚ]", "zh": "更大的", "z": ["ㄍㄥˋ", "ㄉㄚˋ", "ㄉㄜ˙"], "diff": "bigger 是 big 的比較級：g 要多寫一個", "tip": "bigger, bigger and bigger 越來越大", "fet": "", "s": 18, "sec": "C"}, {"id": "juggle", "t": "juggling", "b": "juggle", "kb": "[ˋdʒʌgḷ]", "kt": "[ˋdʒʌglɪŋ]", "zh": "拋接雜耍", "z": ["ㄆㄠ", "ㄐㄧㄝ", "ㄗㄚˊ", "ㄕㄨㄚˇ"], "diff": "juggling 是 juggle 去 e 加 ing", "tip": "看圖：一次丟好幾顆蘋果在空中接住，就是 juggling", "fet": "", "s": 20, "sec": "C"}, {"id": "fall", "t": "fall", "b": "fall", "kb": "[fɔl]", "kt": "[fɔl]", "zh": "秋天", "z": ["ㄑㄧㄡ", "ㄊㄧㄢ"], "diff": "原形就是課本的樣子", "tip": "fall 也是「掉落」：秋天葉子 fall 下來，所以秋天叫 fall", "fet": "", "s": 21, "sec": "D"}, {"id": "tasty", "t": "tasty", "b": "tasty", "kb": "[ˋtestɪ]", "kt": "[ˋtestɪ]", "zh": "好吃的", "z": ["ㄏㄠˇ", "ㄔ", "ㄉㄜ˙"], "diff": "原形就是課本的樣子", "tip": "taste 味道 → tasty 很有味道＝好吃", "fet": "", "s": 22, "sec": "D"}, {"id": "turn", "t": "turned", "b": "turn", "kb": "[tɝn]", "kt": "[tɝnd]", "zh": "變成", "z": ["ㄅㄧㄢˋ", "ㄔㄥˊ"], "diff": "have turned golden 已經變成金黃色", "tip": "turn 轉，也是「變成」：turn golden 變金黃", "fet": "", "s": 23, "sec": "D"}, {"id": "golden", "t": "golden", "b": "golden", "kb": "[ˋgoldṇ]", "kt": "[ˋgoldṇ]", "zh": "金黃色的", "z": ["ㄐㄧㄣ", "ㄏㄨㄤˊ", "ㄙㄜˋ", "ㄉㄜ˙"], "diff": "原形就是課本的樣子", "tip": "gold 金子 + en，像金子一樣的顏色", "fet": "", "s": 23, "sec": "D"}, {"id": "drift", "t": "drift", "b": "drift", "kb": "[drɪft]", "kt": "[drɪft]", "zh": "飄", "z": ["ㄆㄧㄠ"], "diff": "原形就是課本的樣子", "tip": "drift 輕輕地飄，葉子慢慢飄下來", "fet": "", "s": 23, "sec": "D"}, {"id": "gather", "t": "gathers", "b": "gather", "kb": "[ˋgæðɚ]", "kt": "[ˋgæðɚz]", "zh": "收集、聚集", "z": ["ㄕㄡ", "ㄐㄧˊ", "", "ㄐㄩˋ", "ㄐㄧˊ"], "diff": "gathers 是 gather 的三單", "tip": "把東西聚在一起；CET 學過的 gathering 聚會就是從它來的", "fet": "Wk 14", "s": 24, "sec": "D"}, {"id": "lie on", "t": "lie on", "b": "lie on", "kb": "[laɪ ɑn]", "kt": "[laɪ ɑn]", "zh": "躺在…上面", "z": ["ㄊㄤˇ", "ㄗㄞˋ", "", "ㄕㄤˋ", "ㄇㄧㄢˋ"], "diff": "a soft floor to lie on 可以躺的軟地板", "tip": "lie 躺；CET Wk 6 的 lie 是「位於」", "fet": "", "s": 24, "sec": "D"}, {"id": "shake", "t": "shakes", "b": "shake", "kb": "[ʃek]", "kt": "[ʃeks]", "zh": "搖", "z": ["ㄧㄠˊ"], "diff": "shakes 是 shake 的三單", "tip": "shake 搖一搖；milkshake 奶昔就是搖出來的", "fet": "Wk 14", "s": 25, "sec": "D"}, {"id": "basket", "t": "basket", "b": "basket", "kb": "[ˋbæskɪt]", "kt": "[ˋbæskɪt]", "zh": "籃子", "z": ["ㄌㄢˊ", "ㄗ˙"], "diff": "原形就是課本的樣子", "tip": "basketball 籃球就是 basket + ball", "fet": "", "s": 26, "sec": "D"}, {"id": "apple pie", "t": "apple pies", "b": "apple pie", "kb": "[ˋæpḷ paɪ]", "kt": "[ˋæpḷ paɪz]", "zh": "蘋果派", "z": ["ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄆㄞˋ"], "diff": "apple pies 是複數", "tip": "pie 派，唸起來和 π 一樣", "fet": "", "s": 27, "sec": "D"}, {"id": "the rest of", "t": "the rest of", "b": "the rest of", "kb": "[ðə rɛst ɑv]", "kt": "[ðə rɛst ɑv]", "zh": "剩下的", "z": ["ㄕㄥˋ", "ㄒㄧㄚˋ", "ㄉㄜ˙"], "diff": "片語，要一起記", "tip": "rest 是休息，但 the rest of 是「剩下的」", "fet": "", "s": 28, "sec": "D"}, {"id": "cider press", "t": "cider press", "b": "cider press", "kb": "[ˋsaɪdɚ prɛs]", "kt": "[ˋsaɪdɚ prɛs]", "zh": "蘋果榨汁機", "z": ["ㄆㄧㄥˊ", "ㄍㄨㄛˇ", "ㄓㄚˋ", "ㄓ", "ㄐㄧ"], "diff": "原形就是課本的樣子", "tip": "press 壓：用力壓蘋果，把 cider 蘋果汁壓出來", "fet": "", "s": 28, "sec": "D"}, {"id": "fresh", "t": "fresh", "b": "fresh", "kb": "[frɛʃ]", "kt": "[frɛʃ]", "zh": "新鮮的", "z": ["ㄒㄧㄣ", "ㄒㄧㄢ", "ㄉㄜ˙"], "diff": "原形就是課本的樣子", "tip": "fresh apple cider 剛榨好的蘋果汁", "fet": "", "s": 28, "sec": "D"}, {"id": "Halloween", "t": "Halloween", "b": "Halloween", "kb": "[ˌhæloˋin]", "kt": "[ˌhæloˋin]", "zh": "萬聖節", "z": ["ㄨㄢˋ", "ㄕㄥˋ", "ㄐㄧㄝˊ"], "diff": "節日名字，H 要大寫", "tip": "10 月 31 日，Trick or treat!", "fet": "", "s": 29, "sec": "D"}, {"id": "decorate", "t": "decorates", "b": "decorate", "kb": "[ˋdɛkəˌret]", "kt": "[ˋdɛkəˌrets]", "zh": "裝飾", "z": ["ㄓㄨㄤ", "ㄕˋ"], "diff": "decorates 是 decorate 的三單", "tip": "課本解釋：makes something look pretty 讓東西變漂亮", "fet": "Wk 13", "s": 29, "sec": "D"}, {"id": "biggest", "t": "biggest", "b": "big", "kb": "[bɪg]", "kt": "[ˋbɪgɪst]", "zh": "最大的", "z": ["ㄗㄨㄟˋ", "ㄉㄚˋ", "ㄉㄜ˙"], "diff": "biggest 是 big 的最高級：big - bigger - biggest", "tip": "第 18 句是 bigger，這裡是 biggest", "fet": "", "s": 29, "sec": "D"}, {"id": "glow", "t": "glow", "b": "glow", "kb": "[glo]", "kt": "[glo]", "zh": "發光", "z": ["ㄈㄚ", "ㄍㄨㄤ"], "diff": "原形就是課本的樣子（They glow，They 是複數）", "tip": "課本解釋：to shine, or put out light 柔柔地發亮", "fet": "Wk 13", "s": 30, "sec": "D"}, {"id": "moonlight", "t": "moonlight", "b": "moonlight", "kb": "[ˋmunˌlaɪt]", "kt": "[ˋmunˌlaɪt]", "zh": "月光", "z": ["ㄩㄝˋ", "ㄍㄨㄤ"], "diff": "原形就是課本的樣子", "tip": "moon 月亮 + light 光", "fet": "", "s": 30, "sec": "D"}, {"id": "winter", "t": "winter", "b": "winter", "kb": "[ˋwɪntɚ]", "kt": "[ˋwɪntɚ]", "zh": "冬天", "z": ["ㄉㄨㄥ", "ㄊㄧㄢ"], "diff": "原形就是課本的樣子", "tip": "winter 冬天，snow 下雪的季節", "fet": "", "s": 31, "sec": "E"}, {"id": "quiet", "t": "quiet", "b": "quiet", "kb": "[ˋkwaɪət]", "kt": "[ˋkwaɪət]", "zh": "安靜的", "z": ["ㄢ", "ㄐㄧㄥˋ", "ㄉㄜ˙"], "diff": "原形就是課本的樣子", "tip": "quiet 安靜的 → quietly 安靜地（第 8 句）", "fet": "", "s": 32, "sec": "E"}, {"id": "bare", "t": "bare", "b": "bare", "kb": "[bɛr]", "kt": "[bɛr]", "zh": "光禿禿的", "z": ["ㄍㄨㄤ", "ㄊㄨ", "ㄊㄨ", "ㄉㄜ˙"], "diff": "原形就是課本的樣子", "tip": "葉子都掉光了，樹枝上什麼都沒有；和 bear 熊唸法一樣", "fet": "", "s": 32, "sec": "E"}, {"id": "string", "t": "strings", "b": "string", "kb": "[strɪŋ]", "kt": "[strɪŋz]", "zh": "一串、繩子", "z": ["ㄧˊ", "ㄔㄨㄢˋ", "", "ㄕㄥˊ", "ㄗ˙"], "diff": "strings 是 string 的複數", "tip": "strings of popcorn 一串一串的爆米花", "fet": "", "s": 33, "sec": "E"}, {"id": "popcorn", "t": "popcorn", "b": "popcorn", "kb": "[ˋpɑpˌkɔrn]", "kt": "[ˋpɑpˌkɔrn]", "zh": "爆米花", "z": ["ㄅㄠˋ", "ㄇㄧˇ", "ㄏㄨㄚ"], "diff": "原形就是課本的樣子", "tip": "pop 啵一聲爆開 + corn 玉米", "fet": "", "s": 33, "sec": "E"}, {"id": "berry", "t": "berries", "b": "berry", "kb": "[ˋbɛrɪ]", "kt": "[ˋbɛrɪz]", "zh": "莓果", "z": ["ㄇㄟˊ", "ㄍㄨㄛˇ"], "diff": "berries 是 berry 的複數：y 變 i 加 es", "tip": "strawberry 草莓、blueberry 藍莓都是 berry", "fet": "", "s": 33, "sec": "E"}, {"id": "fort", "t": "fort", "b": "fort", "kb": "[fort]", "kt": "[fort]", "zh": "堡壘", "z": ["ㄅㄠˇ", "ㄌㄟˇ"], "diff": "原形就是課本的樣子", "tip": "snow fort 用大雪球堆成的城牆", "fet": "Wk 14", "s": 34, "sec": "E"}, {"id": "bottom", "t": "bottom", "b": "bottom", "kb": "[ˋbɑtəm]", "kt": "[ˋbɑtəm]", "zh": "底部", "z": ["ㄉㄧˇ", "ㄅㄨˋ"], "diff": "原形就是課本的樣子", "tip": "CET Wk 7 學過 bottom 底部", "fet": "", "s": 34, "sec": "E"}, {"id": "snowman", "t": "snowman", "b": "snowman", "kb": "[ˋsnoˌmæn]", "kt": "[ˋsnoˌmæn]", "zh": "雪人", "z": ["ㄒㄩㄝˇ", "ㄖㄣˊ"], "diff": "原形就是課本的樣子", "tip": "snow 雪 + man 人", "fet": "", "s": 35, "sec": "E"}, {"id": "company", "t": "company", "b": "company", "kb": "[ˋkʌmpənɪ]", "kt": "[ˋkʌmpənɪ]", "zh": "陪伴", "z": ["ㄆㄟˊ", "ㄅㄢˋ"], "diff": "keep him company 陪伴他（不是「公司」喔！）", "tip": "keep someone company 陪著某人，不讓他孤單", "fet": "Wk 14", "s": 35, "sec": "E"}, {"id": "melt", "t": "melts away", "b": "melt", "kb": "[mɛlt]", "kt": "[mɛlts əˋwe]", "zh": "融化", "z": ["ㄖㄨㄥˊ", "ㄏㄨㄚˋ"], "diff": "melts 是 melt 的三單；melt away 融化不見", "tip": "冰淇淋在太陽下 melt 掉了", "fet": "Wk 14", "s": 36, "sec": "E"}, {"id": "again", "t": "again", "b": "again", "kb": "[əˋgɛn]", "kt": "[əˋgɛn]", "zh": "又、再一次", "z": ["ㄧㄡˋ", "", "ㄗㄞˋ", "ㄧˊ", "ㄘˋ"], "diff": "原形就是課本的樣子", "tip": "spring again 又是春天，四季轉一圈回來了", "fet": "", "s": 37, "sec": "E"}, {"id": "slowly", "t": "slowly", "b": "slowly", "kb": "[ˋslolɪ]", "kt": "[ˋslolɪ]", "zh": "慢慢地", "z": ["ㄇㄢˋ", "ㄇㄢˋ", "ㄉㄜ˙"], "diff": "課文裡沒有這個字，是老師另外加的", "tip": "slow 慢的 + ly 變成「慢慢地」，和 quietly、carefully 同一家：The snow melts slowly.", "fet": "Wk 13", "s": 0, "sec": ""}], "grammar": [["1) Arnold 一個人：動詞加 -s / -es", "Arnold <b>climbs</b> / <b>watches</b> / <b>picks</b> / <b>builds</b> / <b>gathers</b> / <b>shakes</b> / <b>decorates</b>… 主角只有一個人，現在式的動詞要加 s。 ch 結尾加 es：watch → <b>watches</b>。但 They <b>make</b>、leaves <b>shelter</b>、They <b>glow</b> 是很多個，就不加 s。"], ["2) 複數的變身：leaf → leaves、berry → berries", "f 變 v 加 es：leaf → <b>leaves</b>。y 變 i 加 es：berry → <b>berries</b>。ch 加 es：branch → <b>branches</b>。其他直接加 s：bud → buds、apple → apples。"], ["3) big → bigger → biggest", "第 18、19 句 <b>bigger, bigger … and bigger</b> 是「越來越大」；第 29 句 <b>the biggest apples</b> 是「最大的蘋果」。big 短短的，g 要多寫一個再加 er / est。"], ["4) 四季的開頭都一樣：It is ___.", "<b>It is spring. It is summer. It is fall. It is winter.</b> 每換一個季節，課本都用這一句開頭。最後 <b>It is spring again…</b> 又回到春天，四季轉了一圈！"], ["5) -ly 會讓字變成「怎麼做」", "quiet 安靜的 → <b>quietly</b> 安靜地；careful 小心的 → <b>carefully</b> 小心地；slow 慢的 → <b>slowly</b> 慢慢地。Carefully and quietly, Arnold watches… 說的是阿諾「怎麼看」。"]], "events": [["🐝", "Bees collect nectar from the blossoms.", "spring"], ["🪢", "Arnold makes a swing for his apple tree.", "spring"], ["💐", "They make a flower arrangement together.", "spring"], ["🌸", "Buds develop into apple blossoms.", "spring"], ["🏠", "Arnold builds a tree house.", "summer"], ["🌧️", "The green leaves shelter him during a shower.", "summer"], ["🤹", "Arnold does a juggling act with green apples.", "summer"], ["😎", "His apple tree shades him from the hot sun.", "summer"], ["🍂", "The leaves turn golden and drift to the ground.", "fall"], ["🥧", "Arnold and his family make apple pies.", "fall"], ["🎃", "Arnold decorates apples for Halloween.", "fall"], ["🧺", "He puts the red apples in a basket.", "fall"], ["❄️", "The branches are bare.", "winter"], ["🍿", "He hangs strings of popcorn for the birds.", "winter"], ["🏰", "He builds a snow fort.", "winter"], ["⛄", "Arnold builds a snowman.", "winter"]]};
+(function () {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('arnold_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('arnold_' + k, JSON.stringify(v)); } catch (e) {} },
+  };
+  const SEC = {}; DATA.sections.forEach((s) => { SEC[s.id] = s; });
+  const WORD = {}; DATA.words.forEach((w) => { WORD[w.id] = w; });
+  const soft = (c) => c + '22';
+  const zyHtml = (zh, z) => (typeof renderZhuyin === 'function' ? renderZhuyin(zh, z) : esc(zh));
+  let learned = new Set(store.get('learned', []));
+
+  // ── 語音 ──
+  const synth = window.speechSynthesis;
+  let voices = [];
+  let rate = store.get('rate', 0.8);
+  function loadVoices() {
+    if (!synth) return;
+    voices = synth.getVoices().filter((v) => /^en/i.test(v.lang));
+    const pref = store.get('voice', '');
+    const sel = $('#voiceSel');
+    sel.innerHTML = voices.map((v) => '<option value="' + esc(v.name) + '">' + esc(v.name + ' (' + v.lang + ')') + '</option>').join('')
+      || '<option>（這台裝置沒有英文語音）</option>';
+    const guess = voices.find((v) => v.name === pref) || voices.find((v) => /David|Mark|Alex|Daniel/.test(v.name)) || voices.find((v) => /en-US/i.test(v.lang));
+    if (guess) sel.value = guess.name;
+  }
+  function say(text, onend) {
+    if (!synth) return;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\s*\.\s*\.\s*\./g, '…'));
+    const v = voices.find((x) => x.name === $('#voiceSel').value);
+    if (v) u.voice = v; else u.lang = 'en-US';
+    u.rate = rate;
+    if (onend) u.onend = u.onerror = onend;
+    synth.speak(u);
+  }
+  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+  $('#voiceSel').onchange = (e) => store.set('voice', e.target.value);
+  $('#rate').value = rate; $('#rateVal').textContent = rate + 'x';
+  $('#rate').oninput = (e) => { rate = +e.target.value; $('#rateVal').textContent = rate + 'x'; store.set('rate', rate); };
+  $('#voiceTest').onclick = () => say(DATA.sentences[0].en);
+
+  // ── 故事快覽 ──
+  $('#map').innerHTML = DATA.sections.map((s) =>
+    '<button class="mcard" style="--soft:' + soft(s.color) + '" data-go="' + s.id + '">'
+    + '<div class="em">' + s.emoji + '</div><div class="t">' + esc(s.zh) + '</div>'
+    + '<div class="e en">' + esc(s.en) + '</div><div class="d">' + esc(s.desc) + '</div>'
+    + '<span class="r">第' + s.range[0] + '-' + s.range[1] + '句</span><div class="bg">' + s.emoji + '</div></button>').join('');
+  $('#map').onclick = (e) => { const b = e.target.closest('[data-go]'); if (b) document.getElementById('sec-' + b.dataset.go).scrollIntoView({ behavior: 'smooth' }); };
+
+  // ── 逐句精讀 ──
+  function markSentence(s, seen) {
+    // 依課本寫法在句子裡標出單字；同一個字第一次出現是橘底，之後是橘字
+    let html = esc(s.en);
+    const marks = [];
+    s.w.forEach((id) => {
+      const w = WORD[id]; const t = esc(w.t);
+      const i = html.indexOf(t);
+      if (i < 0) return;
+      const cls = 'hl' + (seen.has(id) ? ' seen' : '') + (w.fet ? ' fet' : '');
+      const tok = '\u0000' + marks.length + '\u0000';
+      marks.push('<button class="' + cls + '" data-w="' + esc(id) + '">' + t + '</button>');
+      html = html.slice(0, i) + tok + html.slice(i + t.length);
+      seen.add(id);
+    });
+    return html.replace(/\u0000(\d+)\u0000/g, (m, n) => marks[+n]);
+  }
+  (function renderSentences() {
+    const seen = new Set();
+    let html = '', cur = '';
+    DATA.sentences.forEach((s) => {
+      if (s.sec !== cur) {
+        cur = s.sec; const sec = SEC[cur];
+        html += '<div class="sec" id="sec-' + cur + '" style="--soft:' + soft(sec.color) + '">'
+          + '<span>' + cur + '. ' + esc(sec.zh) + ' ' + sec.emoji + '</span><small>第' + sec.range[0] + '-' + sec.range[1] + '句</small></div>';
+      }
+      const sec = SEC[s.sec];
+      const fet = s.w.filter((id) => WORD[id].fet).map((id) => WORD[id].b);
+      html += '<div class="sent" id="s' + s.n + '" style="--soft:' + soft(sec.color) + '">'
+        + '<div><div class="num">' + s.n + '</div><button class="say" data-say="' + s.n + '" aria-label="唸這一句">🔊</button></div>'
+        + '<div><div class="en-line en">' + markSentence(s, seen) + '</div>'
+        + '<div class="zh-line">' + zyHtml(s.zh, s.z) + '</div>'
+        + (s.w.length ? '<div class="chips">' + s.w.map((id) => '<span class="chip">' + esc(WORD[id].t) + '</span>').join('') + '</div>' : '')
+        + (fet.length ? '<div class="fetbar">⭐ FET 單字：' + fet.map(esc).join('、') + '</div>' : '')
+        + '</div></div>';
+    });
+    $('#sents').innerHTML = html;
+  })();
+  $('#sents').onclick = (e) => {
+    const w = e.target.closest('[data-w]'); if (w) return openCard(w.dataset.w);
+    const b = e.target.closest('[data-say]');
+    if (b) {
+      const s = DATA.sentences[b.dataset.say - 1]; const el = $('#s' + s.n);
+      document.querySelectorAll('.sent.playing').forEach((x) => x.classList.remove('playing'));
+      el.classList.add('playing');
+      return say(s.en, () => el.classList.remove('playing'));
+    }
+    const zh = e.target.closest('.zh-line'); if (zh) zh.classList.toggle('peek');
+  };
+
+  // 中文／注音開關
+  function setTog(btn, on, label) { btn.classList.toggle('on', on); btn.textContent = label + (on ? ' 開' : ' 關'); }
+  let zhOn = store.get('zh', true), zyOn = store.get('zy', true);
+  function applyTogs() {
+    document.body.classList.toggle('hide-zh', !zhOn); document.body.classList.toggle('no-zy', !zyOn);
+    setTog($('#tZh'), zhOn, '👁️ 中文'); setTog($('#tZy'), zyOn, 'ㄅ 注音');
+  }
+  $('#tZh').onclick = () => { zhOn = !zhOn; store.set('zh', zhOn); document.querySelectorAll('.peek').forEach((x) => x.classList.remove('peek')); applyTogs(); };
+  $('#tZy').onclick = () => { zyOn = !zyOn; store.set('zy', zyOn); applyTogs(); };
+  applyTogs();
+  const setTop = () => document.documentElement.style.setProperty('--toph', $('#top').offsetHeight + 'px');
+  setTop(); addEventListener('resize', setTop);
+
+  // ── 文法 ──
+  $('#gram').innerHTML = DATA.grammar.map((g) => '<div class="gitem"><h3>' + esc(g[0]) + '</h3>' + g[1] + '</div>').join('');
+
+  // ── 單字卡 ──
+  let openId = null;
+  function openCard(id) {
+    const w = WORD[id]; openId = id;
+    const s = w.s ? DATA.sentences[w.s - 1] : null;
+    const sec = w.sec ? SEC[w.sec] : null;
+    $('#card').innerHTML =
+      '<button class="x" data-x aria-label="關閉">✕</button>'
+      + '<span class="tag base">原形 ' + esc(w.b) + '</span><span class="tag book">課本 ' + esc(w.t) + '</span>'
+      + (w.fet ? '<span class="tag fet">⭐ FET ' + esc(w.fet) + '</span>' : '')
+      + (sec ? '<span class="tag" style="background:' + soft(sec.color) + '">' + sec.emoji + ' ' + w.sec + '</span>' : '')
+      + '<div class="word">' + esc(w.b) + '<span class="kk">' + esc(w.kb) + '</span></div>'
+      + (w.t.toLowerCase() !== w.b.toLowerCase() ? '<div class="kk" style="margin:0 0 4px">課本寫法 <b>' + esc(w.t) + '</b> ' + esc(w.kt) + '</div>' : '')
+      + '<div class="mean">' + zyHtml(w.zh, w.z) + '</div>'
+      + (s ? '<div class="box src"><b>課文原句 第' + s.n + '句</b><i class="en">"' + esc(s.en) + '"</i>' + esc(s.zh) + '</div>'
+           : '<div class="box src"><b>課文裡沒有這個字</b>FET 單字表上有，所以一起放進來。</div>')
+      + '<div class="box diff">🔄 <b>原形 vs 課本寫法：</b>' + esc(w.diff) + '</div>'
+      + '<div class="box how">💡 <b>記憶小技巧：</b>' + esc(w.tip) + '</div>'
+      + '<div class="acts"><button class="play" data-play>🔊 聽發音 ' + esc(w.kb) + '</button>'
+      + (s ? '<button class="got" data-ps>📖 聽原句</button>' : '')
+      + '<button class="got' + (learned.has(id) ? ' on' : '') + '" data-got>' + (learned.has(id) ? '✅ 我會了' : '☐ 我會了') + '</button></div>';
+    $('#mask').classList.add('show');
+    say(w.b);
+  }
+  function closeCard() { $('#mask').classList.remove('show'); openId = null; }
+  $('#mask').onclick = (e) => {
+    if (e.target === $('#mask') || e.target.closest('[data-x]')) return closeCard();
+    const w = WORD[openId]; if (!w) return;
+    if (e.target.closest('[data-play]')) say(w.b);
+    if (e.target.closest('[data-ps]')) say(DATA.sentences[w.s - 1].en);
+    const g = e.target.closest('[data-got]');
+    if (g) {
+      learned.has(openId) ? learned.delete(openId) : learned.add(openId);
+      store.set('learned', [...learned]);
+      g.classList.toggle('on', learned.has(openId)); g.textContent = learned.has(openId) ? '✅ 我會了' : '☐ 我會了';
+      renderWords();
+    }
+  };
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCard(); });
+
+  // ── 單字探險 ──
+  let filter = 'all';
+  const FILTERS = [['all', '全部']].concat(DATA.sections.map((s) => [s.id, s.emoji + ' ' + s.id]), [['fet', '⭐ FET'], ['todo', '還沒會']]);
+  function renderWords() {
+    const list = DATA.words.filter((w) => filter === 'all' || w.sec === filter || (filter === 'fet' && w.fet) || (filter === 'todo' && !learned.has(w.id)));
+    $('#filters').innerHTML = FILTERS.map((f) => {
+      const n = DATA.words.filter((w) => f[0] === 'all' || w.sec === f[0] || (f[0] === 'fet' && w.fet) || (f[0] === 'todo' && !learned.has(w.id))).length;
+      return '<button class="f' + (filter === f[0] ? ' on' : '') + '" data-f="' + f[0] + '">' + esc(f[1]) + ' ' + n + '</button>';
+    }).join('');
+    $('#wgrid').innerHTML = list.map((w) =>
+      '<button class="wc' + (learned.has(w.id) ? ' learned' : '') + '" data-w="' + esc(w.id) + '">'
+      + '<span class="b">' + (learned.has(w.id) ? '✅' : '') + (w.fet ? '⭐' : '') + '</span>'
+      + '<div class="w">' + esc(w.b) + '</div><div class="k">' + esc(w.kb) + (w.s ? '・第' + w.s + '句' : '・課文沒有') + '</div>'
+      + '<div class="m">' + zyHtml(w.zh, w.z) + '</div></button>').join('');
+    const nl = DATA.words.filter((w) => learned.has(w.id)).length;
+    $('#learnedStat').textContent = '已學會 ' + nl + ' / ' + DATA.words.length;
+    $('#wcount').textContent = DATA.words.length + ' Words';
+    $('#fcount').textContent = DATA.words.length + ' 字';
+  }
+  $('#filters').onclick = (e) => { const b = e.target.closest('[data-f]'); if (b) { filter = b.dataset.f; renderWords(); } };
+  $('#wgrid').onclick = (e) => { const b = e.target.closest('[data-w]'); if (b) openCard(b.dataset.w); };
+  renderWords();
+
+  // ── 四季挑戰：這件事發生在哪個季節？ ──
+  const SEAS = [['spring', '🌸', 'Spring', '#ec407a'], ['summer', '☀️', 'Summer', '#43a047'], ['fall', '🍎', 'Fall', '#ef6c00'], ['winter', '⛄', 'Winter', '#1e88e5']];
+  let round = [], idx = 0, score = 0, locked = false;
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function startChal() {
+    round = shuffle(DATA.events.slice()).slice(0, 8); idx = 0; score = 0; showQ();
+  }
+  function showQ() {
+    locked = false;
+    if (idx >= round.length) {
+      const best = Math.max(store.get('best', 0), score); store.set('best', best);
+      $('#chal').innerHTML = '<div class="ev">' + (score === round.length ? '🏆' : score >= 6 ? '🌟' : '🍏') + '</div>'
+        + '<div class="q">答對 ' + score + ' / ' + round.length + ' 題！' + (score === round.length ? '四季小專家！' : '再玩一次會更厲害喔') + '</div>'
+        + '<div class="fb">最高紀錄 ' + best + ' / 8</div><button class="go" data-start>再玩一次</button>';
+      return;
+    }
+    const ev = round[idx];
+    $('#chal').innerHTML = '<div class="prog"><div style="width:' + (idx / round.length * 100) + '%"></div></div>'
+      + '<div style="font-size:13px;color:var(--muted)">第 ' + (idx + 1) + ' / ' + round.length + ' 題・這件事發生在哪個季節？</div>'
+      + '<div class="ev">' + ev[0] + '</div><div class="q en">' + esc(ev[1]) + ' <button class="tog" data-sayq>🔊</button></div>'
+      + '<div class="seasons">' + SEAS.map((s) => '<button data-s="' + s[0] + '" style="background:' + s[3] + '"><span class="s">' + s[1] + '</span>' + s[2] + '</button>').join('') + '</div>'
+      + '<div class="fb" id="fb"></div>';
+  }
+  $('#chal').onclick = (e) => {
+    if (e.target.closest('[data-start]')) return startChal();
+    if (e.target.closest('[data-sayq]')) return say(round[idx][1]);
+    const b = e.target.closest('[data-s]'); if (!b || locked) return;
+    locked = true;
+    const ev = round[idx]; const ok = b.dataset.s === ev[2];
+    if (ok) score++;
+    const right = SEAS.find((s) => s[0] === ev[2]);
+    $('#fb').innerHTML = ok ? '✅ 答對了！' : '❌ 是 ' + right[1] + ' ' + right[2] + ' 喔';
+    $('#fb').style.color = ok ? 'var(--green)' : 'var(--apple)';
+    say(ok ? 'Yes! ' + right[2] + '!' : 'It is ' + right[2] + '.');
+    setTimeout(() => { idx++; showQ(); }, ok ? 900 : 1700);
+  };
+  $('#chal').innerHTML = '<div class="ev">🌸☀️🍎⛄</div><div class="q">課文裡的事，發生在哪個季節？<br><small style="font-weight:400;color:var(--muted)">每次 8 題，看句子選季節</small></div><button class="go" data-start>開始挑戰</button>';
+})();
+</script>
+<script src="./version.js"></script>
+<script src="./menu.js"></script>
+</body>
+</html>
